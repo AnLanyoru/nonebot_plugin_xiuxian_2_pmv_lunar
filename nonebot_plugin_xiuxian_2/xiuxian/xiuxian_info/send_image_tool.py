@@ -6,7 +6,7 @@ from PIL import Image
 
 
 async def convert_img(
-    img: Union[Image.Image, str, Path, bytes], is_base64: bool = False
+    img: Union[Image.Image, str, Path, bytes], is_base64: bool = True
 ):
     """
     :说明:
@@ -17,20 +17,18 @@ async def convert_img(
     :返回:
       * res: bytes对象或base64编码图片。
     """
-    if isinstance(img, (str, Path)):
-        img = Image.open(str(img))
-    
     if isinstance(img, Image.Image):
         img = img.convert('RGB')
         result_buffer = BytesIO()
-        img.save(result_buffer, format='PNG', quality=80, subsampling=0)
+        img.save(result_buffer, format='png', quality=90, subsampling=10)
         res = result_buffer.getvalue()
         if is_base64:
-            return 'base64://' + b64encode(res).decode()
+            res = 'base64://' + b64encode(res).decode()
         return res
     elif isinstance(img, bytes):
-        if is_base64:
-            return 'base64://' + b64encode(img).decode()
-        return img
+        return 'base64://' + b64encode(img).decode()
     else:
-        raise ValueError("不支持的输入格式")
+        return 'base64://' + b64encode(img).decode()
+
+
+

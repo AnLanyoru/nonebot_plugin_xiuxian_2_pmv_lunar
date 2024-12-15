@@ -4,11 +4,16 @@ import asyncio
 import json
 import math
 import datetime
+import random
+import re
+
 import unicodedata
-from .xiuxian2_handle import XiuxianDateManage
+
+from .clean_utils import simple_md
+from .other_set import OtherSet
+from .xiuxian2_handle import XiuxianDateManage, PLAYERSDATA
 from nonebot.adapters.onebot.v11 import (
-    GroupMessageEvent,
-    MessageSegment
+    GroupMessageEvent
 )
 from nonebot.params import Depends
 from io import BytesIO
@@ -20,6 +25,7 @@ from nonebot.adapters.onebot.v11 import MessageSegment
 from .data_source import jsondata
 from pathlib import Path
 from base64 import b64encode
+from xu.plugins.nonebot_plugin_xiuxian_2.xiuxian.xiuxian_place import place
 
 sql_message = XiuxianDateManage()  # sql类
 boss_img_path = Path() / "data" / "xiuxian" / "boss_img"
@@ -39,41 +45,65 @@ class MyEncoder(json.JSONEncoder):
             return super(MyEncoder, self).default(obj)
 
 
-def check_user_type(user_id, need_type):
+def read_move_data(user_id):
+    user_id = str(user_id)
+    FILEPATH = PLAYERSDATA / user_id / "moveinfo.json"
+    with open(FILEPATH, "r", encoding="UTF-8") as f:
+        data = f.read()
+    return json.loads(data)
+
+
+async def check_user_type(user_id, need_type):
     """
-    :说明: `check_user_type`
-    > 匹配用户状态，返回是否状态一致
-    :返回参数:
-      * `isType: 是否一致
-      * `msg: 消息体
+    说明: 匹配用户状态，返回是否状态一致
+    :param user_id: type = str 用户ID
+    :param need_type: type = int 需求状态 -1为移动中  0为空闲中  1为闭关中  2为悬赏令中
+    :returns: isType: 是否一致 ， msg: 消息体
     """
     isType = False
     msg = ''
-    user_cd_message = sql_message.get_user_cd(user_id)
+    user_cd_message = await sql_message.get_user_cd(user_id)
     if user_cd_message is None:
         user_type = 0
     else:
         user_type = user_cd_message['type']
-
+    # 此处结算移动
     if user_type == need_type:  # 状态一致
         isType = True
     else:
-        if user_type == 1:
-            msg = "道友现在在闭关呢，小心走火入魔！"
-
-        elif user_type == 2:
-            msg = "道友现在在做悬赏令呢，小心走火入魔！"
-
-        elif user_type == 3:
-            msg = "道友现在正在秘境中，分身乏术！"
-
-        elif user_type == 0:
-            msg = "道友现在什么都没干呢~"
+        type_msgs = {1: simple_md("道友现在在闭关呢，小心走火入魔！若有要事，请先", "出关", "出关", "！"),
+                     2: simple_md("道友现在在做悬赏令呢！请先着手", "完成", "悬赏令结算", "当前悬赏！"),
+                     3: simple_md("道友现在正在", "秘境", "秘境结算", "中，分身乏术！"),
+                     4: simple_md("道友正在修炼中，请抱元守一，聚气凝神，勿要分心！\r如有要事，请先", "停止修炼", "停止修炼", "！！"),
+                     5: simple_md("道友正在虚神界修炼中，请抱元守一，聚气凝神，勿要分心！若有要事，请先", "出关", "出关", "！"),
+                     6: simple_md("道友正在进行", "位面挑战", "查看挑战", "中，请全力以赴！！"),
+                     0: "道友现在什么都没干呢~"}
+        if user_type in type_msgs:
+            msg = type_msgs[user_type]
+        elif user_type == -1:
+            # 前面添加赶路检测
+            work_time = datetime.datetime.strptime(
+                user_cd_message['create_time'], "%Y-%m-%d %H:%M:%S.%f"
+            )
+            pass_time = (datetime.datetime.now() - work_time).seconds // 60  # 时长计算
+            move_info = read_move_data(user_id)
+            need_time = move_info["need_time"]
+            place_name = place.get_place_name(move_info["to_id"])
+            if pass_time < need_time:
+                last_time = math.ceil(need_time - pass_time)
+                msg = f"道友现在正在赶往【{place_name}】中！预计还有{last_time}分钟到达目的地！！"
+            else:  # 移动结算逻辑
+                await sql_message.do_work(user_id, 0)
+                place_id = move_info["to_id"]
+                place.set_now_place_id(user_id, place_id)
+                msg = f"道友成功抵达【{place_name}】！！！"
+        else:
+            msg = '未知状态错误！！！'
 
     return isType, msg
 
 
-def check_user(event: GroupMessageEvent):
+async def check_user(event: GroupMessageEvent):
     """
     判断用户信息是否存在
     :返回参数:
@@ -81,22 +111,15 @@ def check_user(event: GroupMessageEvent):
       * `user_info: 用户
       * `msg: 消息体
     """
-
-    isUser = False
     user_id = event.get_user_id()
-    user_info = sql_message.get_user_info_with_id(user_id)
-    if user_info is None:
-        msg = "修仙界没有道友的信息，请输入【我要修仙】加入！"
-    else:
-        isUser = True
-        msg = ''
+    user_info = await sql_message.get_user_info_with_id(user_id)
 
-    return isUser, user_info, msg
+    return True, user_info, ''
 
 
 class Txt2Img:
     """文字转图片"""
-    
+
     def __init__(self, size=32):
         self.font = str(jsondata.FONT_FILE)
         self.font_size = int(size)
@@ -108,64 +131,63 @@ class Txt2Img:
         self.padding = 12
         self.img_width = 780
         self.black_clor = (255, 255, 255)
-        self.line_num = 0  
-        
-        
+        self.line_num = 0
+
         self.user_font_size = int(size * 1.5)
         self.lrc_font_size = int(size)
         self.font_family = str(jsondata.FONT_FILE)
         self.share_img_width = 1080
         self.line_space = int(size)
         self.lrc_line_space = int(size / 2)
-        
+
     # 预处理
     def prepare(self, text, scale):
         text = unicodedata.normalize("NFKC", text)
         if scale:
-            max_text_len = self.img_width - self.left_size -self.right_size
+            max_text_len = self.img_width - self.left_size - self.right_size
         else:
-            max_text_len = 1080 - self.left_size -self.right_size
+            max_text_len = 1080 - self.left_size - self.right_size
         use_font = self.use_font
         line_num = self.line_num
         text_len = 0
         text_new = ""
         for x in text:
             text_new += x
-            text_len +=  use_font.getlength(x)
-            if x == "\n":
+            text_len += use_font.getlength(x)
+            if x == "\r":
                 text_len = 0
             if text_len >= max_text_len:
                 text_len = 0
-                text_new += "\n"
-        text_new = text_new.replace("\n\n","\n")        
+                text_new += "\r"
+        text_new = text_new.replace("\r\r", "\r")
         text_new = text_new.rstrip()
-        line_num = line_num + text_new.count("\n")
+        line_num = line_num + text_new.count("\r")
         return text_new, line_num
 
-    def sync_draw_to(self, text, boss_name="", scale = True):
+    def sync_draw_to(self, text, boss_name="", scale=True):
         font_size = self.font_size
         black_clor = self.black_clor
         upper_size = self.upper_size
         below_size = self.below_size
-        left_size = self.left_size 
-        padding = self.padding 
-        img_width = self.img_width 
+        left_size = self.left_size
+        padding = self.padding
+        img_width = self.img_width
         use_font = self.use_font
-        text, line_num= self.prepare(text=text, scale = scale)
+        text, line_num = self.prepare(text=text, scale=scale)
         if scale:
             if line_num < 5:
                 blank_space = int(5 - line_num)
-                line_num =5
-                text += "\n"
+                line_num = 5
+                text += "\r"
                 for k in range(blank_space):
-                    text += "(^ ᵕ ^)\n"
+                    text += "(^ ᵕ ^)\r"
             else:
                 line_num = line_num
         else:
             img_width = 1080
             line_num = line_num
-        img_hight = int(upper_size + below_size + font_size * (line_num + 1) + padding * line_num )
-        out_img = Image.new(mode="RGB", size=(img_width, img_hight), 
+        img_hight = int(upper_size + below_size + font_size * (line_num + 1) + padding * line_num)
+        out_img = Image.new(mode="RGB", size=(img_width, img_hight),
                             color=black_clor)
         draw = ImageDraw.Draw(out_img, "RGBA")
 
@@ -208,7 +230,7 @@ class Txt2Img:
             mi_banner.transpose(Image.FLIP_LEFT_RIGHT).transpose(Image.FLIP_TOP_BOTTOM),
             (img_width - out_padding - banner_size + 1, img_hight - out_padding - banner_size + 1),
         )
-        
+
         # 绘制文字
         draw.text(
             (left_size, upper_size),
@@ -235,19 +257,19 @@ class Txt2Img:
             return out_img
         elif XiuConfig().img_send_type == "base64":
             return self.img2b64(out_img)
-     
+
     def img2b64(self, out_img) -> str:
         """ 将图片转换为base64 """
         buf = BytesIO()
         out_img.save(buf, format="PNG")
         base64_str = "base64://" + b64encode(buf.getvalue()).decode()
         return base64_str
-    
-    async def io_draw_to(self, text, boss_name="", scale=True): # draw_to
+
+    async def io_draw_to(self, text, boss_name="", scale=True):  # draw_to
         loop = asyncio.get_running_loop()
         out_img = await loop.run_in_executor(None, self.sync_draw_to, text, boss_name, scale)
         return await loop.run_in_executor(None, self.save_image_with_compression, out_img)
-    
+
     async def save(self, title, lrc):
         """保存图片,涉及title时使用"""
         border_color = (220, 211, 196)
@@ -265,8 +287,8 @@ class Txt2Img:
 
         lrc = self.wrap(lrc)
 
-        if lrc.find("\n") > -1:
-            lrc_rows = len(lrc.split("\n"))
+        if lrc.find("\r") > -1:
+            lrc_rows = len(lrc.split("\r"))
         else:
             lrc_rows = 1
 
@@ -274,17 +296,17 @@ class Txt2Img:
 
         if title:
             inner_h = (
-                padding * 2
-                + self.user_font_size
-                + self.line_space
-                + self.lrc_font_size * lrc_rows
-                + (lrc_rows - 1) * (self.lrc_line_space)
+                    padding * 2
+                    + self.user_font_size
+                    + self.line_space
+                    + self.lrc_font_size * lrc_rows
+                    + (lrc_rows - 1) * self.lrc_line_space
             )
         else:
             inner_h = (
-                padding * 2
-                + self.lrc_font_size * lrc_rows
-                + (lrc_rows - 1) * (self.lrc_line_space)
+                    padding * 2
+                    + self.lrc_font_size * lrc_rows
+                    + (lrc_rows - 1) * self.lrc_line_space
             )
 
         h = out_padding * 2 + inner_h
@@ -333,7 +355,7 @@ class Txt2Img:
             tmp_draw = ImageDraw.Draw(tmp_img)
             user_bbox = tmp_draw.textbbox((0, 0), title, font=user_font, spacing=self.line_space)
             # 四元组(left, top, right, bottom)
-            user_w = user_bbox[2] - user_bbox[0] # 宽度 = right - left
+            user_w = user_bbox[2] - user_bbox[0]  # 宽度 = right - left
             user_h = user_bbox[3] - user_bbox[1]
             draw.text(
                 ((w - user_w) // 2, out_padding + padding),
@@ -370,33 +392,22 @@ class Txt2Img:
             return buf
         elif XiuConfig().img_send_type == "base64":
             return self.img2b64(out_img)
-        
+
     def save_image_with_compression(self, out_img):
         """对传入图片进行压缩"""
         img_byte_arr = io.BytesIO()
-        compression_quality = max(1, min(100, 100 - XiuConfig().img_compression_limit))  # 质量从100到1
-
+        compression_quality = 100 - XiuConfig().img_compression_limit  # 质量从100到0
         if not (0 <= XiuConfig().img_compression_limit <= 100):
-            compression_quality = 50
+            compression_quality = 0
 
-        # 转换为 RGB
-        if out_img.mode in ("RGBA", "P"):
-            out_img = out_img.convert("RGB")
-
-        try:
-            if XiuConfig().img_type == "webp":
-                out_img.save(img_byte_arr, format="WebP", quality=compression_quality)
-            elif XiuConfig().img_type == "jpeg":
-                out_img.save(img_byte_arr, format="JPEG", quality=compression_quality)
-            else:
-                out_img.save(img_byte_arr, format="WebP", quality=compression_quality)
-        except:
-            # 尝试降级为 JPEG
+        if XiuConfig().img_type == "webp":
+            out_img.save(img_byte_arr, format="WebP", quality=compression_quality)
+        elif XiuConfig().img_type == "jpeg":
             out_img.save(img_byte_arr, format="JPEG", quality=compression_quality)
-
+        else:
+            out_img.save(img_byte_arr, format="WebP", quality=compression_quality)
         img_byte_arr.seek(0)
         return img_byte_arr
-
 
     def wrap(self, string):
         max_width = int(1850 / self.lrc_font_size)
@@ -405,16 +416,16 @@ class Txt2Img:
         for ch in string:
             result += ch
             temp_len += wcwidth(ch)
-            if ch == '\n':
+            if ch == '\r':
                 temp_len = 0
             if temp_len >= max_width:
                 temp_len = 0
-                result += '\n'
+                result += '\r'
         result = result.rstrip()
         return result
 
-    
-async def get_msg_pic(msg, boss_name="", scale = True):
+
+async def get_msg_pic(msg, boss_name="", scale=True):
     img = Txt2Img()
     if XiuConfig().img_send_type == "io":
         pic = await img.io_draw_to(msg, boss_name, scale)
@@ -428,14 +439,10 @@ async def send_msg_handler(bot, event, *args):
     统一消息发送处理器
     :param bot: 机器人实例
     :param event: 事件对象
-    :param name: 用户名称
-    :param uin: 用户QQ号
-    :param msgs: 消息内容列表
-    :param messages: 合并转发的消息列表（字典格式）
-    :param msg_type: 关键字参数，可用于传递特定命名参数
+    :param args: 消息内容列表
     """
 
-    if XiuConfig().merge_forward_send:
+    if XiuConfig().merge_forward_send == 1:
         if len(args) == 3:
             name, uin, msgs = args
             messages = [{"type": "node", "data": {"name": name, "uin": uin, "content": msg}} for msg in msgs]
@@ -451,29 +458,51 @@ async def send_msg_handler(bot, event, *args):
                 await bot.call_api("send_private_forward_msg", user_id=event.user_id, messages=messages)
         else:
             raise ValueError("参数数量或类型不匹配")
+    elif XiuConfig().merge_forward_send == 2:  # 合并作为文本发送
+        if len(args) == 3:
+            name, uin, msgs = args
+            messages = '\r'.join(msgs)
+
+            if isinstance(event, GroupMessageEvent):
+                await bot.send(event=event, message=messages)
+            else:
+                await bot.send_private_msg(user_id=event.user_id, message=messages)
+        elif len(args) == 1 and isinstance(args[0], list):
+            messages = args[0]
+            try:
+                messages = '\r'.join([str(msg['data']['content']) for msg in messages])
+            except TypeError:
+                messages = '\r'.join([str(msg) for msg in messages])
+            if isinstance(event, GroupMessageEvent):
+                await bot.send(event=event, message=messages)
+            else:
+                await bot.send_private_msg(user_id=event.user_id, message=messages)
+        else:
+            raise ValueError("参数数量或类型不匹配")
     else:
         if len(args) == 3:
             name, uin, msgs = args
             img = Txt2Img()
-            messages = '\n'.join(msgs)
+            messages = '\r'.join(msgs)
             if XiuConfig().img_send_type == "io":
                 img_data = await img.io_draw_to(messages)
             elif XiuConfig().img_send_type == "base64":
                 img_data = img.sync_draw_to(messages)
             if isinstance(event, GroupMessageEvent):
-                await bot.send_group_msg(group_id=event.group_id, message=MessageSegment.image(img_data))
+                await bot.send(event=event, message=MessageSegment.image(img_data))
             else:
                 await bot.send_private_msg(user_id=event.user_id, message=MessageSegment.image(img_data))
+
         elif len(args) == 1 and isinstance(args[0], list):
             messages = args[0]
             img = Txt2Img()
-            messages = '\n'.join([str(msg['data']['content']) for msg in messages])
+            messages = '\r'.join([str(msg['data']['content']) for msg in messages])
             if XiuConfig().img_send_type == "io":
                 img_data = await img.io_draw_to(messages)
             elif XiuConfig().img_send_type == "base64":
                 img_data = img.sync_draw_to(messages)
             if isinstance(event, GroupMessageEvent):
-                await bot.send_group_msg(group_id=event.group_id, message=MessageSegment.image(img_data))
+                await bot.send(event=event, message=MessageSegment.image(img_data))
             else:
                 await bot.send_private_msg(user_id=event.user_id, message=MessageSegment.image(img_data))
         else:
@@ -501,35 +530,134 @@ def CommandObjectID() -> int:
 
 
 def number_to(num):
-    '''
+    """
     递归实现，精确为最大单位值 + 小数点后一位
     处理科学计数法表示的数值
-    '''
-    def strofsize(num, level):
-        if level >= 29:
-            return num, level
-        elif num >= 10000:
-            num /= 10000
-            level += 1
-            return strofsize(num, level)
-        else:
-            return num, level
-        
-    units = ['', '万', '亿', '兆', '京', '垓', '秭', '穰', '沟', '涧', '正', '载', '极', 
-             '恒河沙', '阿僧祗', '那由他', '不思议', '无量大', '万无量大', '亿无量大', 
-             '兆无量大', '京无量大', '垓无量大', '秭无量大', '穰无量大', '沟无量大', 
-             '涧无量大', '正无量大', '载无量大', '极无量大']
-    # 处理科学计数法
-    if "e" in str(num):
-        num = float(f"{num:.1f}")
-    num, level = strofsize(num, 0)
-    if level >= len(units):
-        level = len(units) - 1
-    return f"{round(num, 1)}{units[level]}"
+    """
+
+    # 处理列表类数据
+    if num:
+        pass
+    else:
+        # 打回
+        return "无"
+    if isinstance(num, str):
+        hf = ""
+        num = num.split("、")
+        final_num = ""
+        for num_per in num:
+            # 对列表型数值每个处理输出到新list
+            # 处理字符串输入
+            if not isinstance(num_per, int):
+                # 处理坑爹的伤害列表
+                if num_per[-2:] == "伤害":
+                    num_per = num_per[:-2]
+                    hf = "点伤害"
+                num_per = int(num_per)
+            # 处理负数输出
+            fh = ""
+            if num_per < 0:
+                fh = "-"
+                num_per = abs(num_per)
+
+            def strofsize(num_per, level):
+                if level >= 29:
+                    return num_per, level
+                elif num_per >= 10000:
+                    num_per /= 10000
+                    level += 1
+                    return strofsize(num_per, level)
+                else:
+                    return num_per, level
+
+            units = ['', '万', '亿', '万亿', '兆', '万兆', '亿兆', '万亿兆', '京', '万京', '亿京', '万亿京', '兆京',
+                     '万兆京', '亿兆京', '万亿兆京', '垓', '万垓', '亿垓', '万亿垓',
+                     '兆垓', '万兆垓', '亿兆垓', '万亿兆垓', '京垓', '万京垓',
+                     '亿京垓', '万亿京垓', '兆京垓', '万兆京垓']
+            # 处理科学计数法
+            if "e" in str(num_per):
+                num_per = float(f"{num_per:.1f}")
+            num_per, level = strofsize(num_per, 0)
+            if level >= len(units):
+                level = len(units) - 1
+            final_num += "、" + f"{fh}{round(num_per, 1)}{units[level]}" + hf
+        return final_num[1:]
+    else:
+        # 处理字符串输入
+        if isinstance(num, str):
+            # 处理坑爹的伤害列表
+            if num[-2:] == "伤害":
+                num = num[:-2]
+            num = int(num)
+        # 处理负数输出
+        fh = ""
+        if num < 0:
+            fh = "-"
+            num = abs(num)
+
+        def strofsize(num, level):
+            if level >= 29:
+                return num, level
+            elif num >= 10000:
+                num /= 10000
+                level += 1
+                return strofsize(num, level)
+            else:
+                return num, level
+
+        units = ['', '万', '亿', '万亿', '兆', '万兆', '亿兆', '万亿兆', '京', '万京', '亿京', '万亿京', '兆京',
+                 '万兆京', '亿兆京', '万亿兆京', '垓', '万垓', '亿垓', '万亿垓',
+                 '兆垓', '万兆垓', '亿兆垓', '万亿兆垓', '京垓', '万京垓',
+                 '亿京垓', '万亿京垓', '兆京垓', '万兆京垓']
+        # 处理科学计数法
+        if "e" in str(num):
+            num = float(f"{num:.1f}")
+        num, level = strofsize(num, 0)
+        if level >= len(units):
+            level = len(units) - 1
+        final_num = f"{fh}{round(num, 1)}{units[level]}"
+    return final_num
+
+
+async def get_id_from_str(msg: str):
+    """
+    将消息中的首个字符组合转换为用户id
+    :param msg: 从args中获取的消息字符串
+    :return: 如果有该用户，返回用户ID，若无，返回None
+    """
+    user_name = re.findall(r"[\u4e00-\u9fa5_a-zA-Z]+", msg)
+    user_id = await sql_message.get_user_id(user_name[0]) if user_name else None
+    return user_id
+
 
 async def pic_msg_format(msg, event):
     user_name = (
         event.sender.card if event.sender.card else event.sender.nickname
     )
-    result = "@" + user_name + "\n" + msg
+    result = "@" + user_name + "\r" + msg
     return result
+
+
+def linggen_get():
+    """获取灵根信息"""
+    data = jsondata.root_data()
+    rate_dict = {}
+    for i, v in data.items():
+        rate_dict[i] = v["type_rate"]
+    lgen = OtherSet().calculated(rate_dict)
+    if data[lgen]["type_flag"]:
+        flag = random.choice(data[lgen]["type_flag"])
+        root = random.sample(data[lgen]["type_list"], flag)
+        msg = ""
+        for j in root:
+            if j == root[-1]:
+                msg += j
+                break
+            msg += (j + "、")
+
+        return msg + '属性灵根', lgen
+    else:
+        root = random.choice(data[lgen]["type_list"])
+        return root, lgen
+
+

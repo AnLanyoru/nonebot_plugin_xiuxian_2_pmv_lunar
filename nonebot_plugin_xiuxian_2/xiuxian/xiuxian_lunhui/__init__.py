@@ -1,5 +1,15 @@
-from nonebot import on_command, on_fullmatch
-from ..xiuxian_utils.lay_out import assign_bot, Cooldown
+import json
+import random
+import time
+import aiosqlite
+from pathlib import Path
+from nonebot import on_command
+from nonebot.permission import SUPERUSER
+from nonebot.typing import T_State
+
+from ..xiuxian_buff import two_exp_cd
+from ..xiuxian_impart_pk import impart_pk
+from ..xiuxian_utils.lay_out import Cooldown
 from ..xiuxian_config import XiuConfig
 from ..xiuxian_utils.xiuxian2_handle import XiuxianDateManage
 from ..xiuxian_utils.data_source import jsondata
@@ -11,209 +21,270 @@ from nonebot.adapters.onebot.v11 import (
 )
 from ..xiuxian_utils.utils import (
     check_user, get_msg_pic,
-    CommandObjectID
+    CommandObjectID, number_to, check_user_type
 )
 
 __warring_help__ = """
-详情：
+
+———轮回帮助———
 散尽修为，轮回重修，将万世的道果凝聚为极致天赋
-修为、功法、神通将被清空！！
-进入千世轮回：获得轮回灵根，可定制极品仙器(在做)
-进入万世轮回：获得真轮回灵根，可定制无上仙器(在做)
-自废修为：字面意思，仅搬血境可用
+修为、攻击修炼将被清空！！
+进入轮回：
+>获得轮回灵根
+感悟源宇之秘：
+>获得源宇道根
+感悟道之本源：
+>获得道之本源，仅有感悟道之本源者可突破彼岸境！！
+———特殊功能———
+自废修为：
+>字面意思，仅炼体境可用
 """.strip()
+
+from ..xiuxian_work.reward_data_source import savef
 
 cache_help_fk = {}
 sql_message = XiuxianDateManage()  # sql类
 
-warring_help = on_fullmatch("轮回重修帮助", priority=12, permission=GROUP, block=True)
-lunhui = on_command('进入千世轮回', priority=15, permission=GROUP,block=True)
-twolun = on_command('进入万世轮回', priority=15, permission=GROUP,block=True)
-resetting = on_command('自废修为', priority=15, permission=GROUP,block=True)
+warring_help = on_command("轮回重修帮助", aliases={"轮回重修", "轮回"}, priority=12, permission=GROUP, block=True)
+lunhui = on_command('进入轮回', priority=15, permission=GROUP, block=True)
+twolun = on_command('感悟源宇之秘', priority=15, permission=GROUP, block=True)
+threelun = on_command('感悟道之本源', priority=15, permission=GROUP, block=True)
+resetting = on_command('自废修为', priority=15, permission=GROUP, block=True)
+gettest = on_command('修炼资源领取', priority=15, permission=GROUP, block=True)
+timeback = on_command('回到过去', priority=15, permission=SUPERUSER, block=True)
+time_set_now = on_command('逆转时空', priority=15, permission=SUPERUSER, block=True)
 
 
 @warring_help.handle(parameterless=[Cooldown(at_sender=False)])
-async def warring_help_(bot: Bot, event: GroupMessageEvent, session_id: int = CommandObjectID()):
+async def warring_help_(bot: Bot, event: GroupMessageEvent):
     """轮回重修帮助"""
-    bot, send_group_id = await assign_bot(bot=bot, event=event)
-    if session_id in cache_help_fk:
-        await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(cache_help_fk[session_id]))
-        await warring_help.finish()
-    else:
-        msg = __warring_help__
-        if XiuConfig().img:
-            pic = await get_msg_pic(msg)
-            cache_help_fk[session_id] = pic
-            await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(pic))
-        else:
-            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-        await warring_help.finish()
+
+    msg = __warring_help__
+    await bot.send(event=event, message=msg)
+    await warring_help.finish()
+
 
 @lunhui.handle(parameterless=[Cooldown(at_sender=False)])
-async def lunhui_(bot: Bot, event: GroupMessageEvent, session_id: int = CommandObjectID()):
-    bot, send_group_id = await assign_bot(bot=bot, event=event)
-    isUser, user_info, msg = check_user(event)
-    if not isUser:
-        if XiuConfig().img:
-            pic = await get_msg_pic(f"@{event.sender.nickname}\n" + msg)
-            await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(pic))
-        else:
-            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-        await lunhui.finish()
-        
+async def lunhui_(bot: Bot, event: GroupMessageEvent):
+
+    _, user_info, _ = await check_user(event)
+
     user_id = user_info['user_id']
-    user_msg = sql_message.get_user_info_with_id(user_id) 
+    user_msg = await sql_message.get_user_info_with_id(user_id)
     user_name = user_msg['user_name']
     user_root = user_msg['root_type']
     list_level_all = list(jsondata.level_data().keys())
     level = user_info['level']
-    
-    if user_root == '轮回道果' :
-        msg = "道友已是千世轮回之身！"
-        if XiuConfig().img:
-            pic = await get_msg_pic(f"@{event.sender.nickname}\n" + msg)
-            await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(pic))
-        else:
-            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+
+    if user_root == '轮回灵根':
+        msg = "道友已是轮回之身！"
+        await bot.send(event=event, message=msg)
         await lunhui.finish()
-    
-    if user_root == '真·轮回道果' :
-        msg = "道友已是万世轮回之身！"
-        if XiuConfig().img:
-            pic = await get_msg_pic(f"@{event.sender.nickname}\n" + msg)
-            await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(pic))
-        else:
-            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+
+    if user_root == '源宇道根':
+        msg = "道友已然感悟源宇之秘！"
+        await bot.send(event=event, message=msg)
         await lunhui.finish()
-        
+    if user_root == '道之本源':
+        msg = "道友已然触及道之本源！"
+        await bot.send(event=event, message=msg)
+        await lunhui.finish()
+    is_type, msg = await check_user_type(user_id, 0)
+    if is_type:
+        pass
+    else:
+        await bot.send(event=event, message=msg)
+        await lunhui.finish()
+
     if list_level_all.index(level) >= list_level_all.index(XiuConfig().lunhui_min_level):
         exp = user_msg['exp']
         now_exp = exp - 100
-        sql_message.updata_level(user_id, '江湖好手') #重置用户境界
-        sql_message.update_levelrate(user_id, 0) #重置突破成功率
-        sql_message.update_j_exp(user_id, now_exp) #重置用户修为
-        sql_message.update_user_hp(user_id)  # 重置用户HP，mp，atk状态
-        sql_message.reset_user_drug_resistance(user_id) #重置用户耐药性
-        sql_message.updata_user_main_buff(user_id, 0) #重置用户主功法
-        sql_message.updata_user_sub_buff(user_id, 0) #重置用户辅修功法
-        sql_message.updata_user_sec_buff(user_id, 0) #重置用户神通
-        sql_message.update_user_atkpractice(user_id, 0) #重置用户攻修等级
-        sql_message.update_root(user_id, 6) #更换轮回灵根
-        msg = f"千世轮回磨不灭，重回绝颠谁能敌，恭喜大能{user_name}轮回成功！"
-        if XiuConfig().img:
-            pic = await get_msg_pic(f"@{event.sender.nickname}\n" + msg)
-            await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(pic))
-        else:
-            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await sql_message.updata_level(user_id, '求道者')  # 重置用户境界
+        await sql_message.update_levelrate(user_id, 0)  # 重置突破成功率
+        await sql_message.update_j_exp(user_id, now_exp)  # 重置用户修为
+        await sql_message.update_user_hp(user_id)  # 重置用户HP，mp，atk状态
+        await sql_message.update_user_atkpractice(user_id, 0)  # 重置用户攻修等级
+        savef(user_id, json.dumps({}, ensure_ascii=False))
+        await sql_message.update_root(user_id, 6)  # 更换轮回灵根
+        msg = f"数世轮回磨不灭，重回绝颠谁能敌，恭喜大能{user_name}轮回成功！"
+        await bot.send(event=event, message=msg)
         await lunhui.finish()
     else:
-        msg = f"道友境界未达要求，进入千世轮回的最低境界为{XiuConfig().lunhui_min_level}"
-        if XiuConfig().img:
-            pic = await get_msg_pic(f"@{event.sender.nickname}\n" + msg)
-            await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(pic))
-        else:
-            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        msg = f"道友境界未达要求，进入轮回的最低境界为{XiuConfig().lunhui_min_level}"
+        await bot.send(event=event, message=msg)
         await lunhui.finish()
-        
+
+
 @twolun.handle(parameterless=[Cooldown(at_sender=False)])
-async def twolun_(bot: Bot, event: GroupMessageEvent, session_id: int = CommandObjectID()):
-    bot, send_group_id = await assign_bot(bot=bot, event=event)
-    isUser, user_info, msg = check_user(event)
-    if not isUser:
-        if XiuConfig().img:
-            pic = await get_msg_pic(f"@{event.sender.nickname}\n" + msg)
-            await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(pic))
-        else:
-            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-        await twolun.finish()
-        
+async def twolun_(bot: Bot, event: GroupMessageEvent):
+
+    _, user_info, _ = await check_user(event)
+
     user_id = user_info['user_id']
-    user_msg = sql_message.get_user_info_with_id(user_id) 
+    user_msg = await sql_message.get_user_info_with_id(user_id)
     user_name = user_msg['user_name']
     user_root = user_msg['root_type']
     list_level_all = list(jsondata.level_data().keys())
     level = user_info['level']
-    
-    if user_root == '真·轮回道果':
-        msg = "道友已是万世轮回之身！"
-        if XiuConfig().img:
-            pic = await get_msg_pic(f"@{event.sender.nickname}\n" + msg)
-            await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(pic))
-        else:
-            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-        await twolun.finish() 
-        
-    if user_root != '轮回道果':
-        msg = "道友还未轮回过，请先进入千世轮回！"
-        if XiuConfig().img:
-            pic = await get_msg_pic(f"@{event.sender.nickname}\n" + msg)
-            await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(pic))
-        else:
-            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-        await twolun.finish() 
-    
-    if list_level_all.index(level) >= list_level_all.index(XiuConfig().twolun_min_level) and user_root == '轮回道果':
+
+    if user_root == '源宇道根':
+        msg = "道友已然感悟源宇之秘！！"
+        await bot.send(event=event, message=msg)
+        await twolun.finish()
+    if user_root == '道之本源':
+        msg = "道友已然触及道之本源！"
+        await bot.send(event=event, message=msg)
+        await twolun.finish()
+
+    if user_root != '轮回灵根':
+        msg = "道友还未轮回过，请先进入轮回！"
+        await bot.send(event=event, message=msg)
+        await twolun.finish()
+    is_type, msg = await check_user_type(user_id, 0)
+    if is_type:
+        pass
+    else:
+        await bot.send(event=event, message=msg)
+        await twolun.finish()
+
+    if list_level_all.index(level) >= list_level_all.index(XiuConfig().twolun_min_level) and user_root == '轮回灵根':
         exp = user_msg['exp']
         now_exp = exp - 100
-        sql_message.updata_level(user_id, '江湖好手') #重置用户境界
-        sql_message.update_levelrate(user_id, 0) #重置突破成功率
-        sql_message.update_j_exp(user_id, now_exp) #重置用户修为
-        sql_message.update_user_hp(user_id)  # 重置用户HP，mp，atk状态
-        sql_message.reset_user_drug_resistance(user_id) #重置用户耐药性
-        sql_message.update_root(user_id, 7) #更换轮回灵根
-        msg = f"万世道果集一身，脱出凡道入仙道，恭喜大能{user_name}万世轮回成功！"
-        if XiuConfig().img:
-            pic = await get_msg_pic(f"@{event.sender.nickname}\n" + msg)
-            await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(pic))
-        else:
-            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await sql_message.updata_level(user_id, '求道者')  # 重置用户境界
+        await sql_message.update_levelrate(user_id, 0)  # 重置突破成功率
+        await sql_message.update_j_exp(user_id, now_exp)  # 重置用户修为
+        await sql_message.update_user_hp(user_id)  # 重置用户HP，mp，atk状态
+        await sql_message.update_user_atkpractice(user_id, 0)  # 重置用户攻修等级
+        savef(user_id, json.dumps({}, ensure_ascii=False))
+        await sql_message.update_root(user_id, 7)  # 更换轮回灵根
+        msg = f"求道散尽半仙躯，堪能窥得源宇秘，恭喜大能{user_name}成功感悟源宇之秘！"
+        await bot.send(event=event, message=msg)
         await twolun.finish()
     else:
-        msg = f"道友境界未达要求，万世轮回的最低境界为{XiuConfig().twolun_min_level}！"
-        if XiuConfig().img:
-            pic = await get_msg_pic(f"@{event.sender.nickname}\n" + msg)
-            await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(pic))
-        else:
-            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        msg = f"道友境界未达要求，感悟源宇之秘的最低境界为{XiuConfig().twolun_min_level}！"
+        await bot.send(event=event, message=msg)
         await twolun.finish()
-        
-@resetting.handle(parameterless=[Cooldown(at_sender=False)])
-async def resetting_(bot: Bot, event: GroupMessageEvent, session_id: int = CommandObjectID()):
-    bot, send_group_id = await assign_bot(bot=bot, event=event)
-    isUser, user_info, msg = check_user(event)
-    if not isUser:
-        if XiuConfig().img:
-            pic = await get_msg_pic(f"@{event.sender.nickname}\n" + msg)
-            await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(pic))
-        else:
-            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-        await resetting.finish()
-        
+
+
+@threelun.handle(parameterless=[Cooldown(at_sender=False)])
+async def threelun_(bot: Bot, event: GroupMessageEvent):
+
+    _, user_info, _ = await check_user(event)
+
     user_id = user_info['user_id']
-    user_msg = sql_message.get_user_info_with_id(user_id) 
+    user_msg = await sql_message.get_user_info_with_id(user_id)
+    user_name = user_msg['user_name']
+    user_root = user_msg['root_type']
+    list_level_all = list(jsondata.level_data().keys())
+    level = user_info['level']
+
+    if user_root == '道之本源':
+        msg = "道友已然触及道之本源！"
+        await bot.send(event=event, message=msg)
+        await threelun.finish()
+
+    if user_root != '源宇道根':
+        msg = "道友根基未牢，请先感悟源宇之秘！"
+        await bot.send(event=event, message=msg)
+        await threelun.finish()
+    is_type, msg = await check_user_type(user_id, 0)
+    if is_type:
+        pass
+    else:
+        await bot.send(event=event, message=msg)
+        await threelun.finish()
+
+    if list_level_all.index(level) >= list_level_all.index(
+            XiuConfig().threelun_min_level) and user_root == '源宇道根':
+        exp = user_msg['exp']
+        now_exp = exp - 100
+        await sql_message.updata_level(user_id, '求道者')  # 重置用户境界
+        await sql_message.update_levelrate(user_id, 0)  # 重置突破成功率
+        await sql_message.update_j_exp(user_id, now_exp)  # 重置用户修为
+        await sql_message.update_user_hp(user_id)  # 重置用户HP，mp，atk状态
+        await sql_message.update_user_atkpractice(user_id, 0)  # 重置用户攻修等级
+        savef(user_id, json.dumps({}, ensure_ascii=False))
+        await sql_message.update_root(user_id, 8)  # 更换灵根
+        msg = f"帝蕴浸灭求一道，触及本源登顶峰，恭喜大能{user_name}成功感悟道之本源！"
+        await bot.send(event=event, message=msg)
+        await threelun.finish()
+    else:
+        msg = f"道友境界未达要求，感悟道之本源的最低境界为{XiuConfig().threelun_min_level}！"
+        await bot.send(event=event, message=msg)
+        await threelun.finish()
+
+
+@resetting.handle(parameterless=[Cooldown(at_sender=False)])
+async def resetting_(bot: Bot, event: GroupMessageEvent):
+
+    _, user_info, _ = await check_user(event)
+
+    user_id = user_info['user_id']
+    user_msg = await sql_message.get_user_info_with_id(user_id)
     user_name = user_msg['user_name']
 
-        
-    if user_msg['level'] in ['搬血境初期', '搬血境中期', '搬血境圆满']:
+    if user_msg['level'][:-2] == '炼体境':
         exp = user_msg['exp']
         now_exp = exp
-        sql_message.updata_level(user_id, '江湖好手') #重置用户境界
-        sql_message.update_levelrate(user_id, 0) #重置突破成功率
-        sql_message.update_j_exp(user_id, now_exp) #重置用户修为
-        sql_message.update_user_hp(user_id)  # 重置用户HP，mp，atk状态
+        await sql_message.updata_level(user_id, '求道者')  # 重置用户境界
+        await sql_message.update_levelrate(user_id, 0)  # 重置突破成功率
+        await sql_message.update_j_exp(user_id, now_exp)  # 重置用户修为
+        await sql_message.update_user_hp(user_id)  # 重置用户HP，mp，atk状态
         msg = f"{user_name}现在是一介凡人了！！"
-        if XiuConfig().img:
-            pic = await get_msg_pic(f"@{event.sender.nickname}\n" + msg)
-            await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(pic))
-        else:
-            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await bot.send(event=event, message=msg)
         await resetting.finish()
     else:
-        msg = f"道友境界未达要求，自废修为的最低境界为搬血境！"
-        if XiuConfig().img:
-            pic = await get_msg_pic(f"@{event.sender.nickname}\n" + msg)
-            await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(pic))
-        else:
-            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        msg = f"道友境界未达要求，仅有练体境可自废修为！"
+        await bot.send(event=event, message=msg)
         await resetting.finish()
-        
+
+
+@gettest.handle(parameterless=[Cooldown(at_sender=False)])
+async def gettest_(bot: Bot, event: GroupMessageEvent, state: T_State):
+    # 这里曾经是风控模块，但是已经不再需要了
+    _, user_info, _ = await check_user(event)
+
+    await bot.send(event=event, message="正在申请测试用灵石，请在10秒内输入后台获取的代码")
+    key = ""
+    key_pre = "qwert-yuioppppp-asdffghjk-llzxcvb-nm12345-67890"
+    for e in range(20):
+        key += random.choice(key_pre)
+    print(key)
+    state["key"] = key
+
+
+@gettest.receive()
+async def gettest_(bot: Bot, event: GroupMessageEvent, state: T_State):
+    # 这里曾经是风控模块，但是已经不再需要了
+    isUser, user_info, msg = await check_user(event)
+    input_key = event.get_plaintext().strip()
+
+    if input_key == state["key"]:
+        user_id = user_info['user_id']
+        user_msg = await sql_message.get_user_info_with_id(user_id)
+        user_name = user_msg['user_name']
+        await sql_message.update_ls(user_id, int(100000000000000), 1)
+        msg = f"{user_name}获取灵石成功，共获取100000000000000 | {number_to(100000000000000)}枚灵石，别嫌少肯定够用了"
+        await bot.send(event=event, message=msg)
+        await gettest.finish()
+    else:
+        msg = "密钥错误！！请不要随意调用调试接口！！！"
+        await bot.send(event=event, message=msg)
+        await gettest.finish()
+
+
+@time_set_now.handle(parameterless=[Cooldown(at_sender=False)])
+async def time_set_now_(bot: Bot, event: GroupMessageEvent):
+
+    _, user_info, _ = await check_user(event)
+
+    await sql_message.sign_remake()
+    await sql_message.day_num_reset()
+    two_exp_cd.re_data()
+    await sql_message.beg_remake()
+    impart_pk.re_data()
+    await sql_message.sect_task_reset()
+    await sql_message.sect_elixir_get_num_reset()
+    msg = f"逆转时空，让一切重置次数！！！"
+    await bot.send(event=event, message=msg)
+    await time_set_now.finish()

@@ -4,7 +4,6 @@ except ImportError:
     import json
 import asyncio    
 from nonebot.log import logger
-from io import BytesIO    
 from PIL import Image, ImageDraw, ImageFont
 from aiohttp import ClientSession
 from pathlib import Path
@@ -17,6 +16,9 @@ first_color = (242, 250, 242)
 second_color = (57, 57, 57)
 
 FONT_ORIGIN_PATH = Path() / "data" / "xiuxian" / "font" / "SourceHanSerifCN-Heavy.otf"
+
+
+
 
 
 def font_origin(size: int) -> ImageFont.FreeTypeFont:
@@ -32,8 +34,9 @@ async def draw_user_info_img(user_id, DETAIL_MAP):
     based_w = 1100
     based_h = 2450
     # 获取背景图
+    img = Image.open(TEXT_PATH / 'back.png').resize((based_w, based_h)).convert("RGBA")
     try:
-        img = Image.open(BytesIO(await async_request(await get_anime_pic()))).convert("RGBA")
+        img = Image.open(TEXT_PATH / f'{user_id}_back.png').convert("RGBA")
         # 居中裁剪背景
         img_w, img_h = img.size
         scale = based_w / img_w
@@ -50,12 +53,11 @@ async def draw_user_info_img(user_id, DETAIL_MAP):
             img = img.resize((based_w, img_h)).crop((0, crop_t, based_w, crop_t + based_h))
         img.resize((based_w, based_h), Image.Resampling.LANCZOS)
         # 贴一层黑色遮罩
-        img.paste(i := Image.new("RGBA", (based_w, based_h), (0, 0, 0, 168)), mask=i)
+        # img.paste(i := Image.new("RGBA", (based_w, based_h), (0, 0, 0, 28)), mask=i)
     except:
-        logger.opt(colors=True).info("<red>下载随机背景图失败，使用默认背景图</red>")
-        img = Image.open(TEXT_PATH / 'back.png').resize((based_w, based_h)).convert("RGBA")
+        pass
     # 获取用户头像圆框
-    user_status = Image.open(TEXT_PATH / 'user_state.png').resize((450, 450)).convert("RGBA")
+    user_status = Image.open(TEXT_PATH / 'user_state.png').resize((457, 457)).convert("RGBA")
     temp = await get_avatar_by_user_id_and_save(user_id)
     user_avatar = await img_author(temp, user_status)
     r, g, b, a = user_status.split()
@@ -65,7 +67,7 @@ async def draw_user_info_img(user_id, DETAIL_MAP):
     # h获取信息图片
     line = Image.open(TEXT_PATH / 'line3.png').resize((400, 60)).convert("RGBA")
     line_draw = ImageDraw.Draw(line)
-    word = f"QQ:{user_id}"
+    word = f"ID:{user_id}"
     w, h = await linewh(line, word)
     line_draw.text((w, h), word, first_color, font_36, 'lm')
     # 绘制QQ信息
@@ -112,7 +114,7 @@ async def draw_user_info_img(user_id, DETAIL_MAP):
     w, h = await linewh(sectinfo, sectword)
     sectinfo_draw = ImageDraw.Draw(sectinfo)
     sectinfo_draw.text((w, h), sectword, first_color, font_40, 'lm')
-    img.paste(sectinfo, (100, 1542), sectinfo) #100为距离图像左边界100像素，1542为距离图像上边界1542像素
+    img.paste(sectinfo, (100, 1542), sectinfo)  # 100为距离图像左边界100像素，1542为距离图像上边界1542像素
 
     DETAIL_sectinfo = {
         '所在宗门': DETAIL_MAP['所在宗门'],
@@ -133,10 +135,8 @@ async def draw_user_info_img(user_id, DETAIL_MAP):
     paihang_draw.text((w, h), paihangword, first_color, font_40, 'lm')
     img.paste(paihang, (100, 1873), paihang)
 
-    DETAIL_paihang = {}
-    DETAIL_paihang['注册位数'] = DETAIL_MAP['注册位数']
-    DETAIL_paihang['修为排行'] = DETAIL_MAP['修为排行']
-    DETAIL_paihang['灵石排行'] = DETAIL_MAP['灵石排行']
+    DETAIL_paihang = {'注册位数': DETAIL_MAP['注册位数'], '修为排行': DETAIL_MAP['修为排行'],
+                      '灵石排行': DETAIL_MAP['灵石排行']}
 
     tasks4 = []
     for key, value in DETAIL_paihang.items():
@@ -144,6 +144,7 @@ async def draw_user_info_img(user_id, DETAIL_MAP):
     await asyncio.gather(*tasks4)
     res = await convert_img(img)
     return res
+
 
 async def _draw_line(img: Image.Image, key, value, DETAIL_MAP):
     line = Image.open(TEXT_PATH / 'line3.png').resize((450, 68))
@@ -191,7 +192,7 @@ async def img_author(img, bg):
     alpha_layer = Image.new('L', (w, w), 0)
     draw = ImageDraw.Draw(alpha_layer)
     draw.ellipse((0, 0, w, w), fill=255)
-    bg.paste(img, (88, 80), alpha_layer)
+    bg.paste(img, (88, 88), alpha_layer)
 
     return bg
 

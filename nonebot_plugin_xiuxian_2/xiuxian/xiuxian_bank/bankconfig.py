@@ -15,7 +15,12 @@ CONFIG = {
         "4": {"savemax": 8000000, "levelup": 1600000, 'interest': 0.0023, "level": "优质会员"},
         "5": {"savemax": 16000000, "levelup": 3200000, 'interest': 0.0024, "level": "黄金会员"},
         "6": {"savemax": 32000000, "levelup": 6400000, 'interest': 0.0025, "level": "钻石会员"},
-        "7": {"savemax": 64000000, "levelup": 0, 'interest': 0.0030, "level": "终极会员"},
+        "7": {"savemax": 64000000, "levelup": 12800000, 'interest': 0.0030, "level": "黑曜会员"},
+        "8": {"savemax": 128000000, "levelup": 25600000, 'interest': 0.0030, "level": "尊享会员"},
+        "9": {"savemax": 256000000, "levelup": 256000000, 'interest': 0.0035, "level": "至尊会员"},
+        "10": {"savemax": 512000000, "levelup": 512000000, 'interest': 0.0035, "level": "超级至尊会员"},
+        "11": {"savemax": 1024000000, "levelup": 10000000000, 'interest': 0.0040, "level": "终极会员"},
+        "12": {"savemax": 10000000000, "levelup": 0, 'interest': 0.0050, "level": "灵庄股东"},
     }
 }
 

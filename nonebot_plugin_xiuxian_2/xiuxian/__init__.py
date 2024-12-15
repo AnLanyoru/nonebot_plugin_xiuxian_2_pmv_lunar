@@ -26,19 +26,14 @@ except Exception as e:
     logger.opt(colors=True).info(f"<red>请去.env.dev文件中设置超级用户QQ号以及nickname!</red>")
     NICKNAME = 'bot'
 
-try:
-    download_xiuxian_data()
-except Exception as e:
-    logger.opt(colors=True).info(f"<red>下载配置文件失败，修仙插件无法加载，{e}!</red>")
-    raise ImportError
+# try:
+#     download_xiuxian_data()
+# except Exception as e:
+#     logger.opt(colors=True).info(f"<red>下载配置文件失败，修仙插件无法加载，{e}!</red>")
+#     raise ImportError
 
 put_bot = XiuConfig().put_bot
 shield_group = XiuConfig().shield_group
-
-try:
-    put_bot_ = put_bot[0]
-except:
-    logger.opt(colors=True).info(f"<green>修仙插件没有配置put_bot,如果有多个qq和nb链接,请务必配置put_bot,具体介绍参考【风控帮助】！</green>")
 
 require('nonebot_plugin_apscheduler')
 
@@ -53,6 +48,7 @@ if get_plugin_by_module_name("xiuxian"):
                 (name := module.name[11:]) == "meta"
                 or name not in _config.disabled_plugins
             )
+            # module.name[:11] == xiuxian_
         ],
         [],
     )
@@ -61,7 +57,7 @@ __plugin_meta__ = PluginMetadata(
     name='修仙模拟器',
     description='',
     usage=(
-        "必死之境机逢仙缘，修仙之路波澜壮阔！\n"
+        "必死之境机逢仙缘，修仙之路波澜壮阔！\r"
         " 输入 < 修仙帮助 > 获取仙界信息"
     ),
     extra={
