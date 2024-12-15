@@ -108,6 +108,8 @@ self.layout_bot_dict = {{}}  # QQ所负责的群聊{{群 :bot}}   其中 bot类�
 - [NoneBot2](https://github.com/nonebot/nonebot2)：本插件实装的开发框架，NB天下第一可爱。
 - [nonebot_plugin_xiuxian](https://github.com/s52047qwas/nonebot_plugin_xiuxian)：原版修仙
 - [nonebot_plugin_xiuxian_2](https://github.com/QingMuCat/nonebot_plugin_xiuxian_2)：原版修仙2
+- [nonebot_plugin_xiuxian_2_pmv](https://github.com/MyXiaoNan/nonebot_plugin_xiuxian_2_pmv)：原版修仙2魔改版
+- [random_chinese_fantasy_names](https://github.com/hythl0day/random_chinese_fantasy_names)：仙侠小说专有名词随机生成器 本插件使用的随机名词生成器
 
 # 🎉 支持
 
