@@ -2,8 +2,8 @@ import random
 
 from .. import XiuConfig
 from ..xiuxian_place import place
-from data_source import jsondata
-from xiuxian2_handle import XiuxianDateManage, sql_message, \
+from .data_source import jsondata
+from .xiuxian2_handle import XiuxianDateManage, sql_message, \
     number_to, UserBuffDate, xiuxian_impart
 
 
