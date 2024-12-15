@@ -229,7 +229,7 @@ WHERE last_check_info_time = '0' OR last_check_info_time IS NULL
         cursor = await db.execute(sql, (str(user_id),))
         result = await cursor.fetchone()
         if result:
-            columns = await cursor.description
+            columns = cursor.description
             columns = [column[0] for column in columns]
             user_dict = dict(zip(columns, result))
             return user_dict
@@ -243,7 +243,7 @@ WHERE last_check_info_time = '0' OR last_check_info_time IS NULL
         cursor = await db.execute(sql, (user_id,))
         result = await cursor.fetchone()
         if result:
-            columns = await cursor.description
+            columns = cursor.description
             columns = [column[0] for column in columns]
             user_dict = dict(zip(columns, result))
             return user_dict
@@ -282,7 +282,7 @@ WHERE last_check_info_time = '0' OR last_check_info_time IS NULL
         cursor = await db.execute(sql, (user_id,))
         result = await cursor.fetchone()
         if result:
-            columns = await cursor.description
+            columns = cursor.description
             user_data_dict = await final_user_data(result, columns)  # 意义不明的分装，增加维护难度
             return user_data_dict
         else:
@@ -299,7 +299,7 @@ WHERE last_check_info_time = '0' OR last_check_info_time IS NULL
         cursor = await db.execute(sql, (sect_id,))
         result = await cursor.fetchone()
         if result:
-            columns = await cursor.description
+            columns = cursor.description
             columns = [column[0] for column in columns]
             sect_id_dict = dict(zip(columns, result))
             return sect_id_dict
@@ -608,7 +608,7 @@ WHERE last_check_info_time = '0' OR last_check_info_time IS NULL
         cursor = await db.execute(sql, (user_id,))
         result = await cursor.fetchone()
         if result:
-            columns = await cursor.description
+            columns = cursor.description
             columns = [column[0] for column in columns]
             user_cd_dict = dict(zip(columns, result))
             return user_cd_dict
@@ -670,7 +670,7 @@ WHERE last_check_info_time = '0' OR last_check_info_time IS NULL
         cursor = await db.execute(sql, (user_id,))
         result = await cursor.fetchone()
         if result:
-            columns = await cursor.description
+            columns = cursor.description
             columns = [column[0] for column in columns]
             sect_onwer_dict = dict(zip(columns, result))
             return sect_onwer_dict
@@ -688,7 +688,7 @@ WHERE last_check_info_time = '0' OR last_check_info_time IS NULL
         cursor = await db.execute(sql, (sect_id,))
         result = await cursor.fetchone()
         if result:
-            columns = await cursor.description
+            columns = cursor.description
             columns = [column[0] for column in columns]
             sect_dict = dict(zip(columns, result))
             return sect_dict
@@ -907,7 +907,7 @@ WHERE last_check_info_time = '0' OR last_check_info_time IS NULL
         cursor = await db.execute(sql)
         result = await cursor.fetchall()
         results = []
-        columns = await cursor.description
+        columns = cursor.description
         columns = [column[0] for column in columns]
         for row in result:
             sect_dict = dict(zip(columns, row))
@@ -949,7 +949,7 @@ WHERE last_check_info_time = '0' OR last_check_info_time IS NULL
         cursor = await db.execute(sql)
         result = await cursor.fetchone()
         if result:
-            columns = await cursor.description
+            columns = cursor.description
             columns = [column[0] for column in columns]
             top1_dict = dict(zip(columns, result))
             return top1_dict
@@ -1014,7 +1014,7 @@ WHERE last_check_info_time = '0' OR last_check_info_time IS NULL
         result = await cursor.fetchall()
         results = []
         for user in result:
-            columns = await cursor.description
+            columns = cursor.description
             columns = [column[0] for column in columns]
             user_dict = dict(zip(columns, user))
             results.append(user_dict)
@@ -1109,7 +1109,7 @@ WHERE last_check_info_time = '0' OR last_check_info_time IS NULL
         if not result:
             return None
 
-        columns = await cursor.description
+        columns = cursor.description
         columns = [column[0] for column in columns]
         results = []
         for row in result:
@@ -1126,7 +1126,7 @@ WHERE last_check_info_time = '0' OR last_check_info_time IS NULL
         if not result:
             return None
 
-        columns = await cursor.description
+        columns = cursor.description
         columns = [column[0] for column in columns]
         results = []
         for row in result:
@@ -1148,7 +1148,7 @@ WHERE last_check_info_time = '0' OR last_check_info_time IS NULL
         if not result:
             return None
 
-        columns = await cursor.description
+        columns = cursor.description
         columns = [column[0] for column in columns]
         results = []
         for row in result:
@@ -1257,7 +1257,7 @@ WHERE last_check_info_time = '0' OR last_check_info_time IS NULL
         cursor = await db.execute(sql, (user_id,))
         result = await cursor.fetchone()
         if result:
-            columns = await cursor.description
+            columns = cursor.description
             columns = [column[0] for column in columns]
             buff_dict = dict(zip(columns, result))
             return buff_dict
@@ -1414,7 +1414,7 @@ WHERE last_check_info_time = '0' OR last_check_info_time IS NULL
         if not result:
             return None
 
-        columns = await cursor.description
+        columns = cursor.description
         columns = [column[0] for column in columns]
         item_dict = dict(zip(columns, result))
         return item_dict
@@ -1647,9 +1647,9 @@ class XIUXIAN_IMPART_BUFF:
 
 
     async def get_db(self):
-        db_instance = getattr(threading_data, 'db_instance', None)
+        db_instance = getattr(xu_threading_data, 'db_instance', None)
         if db_instance is None:
-            threading_data.db_instance = await aiosqlite.connect(self.database_path, check_same_thread=False)
+            xu_threading_data.db_instance = await aiosqlite.connect(self.database_path, check_same_thread=False)
         return xu_threading_data.db_instance
 
     async def close(self):
@@ -1730,7 +1730,7 @@ class XIUXIAN_IMPART_BUFF:
         cursor = await db.execute(sql, (user_id,))
         result = await cursor.fetchone()
         if result:
-            columns = await cursor.description
+            columns = cursor.description
             columns = [column[0] for column in columns]
             user_dict = dict(zip(columns, result))
             return user_dict
