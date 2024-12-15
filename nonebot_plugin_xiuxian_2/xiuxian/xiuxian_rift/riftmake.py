@@ -5,7 +5,7 @@ from ..xiuxian_utils.utils import number_to
 from ..xiuxian_utils.other_set import OtherSet
 from .jsondata import read_f
 from ..xiuxian_utils.xiuxian2_handle import XiuxianDateManage, UserBuffDate, XIUXIAN_IMPART_BUFF
-from ..xiuxian_utils.player_fight import Boss_fight
+from ..xiuxian_utils.player_fight import boss_fight
 from ..xiuxian_utils.item_json import items
 from ..xiuxian_config import convert_rank
 
@@ -173,7 +173,7 @@ async def get_boss_battle_info(user_info, rift_rank, bot_id):
         'stone': 1
     }
 
-    result, victor, bossinfo_new, stone = await Boss_fight(player, boss_info, bot_id=bot_id)  # 未开启，1不写入，2写入
+    result, victor, bossinfo_new, stone = await boss_fight(player, boss_info, bot_id=bot_id)  # 未开启，1不写入，2写入
 
     if victor == "群友赢了":  # 获胜
         user_rank = convert_rank(user_info['level'])[0]  # 60-用户当前等级 原50

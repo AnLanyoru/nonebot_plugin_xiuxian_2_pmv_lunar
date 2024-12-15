@@ -31,7 +31,7 @@ from ..xiuxian_config import convert_rank, XiuConfig, JsonConfig
 from .makeboss import createboss, createboss_jj
 from .bossconfig import get_boss_config, savef_boss
 from .old_boss_info import old_boss_info
-from ..xiuxian_utils.player_fight import Boss_fight
+from ..xiuxian_utils.player_fight import boss_fight
 from ..xiuxian_utils.item_json import items
 
 from ..xiuxian_utils.utils import (
@@ -235,7 +235,7 @@ async def battle_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg
     boss_old_hp = bossinfo['气血']  # 打之前的血量
     more_msg = ''
     battle_flag[group_id] = True
-    result, victor, bossinfo_new, get_stone = await Boss_fight(player, bossinfo, bot_id=bot.self_id)
+    result, victor, bossinfo_new, get_stone = await boss_fight(player, bossinfo, bot_id=bot.self_id)
     if victor == "Boss赢了":
         group_boss[group_id][boss_num - 1] = bossinfo_new
         await sql_message.update_ls(user_id, get_stone, 1)

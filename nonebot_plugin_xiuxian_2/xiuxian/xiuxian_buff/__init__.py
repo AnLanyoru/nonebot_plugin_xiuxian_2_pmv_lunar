@@ -29,7 +29,7 @@ from ..xiuxian_utils.other_set import OtherSet
 from ..xiuxian_config import XiuConfig
 from ..xiuxian_utils.data_source import jsondata
 from nonebot.params import CommandArg
-from ..xiuxian_utils.player_fight import Player_fight
+from ..xiuxian_utils.player_fight import player_fight
 from ..xiuxian_utils.utils import (
     number_to, check_user, send_msg_handler,
     check_user_type, get_id_from_str
@@ -270,7 +270,7 @@ async def qc_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
         player2['exp'] = user2['exp']
         player2['level'] = user2['level']
 
-        result, victor = await Player_fight(player1, player2, 1, bot.self_id)
+        result, victor = await player_fight(player1, player2, 1, bot.self_id)
         text = msg_handler(result)
         msg = f"获胜的是{victor}"
         msg = main_md(msg, text, '切磋其他人', '切磋', '修炼', '修炼', '闭关', '闭关', '修仙帮助', '修仙帮助')

@@ -67,12 +67,12 @@ async def bind_break_(
         for back_item in user_backs:
             item_info = items.get_data_by_item_id(back_item['goods_id'])
             item_rank = item_info['rank']
-            if item_rank == 1000:
+            print(type(item_rank), item_rank)
+            if item_rank == int(1000):
                 continue
             item_id = back_item['goods_id']
             await sql_message.break_bind_item(user_id, item_id)
             set_cmd_lock(user_id, int(time.time()))
-            await asyncio.sleep(0.5)
     msg = '道友的物品解绑完成啦！'
     await bot.send(event, msg)
     set_cmd_lock(user_id, 0)
