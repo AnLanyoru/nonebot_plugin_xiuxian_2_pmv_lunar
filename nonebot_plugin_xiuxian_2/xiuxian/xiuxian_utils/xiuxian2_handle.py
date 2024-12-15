@@ -229,7 +229,8 @@ WHERE last_check_info_time = '0' OR last_check_info_time IS NULL
         cursor = await db.execute(sql, (str(user_id),))
         result = await cursor.fetchone()
         if result:
-            columns = [column[0] for column in await cursor.description]
+            columns = await cursor.description
+            columns = [column[0] for column in columns]
             user_dict = dict(zip(columns, result))
             return user_dict
         else:
@@ -242,7 +243,8 @@ WHERE last_check_info_time = '0' OR last_check_info_time IS NULL
         cursor = await db.execute(sql, (user_id,))
         result = await cursor.fetchone()
         if result:
-            columns = [column[0] for column in await cursor.description]
+            columns = await cursor.description
+            columns = [column[0] for column in columns]
             user_dict = dict(zip(columns, result))
             return user_dict
         else:
@@ -297,7 +299,9 @@ WHERE last_check_info_time = '0' OR last_check_info_time IS NULL
         cursor = await db.execute(sql, (sect_id,))
         result = await cursor.fetchone()
         if result:
-            sect_id_dict = dict(zip((col[0] for col in await cursor.description), result))
+            columns = await cursor.description
+            columns = [column[0] for column in columns]
+            sect_id_dict = dict(zip(columns, result))
             return sect_id_dict
         else:
             return None
@@ -604,7 +608,8 @@ WHERE last_check_info_time = '0' OR last_check_info_time IS NULL
         cursor = await db.execute(sql, (user_id,))
         result = await cursor.fetchone()
         if result:
-            columns = [column[0] for column in await cursor.description]
+            columns = await cursor.description
+            columns = [column[0] for column in columns]
             user_cd_dict = dict(zip(columns, result))
             return user_cd_dict
         else:
@@ -665,7 +670,8 @@ WHERE last_check_info_time = '0' OR last_check_info_time IS NULL
         cursor = await db.execute(sql, (user_id,))
         result = await cursor.fetchone()
         if result:
-            columns = [column[0] for column in await cursor.description]
+            columns = await cursor.description
+            columns = [column[0] for column in columns]
             sect_onwer_dict = dict(zip(columns, result))
             return sect_onwer_dict
         else:
@@ -682,7 +688,8 @@ WHERE last_check_info_time = '0' OR last_check_info_time IS NULL
         cursor = await db.execute(sql, (sect_id,))
         result = await cursor.fetchone()
         if result:
-            columns = [column[0] for column in await cursor.description]
+            columns = await cursor.description
+            columns = [column[0] for column in columns]
             sect_dict = dict(zip(columns, result))
             return sect_dict
         else:
@@ -900,7 +907,8 @@ WHERE last_check_info_time = '0' OR last_check_info_time IS NULL
         cursor = await db.execute(sql)
         result = await cursor.fetchall()
         results = []
-        columns = [column[0] for column in await cursor.description]
+        columns = await cursor.description
+        columns = [column[0] for column in columns]
         for row in result:
             sect_dict = dict(zip(columns, row))
             results.append(sect_dict)
@@ -941,7 +949,8 @@ WHERE last_check_info_time = '0' OR last_check_info_time IS NULL
         cursor = await db.execute(sql)
         result = await cursor.fetchone()
         if result:
-            columns = [column[0] for column in await cursor.description]
+            columns = await cursor.description
+            columns = [column[0] for column in columns]
             top1_dict = dict(zip(columns, result))
             return top1_dict
         else:
@@ -1005,7 +1014,8 @@ WHERE last_check_info_time = '0' OR last_check_info_time IS NULL
         result = await cursor.fetchall()
         results = []
         for user in result:
-            columns = [column[0] for column in await cursor.description]
+            columns = await cursor.description
+            columns = [column[0] for column in columns]
             user_dict = dict(zip(columns, user))
             results.append(user_dict)
         results = sorted(results, key=operator.itemgetter('sect_contribution'), reverse=True)
@@ -1099,7 +1109,8 @@ WHERE last_check_info_time = '0' OR last_check_info_time IS NULL
         if not result:
             return None
 
-        columns = [column[0] for column in await cursor.description]
+        columns = await cursor.description
+        columns = [column[0] for column in columns]
         results = []
         for row in result:
             back_dict = dict(zip(columns, row))
@@ -1115,7 +1126,8 @@ WHERE last_check_info_time = '0' OR last_check_info_time IS NULL
         if not result:
             return None
 
-        columns = [column[0] for column in await cursor.description]
+        columns = await cursor.description
+        columns = [column[0] for column in columns]
         results = []
         for row in result:
             back_dict = dict(zip(columns, row))
@@ -1136,7 +1148,8 @@ WHERE last_check_info_time = '0' OR last_check_info_time IS NULL
         if not result:
             return None
 
-        columns = [column[0] for column in await cursor.description]
+        columns = await cursor.description
+        columns = [column[0] for column in columns]
         results = []
         for row in result:
             back_dict = dict(zip(columns, row))
@@ -1244,7 +1257,8 @@ WHERE last_check_info_time = '0' OR last_check_info_time IS NULL
         cursor = await db.execute(sql, (user_id,))
         result = await cursor.fetchone()
         if result:
-            columns = [column[0] for column in await cursor.description]
+            columns = await cursor.description
+            columns = [column[0] for column in columns]
             buff_dict = dict(zip(columns, result))
             return buff_dict
         else:
@@ -1400,7 +1414,8 @@ WHERE last_check_info_time = '0' OR last_check_info_time IS NULL
         if not result:
             return None
 
-        columns = [column[0] for column in await cursor.description]
+        columns = await cursor.description
+        columns = [column[0] for column in columns]
         item_dict = dict(zip(columns, result))
         return item_dict
 
@@ -1715,7 +1730,8 @@ class XIUXIAN_IMPART_BUFF:
         cursor = await db.execute(sql, (user_id,))
         result = await cursor.fetchone()
         if result:
-            columns = [column[0] for column in await cursor.description]
+            columns = await cursor.description
+            columns = [column[0] for column in columns]
             user_dict = dict(zip(columns, result))
             return user_dict
         else:
