@@ -42,6 +42,7 @@ class OtherSet(XiuConfig):
         user_place = place.get_now_place_id(user_id)
         user_world = place.get_world_id(user_place)
         world_name = place.get_world_name(user_place)
+        # 哼，我就写垃圾代码怎么了？
         if user_level == "合道境后期":
             if user_world < 1:
                 msg = f"道友所在世界【{world_name}】天地法则限制道友无法突破\r【{world_name}】可承载的最高境界为{user_level}"

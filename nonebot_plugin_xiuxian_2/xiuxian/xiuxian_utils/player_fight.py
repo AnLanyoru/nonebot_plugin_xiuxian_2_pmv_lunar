@@ -78,13 +78,11 @@ async def player_fight(player1: dict, player2: dict, type_in, bot_id):
 
     player1_sub_open = False  # 辅修功法14
     player2_sub_open = False
-    user1_sub_buff_date = {}
-    user2_sub_buff_date = {}
-    if user1_buff_date.get_user_sub_buff_data() is not None:
-        user1_sub_buff_date = user1_buff_date.get_user_sub_buff_data()
+
+    if (user1_sub_buff_date := await user1_buff_date.get_user_sub_buff_data()) is not None:
         player1_sub_open = True
-    if user2_buff_date.get_user_sub_buff_data() is not None:
-        user2_sub_buff_date = user2_buff_date.get_user_sub_buff_data()
+
+    if (user2_sub_buff_date := await user2_buff_date.get_user_sub_buff_data()) is not None:
         player2_sub_open = True
 
     play_list = []
@@ -113,12 +111,9 @@ async def player_fight(player1: dict, player2: dict, type_in, bot_id):
 
     for i in range(15):
 
-        user1_battle_buff_date, user2_battle_buff_date, msg = start_sub_buff_handle(player1_sub_open,
-                                                                                    user1_sub_buff_date,
-                                                                                    user1_battle_buff_date,
-                                                                                    player2_sub_open,
-                                                                                    user2_sub_buff_date,
-                                                                                    user2_battle_buff_date)
+        user1_battle_buff_date, user2_battle_buff_date, msg = start_sub_buff_handle(
+            player1_sub_open,user1_sub_buff_date,user1_battle_buff_date,
+            player2_sub_open,user2_sub_buff_date,user2_battle_buff_date)
         if msg:
             play_list.append(get_msg_dict(player1, player1_init_hp, msg))  # 辅修功法14
 
