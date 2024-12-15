@@ -1,7 +1,7 @@
 from math import *
 
-from xu.plugins.nonebot_plugin_xiuxian_2.xiuxian import DRIVER
-from xu.plugins.nonebot_plugin_xiuxian_2.xiuxian.xiuxian_utils.database_cur_get import XiuxianDateCur
+from . import DRIVER
+from .xiuxian_utils.database_cur_get import XiuxianDateCur
 from nonebot.log import logger
 from pathlib import Path
 try:

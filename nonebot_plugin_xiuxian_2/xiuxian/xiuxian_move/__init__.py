@@ -15,7 +15,7 @@ from nonebot.params import CommandArg
 from ..xiuxian_utils.xiuxian2_handle import (
     XiuxianDateManage
 )
-from xu.plugins.nonebot_plugin_xiuxian_2.xiuxian.xiuxian_place import place
+from ..xiuxian_place import place
 
 from ..xiuxian_utils.utils import (
     check_user, check_user_type

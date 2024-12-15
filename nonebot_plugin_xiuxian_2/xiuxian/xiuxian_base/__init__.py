@@ -5,7 +5,7 @@ from nonebot.typing import T_State
 
 from ..xiuxian_buff import check_limit
 from ..xiuxian_limit.limit_database import limit_handle
-from xu.plugins.nonebot_plugin_xiuxian_2.xiuxian.xiuxian_place import place
+from ..xiuxian_place import place
 from ..xiuxian_utils.clean_utils import date_sub, get_num_from_str, get_strs_from_str, main_md
 from ..xiuxian_utils.lay_out import Cooldown
 from nonebot import require, on_command, on_fullmatch

@@ -1,9 +1,9 @@
 import random
 
-from xu.plugins.nonebot_plugin_xiuxian_2.xiuxian import XiuConfig
-from xu.plugins.nonebot_plugin_xiuxian_2.xiuxian.xiuxian_place import place
-from xu.plugins.nonebot_plugin_xiuxian_2.xiuxian.xiuxian_utils.data_source import jsondata
-from xu.plugins.nonebot_plugin_xiuxian_2.xiuxian.xiuxian_utils.xiuxian2_handle import XiuxianDateManage, sql_message, \
+from .. import XiuConfig
+from ..xiuxian_place import place
+from data_source import jsondata
+from xiuxian2_handle import XiuxianDateManage, sql_message, \
     number_to, UserBuffDate, xiuxian_impart
 
 

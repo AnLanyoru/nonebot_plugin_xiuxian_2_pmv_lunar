@@ -11,7 +11,7 @@ import asyncio
 
 from nonebot.typing import T_State
 from ..xiuxian_limit.limit_database import limit_handle
-from xu.plugins.nonebot_plugin_xiuxian_2.xiuxian.xiuxian_place import place
+from ..xiuxian_place import place
 from ..xiuxian_utils.xiuxian2_handle import (
     XiuxianDateManage, UserBuffDate
 )

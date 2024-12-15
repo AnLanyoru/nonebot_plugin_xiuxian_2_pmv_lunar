@@ -25,7 +25,7 @@ from nonebot.adapters.onebot.v11 import MessageSegment
 from .data_source import jsondata
 from pathlib import Path
 from base64 import b64encode
-from xu.plugins.nonebot_plugin_xiuxian_2.xiuxian.xiuxian_place import place
+from ..xiuxian_place import place
 
 sql_message = XiuxianDateManage()  # sql类
 boss_img_path = Path() / "data" / "xiuxian" / "boss_img"

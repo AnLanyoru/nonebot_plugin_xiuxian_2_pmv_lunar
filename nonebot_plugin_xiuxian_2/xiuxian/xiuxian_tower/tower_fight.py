@@ -1,5 +1,5 @@
-from xu.plugins.nonebot_plugin_xiuxian_2.xiuxian.xiuxian_utils.player_fight import Boss_fight
-from xu.plugins.nonebot_plugin_xiuxian_2.xiuxian.xiuxian_utils.xiuxian2_handle import UserBuffDate, sql_message, \
+from ..xiuxian_utils.player_fight import boss_fight
+from ..xiuxian_utils.xiuxian2_handle import UserBuffDate, sql_message, \
     xiuxian_impart
 
 
@@ -48,6 +48,6 @@ async def get_tower_battle_info(user_info, tower_floor_info: dict, bot_id):
         'stone': 1
     }
 
-    result, victor, bossinfo_new, stone = await Boss_fight(player, boss_info, bot_id=bot_id)  # 未开启，1不写入，2写入
+    result, victor, bossinfo_new, stone = await boss_fight(player, boss_info, bot_id=bot_id)  # 未开启，1不写入，2写入
 
     return result, victor

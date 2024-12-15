@@ -12,7 +12,7 @@ from nonebot.params import CommandArg
 from .old_rift_info import old_rift_info
 from .. import DRIVER
 from ..xiuxian_limit import limit_handle
-from xu.plugins.nonebot_plugin_xiuxian_2.xiuxian.xiuxian_place import place
+from ..xiuxian_place import place
 from ..xiuxian_utils.clean_utils import get_strs_from_str, simple_md, main_md, msg_handler
 from ..xiuxian_utils.lay_out import Cooldown
 from nonebot.permission import SUPERUSER

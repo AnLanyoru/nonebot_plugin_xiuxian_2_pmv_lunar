@@ -16,7 +16,7 @@ from ..xiuxian_exp_up.exp_up_def import exp_up_by_time
 from ..xiuxian_impart_pk import impart_pk_check
 from ..xiuxian_limit.limit_database import limit_handle, limit_data
 from ..xiuxian_limit.limit_util import limit_check
-from xu.plugins.nonebot_plugin_xiuxian_2.xiuxian.xiuxian_place import place
+from ..xiuxian_place import place
 from ..xiuxian_tower import tower_handle
 from ..xiuxian_utils.clean_utils import get_datetime_from_str, date_sub, main_md, msg_handler, simple_md
 from ..xiuxian_utils.xiuxian2_handle import (

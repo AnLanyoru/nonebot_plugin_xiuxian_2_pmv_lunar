@@ -6,7 +6,7 @@ from nonebot.log import logger
 from .. import DRIVER
 import threading
 
-from xu.plugins.nonebot_plugin_xiuxian_2.xiuxian.xiuxian_place import place
+from ..xiuxian_place import place
 from ..xiuxian_utils.clean_utils import number_to_msg
 from ..xiuxian_utils.item_json import items
 from ..xiuxian_utils.xiuxian2_handle import sql_message
