@@ -8,4 +8,8 @@ asyncio
 aiohttp
 pydantic
 aiofiles
-nonebot_plugin_apscheduler 
+nonebot_plugin_apscheduler
+aiosqlite~=0.20.0
+httpx~=0.27.2
+typing_extensions~=4.12.2
+asyncpg~=0.30.0
