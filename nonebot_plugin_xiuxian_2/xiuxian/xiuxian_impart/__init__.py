@@ -32,6 +32,7 @@ xiuxian_impart = XIUXIAN_IMPART_BUFF()
 cache_help = {}
 img_path = Path(f"{os.getcwd()}/data/xiuxian/卡图")
 
+
 def img2b64(out_img) -> str:
     """ 将图片转换为base64 """
     buf = BytesIO()
@@ -98,19 +99,19 @@ async def impart_img_(bot: Bot, event: GroupMessageEvent, args: Message = Comman
     if all_data[x]["type"] == "impart_two_exp":
         msg += "每日双修次数提升：" + str(all_data[x]["vale"])
     elif all_data[x]["type"] == "impart_exp_up":
-        msg += "闭关经验提升：" + str(all_data[x]["vale"]*100) + "%"
+        msg += "闭关经验提升：" + str(all_data[x]["vale"] * 100) + "%"
     elif all_data[x]["type"] == "impart_atk_per":
-        msg += "攻击力提升：" + str(all_data[x]["vale"]*100) + "%"
+        msg += "攻击力提升：" + str(all_data[x]["vale"] * 100) + "%"
     elif all_data[x]["type"] == "impart_hp_per":
-        msg += "气血提升：" + str(all_data[x]["vale"]*100) + "%"
+        msg += "气血提升：" + str(all_data[x]["vale"] * 100) + "%"
     elif all_data[x]["type"] == "impart_mp_per":
-        msg += "真元提升" + str(all_data[x]["vale"]*100) + "%"
+        msg += "真元提升" + str(all_data[x]["vale"] * 100) + "%"
     elif all_data[x]["type"] == "boss_atk":
-        msg += "boss战攻击提升" + str(all_data[x]["vale"]*100) + "%"
+        msg += "boss战攻击提升" + str(all_data[x]["vale"] * 100) + "%"
     elif all_data[x]["type"] == "impart_know_per":
-        msg += "会心提升：" + str(all_data[x]["vale"]*100) + "%"
+        msg += "会心提升：" + str(all_data[x]["vale"] * 100) + "%"
     elif all_data[x]["type"] == "impart_burst_per":
-        msg += "会心伤害提升：" + str(all_data[x]["vale"]*100) + "%"
+        msg += "会心伤害提升：" + str(all_data[x]["vale"] * 100) + "%"
     elif all_data[x]["type"] == "impart_mix_per":
         msg += "炼丹收取数量增加：" + str(all_data[x]["vale"])
     elif all_data[x]["type"] == "impart_reap_per":
@@ -157,16 +158,18 @@ async def impart_draw_fast_(bot: Bot, event: GroupMessageEvent, args: Message = 
     text = ''
     if had_card := card_dict['had']:
         text += f"获取重复传承卡片{'、'.join(had_card)}\r"
-        text += f"已转化为{len(had_card)*45}分钟余剩虚神界内闭关时间\r"
+        text += f"已转化为{len(had_card) * 45}分钟余剩虚神界内闭关时间\r"
     if new_card := card_dict['new']:
         text += f"获取新传承卡片{'、'.join(new_card)}\r"
     all_time = (num * 50) - (card * 5) + (len(had_card) * 45)
-    all_card = '\r'.join(operator.add(operator.add(new_card, had_card), [f"累计共获得{all_time}分钟余剩虚神界内闭关时间!\r"]))
+    all_card = '\r'.join(
+        operator.add(operator.add(new_card, had_card), [f"累计共获得{all_time}分钟余剩虚神界内闭关时间!\r"]))
     text += f"抽卡{10 * num}次结果如下：\r"
     text += f"{all_card}5分钟虚神界闭关时间 X{((num * 10) - card)}"
     await xiuxian_impart.add_impart_exp_day(all_time, user_id)
     await xiuxian_impart.update_impart_wish(wish_count, user_id)
-    msg = main_md(msg, text, '传承背包', '传承背包', '继续抽卡', '传承抽卡', '虚神界对决', '虚神界对决', '传承帮助', '传承帮助')
+    msg = main_md(msg, text, '传承背包', '传承背包', '继续抽卡', '传承抽卡', '虚神界对决', '虚神界对决', '传承帮助',
+                  '传承帮助')
     await re_impart_data(user_id)
     await bot.send(event=event, message=msg)
     await impart_draw_fast.finish()
@@ -209,7 +212,8 @@ async def impart_back_(bot: Bot, event: GroupMessageEvent):
     img_tp = impart_data_json.data_person_list(user_id)
 
     text += "\r".join(img_tp)
-    msg = main_md(msg, text, '传承卡图 【卡图名称】', '传承卡图', '传承抽卡', '传承抽卡', '虚神界对决', '虚神界对决', '传承帮助', '传承帮助')
+    msg = main_md(msg, text, '传承卡图 【卡图名称】', '传承卡图', '传承抽卡', '传承抽卡', '虚神界对决', '虚神界对决',
+                  '传承帮助', '传承帮助')
     await bot.send(event=event, message=msg)
     await impart_back.finish()
 

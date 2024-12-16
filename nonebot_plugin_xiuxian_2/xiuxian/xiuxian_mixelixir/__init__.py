@@ -84,7 +84,7 @@ async def yaocai_get_op_(bot: Bot, event: GroupMessageEvent):
         msg += f"道友成功收获药材：恒心草 {num} 个！\r"
     else:
         give_dict = {}
-        while num := num -1:
+        while num := num - 1:
             item_id = random.choice(yaocai_id_list)
             try:
                 give_dict[item_id] += 1
@@ -175,7 +175,9 @@ async def yaocai_get_(bot: Bot, event: GroupMessageEvent):
     last_time = mix_elixir_info['收取时间']
     if last_time != 0:
         nowtime = datetime.now().strftime('%Y-%m-%d %H:%M:%S')  # str
-        timedeff = round((datetime.strptime(nowtime, '%Y-%m-%d %H:%M:%S') - datetime.strptime(last_time,'%Y-%m-%d %H:%M:%S')).total_seconds() / 3600,2)
+        timedeff = round((datetime.strptime(nowtime, '%Y-%m-%d %H:%M:%S') - datetime.strptime(last_time,
+                                                                                              '%Y-%m-%d %H:%M:%S')).total_seconds() / 3600,
+                         2)
         user_buff_data = await UserBuffDate(user_id).BuffInfo
         if timedeff >= round(GETCONFIG['time_cost'] * (1 - (GETCONFIG['加速基数'] * mix_elixir_info['药材速度'])), 2):
             yaocai_id_list = items.get_random_id_list_by_rank_and_item_type(convert_rank(user_info['level'])[0],

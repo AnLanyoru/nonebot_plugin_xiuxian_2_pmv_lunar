@@ -77,6 +77,7 @@ class MixtureData:
     @classmethod
     def close_dbs(cls):
         MixtureData().close()
+
     # 上面是数据库校验，别动
 
     def get_all_table(self) -> list | None:

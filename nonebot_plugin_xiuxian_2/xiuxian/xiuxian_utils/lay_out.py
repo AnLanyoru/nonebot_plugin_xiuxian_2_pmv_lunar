@@ -75,7 +75,6 @@ def limit_all_run(user_id: str):
         return None
 
 
-
 def limit_all_run_strong(user_id: str):
     user_id = str(user_id)
     user_limit_data = limit_all_data.get(user_id)
@@ -170,6 +169,7 @@ def Cooldown(
             del running[key]
             del time_sy[key]
         return
+
     async def dependency(bot: Bot, matcher: Matcher, event: MessageEvent):
         user_id = str(event.get_user_id())
         limit_type = limit_all_run(user_id)
@@ -257,6 +257,3 @@ def Cooldown(
 put_bot = XiuConfig().put_bot
 main_bot = XiuConfig().main_bo
 layout_bot_dict = XiuConfig().layout_bot_dict
-
-
-

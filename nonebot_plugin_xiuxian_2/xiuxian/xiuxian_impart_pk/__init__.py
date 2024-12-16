@@ -133,8 +133,3 @@ async def impart_pk_exp_(bot: Bot, event: GroupMessageEvent):
     else:
         await bot.send(event=event, message=msg)
         await impart_pk_exp.finish()
-
-
-
-
-        

@@ -34,5 +34,3 @@ async def get_avatar_by_user_id_and_save(user_id):
     INIT_PATH = Path() / "data" / "xiuxian" / "info_img" / "init.png"
     im = Image.open(INIT_PATH).resize((280, 280)).convert("RGBA")
     return im
-
-

@@ -52,4 +52,3 @@ class OLD_RIFT_INFO(object):
 
 
 old_rift_info = OLD_RIFT_INFO()
-

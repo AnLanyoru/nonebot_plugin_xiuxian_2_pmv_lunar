@@ -24,12 +24,16 @@ from ..xiuxian_utils.xiuxian2_handle import sql_message
 store_sell_lock = asyncio.Lock()
 break_bind = []
 
-check_user_want_item = on_command("灵宝楼求购查看", aliases={"查看灵宝楼求购", "个人摊位查看"}, priority=2, permission=GROUP, block=True)
-user_sell_to = on_command("灵宝楼出售", aliases={"个人摊位出售", "灵宝楼寄售"}, priority=2, permission=GROUP, block=True)
+check_user_want_item = on_command("灵宝楼求购查看", aliases={"查看灵宝楼求购", "个人摊位查看"}, priority=2,
+                                  permission=GROUP, block=True)
+user_sell_to = on_command("灵宝楼出售", aliases={"个人摊位出售", "灵宝楼寄售"}, priority=2, permission=GROUP,
+                          block=True)
 user_want_item = on_command("灵宝楼求购", aliases={"个人摊位求购"}, priority=2, permission=GROUP, block=True)
 check_my_want_item = on_command("我的灵宝楼求购", aliases={"我的摊位"}, priority=2, permission=GROUP, block=True)
-user_want_funds = on_command("灵宝楼存灵石", aliases={"个人摊位存灵石", "摊位存灵石", "预备资金"}, priority=2, permission=GROUP, block=True)
-user_funds_extract = on_command("灵宝楼取灵石", aliases={"个人摊位取灵石", "摊位取灵石", "取资金"}, priority=2, permission=GROUP, block=True)
+user_want_funds = on_command("灵宝楼存灵石", aliases={"个人摊位存灵石", "摊位存灵石", "预备资金"}, priority=2,
+                             permission=GROUP, block=True)
+user_funds_extract = on_command("灵宝楼取灵石", aliases={"个人摊位取灵石", "摊位取灵石", "取资金"}, priority=2,
+                                permission=GROUP, block=True)
 remove_want_item = on_command("取消灵宝楼求购", aliases={"取消求购"}, priority=2, permission=GROUP, block=True)
 fast_sell_items = on_command("灵宝楼快速出售", aliases={"个人摊位快速出售"}, priority=2, permission=GROUP, block=True)
 bind_break = on_command("物品解绑", priority=2, permission=GROUP, block=True)
@@ -42,8 +46,8 @@ bind_break = on_command("物品解绑", priority=2, permission=GROUP, block=True
             at_sender=False,
             parallel_block=True)])
 async def bind_break_(
-        bot: Bot,                     # 机器人实例
-        event: GroupMessageEvent,     # 消息主体
+        bot: Bot,  # 机器人实例
+        event: GroupMessageEvent,  # 消息主体
 ):
     """
     物品解绑
@@ -86,8 +90,8 @@ async def bind_break_(
             at_sender=False,
             parallel_block=True)])
 async def fast_sell_items_(
-        bot: Bot,                     # 机器人实例
-        event: GroupMessageEvent,     # 消息主体
+        bot: Bot,  # 机器人实例
+        event: GroupMessageEvent,  # 消息主体
         args: Message = CommandArg()  # 获取命令参数
 ):
     """
@@ -127,9 +131,9 @@ async def fast_sell_items_(
                 item_level = item_info.get('level') if item_info else None
                 item_type = back.get('goods_type')
                 if (item_level == goal_level
-                        or goods_name == goal_level
-                        or buff_type == goal_level
-                        or item_type == goal_level) and goods_num > 0:
+                    or goods_name == goal_level
+                    or buff_type == goal_level
+                    or item_type == goal_level) and goods_num > 0:
                     sell_list.append(back)
         msg = f"开始向{want_user_name}道友快速出售以下类型物品：\r" + "|".join(args) + "请等待...."
         await bot.send(event, msg)
@@ -204,8 +208,8 @@ async def fast_sell_items_(
             cd_time=10,
             at_sender=False)])
 async def user_want_funds_(
-        bot: Bot,                     # 机器人实例
-        event: GroupMessageEvent,     # 消息主体
+        bot: Bot,  # 机器人实例
+        event: GroupMessageEvent,  # 消息主体
         args: Message = CommandArg()  # 获取命令参数
 ):
     """
@@ -233,8 +237,8 @@ async def user_want_funds_(
             cd_time=10,
             at_sender=False)])
 async def remove_want_item_(
-        bot: Bot,                     # 机器人实例
-        event: GroupMessageEvent,     # 消息主体
+        bot: Bot,  # 机器人实例
+        event: GroupMessageEvent,  # 消息主体
         args: Message = CommandArg()  # 获取命令参数
 ):
     """
@@ -268,8 +272,8 @@ async def remove_want_item_(
             cd_time=10,
             at_sender=False)])
 async def user_funds_extract_(
-        bot: Bot,                     # 机器人实例
-        event: GroupMessageEvent,     # 消息主体
+        bot: Bot,  # 机器人实例
+        event: GroupMessageEvent,  # 消息主体
         args: Message = CommandArg()  # 获取命令参数
 ):
     """
@@ -302,8 +306,8 @@ async def user_funds_extract_(
             cd_time=2,
             at_sender=False)])
 async def user_sell_to_(
-        bot: Bot,                     # 机器人实例
-        event: GroupMessageEvent,     # 消息主体
+        bot: Bot,  # 机器人实例
+        event: GroupMessageEvent,  # 消息主体
         args: Message = CommandArg()  # 获取命令参数
 ):
     """
@@ -409,10 +413,10 @@ async def user_sell_to_(
             cd_time=10,
             at_sender=False)])
 async def check_my_want_item_(
-    bot: Bot,                     # 机器人实例
-    event: GroupMessageEvent,     # 消息主体
-    cmd: str = RawCommand(),      # 获取命令名称，用于标识翻页
-    args: Message = CommandArg()  # 获取命令参数
+        bot: Bot,  # 机器人实例
+        event: GroupMessageEvent,  # 消息主体
+        cmd: str = RawCommand(),  # 获取命令名称，用于标识翻页
+        args: Message = CommandArg()  # 获取命令参数
 ):
     """
     查看自身求购物品
@@ -442,10 +446,10 @@ async def check_my_want_item_(
             cd_time=10,
             at_sender=False)])
 async def check_user_want_item_(
-    bot: Bot,                     # 机器人实例
-    event: GroupMessageEvent,     # 消息主体
-    cmd: str = RawCommand(),      # 获取命令名称，用于标识翻页
-    args: Message = CommandArg()  # 获取命令参数
+        bot: Bot,  # 机器人实例
+        event: GroupMessageEvent,  # 消息主体
+        cmd: str = RawCommand(),  # 获取命令名称，用于标识翻页
+        args: Message = CommandArg()  # 获取命令参数
 ):
     """
     查看求购物品

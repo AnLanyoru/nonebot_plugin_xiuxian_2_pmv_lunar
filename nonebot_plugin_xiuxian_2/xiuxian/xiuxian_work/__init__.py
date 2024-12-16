@@ -149,7 +149,8 @@ async def do_work_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = R
         await do_work.finish()
     mode = args[0]  # 刷新、终止、结算、接取
     user_level = user_info['level']
-    if int(user_info['exp']) >= int(await OtherSet().set_closing_type(user_level)) * XiuConfig().closing_exp_upper_limit:
+    if int(user_info['exp']) >= int(
+            await OtherSet().set_closing_type(user_level)) * XiuConfig().closing_exp_upper_limit:
         # 获取下个境界需要的修为 * 1.5为闭关上限
         msg = "道友的修为已经到达上限，悬赏令已无法再获得经验！"
         await bot.send(event=event, message=msg)

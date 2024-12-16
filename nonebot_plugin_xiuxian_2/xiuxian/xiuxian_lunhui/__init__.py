@@ -66,7 +66,6 @@ async def warring_help_(bot: Bot, event: GroupMessageEvent):
 
 @lunhui.handle(parameterless=[Cooldown(at_sender=False)])
 async def lunhui_(bot: Bot, event: GroupMessageEvent):
-
     _, user_info, _ = await check_user(event)
 
     user_id = user_info['user_id']
@@ -117,7 +116,6 @@ async def lunhui_(bot: Bot, event: GroupMessageEvent):
 
 @twolun.handle(parameterless=[Cooldown(at_sender=False)])
 async def twolun_(bot: Bot, event: GroupMessageEvent):
-
     _, user_info, _ = await check_user(event)
 
     user_id = user_info['user_id']
@@ -168,7 +166,6 @@ async def twolun_(bot: Bot, event: GroupMessageEvent):
 
 @threelun.handle(parameterless=[Cooldown(at_sender=False)])
 async def threelun_(bot: Bot, event: GroupMessageEvent):
-
     _, user_info, _ = await check_user(event)
 
     user_id = user_info['user_id']
@@ -216,7 +213,6 @@ async def threelun_(bot: Bot, event: GroupMessageEvent):
 
 @resetting.handle(parameterless=[Cooldown(at_sender=False)])
 async def resetting_(bot: Bot, event: GroupMessageEvent):
-
     _, user_info, _ = await check_user(event)
 
     user_id = user_info['user_id']
@@ -275,7 +271,6 @@ async def gettest_(bot: Bot, event: GroupMessageEvent, state: T_State):
 
 @time_set_now.handle(parameterless=[Cooldown(at_sender=False)])
 async def time_set_now_(bot: Bot, event: GroupMessageEvent):
-
     _, user_info, _ = await check_user(event)
 
     await sql_message.sign_remake()

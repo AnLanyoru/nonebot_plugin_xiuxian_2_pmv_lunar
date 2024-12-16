@@ -64,7 +64,6 @@ user_stamina = on_command('我的体力', aliases={'体力'}, priority=5, permis
 xiuxian_update_data = on_fullmatch('更新记录', priority=15, permission=GROUP, block=True)
 level_help = on_command('列表', aliases={"灵根列表", "品阶列表", "境界列表"}, priority=15, permission=GROUP, block=True)
 
-
 __xiuxian_update_data__ = f"""
 #更新2024.11.28
 事实证明我不喜欢写更新记录
@@ -132,7 +131,8 @@ async def run_xiuxian_(bot: Bot, event: GroupMessageEvent):
             await sql_message.update_user_hp(user_id)
         text = "耳边响起一个神秘人的声音：不要忘记仙途奇缘！!\r不知道怎么玩的话可以发送 修仙帮助 喔！！"
 
-        msg = main_md(msg, text, '仙途奇缘', f'仙途奇缘', '修仙帮助', '修仙帮助', '修仙新手教程', '新手教程', '开始修炼', '修炼')
+        msg = main_md(msg, text, '仙途奇缘', f'仙途奇缘', '修仙帮助', '修仙帮助', '修仙新手教程', '新手教程',
+                      '开始修炼', '修炼')
         await bot.send(event=event, message=msg)
     else:
         await bot.send(event=event, message=msg)
@@ -295,7 +295,8 @@ async def rank_(bot: Bot, event: GroupMessageEvent):
             num += 1
             msg += f"第{num}位 {first_msg}{i[0]} {i[1]} {scened_msg}:{number_to(i[2])}\r"
         msg += f"第 {page}/{page_all} 页"
-        msg = main_md(top_msg, msg, '下一页', f'{message}{page + 1}', '灵石排行榜', '灵石排行榜', '宗门排行榜', '宗门排行榜', '修仙帮助', '修仙帮助')
+        msg = main_md(top_msg, msg, '下一页', f'{message}{page + 1}', '灵石排行榜', '灵石排行榜', '宗门排行榜',
+                      '宗门排行榜', '修仙帮助', '修仙帮助')
     else:
         msg = f"{message}空空如也！"
     await bot.send(event=event, message=msg)
@@ -356,12 +357,14 @@ async def level_up_(bot: Bot, event: GroupMessageEvent):
     number = main_rate_buff['number'] if main_rate_buff is not None else 0
     if pause_flag:
         msg = f"由于检测到背包有丹药：{elixir_name}，效果：{elixir_desc}，突破已经准备就绪\r请发送 ，【渡厄突破】 或 【直接突破】来选择是否使用丹药突破！\r本次突破概率为：{level_rate + user_leveluprate + number}% "
-        msg = main_md("提示", msg, '渡厄突破', '渡厄突破', '直接突破', '直接突破', '继续修炼', '修炼', '修仙帮助', '修仙帮助')
+        msg = main_md("提示", msg, '渡厄突破', '渡厄突破', '直接突破', '直接突破', '继续修炼', '修炼', '修仙帮助',
+                      '修仙帮助')
         await bot.send(event=event, message=msg)
         await level_up.finish()
     else:
         msg = f"由于检测到背包没有【渡厄丹】，突破已经准备就绪\r请发送，【直接突破】来突破！请注意，本次突破失败将会损失部分修为！\r本次突破概率为：{level_rate + user_leveluprate + number}% "
-        msg = main_md("提示", msg, '确认直接突破', '直接突破', '领取宗门丹药', '宗门丹药领取', '继续修炼', '修炼', '修仙帮助', '修仙帮助')
+        msg = main_md("提示", msg, '确认直接突破', '直接突破', '领取宗门丹药', '宗门丹药领取', '继续修炼', '修炼',
+                      '修仙帮助', '修仙帮助')
         await bot.send(event=event, message=msg)
         await level_up.finish()
 
@@ -591,7 +594,7 @@ async def level_up_dr_(bot: Bot, event: GroupMessageEvent):
             await sql_message.update_j_exp(user_id, now_exp)  # 更新用户修为
             user_msg = await XiuxianDateManage().get_user_info_with_id(user_id)
             user_buff_data = UserBuffDate(user_id)
-            main_buff_data =await  user_buff_data.get_user_main_buff_data()
+            main_buff_data = await  user_buff_data.get_user_main_buff_data()
             impart_data = await xiuxian_impart.get_user_info_with_id(user_id)
             impart_hp_per = impart_data['impart_hp_per'] if impart_data is not None else 0
             main_hp_buff = main_buff_data['hpbuff'] if main_buff_data is not None else 0
@@ -1094,8 +1097,9 @@ async def rob_stone_(bot: Bot, event: GroupMessageEvent, args: Message = Command
                         await rob_stone.finish()
                     else:
                         exps = int(user_2['exp'] * 0.005)
-                        msg = (f"大战一番，战胜对手，结果对方是个穷光蛋，修为增加{number_to(exps)}，对手修为减少{number_to(exps / 2)}........"
-                               f"实际上没有，重写版战斗系统灰度中！！")
+                        msg = (
+                            f"大战一番，战胜对手，结果对方是个穷光蛋，修为增加{number_to(exps)}，对手修为减少{number_to(exps / 2)}........"
+                            f"实际上没有，重写版战斗系统灰度中！！")
                         if XiuConfig().img:
                             pic = await get_msg_pic(f"@{event.sender.nickname}\r" + msg)
                             await bot.send(event=event, message=MessageSegment.image(pic))
@@ -1107,8 +1111,9 @@ async def rob_stone_(bot: Bot, event: GroupMessageEvent, args: Message = Command
                     mind_stone = user_info['stone']
                     if mind_stone > 0:
                         exps = int(user_info['exp'] * 0.005)
-                        msg = (f"大战一番，被对手反杀，损失灵石{number_to(mind_stone * 0.1)}枚，修为减少{number_to(exps)}，对手获取灵石{number_to(mind_stone * 0.1)}枚，修为增加{number_to(exps / 2)}"
-                               f"。。。。。。实际上没有，重写版战斗系统灰度中！！")
+                        msg = (
+                            f"大战一番，被对手反杀，损失灵石{number_to(mind_stone * 0.1)}枚，修为减少{number_to(exps)}，对手获取灵石{number_to(mind_stone * 0.1)}枚，修为增加{number_to(exps / 2)}"
+                            f"。。。。。。实际上没有，重写版战斗系统灰度中！！")
                         if XiuConfig().img:
                             pic = await get_msg_pic(f"@{event.sender.nickname}\r" + msg)
                             await bot.send(event=event, message=MessageSegment.image(pic))
@@ -1117,8 +1122,9 @@ async def rob_stone_(bot: Bot, event: GroupMessageEvent, args: Message = Command
                         await rob_stone.finish()
                     else:
                         exps = int(user_info['exp'] * 0.005)
-                        msg = (f"大战一番，被对手反杀，修为减少{number_to(exps)}，对手修为增加{number_to(exps / 2)}，，，，，，，，"
-                               f"实际上没有，重写版战斗系统灰度中！！")
+                        msg = (
+                            f"大战一番，被对手反杀，修为减少{number_to(exps)}，对手修为增加{number_to(exps / 2)}，，，，，，，，"
+                            f"实际上没有，重写版战斗系统灰度中！！")
                         if XiuConfig().img:
                             pic = await get_msg_pic(f"@{event.sender.nickname}\r" + msg)
                             await bot.send(event=event, message=MessageSegment.image(pic))
@@ -1135,5 +1141,3 @@ async def rob_stone_(bot: Bot, event: GroupMessageEvent, args: Message = Command
         msg = f"对方未踏入修仙界，不可抢劫！"
         await bot.send(event=event, message=msg)
         await rob_stone.finish()
-
-

@@ -2,7 +2,7 @@ try:
     import ujson as json
 except ImportError:
     import json
-import asyncio    
+import asyncio
 from nonebot.log import logger
 from PIL import Image, ImageDraw, ImageFont
 from aiohttp import ClientSession
@@ -16,9 +16,6 @@ first_color = (242, 250, 242)
 second_color = (57, 57, 57)
 
 FONT_ORIGIN_PATH = Path() / "data" / "xiuxian" / "font" / "SourceHanSerifCN-Heavy.otf"
-
-
-
 
 
 def font_origin(size: int) -> ImageFont.FreeTypeFont:
@@ -126,7 +123,7 @@ async def draw_user_info_img(user_id, DETAIL_MAP):
     await asyncio.gather(*tasks3)
     img.convert("RGB")
     res = await convert_img(img)
-    
+
     paihang = Image.open(
         TEXT_PATH / 'line2.png').resize((900, 100)).convert("RGBA")
     paihangword = '【排行信息】'
@@ -177,7 +174,6 @@ async def _draw_sect_info_line(img: Image.Image, key, value, DETAIL_MAP):
 
 
 async def _draw_ph_info_line(img: Image.Image, key, value, DETAIL_MAP):
-
     line = Image.open(TEXT_PATH / 'line4.png').resize((900, 100))
     line_draw = ImageDraw.Draw(line)
     word = f"{key}：{value}"

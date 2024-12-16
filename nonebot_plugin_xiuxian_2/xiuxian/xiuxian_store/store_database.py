@@ -274,7 +274,7 @@ class UserStoreData:
                 sell_user,
                 user_id,
                 need_items_id)
-            )
+                        )
             is_new = False
         else:
             # 判断是否存在，不存在则INSERT
@@ -289,7 +289,7 @@ class UserStoreData:
                 now_time_str,
                 now_time_str,
                 sell_user)
-            )
+                        )
             is_new = True
         self.conn.commit()
         return is_new
@@ -399,7 +399,7 @@ class UserStoreHandle:
             num += 1
         return msg_list, need_item_map
 
-    async def check_user_want_item(self, user_id, item_id, get_info: str = 0) -> str | dict |None:
+    async def check_user_want_item(self, user_id, item_id, get_info: str = 0) -> str | dict | None:
         """
         获取指定用户的指定求购物品
         :param user_id: 用户id

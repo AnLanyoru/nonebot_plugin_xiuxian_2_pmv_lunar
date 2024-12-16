@@ -93,7 +93,8 @@ async def get_mix_elixir_msg(yaocai):
                                     if i + o + p <= Llandudno_info["max_num"]:
                                         # 判断背包里药材是否足够(同个药材多种类型)
                                         if len({v["name"], vv["name"], vvv["name"]}) != 3:
-                                            num_dict = Counter([*[v["name"]]*i, *[vv["name"]]*o, *[vvv["name"]]*p])
+                                            num_dict = Counter(
+                                                [*[v["name"]] * i, *[vv["name"]] * o, *[vvv["name"]] * p])
                                             if any(num_dict[yao["name"]] > yao["num"] for yao in [v, vv, vvv]):
                                                 p += 1
                                                 continue

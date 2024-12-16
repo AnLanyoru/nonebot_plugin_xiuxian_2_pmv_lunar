@@ -58,7 +58,7 @@ async def exp_up_by_time(user_info, exp_time) -> tuple[str, int, dict]:
                 * (1 + main_buff_rate_buff)
                 * (1 + main_buff_clo_exp)
                 * (1 + impart_exp_up + user_buff_data['blessed_spot'] + world_buff)
-                )
+            )
             * exp_time
     )
 

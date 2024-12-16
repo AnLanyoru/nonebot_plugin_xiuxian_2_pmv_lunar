@@ -167,7 +167,7 @@ class WorldTowerData:
         """
         sql = f"select * from {self.sql_user_table_name} WHERE user_id=?"
         cur = self.conn.cursor()
-        cur.execute(sql, (user_id, ))
+        cur.execute(sql, (user_id,))
         result = cur.fetchone()
         if not result:
             return None
@@ -240,9 +240,9 @@ class WorldTowerData:
     def reset_point_get(self):
         cur = self.conn.cursor()
         sql = (
-                f"UPDATE {self.sql_user_table_name} set "
-                f"weekly_point=0 where "
-                f"user_id is not NULL")
+            f"UPDATE {self.sql_user_table_name} set "
+            f"weekly_point=0 where "
+            f"user_id is not NULL")
         cur.execute(sql)
         self.conn.commit()
 
@@ -256,7 +256,6 @@ class WorldTowerData:
             return [row[0] for row in result]
         else:
             return None
-
 
 
 class TowerHandle(WorldTowerData):
@@ -415,7 +414,7 @@ class TowerHandle(WorldTowerData):
             world_id = place.get_world_id(place_id)
             tower = self.tower_data.get(world_id)
             msg_head = (f"【{tower.name}】积分兑换商店\r"
-                            f"当前拥有积分：{point}")
+                        f"当前拥有积分：{point}")
             shop = tower.shop
             for goods_no, goods in shop.items():
                 msg = (f"商品编号：{goods_no}\r"
@@ -426,7 +425,6 @@ class TowerHandle(WorldTowerData):
 
 
 tower_handle = TowerHandle()
-
 
 if __name__ == '__main__':
     tower_handle.create_enemy()

@@ -7,6 +7,7 @@ from typing import Tuple, Dict, Any
 import threading
 from ..xiuxian_utils.item_json import items
 from .. import DRIVER
+
 DATABASE = Path() / "data" / "xiuxian" / "players_database"
 xiuxian_num = "578043031"  # 这里其实是修仙1作者的QQ号
 current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')

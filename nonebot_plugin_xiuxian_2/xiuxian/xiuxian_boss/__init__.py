@@ -304,7 +304,8 @@ async def battle_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg
             drops_msg = " "
         elif boss_rank < convert_rank('合道境中期')[0]:
             drops_msg = f"boss的遗骸上好像有什么东西， 凑近一看居然是{drops_info['name']}！ "
-            await sql_message.send_back(user_info['user_id'], drops_info['id'], drops_info['name'], drops_info['type'], 1)
+            await sql_message.send_back(user_info['user_id'], drops_info['id'], drops_info['name'], drops_info['type'],
+                                        1)
         else:
             drops_msg = " "
 

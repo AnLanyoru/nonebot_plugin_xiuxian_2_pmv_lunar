@@ -31,7 +31,8 @@ from ..xiuxian_utils.utils import (
 )
 from ..xiuxian_utils.clean_utils import get_strs_from_str, simple_md
 
-xiuxian_message = on_command("我的修仙信息", aliases={"我的存档", "我的信息", "存档", "修仙信息"}, priority=23, permission=GROUP, block=True)
+xiuxian_message = on_command("我的修仙信息", aliases={"我的存档", "我的信息", "存档", "修仙信息"}, priority=23,
+                             permission=GROUP, block=True)
 pic_test = on_command("测试图片", aliases={"图片测试"}, priority=23, permission=SUPERUSER, block=True)
 sql_message = XiuxianDateManage()  # sql类
 
@@ -95,7 +96,6 @@ async def xiuxian_message_(bot: Bot, event: GroupMessageEvent, args: Message = C
         sectmsg = f"无宗门"
         sectzw = f"无"
 
-    
     # 判断突破的修为
     list_all = len(OtherSet().level) - 1
     now_index = OtherSet().level.index(user_info['level'])
@@ -124,17 +124,17 @@ async def xiuxian_message_(bot: Bot, event: GroupMessageEvent, args: Message = C
     if user_main_buff_date is not None:
         main_buff_name = f"{user_main_buff_date['name']}({user_main_buff_date['level']})"
     if user_sub_buff_date is not None:
-        sub_buff_name = f"{user_sub_buff_date['name']}({user_sub_buff_date['level']})"   
+        sub_buff_name = f"{user_sub_buff_date['name']}({user_sub_buff_date['level']})"
     if user_sec_buff_date is not None:
         sec_buff_name = f"{user_sec_buff_date['name']}({user_sec_buff_date['level']})"
     if user_weapon_data is not None:
         weapon_name = f"{user_weapon_data['name']}({user_weapon_data['level']})"
     if user_armor_data is not None:
         armor_name = f"{user_armor_data['name']}({user_armor_data['level']})"
-    main_rate_buff = await UserBuffDate(user_id).get_user_main_buff_data() # 功法突破概率提升
-    await sql_message.update_last_check_info_time(user_id) # 更新查看修仙信息时间
+    main_rate_buff = await UserBuffDate(user_id).get_user_main_buff_data()  # 功法突破概率提升
+    await sql_message.update_last_check_info_time(user_id)  # 更新查看修仙信息时间
     leveluprate = int(user_info['level_up_rate'])  # 用户失败次数加成
-    number =  main_rate_buff["number"] if main_rate_buff is not None else 0
+    number = main_rate_buff["number"] if main_rate_buff is not None else 0
     DETAIL_MAP = {
         "道号": f"{user_name}",
         "境界": f"{user_info['level']}",
@@ -155,7 +155,7 @@ async def xiuxian_message_(bot: Bot, event: GroupMessageEvent, args: Message = C
         "修为排行": f"道友的修为排在第{int(user_rank)}位",
         "灵石排行": f"道友的灵石排在第{int(user_stone)}位",
     }
-    
+
     if args == "图片版":
         img_res = await draw_user_info_img(user_id, DETAIL_MAP)
         await bot.send(event=event, message=MessageSegment.image(img_res))

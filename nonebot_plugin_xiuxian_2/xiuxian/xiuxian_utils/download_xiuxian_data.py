@@ -55,4 +55,5 @@ def download_xiuxian_data():
                     logger.opt(colors=True).info(f"<red>原始压缩包已删除！</red>")
                 except:
                     logger.opt(colors=True).info(f"<red>原始压缩包删除失败，请手动删除，路径{zipPath}!</red>")
+
     return _main_()

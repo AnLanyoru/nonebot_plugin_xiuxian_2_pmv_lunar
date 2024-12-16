@@ -16,7 +16,6 @@ from nonebot.log import logger
 from nonebot import require, load_all_plugins, get_plugin_by_module_name
 from .xiuxian_utils.config import config as _config
 
-
 DRIVER = get_driver()
 
 try:
@@ -44,10 +43,10 @@ if get_plugin_by_module_name("xiuxian"):
             f"xiuxian.{module.name}"
             for module in iter_modules([str(Path(__file__).parent)])
             if module.ispkg
-            and (
-                (name := module.name[11:]) == "meta"
-                or name not in _config.disabled_plugins
-            )
+               and (
+                       (name := module.name[11:]) == "meta"
+                       or name not in _config.disabled_plugins
+               )
             # module.name[:11] == xiuxian_
         ],
         [],
@@ -80,5 +79,3 @@ async def do_something(bot: Bot, event: GroupMessageEvent):
                 pass
         else:
             raise IgnoredException("非主bot信息,已忽略")
-
-

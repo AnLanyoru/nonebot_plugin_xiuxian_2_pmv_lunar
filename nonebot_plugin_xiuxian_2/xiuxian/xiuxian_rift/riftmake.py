@@ -231,15 +231,17 @@ async def get_treasure_info(user_info, rift_rank):
         weapon_info = get_weapon(user_info, rift_rank)
         temp_msg = f"{weapon_info[1]['level']}:{weapon_info[1]['name']}!"
         msg = random.choice(TREASUREMSG).format(temp_msg)
-        await sql_message.send_back(user_info['user_id'], weapon_info[0], weapon_info[1]['name'], weapon_info[1]['type'], 1,
-                              0)
+        await sql_message.send_back(user_info['user_id'], weapon_info[0], weapon_info[1]['name'],
+                                    weapon_info[1]['type'], 1,
+                                    0)
         # 背包sql
 
     elif rift_type == "防具":  # todo
         armor_info = get_armor(user_info, rift_rank)
         temp_msg = f"{armor_info[1]['level']}防具：{armor_info[1]['name']}!"
         msg = random.choice(TREASUREMSG_1).format(temp_msg)
-        await sql_message.send_back(user_info['user_id'], armor_info[0], armor_info[1]['name'], armor_info[1]['type'], 1, 0)
+        await sql_message.send_back(user_info['user_id'], armor_info[0], armor_info[1]['name'], armor_info[1]['type'],
+                                    1, 0)
         # 背包sql
 
     elif rift_type == "功法":

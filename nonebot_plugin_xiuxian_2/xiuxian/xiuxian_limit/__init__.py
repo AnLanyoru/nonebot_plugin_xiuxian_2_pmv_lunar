@@ -23,13 +23,14 @@ sql_message = XiuxianDateManage()  # sql类
 limit = limit_data
 offset = on_command('补偿', priority=1, permission=GROUP, block=True)
 offset_get = on_command('领取补偿', priority=1, permission=GROUP, block=True)
-get_log = on_command('查日志', aliases={"日志查询", "查询日志", "查看日志", "日志记录"}, priority=1, permission=GROUP, block=True)
-get_shop_log = on_command('坊市日志', aliases={"查询坊市日志", "查看坊市日志"}, priority=1, permission=GROUP, block=True)
+get_log = on_command('查日志', aliases={"日志查询", "查询日志", "查看日志", "日志记录"}, priority=1, permission=GROUP,
+                     block=True)
+get_shop_log = on_command('坊市日志', aliases={"查询坊市日志", "查看坊市日志"}, priority=1, permission=GROUP,
+                          block=True)
 
 
 @offset.handle(parameterless=[Cooldown(cd_time=30, at_sender=False)])
 async def offset_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
-
     _, user_info, _ = await check_user(event)
 
     user_id = user_info['user_id']
@@ -47,7 +48,8 @@ async def offset_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg
         item_num = page * per_item - per_item
         item_num_end = item_num + per_item
         msg_hand = ["当前可领补偿如下："]  # 页面头
-        page_info = [f"第{page}/{page_all}页\r——tips——\r可以发送 补偿 页数 来查看更多页\r领取补偿 补偿id 来领取补偿哦"]  # 页面尾
+        page_info = [
+            f"第{page}/{page_all}页\r——tips——\r可以发送 补偿 页数 来查看更多页\r领取补偿 补偿id 来领取补偿哦"]  # 页面尾
         msg_list = msg_hand + msg_list[item_num:item_num_end] + page_info
         pass
     else:
@@ -60,7 +62,6 @@ async def offset_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg
 
 @offset_get.handle(parameterless=[Cooldown(cd_time=3, at_sender=False)])
 async def offset_get_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
-
     _, user_info, _ = await check_user(event)
 
     user_id = user_info['user_id']
@@ -97,7 +98,6 @@ async def offset_get_(bot: Bot, event: GroupMessageEvent, args: Message = Comman
 
 @get_log.handle(parameterless=[Cooldown(cd_time=30, at_sender=False)])
 async def offset_(bot: Bot, event: GroupMessageEvent):
-
     _, user_info, _ = await check_user(event)
 
     user_id = user_info['user_id']
@@ -113,7 +113,6 @@ async def offset_(bot: Bot, event: GroupMessageEvent):
 
 @get_shop_log.handle(parameterless=[Cooldown(cd_time=30, at_sender=False)])
 async def offset_(bot: Bot, event: GroupMessageEvent):
-
     _, user_info, _ = await check_user(event)
 
     user_id = user_info['user_id']
@@ -125,4 +124,3 @@ async def offset_(bot: Bot, event: GroupMessageEvent):
         msg = "未查询到道友的坊市日志信息！"
         await bot.send(event=event, message=msg)
         await get_shop_log.finish()
-

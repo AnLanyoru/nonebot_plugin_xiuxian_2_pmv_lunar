@@ -25,13 +25,15 @@ from ..xiuxian_utils.lay_out import Cooldown
 
 scheduler = require("nonebot_plugin_apscheduler").scheduler
 
-tower_rule = on_command("挑战之地规则详情", aliases={"挑战之地规则"}, priority=2, permission=GROUP | PRIVATE, block=True)
+tower_rule = on_command("挑战之地规则详情", aliases={"挑战之地规则"}, priority=2, permission=GROUP | PRIVATE,
+                        block=True)
 tower_start = on_command("进入挑战之地", aliases={"进入挑战"}, priority=2, permission=GROUP | PRIVATE, block=True)
 tower_end = on_command("离开挑战之地", aliases={"离开挑战"}, priority=2, permission=GROUP | PRIVATE, block=True)
 tower_info = on_command("查看挑战", aliases={"查看挑战信息"}, priority=1, permission=GROUP | PRIVATE, block=True)
 tower_fight = on_command("开始挑战", aliases={"挑战开始"}, priority=3, permission=GROUP | PRIVATE, block=True)
 tower_shop = on_command("挑战商店", priority=3, permission=GROUP | PRIVATE, block=True)
-tower_shop_buy = on_command("挑战商店兑换", aliases={"挑战积分兑换", "挑战兑换"}, priority=3, permission=GROUP | PRIVATE, block=True)
+tower_shop_buy = on_command("挑战商店兑换", aliases={"挑战积分兑换", "挑战兑换"}, priority=3,
+                            permission=GROUP | PRIVATE, block=True)
 tower_point_get = on_command("本周挑战积分", priority=3, permission=GROUP | PRIVATE, block=True)
 tower_point_get_reset = on_command("结算积分", priority=3, permission=SUPERUSER, block=True)
 
@@ -59,15 +61,14 @@ async def tower_point_give_():
     logger.opt(colors=True).info(f"<green>发放塔积分完毕！！！</green>")
 
 
-
 @tower_point_get_reset.handle(
     parameterless=[
         Cooldown(
             cd_time=5,
             at_sender=False)])
 async def tower_point_get_reset_(
-        bot: Bot,                     # 机器人实例
-        event: GroupMessageEvent,     # 消息主体
+        bot: Bot,  # 机器人实例
+        event: GroupMessageEvent,  # 消息主体
 ):
     user_all = tower_handle.get_all_tower_user_id()
     member_count = len(user_all)
@@ -99,8 +100,8 @@ async def tower_point_get_reset_(
             cd_time=5,
             at_sender=False)])
 async def tower_shop_buy_(
-        bot: Bot,                     # 机器人实例
-        event: GroupMessageEvent,     # 消息主体
+        bot: Bot,  # 机器人实例
+        event: GroupMessageEvent,  # 消息主体
         args: Message = CommandArg()  # 命令参数
 ):
     time_now = datetime.now()
@@ -149,7 +150,7 @@ async def tower_shop_buy_(
         await sql_message.send_back(user_id, item_id, item_name, item['type'], goods_num, 1)
     last_point = point - goods_price
     msg = f"成功兑换{item_name}{goods_num}个"
-    text =  f"消耗{goods_price}积分，余剩{last_point}积分"
+    text = f"消耗{goods_price}积分，余剩{last_point}积分"
     msg = main_md(
         msg, text,
         '挑战积分兑换 物品编号 数量', '挑战积分兑换',
@@ -186,7 +187,7 @@ async def tower_point_get_(bot: Bot, event: GroupMessageEvent):
     tower = tower_handle.tower_data.get(world_id)
     point_get = tower.point_give.get(had_get, 0)
     msg = f"道友的挑战积分信息"
-    text =  f"！本周最深抵达第{best_floor}区域，将可获取{point_get}积分！！"
+    text = f"！本周最深抵达第{best_floor}区域，将可获取{point_get}积分！！"
     msg = main_md(
         msg, text,
         '进入挑战', '进入挑战',
@@ -203,8 +204,8 @@ async def tower_point_get_(bot: Bot, event: GroupMessageEvent):
             cd_time=3,
             at_sender=False)])
 async def tower_rule_(
-        bot: Bot,                     # 机器人实例
-        event: GroupMessageEvent,     # 消息主体
+        bot: Bot,  # 机器人实例
+        event: GroupMessageEvent,  # 消息主体
 ):
     msg = ("- 挑战之地规则详情 -\r"
            "进入挑战之地后，无法进行修炼。\r"
@@ -223,8 +224,8 @@ async def tower_rule_(
             cd_time=3,
             at_sender=False)])
 async def tower_shop_(
-        bot: Bot,                     # 机器人实例
-        event: GroupMessageEvent,     # 消息主体
+        bot: Bot,  # 机器人实例
+        event: GroupMessageEvent,  # 消息主体
 ):
     time_now = datetime.now()
     day_now = time_now.weekday()
@@ -288,7 +289,8 @@ async def tower_fight_(bot: Bot, event: GroupMessageEvent):
     else:  # 输了
         final_floor = user_tower_info['now_floor']
         best_floor = max(final_floor, user_tower_info['best_floor'])
-        week_best = max(user_tower_info['now_floor'], user_tower_info['weekly_point']) if user_tower_info['weekly_point'] != -1 else -1
+        week_best = max(user_tower_info['now_floor'], user_tower_info['weekly_point']) if user_tower_info[
+                                                                                              'weekly_point'] != -1 else -1
         user_tower_info['weekly_point'] = week_best
         user_tower_info['now_floor'] = 0
         user_tower_info['best_floor'] = best_floor
@@ -358,8 +360,9 @@ async def tower_start_(bot: Bot, event: GroupMessageEvent):
     else:
         far, start_place, to_place = place.get_distance(place_id, tower_handle.tower_data[world_id].place)
         msg = f"\r道友所在位置没有位面挑战!!\r"
-        text = (f"当前位面【{world_name}】的位面挑战【{tower_handle.tower_data[world_id].name}】在距你{far:.1f}万里的：【{to_place}】\r"
-               f"可以发送【前往 {to_place}】来前去位面挑战所在位置挑战！")
+        text = (
+            f"当前位面【{world_name}】的位面挑战【{tower_handle.tower_data[world_id].name}】在距你{far:.1f}万里的：【{to_place}】\r"
+            f"可以发送【前往 {to_place}】来前去位面挑战所在位置挑战！")
         msg = main_md(
             msg, text,
             f'前往 {to_place}', f'前往 {to_place}',
@@ -422,7 +425,8 @@ async def tower_end_(bot: Bot, event: GroupMessageEvent):
         user_tower_info = tower_handle.check_user_tower_info(user_id)
         place_id = user_tower_info.get('tower_place')
         world_id = place.get_world_id(place_id)
-        week_best = max(user_tower_info['now_floor'], user_tower_info['weekly_point']) if user_tower_info['weekly_point'] != -1 else -1
+        week_best = max(user_tower_info['now_floor'], user_tower_info['weekly_point']) if user_tower_info[
+                                                                                              'weekly_point'] != -1 else -1
         user_tower_info['weekly_point'] = week_best
         final_floor = user_tower_info['now_floor']
         best_floor = max(final_floor, user_tower_info['best_floor'])
@@ -430,7 +434,7 @@ async def tower_end_(bot: Bot, event: GroupMessageEvent):
         tower_handle.update_user_tower_info(user_info, user_tower_info)
         await sql_message.do_work(user_id, 0)
         msg = f"道友成功退出位面挑战【{tower_handle.tower_data[world_id].name}】"
-        text =  f"！本次抵达第{best_floor}区域\r本周最深抵达第{week_best}区域\r历史最深抵达第{best_floor}区域，已记录！！"
+        text = f"！本次抵达第{best_floor}区域\r本周最深抵达第{week_best}区域\r历史最深抵达第{best_floor}区域，已记录！！"
         msg = main_md(
             msg, text,
             '再次挑战', '进入挑战',
@@ -439,4 +443,3 @@ async def tower_end_(bot: Bot, event: GroupMessageEvent):
             '挑战帮助', '挑战帮助')
         await bot.send(event=event, message=msg)
         await tower_end.finish()
-

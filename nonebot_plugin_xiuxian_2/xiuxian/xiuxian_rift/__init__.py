@@ -29,7 +29,6 @@ from .riftmake import (
     get_dxsj_info, get_boss_battle_info, get_treasure_info
 )
 
-
 config = get_rift_config()
 groups = config['open']  # list，群发秘境开启信息
 sql_message = XiuxianDateManage()  # sql类
@@ -38,13 +37,11 @@ world_rift = {}  # dict
 # 定时任务
 set_rift = require("nonebot_plugin_apscheduler").scheduler
 
-
 rift_help = on_command("秘境帮助", priority=6, permission=GROUP, block=True)
 create_rift = on_command("生成秘境", priority=5, permission=SUPERUSER, block=True)
 complete_rift = on_command("探索秘境", aliases={"结算秘境"}, priority=7, permission=GROUP, block=True)
 rift_protect_handle = on_command("秘境战斗事件保底", priority=5, permission=GROUP, block=True)
 rift_protect_msg = on_command("查看秘境战斗事件保底", priority=5, permission=GROUP, block=True)
-
 
 # 秘境类改动，将原group分隔的群秘境形式更改为位置（依旧套用group），位置实现方式为位置与状态压成元组，原状态访问[0]数据，位置访问[1]数据
 __rift_help__ = f"""
@@ -83,7 +80,7 @@ async def set_rift_(place_cls=place):
     if place_cls.get_worlds():
         world_rift = {}
         for world_id in place_cls.get_worlds():
-            if world_id == len(place_cls.get_worlds())-1:
+            if world_id == len(place_cls.get_worlds()) - 1:
                 continue
             rift = Rift()
             rift.name = get_rift_type()
@@ -126,7 +123,7 @@ async def create_rift_(bot: Bot, event: GroupMessageEvent):
     if place.get_worlds():
         world_rift = {}
         for world_id in place.get_worlds():
-            if world_id == len(place.get_worlds())-1:
+            if world_id == len(place.get_worlds()) - 1:
                 continue
             rift = Rift()
             rift.name = get_rift_type()

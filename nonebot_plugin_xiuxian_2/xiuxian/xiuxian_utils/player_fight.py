@@ -9,6 +9,7 @@ from .utils import number_to
 sql_message = XiuxianDateManage()  # sql类
 xiuxian_impart = XIUXIAN_IMPART_BUFF()
 
+
 class BossBuff:
     def __init__(self):
         self.boss_zs = 0
@@ -19,16 +20,16 @@ class BossBuff:
         self.boss_jh = 0
         self.boss_jb = 0
         self.boss_xl = 0
-    
-    
+
+
 class UserRandomBuff:
     def __init__(self):
         self.random_break = 0
         self.random_xx = 0
         self.random_hx = 0
         self.random_def = 0
-    
-    
+
+
 empty_boss_buff = BossBuff()
 empty_ussr_random_buff = UserRandomBuff()
 
@@ -112,8 +113,8 @@ async def player_fight(player1: dict, player2: dict, type_in, bot_id):
     for i in range(15):
 
         user1_battle_buff_date, user2_battle_buff_date, msg = start_sub_buff_handle(
-            player1_sub_open,user1_sub_buff_date,user1_battle_buff_date,
-            player2_sub_open,user2_sub_buff_date,user2_battle_buff_date)
+            player1_sub_open, user1_sub_buff_date, user1_battle_buff_date,
+            player2_sub_open, user2_sub_buff_date, user2_battle_buff_date)
         if msg:
             play_list.append(get_msg_dict(player1, player1_init_hp, msg))  # 辅修功法14
 
@@ -122,13 +123,14 @@ async def player_fight(player1: dict, player2: dict, type_in, bot_id):
             if user1_turn_skip:  # 无需跳过回合
                 play_list.append(get_msg_dict(player1, player1_init_hp, f"☆------{player1['道号']}的回合------☆"))
                 user1_hp_cost, user1_mp_cost, user1_skill_type, skill_rate = await get_skill_hp_mp_data(player1,
-                                                                                                  user1_skill_date)
+                                                                                                        user1_skill_date)
                 if player1_turn_cost == 0:  # 没有持续性技能生效
                     player1_js = player1_f_js  # 没有持续性技能生效,减伤恢复
                     if is_enable_user_skill(player1, user1_hp_cost, user1_mp_cost, player1_turn_cost,
                                             skill_rate):  # 满足技能要求，#此处为技能的第一次释放
-                        skill_msg, user1_skill_sh, player1_turn_cost = await get_skill_sh_data(player1, user1_skill_date,
-                                                                                         player2_js)
+                        skill_msg, user1_skill_sh, player1_turn_cost = await get_skill_sh_data(player1,
+                                                                                               user1_skill_date,
+                                                                                               player2_js)
                         if user1_skill_type == 1:  # 直接伤害类技能
                             play_list.append(get_msg_dict(player1, player1_init_hp, skill_msg))
                             player1 = calculate_skill_cost(player1, user1_hp_cost, user1_mp_cost)
@@ -150,7 +152,7 @@ async def player_fight(player1: dict, player2: dict, type_in, bot_id):
                             user1_buff_type = user1_skill_date['bufftype']
                             if user1_buff_type == 1:  # 攻击类buff
                                 is_crit, player1_sh = await get_turnatk(player1, user1_skill_sh,
-                                                                 user1_battle_buff_date)  # 判定是否暴击 辅修功法14
+                                                                        user1_battle_buff_date)  # 判定是否暴击 辅修功法14
                                 if is_crit:
                                     msg1 = "{}发起会心一击，造成了{}伤害"
                                 else:
@@ -166,7 +168,8 @@ async def player_fight(player1: dict, player2: dict, type_in, bot_id):
                                                  f"{player2['道号']}剩余血量{number_to(player2['气血'])}"))
 
                             elif user1_buff_type == 2:  # 减伤类buff,需要在player2处判断
-                                is_crit, player1_sh = await get_turnatk(player1, 0, user1_battle_buff_date)  # 判定是否暴击 辅修功法14
+                                is_crit, player1_sh = await get_turnatk(player1, 0,
+                                                                        user1_battle_buff_date)  # 判定是否暴击 辅修功法14
                                 if is_crit:
                                     msg1 = "{}发起会心一击，造成了{}伤害"
                                 else:
@@ -226,7 +229,7 @@ async def player_fight(player1: dict, player2: dict, type_in, bot_id):
                         user1_buff_type = user1_skill_date['bufftype']
                         if user1_buff_type == 1:  # 攻击类buff
                             is_crit, player1_sh = await get_turnatk(player1, user1_skill_sh,
-                                                             user1_battle_buff_date)  # 判定是否暴击 辅修功法14
+                                                                    user1_battle_buff_date)  # 判定是否暴击 辅修功法14
 
                             if is_crit:
                                 msg1 = "{}发起会心一击，造成了{}伤害"
@@ -341,13 +344,14 @@ async def player_fight(player1: dict, player2: dict, type_in, bot_id):
             if user2_turn_skip:  # 玩家2无需跳过回合
                 play_list.append(get_msg_dict(player2, player2_init_hp, f"☆------{player2['道号']}的回合------☆"))
                 user2_hp_cost, user2_mp_cost, user2_skill_type, skill_rate = await get_skill_hp_mp_data(player2,
-                                                                                                  user2_skill_date)
+                                                                                                        user2_skill_date)
                 if player2_turn_cost == 0:  # 没有持续性技能生效
                     player2_js = player2_f_js
                     if is_enable_user_skill(player2, user2_hp_cost, user2_mp_cost, player2_turn_cost,
                                             skill_rate):  # 满足技能要求，#此处为技能的第一次释放
-                        skill_msg, user2_skill_sh, player2_turn_cost = await get_skill_sh_data(player2, user2_skill_date,
-                                                                                         player1_js)
+                        skill_msg, user2_skill_sh, player2_turn_cost = await get_skill_sh_data(player2,
+                                                                                               user2_skill_date,
+                                                                                               player1_js)
                         if user2_skill_type == 1:  # 直接伤害类技能
                             play_list.append(get_msg_dict(player2, player2_init_hp, skill_msg))
                             player1['气血'] = player1['气血'] - int(user2_skill_sh * player1_js)  # 玩家2的伤害 * 玩家1的减伤
@@ -369,7 +373,7 @@ async def player_fight(player1: dict, player2: dict, type_in, bot_id):
                             user2_buff_type = user2_skill_date['bufftype']
                             if user2_buff_type == 1:  # 攻击类buff
                                 is_crit, player2_sh = await get_turnatk(player2, user2_skill_sh,
-                                                                 user2_battle_buff_date)  # 判定是否暴击 辅修功法14
+                                                                        user2_battle_buff_date)  # 判定是否暴击 辅修功法14
                                 if is_crit:
                                     msg2 = "{}发起会心一击，造成了{}伤害"
                                 else:
@@ -386,7 +390,8 @@ async def player_fight(player1: dict, player2: dict, type_in, bot_id):
                                 player2 = calculate_skill_cost(player2, user2_hp_cost, user2_mp_cost)
 
                             elif user2_buff_type == 2:  # 减伤类buff,需要在player2处判断
-                                is_crit, player2_sh = await get_turnatk(player2, 0, user2_battle_buff_date)  # 判定是否暴击 辅修功法14
+                                is_crit, player2_sh = await get_turnatk(player2, 0,
+                                                                        user2_battle_buff_date)  # 判定是否暴击 辅修功法14
                                 if is_crit:
                                     msg2 = "{}发起会心一击，造成了{}伤害"
                                 else:
@@ -446,7 +451,7 @@ async def player_fight(player1: dict, player2: dict, type_in, bot_id):
                         user2_buff_type = user2_skill_date['bufftype']
                         if user2_buff_type == 1:  # 攻击类buff
                             is_crit, player2_sh = await get_turnatk(player2, user2_skill_sh,
-                                                             user2_battle_buff_date)  # 判定是否暴击 辅修功法14
+                                                                    user2_battle_buff_date)  # 判定是否暴击 辅修功法14
 
                             if is_crit:
                                 msg2 = "{}发起会心一击，造成了{}伤害"
@@ -558,7 +563,7 @@ async def player_fight(player1: dict, player2: dict, type_in, bot_id):
             if is_sql:
                 await sql_message.update_user_hp_mp(player1['user_id'], 1, int(player1['真元'] / (1 + user1_mp_buff)))
                 await sql_message.update_user_hp_mp(player2['user_id'], int(player2['气血'] / (1 + user2_hp_buff)),
-                                              int(player2['真元'] / (1 + user2_mp_buff)))
+                                                    int(player2['真元'] / (1 + user2_mp_buff)))
             break
 
         if player2_turn_cost < 0:  # 休息为负数，如果休息，则跳过回合，正常是0
@@ -577,7 +582,8 @@ async def player_fight(player1: dict, player2: dict, type_in, bot_id):
     try:
         suc
     except NameError:
-        play_list.append({"type": "node", "data": {"name": "Bot", "uin": int(bot_id), "content": "你们打到天昏地暗被大能制止！！！！"}})
+        play_list.append(
+            {"type": "node", "data": {"name": "Bot", "uin": int(bot_id), "content": "你们打到天昏地暗被大能制止！！！！"}})
         suc = "None"
     return play_list, suc
 
@@ -735,9 +741,9 @@ async def boss_fight(player1: dict, boss: dict, type_in=2, bot_id=0):
     player1_js = player1_f_js  # 减伤率
 
     # 回旋镖
-    
+
     boss_buff = BossBuff()
-    
+
     try:
         boss_rank = convert_rank((boss["jj"] + '中期'))[0]
     except:
@@ -937,99 +943,116 @@ async def boss_fight(player1: dict, boss: dict, type_in=2, bot_id=0):
 
     if boss_js <= 0.6 and boss['name'] in BOSSDEF:
         effect_name = BOSSDEF[boss['name']]
-        boss_js_data = {"type": "node", "data": {"name": f"{boss['name']}",
-                                                 "uin": int(bot_id),
-                                                 "content": f"{effect_name},获得了{int((1 - boss_js) * 100)}%减伤!"}}
+        boss_js_data = {"type": "node",
+                        "data": {"name": f"{boss['name']}",
+                                 "uin": int(bot_id),
+                                 "content": f"{effect_name},获得了{int((1 - boss_js) * 100)}%减伤!"}}
 
         play_list.append(boss_js_data)
 
     if boss_buff.boss_zs > 0:
-        boss_zs_data = {"type": "node", "data": {"name": f"{boss['name']}",
-                                                 "uin": int(bot_id),
-                                                 "content": f"{boss['name']}使用了真龙九变,提升了{int(boss_buff.boss_zs * 100)}%攻击力!"}}
+        boss_zs_data = {"type": "node",
+                        "data": {"name": f"{boss['name']}",
+                                 "uin": int(bot_id),
+                                 "content": f"{boss['name']}使用了真龙九变,提升了{int(boss_buff.boss_zs * 100)}%攻击力!"}}
 
         play_list.append(boss_zs_data)
 
     if boss_buff.boss_hx > 0:
-        boss_hx_data = {"type": "node", "data": {"name": f"{boss['name']}",
-                                                 "uin": int(bot_id),
-                                                 "content": f"{boss['name']}使用了无瑕七绝剑,提升了{int(boss_buff.boss_hx * 100)}%会心率!"}}
+        boss_hx_data = {"type": "node",
+                        "data": {"name": f"{boss['name']}",
+                                 "uin": int(bot_id),
+                                 "content": f"{boss['name']}使用了无瑕七绝剑,提升了{int(boss_buff.boss_hx * 100)}%会心率!"}}
 
         play_list.append(boss_hx_data)
 
     if boss_buff.boss_bs > 0:
-        boss_bs_data = {"type": "node", "data": {"name": f"{boss['name']}",
-                                                 "uin": int(bot_id),
-                                                 "content": f"{boss['name']}使用了太乙剑诀,提升了{int(boss_buff.boss_bs * 100)}%会心伤害!"}}
+        boss_bs_data = {
+            "type": "node",
+            "data": {"name": f"{boss['name']}",
+                     "uin": int(bot_id),
+                     "content": f"{boss['name']}使用了太乙剑诀,提升了{int(boss_buff.boss_bs * 100)}%会心伤害!"}}
 
         play_list.append(boss_bs_data)
 
     if boss_buff.boss_xx > 0:
-        boss_xx_data = {"type": "node", "data": {"name": f"{boss['name']}",
-                                                 "uin": int(bot_id),
-                                                 "content": f"{boss['name']}使用了七煞灭魂聚血杀阵,降低了{player1['道号']}{int(boss_buff.boss_xx * 100)}%气血吸取!"}}
+        boss_xx_data = {"type": "node",
+                        "data": {"name": f"{boss['name']}",
+                                 "uin": int(bot_id),
+                                 "content": f"{boss['name']}使用了七煞灭魂聚血杀阵,降低了{player1['道号']}{int(boss_buff.boss_xx * 100)}%气血吸取!"}}
 
         play_list.append(boss_xx_data)
 
     if boss_buff.boss_jg > 0:
-        boss_jg_data = {"type": "node", "data": {"name": f"{boss['name']}",
-                                                 "uin": int(bot_id),
-                                                 "content": f"{boss['name']}使用了子午安息香,降低了{player1['道号']}{int(boss_buff.boss_jg * 100)}%伤害!"}}
+        boss_jg_data = {"type": "node",
+                        "data": {"name": f"{boss['name']}",
+                                 "uin": int(bot_id),
+                                 "content": f"{boss['name']}使用了子午安息香,降低了{player1['道号']}{int(boss_buff.boss_jg * 100)}%伤害!"}}
 
         play_list.append(boss_jg_data)
 
     if boss_buff.boss_jh > 0:
-        boss_jh_data = {"type": "node", "data": {"name": f"{boss['name']}",
-                                                 "uin": int(bot_id),
-                                                 "content": f"{boss['name']}使用了玄冥剑气,降低了{player1['道号']}{int(boss_buff.boss_jh * 100)}%会心率!"}}
+        boss_jh_data = {"type": "node",
+                        "data": {"name": f"{boss['name']}",
+                                 "uin": int(bot_id),
+                                 "content": f"{boss['name']}使用了玄冥剑气,降低了{player1['道号']}{int(boss_buff.boss_jh * 100)}%会心率!"}}
 
         play_list.append(boss_jh_data)
 
     if boss_buff.boss_jb > 0:
-        boss_jb_data = {"type": "node", "data": {"name": f"{boss['name']}",
-                                                 "uin": int(bot_id),
-                                                 "content": f"{boss['name']}使用了大德琉璃金刚身,降低了{player1['道号']}{int(boss_buff.boss_jb * 100)}%会心伤害!"}}
+        boss_jb_data = {"type": "node",
+                        "data": {"name": f"{boss['name']}",
+                                 "uin": int(bot_id),
+                                 "content": f"{boss['name']}使用了大德琉璃金刚身,降低了{player1['道号']}{int(boss_buff.boss_jb * 100)}%会心伤害!"}}
 
         play_list.append(boss_jb_data)
 
     if boss_buff.boss_xl > 0:
         # effect_name = BOSSDEF[boss['name']]
-        boss_xl_data = {"type": "node", "data": {"name": f"{boss['name']}",
-                                                 "uin": int(bot_id),
-                                                 "content": f"{boss['name']}使用了千煌锁灵阵,降低了{player1['道号']}{int(boss_buff.boss_xl * 100)}%真元吸取!"}}
+        boss_xl_data = {"type": "node",
+                        "data": {"name": f"{boss['name']}",
+                                 "uin": int(bot_id),
+                                 "content": f"{boss['name']}使用了千煌锁灵阵,降低了{player1['道号']}{int(boss_buff.boss_xl * 100)}%真元吸取!"}}
 
         play_list.append(boss_xl_data)
 
     if random_buff.random_break > 0:
-        random_buff.random_break_data = {"type": "node", "data": {"name": f"{player1['道号']}",
-                                                      "uin": int(bot_id),
-                                                      "content": f"{player1['道号']}发动了八九玄功,获得了{int(random_buff.random_break * 100)}%穿甲！"}}
+        random_buff.random_break_data = {"type": "node",
+                                         "data": {"name": f"{player1['道号']}",
+                                                  "uin": int(bot_id),
+                                                  "content": f"{player1['道号']}发动了八九玄功,获得了{int(random_buff.random_break * 100)}%穿甲！"}}
         play_list.append(random_buff.random_break_data)
 
     if random_buff.random_xx > 0:
-        random_buff.random_xx_data = {"type": "node", "data": {"name": f"{player1['道号']}",
-                                                   "uin": int(bot_id),
-                                                   "content": f"{player1['道号']}发动了八九玄功,提升了{int(random_buff.random_xx * 100)}%!吸血效果！"}}
+        random_buff.random_xx_data = {"type": "node",
+                                      "data": {"name": f"{player1['道号']}",
+                                               "uin": int(bot_id),
+                                               "content": f"{player1['道号']}发动了八九玄功,提升了{int(random_buff.random_xx * 100)}%!吸血效果！"}}
         play_list.append(random_buff.random_xx_data)
 
     if random_buff.random_hx > 0:
-        random_buff.random_hx_data = {"type": "node", "data": {"name": f"{player1['道号']}",
-                                                   "uin": int(bot_id),
-                                                   "content": f"{player1['道号']}发动了八九玄功,提升了{int(random_buff.random_hx * 100)}%!会心！"}}
+        random_buff.random_hx_data = {"type": "node",
+                                      "data": {"name": f"{player1['道号']}",
+                                               "uin": int(bot_id),
+                                               "content": f"{player1['道号']}发动了八九玄功,提升了{int(random_buff.random_hx * 100)}%!会心！"}}
         play_list.append(random_buff.random_hx_data)
 
     if random_buff.random_def > 0:
-        random_buff.random_def_data = {"type": "node", "data": {"name": f"{player1['道号']}",
-                                                    "uin": int(bot_id),
-                                                    "content": f"{player1['道号']}发动了八九玄功,获得了{int(random_buff.random_def * 100)}%!减伤！"}}
+        random_buff.random_def_data = {"type": "node",
+                                       "data":
+                                           {"name": f"{player1['道号']}",
+                                            "uin": int(bot_id),
+                                            "content": f"{player1['道号']}发动了八九玄功,获得了{int(random_buff.random_def * 100)}%!减伤！"}}
         play_list.append(random_buff.random_def_data)
 
     boss['会心'] = 30
 
     if fan_data is True:
-        fan_data = {"type": "node", "data": {"name": f"{player1['道号']}",
-                                             "uin": int(bot_id),
-                                             "content": f"{player1['道号']}发动了辅修功法反咒禁制，无效化了减益！"}}
+        fan_data = {"type": "node",
+                    "data":
+                        {"name": f"{player1['道号']}",
+                         "uin": int(bot_id),
+                         "content": f"{player1['道号']}发动了辅修功法反咒禁制，无效化了减益！"}}
         play_list.append(fan_data)
 
     user1_battle_buff_date = UserBattleBuffDate(player1['user_id'])  # 1号的战斗buff信息 辅修功法14
@@ -1048,13 +1071,14 @@ async def boss_fight(player1: dict, boss: dict, type_in=2, bot_id=0):
             if user1_turn_skip:  # 无需跳过回合
                 turn_start_msg = f"☆------{player1['道号']}的回合------☆"
                 play_list.append(get_msg_dict(player1, player_init_hp, turn_start_msg))
-                user1hpconst, user1mpcost, user1skill_type, skillrate = await get_skill_hp_mp_data(player1, user1_skill_date)
+                user1hpconst, user1mpcost, user1skill_type, skillrate = await get_skill_hp_mp_data(player1,
+                                                                                                   user1_skill_date)
                 if player1_turn_cost == 0:  # 没有持续性技能生效
                     player1_js = player1_f_js  # 没有持续性技能生效,减伤恢复
                     if is_enable_user_skill(player1, user1hpconst, user1mpcost, player1_turn_cost,
                                             skillrate):  # 满足技能要求，#此处为技能的第一次释放
                         skillmsg, user1_skill_sh, player1_turn_cost = await get_skill_sh_data(player1, user1_skill_date,
-                                                                                        boss_js)
+                                                                                              boss_js)
                         if user1skill_type == 1:  # 直接伤害类技能
                             play_list.append(get_msg_dict(player1, player_init_hp, skillmsg))
                             player1 = calculate_skill_cost(player1, user1hpconst, user1mpcost)
@@ -1075,7 +1099,8 @@ async def boss_fight(player1: dict, boss: dict, type_in=2, bot_id=0):
                         elif user1skill_type == 3:  # buff类技能
                             user1buff_type = user1_skill_date['bufftype']
                             if user1buff_type == 1:  # 攻击类buff
-                                is_crit, player1_sh = await get_turnatk(player1, 0, user1_battle_buff_date, boss_buff, random_buff)  # 判定是否暴击 辅修功法14
+                                is_crit, player1_sh = await get_turnatk(player1, 0, user1_battle_buff_date, boss_buff,
+                                                                        random_buff)  # 判定是否暴击 辅修功法14
                                 if is_crit:
                                     msg1 = "{}发起会心一击，造成了{}伤害"
                                 else:
@@ -1092,7 +1117,8 @@ async def boss_fight(player1: dict, boss: dict, type_in=2, bot_id=0):
                                 sh += int(player1_sh * (boss_js + user1_break))
 
                             elif user1buff_type == 2:  # 减伤类buff,需要在player2处判断
-                                is_crit, player1_sh = await get_turnatk(player1, 0, user1_battle_buff_date, boss_buff, random_buff)  # 判定是否暴击 辅修功法14
+                                is_crit, player1_sh = await get_turnatk(player1, 0, user1_battle_buff_date, boss_buff,
+                                                                        random_buff)  # 判定是否暴击 辅修功法14
                                 if is_crit:
                                     msg1 = "{}发起会心一击，造成了{}伤害"
                                 else:
@@ -1118,7 +1144,8 @@ async def boss_fight(player1: dict, boss: dict, type_in=2, bot_id=0):
                                 boss_turn_skip = False
 
                     else:  # 没放技能，打一拳
-                        is_crit, player1_sh = await get_turnatk(player1, 0, user1_battle_buff_date, boss_buff, random_buff)  # 判定是否暴击 辅修功法14
+                        is_crit, player1_sh = await get_turnatk(player1, 0, user1_battle_buff_date, boss_buff,
+                                                                random_buff)  # 判定是否暴击 辅修功法14
                         if is_crit:
                             msg1 = "{}发起会心一击，造成了{}伤害"
                         else:
@@ -1137,7 +1164,8 @@ async def boss_fight(player1: dict, boss: dict, type_in=2, bot_id=0):
                         skillmsg = get_persistent_skill_msg(player1['道号'], user1_skill_date['name'], user1_skill_sh,
                                                             boss_js, player1_turn_cost)
                         play_list.append(get_msg_dict(player1, player_init_hp, skillmsg))
-                        is_crit, player1_sh = await get_turnatk(player1, 0, user1_battle_buff_date, boss_buff, random_buff)  # 判定是否暴击 辅修功法14
+                        is_crit, player1_sh = await get_turnatk(player1, 0, user1_battle_buff_date, boss_buff,
+                                                                random_buff)  # 判定是否暴击 辅修功法14
                         if is_crit:
                             msg1 = "{}发起会心一击，造成了{}伤害"
                         else:
@@ -1155,7 +1183,8 @@ async def boss_fight(player1: dict, boss: dict, type_in=2, bot_id=0):
                         user1buff_type = user1_skill_date['bufftype']
                         if user1buff_type == 1:  # 攻击类buff
                             is_crit, player1_sh = await get_turnatk(player1, user1_skill_sh,
-                                                             user1_battle_buff_date, boss_buff, random_buff)  # 判定是否暴击 辅修功法14
+                                                                    user1_battle_buff_date, boss_buff,
+                                                                    random_buff)  # 判定是否暴击 辅修功法14
 
                             if is_crit:
                                 msg1 = "{}发起会心一击，造成了{}伤害"
@@ -1172,7 +1201,8 @@ async def boss_fight(player1: dict, boss: dict, type_in=2, bot_id=0):
                             sh += int(player1_sh * (boss_js + user1_break))
 
                         elif user1buff_type == 2:  # 减伤类buff,需要在player2处判断
-                            is_crit, player1_sh = await get_turnatk(player1, 0, user1_battle_buff_date, boss_buff, random_buff)  # 判定是否暴击 辅修功法14
+                            is_crit, player1_sh = await get_turnatk(player1, 0, user1_battle_buff_date, boss_buff,
+                                                                    random_buff)  # 判定是否暴击 辅修功法14
                             if is_crit:
                                 msg1 = "{}发起会心一击，造成了{}伤害"
                             else:
@@ -1193,7 +1223,8 @@ async def boss_fight(player1: dict, boss: dict, type_in=2, bot_id=0):
                         skillmsg = get_persistent_skill_msg(player1['道号'], user1_skill_date['name'], user1_skill_sh,
                                                             boss_js, player1_turn_cost)
                         play_list.append(get_msg_dict(player1, player_init_hp, skillmsg))
-                        is_crit, player1_sh = await get_turnatk(player1, 0, user1_battle_buff_date, boss_buff, random_buff)  # 判定是否暴击 辅修功法14
+                        is_crit, player1_sh = await get_turnatk(player1, 0, user1_battle_buff_date, boss_buff,
+                                                                random_buff)  # 判定是否暴击 辅修功法14
                         if is_crit:
                             msg1 = "{}发起会心一击，造成了{}伤害"
                         else:
@@ -1230,7 +1261,7 @@ async def boss_fight(player1: dict, boss: dict, type_in=2, bot_id=0):
 
             ## 自己回合结束 处理 辅修功法14
         player1, boss, msg = after_atk_sub_buff_handle(player1_sub_open, player1, user1_main_buff_data,
-                                                       user1_sub_buff_date, player2_health_temp - boss['气血'], 
+                                                       user1_sub_buff_date, player2_health_temp - boss['气血'],
                                                        boss, boss_buff, random_buff)
         if msg:
             play_list.append(get_msg_dict(player1, player_init_hp, msg))
@@ -1269,9 +1300,11 @@ async def boss_fight(player1: dict, boss: dict, type_in=2, bot_id=0):
                 else:
                     msg2 = "{}：紫玄掌！！紫星河！！！造成了{}伤害"
                 play_list.append(get_boss_dict(boss, qx, msg2.format(boss['name'], number_to(
-                    (boss_sh * (1 + boss_buff.boss_zs) * (player1_js - random_buff.random_def) * 5) + (player1['气血'] * 0.3))), bot_id))
+                    (boss_sh * (1 + boss_buff.boss_zs) * (player1_js - random_buff.random_def) * 5) + (
+                            player1['气血'] * 0.3))), bot_id))
                 player1['气血'] = player1['气血'] - (
-                    ((boss_sh * (1 + boss_buff.boss_zs) * (player1_js - random_buff.random_def) * 5) + (player1['气血'] * 0.3)))
+                    ((boss_sh * (1 + boss_buff.boss_zs) * (player1_js - random_buff.random_def) * 5) + (
+                            player1['气血'] * 0.3)))
                 play_list.append(
                     get_boss_dict(boss, qx, f"{player1['道号']}剩余血量{number_to(player1['气血'])}", bot_id))
 
@@ -1285,7 +1318,7 @@ async def boss_fight(player1: dict, boss: dict, type_in=2, bot_id=0):
                 play_list.append(get_boss_dict(boss, qx, msg2.format(boss['name'], number_to(
                     boss_sh * (1 + boss_buff.boss_zs) * (player1_js - random_buff.random_def + 0.5) * 3)), bot_id))
                 player1['气血'] = player1['气血'] - (
-                            boss_sh * (1 + boss_buff.boss_zs) * (player1_js - random_buff.random_def + 0.5) * 3)
+                        boss_sh * (1 + boss_buff.boss_zs) * (player1_js - random_buff.random_def + 0.5) * 3)
                 play_list.append(
                     get_boss_dict(boss, qx, f"{player1['道号']}剩余血量{number_to(player1['气血'])}", bot_id))
 
@@ -1298,7 +1331,8 @@ async def boss_fight(player1: dict, boss: dict, type_in=2, bot_id=0):
                     msg2 = "{}发起攻击，造成了{}伤害"
                 play_list.append(get_boss_dict(boss, qx, msg2.format(boss['name'], number_to(
                     (boss_sh * (1 + boss_buff.boss_zs) * (player1_js - random_buff.random_def)))), bot_id))
-                player1['气血'] = player1['气血'] - (boss_sh * (1 + boss_buff.boss_zs) * (player1_js - random_buff.random_def))
+                player1['气血'] = player1['气血'] - (
+                        boss_sh * (1 + boss_buff.boss_zs) * (player1_js - random_buff.random_def))
                 play_list.append(
                     get_boss_dict(boss, qx, f"{player1['道号']}剩余血量{number_to(player1['气血'])}", bot_id))
 
@@ -1347,7 +1381,7 @@ def get_msg_dict(player, player_init_hp, msg):
 def get_boss_dict(boss, boss_init_hp, msg, bot_id):
     return {"type": "node",
             "data": {"name": f"{boss['name']}当前血量：{int(boss['气血'])} / {int(boss_init_hp)}", "uin": int(bot_id),
-                     "content": msg+'.'}}
+                     "content": msg + '.'}}
 
 
 async def get_user_def_buff(user_id):
@@ -1372,7 +1406,7 @@ async def get_user_def_buff(user_id):
 async def get_turnatk(
         player, buff=0, user_battle_buff_date=None,
         boss_buff: BossBuff = empty_boss_buff,
-        random_buff:UserRandomBuff = empty_ussr_random_buff):  # 辅修功法14
+        random_buff: UserRandomBuff = empty_ussr_random_buff):  # 辅修功法14
     if user_battle_buff_date is None:
         pass
     sub_atk = 0
@@ -1433,7 +1467,8 @@ async def get_turnatk(
     weapon_critatk = weapon_critatk_data['critatk'] if weapon_critatk_data is not None else 0  # 武器会心伤害
     main_critatk = main_critatk_data['critatk'] if main_critatk_data is not None else 0  # 功法会心伤害
     crit_per = crit_buff + int(
-        (impart_know_per + sub_crit - boss_buff.boss_jh + random_buff.random_hx) * 100) + armor_crit_buff + main_crit_buff
+        (
+                impart_know_per + sub_crit - boss_buff.boss_jh + random_buff.random_hx) * 100) + armor_crit_buff + main_crit_buff
     # 新会心实现，包含辅修，boss减暴击，随机buff效果，武器&装备暴击，功法暴击
     print("新会心实现", crit_per)
     is_crit = False
@@ -1512,9 +1547,15 @@ async def get_skill_sh_data(player, secbuffdata, js):
             turnmsg = f"，休息{secbuffdata['turncost']}回合！"
 
         if is_crit:
-            skillmsg = f"{player['道号']}发动技能：{secbuffdata['name']}，消耗气血{number_to(int(secbuffdata['hpcost'] * player['气血'])) if secbuffdata['hpcost'] != 0 else 0}点、真元{number_to(int(secbuffdata['mpcost'] * player['exp'])) if secbuffdata['mpcost'] != 0 else 0}点，{secbuffdata['desc']}并且发生了会心一击，造成{number_to(atkmsg[:-1])}，共计{number_to(skillsh * js)}点伤害{turnmsg}"
+            skillmsg = (f"{player['道号']}发动技能：{secbuffdata['name']}，"
+                        f"消耗气血{number_to(int(secbuffdata['hpcost'] * player['气血'])) if secbuffdata['hpcost'] != 0 else 0}点、"
+                        f"真元{number_to(int(secbuffdata['mpcost'] * player['exp'])) if secbuffdata['mpcost'] != 0 else 0}点，"
+                        f"{secbuffdata['desc']}并且发生了会心一击，造成{number_to(atkmsg[:-1])}，共计{number_to(skillsh * js)}点伤害{turnmsg}")
         else:
-            skillmsg = f"{player['道号']}发动技能：{secbuffdata['name']}，消耗气血{number_to(int(secbuffdata['hpcost'] * player['气血'])) if secbuffdata['hpcost'] != 0 else 0}点、真元{number_to(int(secbuffdata['mpcost'] * player['exp'])) if secbuffdata['mpcost'] != 0 else 0}点，{secbuffdata['desc']}造成{number_to(atkmsg[:-1])}，共计{number_to(skillsh * js)}点伤害{turnmsg}"
+            skillmsg = (f"{player['道号']}发动技能：{secbuffdata['name']}，"
+                        f"消耗气血{number_to(int(secbuffdata['hpcost'] * player['气血'])) if secbuffdata['hpcost'] != 0 else 0}点、"
+                        f"真元{number_to(int(secbuffdata['mpcost'] * player['exp'])) if secbuffdata['mpcost'] != 0 else 0}点，"
+                        f"{secbuffdata['desc']}造成{number_to(atkmsg[:-1])}，共计{number_to(skillsh * js)}点伤害{turnmsg}")
 
         return skillmsg, skillsh, turncost
 
@@ -1523,9 +1564,15 @@ async def get_skill_sh_data(player, secbuffdata, js):
         is_crit, turnatk = await get_turnatk(player)
         skillsh = int(secbuffdata['atkvalue'] * player['攻击'])  # 改动
         if is_crit:
-            skillmsg = f"{player['道号']}发动技能：{secbuffdata['name']}，消耗气血{number_to(int(secbuffdata['hpcost'] * player['气血'])) if secbuffdata['hpcost'] != 0 else 0}点、真元{number_to(int(secbuffdata['mpcost'] * player['exp'])) if secbuffdata['mpcost'] != 0 else 0}点，{secbuffdata['desc']}并且发生了会心一击，造成{number_to(skillsh * (0.2 + js))}点伤害，持续{turncost}回合！"
+            skillmsg = (f"{player['道号']}发动技能：{secbuffdata['name']}，"
+                        f"消耗气血{number_to(int(secbuffdata['hpcost'] * player['气血'])) if secbuffdata['hpcost'] != 0 else 0}点、"
+                        f"真元{number_to(int(secbuffdata['mpcost'] * player['exp'])) if secbuffdata['mpcost'] != 0 else 0}点，"
+                        f"{secbuffdata['desc']}并且发生了会心一击，造成{number_to(skillsh * (0.2 + js))}点伤害，持续{turncost}回合！")
         else:
-            skillmsg = f"{player['道号']}发动技能：{secbuffdata['name']}，消耗气血{number_to(int(secbuffdata['hpcost'] * player['气血'])) if secbuffdata['hpcost'] != 0 else 0}点、真元{number_to(int(secbuffdata['mpcost'] * player['exp'])) if secbuffdata['mpcost'] != 0 else 0}点，{secbuffdata['desc']}造成{number_to(skillsh * (0.2 + js))}点伤害，持续{turncost}回合！"
+            skillmsg = (f"{player['道号']}发动技能：{secbuffdata['name']}，"
+                        f"消耗气血{number_to(int(secbuffdata['hpcost'] * player['气血'])) if secbuffdata['hpcost'] != 0 else 0}点、"
+                        f"真元{number_to(int(secbuffdata['mpcost'] * player['exp'])) if secbuffdata['mpcost'] != 0 else 0}点，"
+                        f"{secbuffdata['desc']}造成{number_to(skillsh * (0.2 + js))}点伤害，持续{turncost}回合！")
 
         return skillmsg, skillsh, turncost
 
@@ -1533,9 +1580,15 @@ async def get_skill_sh_data(player, secbuffdata, js):
         turncost = secbuffdata['turncost']
         skillsh = secbuffdata['buffvalue']
         if secbuffdata['bufftype'] == 1:
-            skillmsg = f"{player['道号']}发动技能：{secbuffdata['name']}，消耗气血{number_to(int(secbuffdata['hpcost'] * player['气血'])) if secbuffdata['hpcost'] != 0 else 0}点、真元{number_to(int(secbuffdata['mpcost'] * player['exp'])) if secbuffdata['mpcost'] != 0 else 0}点，{secbuffdata['desc']}攻击力增加{skillsh}倍，持续{turncost}回合！"
+            skillmsg = (f"{player['道号']}发动技能：{secbuffdata['name']}，"
+                        f"消耗气血{number_to(int(secbuffdata['hpcost'] * player['气血'])) if secbuffdata['hpcost'] != 0 else 0}点、"
+                        f"真元{number_to(int(secbuffdata['mpcost'] * player['exp'])) if secbuffdata['mpcost'] != 0 else 0}点，"
+                        f"{secbuffdata['desc']}攻击力增加{skillsh}倍，持续{turncost}回合！")
         elif secbuffdata['bufftype'] == 2:
-            skillmsg = f"{player['道号']}发动技能：{secbuffdata['name']}，消耗气血{number_to(int(secbuffdata['hpcost'] * player['气血'])) if secbuffdata['hpcost'] != 0 else 0}点、真元{number_to(int(secbuffdata['mpcost'] * player['exp'])) if secbuffdata['mpcost'] != 0 else 0}点，{secbuffdata['desc']}获得{skillsh * 100}%的减伤，持续{turncost}回合！"
+            skillmsg = (f"{player['道号']}发动技能：{secbuffdata['name']}，"
+                        f"消耗气血{number_to(int(secbuffdata['hpcost'] * player['气血'])) if secbuffdata['hpcost'] != 0 else 0}点、"
+                        f"真元{number_to(int(secbuffdata['mpcost'] * player['exp'])) if secbuffdata['mpcost'] != 0 else 0}点，"
+                        f"{secbuffdata['desc']}获得{skillsh * 100}%的减伤，持续{turncost}回合！")
 
         return skillmsg, skillsh, turncost
 
@@ -1543,10 +1596,16 @@ async def get_skill_sh_data(player, secbuffdata, js):
         turncost = secbuffdata['turncost']
         if random.randint(0, 100) <= secbuffdata['success']:  # 命中
             skillsh = True
-            skillmsg = f"{player['道号']}发动技能：{secbuffdata['name']}，消耗气血{number_to(int(secbuffdata['hpcost'] * player['气血'])) if secbuffdata['hpcost'] != 0 else 0}点、真元{number_to(int(secbuffdata['mpcost'] * player['exp'])) if secbuffdata['mpcost'] != 0 else 0}点，使对手动弹不得,{secbuffdata['desc']}持续{turncost}回合！"
+            skillmsg = (f"{player['道号']}发动技能：{secbuffdata['name']}，"
+                        f"消耗气血{number_to(int(secbuffdata['hpcost'] * player['气血'])) if secbuffdata['hpcost'] != 0 else 0}点、"
+                        f"真元{number_to(int(secbuffdata['mpcost'] * player['exp'])) if secbuffdata['mpcost'] != 0 else 0}点，"
+                        f"使对手动弹不得,{secbuffdata['desc']}持续{turncost}回合！")
         else:  # 未命中
             skillsh = False
-            skillmsg = f"{player['道号']}发动技能：{secbuffdata['name']}，消耗气血{number_to(int(secbuffdata['hpcost'] * player['气血'])) if secbuffdata['hpcost'] != 0 else 0}点、真元{number_to(int(secbuffdata['mpcost'] * player['exp'])) if secbuffdata['mpcost'] != 0 else 0}点，{secbuffdata['desc']}但是被对手躲避！"
+            skillmsg = (f"{player['道号']}发动技能：{secbuffdata['name']}，"
+                        f"消耗气血{number_to(int(secbuffdata['hpcost'] * player['气血'])) if secbuffdata['hpcost'] != 0 else 0}点、"
+                        f"真元{number_to(int(secbuffdata['mpcost'] * player['exp'])) if secbuffdata['mpcost'] != 0 else 0}点，"
+                        f"{secbuffdata['desc']}但是被对手躲避！")
 
         return skillmsg, skillsh, turncost
 
@@ -1589,10 +1648,10 @@ def start_sub_buff_handle(player1_sub_open, subbuffdata1, user1_battle_buff_date
 
 # 处理攻击后辅修功法效果
 def after_atk_sub_buff_handle(
-        player1_sub_open, player1, 
-        user1_main_buff_data, subbuffdata1, damage1, player2, 
+        player1_sub_open, player1,
+        user1_main_buff_data, subbuffdata1, damage1, player2,
         boss_buff: BossBuff = empty_boss_buff,
-        random_buff:UserRandomBuff = empty_ussr_random_buff):
+        random_buff: UserRandomBuff = empty_ussr_random_buff):
     msg = ""
 
     if not player1_sub_open:

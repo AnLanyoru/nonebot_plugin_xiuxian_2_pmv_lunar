@@ -53,9 +53,12 @@ two_exp = on_command("双修", priority=5, permission=GROUP, block=True)
 mind_state = on_command("我的状态", aliases={"/我的状态"}, priority=1, permission=GROUP, block=True)
 select_state = on_command("查看状态", aliases={"查状态"}, priority=1, permission=GROUP, block=True)
 qc = on_command("切磋", priority=6, permission=GROUP, block=True)
-blessed_spot_create = on_command("洞天福地购买", aliases={"获取洞天福地", "购买洞天福地"}, priority=1, permission=GROUP, block=True)
-blessed_spot_info = on_command("洞天福地查看", aliases={"我的洞天福地", "查看洞天福地"}, priority=1, permission=GROUP, block=True)
-blessed_spot_rename = on_command("洞天福地改名", aliases={"改名洞天福地", "改洞天福地名"}, priority=1, permission=GROUP, block=True)
+blessed_spot_create = on_command("洞天福地购买", aliases={"获取洞天福地", "购买洞天福地"}, priority=1, permission=GROUP,
+                                 block=True)
+blessed_spot_info = on_command("洞天福地查看", aliases={"我的洞天福地", "查看洞天福地"}, priority=1, permission=GROUP,
+                               block=True)
+blessed_spot_rename = on_command("洞天福地改名", aliases={"改名洞天福地", "改洞天福地名"}, priority=1, permission=GROUP,
+                                 block=True)
 ling_tian_up = on_fullmatch("灵田开垦", priority=5, permission=GROUP, block=True)
 del_exp_decimal = on_fullmatch("抑制黑暗动乱", priority=9, permission=GROUP, block=True)
 my_exp_num = on_fullmatch("我的双修次数", priority=9, permission=GROUP, block=True)
@@ -66,7 +69,6 @@ daily_work = on_fullmatch("日常中心", priority=9, permission=GROUP, block=Tr
 # 每日0点重置用户双修次数
 @two_exp_cd_up.scheduled_job("cron", hour=0, minute=0)
 async def two_exp_cd_up_():
-
     two_exp_cd.re_data()
     reset_send_stone()
     reset_stone_exp_up()
@@ -630,20 +632,20 @@ async def mind_state_(bot: Bot, event: GroupMessageEvent):
     now_place = place.get_place_name(place.get_now_place_id(user_id))
 
     msg = simple_md(f"道号：{user_info['user_name']}\r"
-           f"气血:{number_to(user_info['hp'])}/{number_to(int((user_info['exp'] / 2) * (1 + main_hp_buff + impart_hp_per) * main_hp_rank))}({(user_info['hp'] / ((user_info['exp'] / 2) * (1 + main_hp_buff + impart_hp_per) * main_hp_rank)) * 100:.2f}%)\r"
-           f"真元:{number_to(user_info['mp'])}/{number_to(user_info['exp'])}({((user_info['mp'] / user_info['exp']) * 100):.2f}%)\r"
-           f"攻击:{number_to(user_info['atk'])}\r"
-           f"突破状态: {exp_meg}\r"
-           f"(概率：{jsondata.level_rate_data()[user_info['level']] + leveluprate + number}%)\r"
-           f"攻击修炼:{user_info['atkpractice']}级\r"
-           f"(提升攻击力{user_info['atkpractice'] * 4}%)\r"
-           f"修炼效率:{int(((level_rate * realm_rate) * (1 + main_buff_rate_buff)) * 100)}%\r"
-           f"会心:{crit_buff + int(impart_know_per * 100) + armor_crit_buff + main_crit_buff}%\r"
-           f"减伤率:{100 - (((100 - def_buff) * (100 - weapon_def) * (100 - main_def)) / 10000):.2f}%\r"
-           f"boss战增益:{int(boss_atk * 100)}%\r"
-           f"会心伤害增益:{int((1.5 + impart_burst_per + weapon_critatk + main_critatk) * 100)}%\r"
-           f"当前体力：{user_info['user_stamina']}\r"
-           f"所在位置：{now_place}\r", "日常状态", "日常中心", "查看")
+                    f"气血:{number_to(user_info['hp'])}/{number_to(int((user_info['exp'] / 2) * (1 + main_hp_buff + impart_hp_per) * main_hp_rank))}({(user_info['hp'] / ((user_info['exp'] / 2) * (1 + main_hp_buff + impart_hp_per) * main_hp_rank)) * 100:.2f}%)\r"
+                    f"真元:{number_to(user_info['mp'])}/{number_to(user_info['exp'])}({((user_info['mp'] / user_info['exp']) * 100):.2f}%)\r"
+                    f"攻击:{number_to(user_info['atk'])}\r"
+                    f"突破状态: {exp_meg}\r"
+                    f"(概率：{jsondata.level_rate_data()[user_info['level']] + leveluprate + number}%)\r"
+                    f"攻击修炼:{user_info['atkpractice']}级\r"
+                    f"(提升攻击力{user_info['atkpractice'] * 4}%)\r"
+                    f"修炼效率:{int(((level_rate * realm_rate) * (1 + main_buff_rate_buff)) * 100)}%\r"
+                    f"会心:{crit_buff + int(impart_know_per * 100) + armor_crit_buff + main_crit_buff}%\r"
+                    f"减伤率:{100 - (((100 - def_buff) * (100 - weapon_def) * (100 - main_def)) / 10000):.2f}%\r"
+                    f"boss战增益:{int(boss_atk * 100)}%\r"
+                    f"会心伤害增益:{int((1.5 + impart_burst_per + weapon_critatk + main_critatk) * 100)}%\r"
+                    f"当前体力：{user_info['user_stamina']}\r"
+                    f"所在位置：{now_place}\r", "日常状态", "日常中心", "查看")
     await sql_message.update_last_check_info_time(user_id)
     await bot.send(event=event, message=msg)
     await mind_state.finish()
@@ -782,12 +784,12 @@ async def buffinfo_(bot: Bot, event: GroupMessageEvent):
     secbuffdata = await UserBuffDate(user_id).get_user_sec_buff_data()
     secbuffmsg = get_sec_msg(secbuffdata) if get_sec_msg(secbuffdata) != '无' else ''
     msg = simple_md(f"道友的主功法：{mainbuffdata['name'] if mainbuffdata is not None else '无'}\r"
-           f"{mainbuffmsg}\r"
-           f"道友的辅修功法：{subbuffdata['name'] if subbuffdata is not None else '无'}\r"
-           f"{subbuffmsg}\r"
-           f"道友的神通：{secbuffdata['name'] if secbuffdata is not None else '无'}\r"
-           f"{secbuffmsg}\r",
-           "拥有功法", "功法背包", "查看")
+                    f"{mainbuffmsg}\r"
+                    f"道友的辅修功法：{subbuffdata['name'] if subbuffdata is not None else '无'}\r"
+                    f"{subbuffmsg}\r"
+                    f"道友的神通：{secbuffdata['name'] if secbuffdata is not None else '无'}\r"
+                    f"{secbuffmsg}\r",
+                    "拥有功法", "功法背包", "查看")
 
     await bot.send(event=event, message=msg)
     await buffinfo.finish()
@@ -827,7 +829,6 @@ async def my_exp_num_(bot: Bot, event: GroupMessageEvent):
     await my_exp_num.finish()
 
 
-
 @daily_work.handle(parameterless=[Cooldown(at_sender=False)])
 async def daily_work_(bot: Bot, event: GroupMessageEvent):
     """我的双修次数"""
@@ -858,12 +859,14 @@ async def daily_work_(bot: Bot, event: GroupMessageEvent):
         if last_time != 0:
             nowtime = datetime.now().strftime('%Y-%m-%d %H:%M:%S')  # str
             timedeff = round((datetime.strptime(nowtime, '%Y-%m-%d %H:%M:%S')
-                              - datetime.strptime(last_time,'%Y-%m-%d %H:%M:%S')).total_seconds() / 3600,2)
-            if timedeff >= round(GETCONFIG['time_cost'] * (1 - (GETCONFIG['加速基数'] * mix_elixir_info['药材速度'])), 2):
+                              - datetime.strptime(last_time, '%Y-%m-%d %H:%M:%S')).total_seconds() / 3600, 2)
+            if timedeff >= round(GETCONFIG['time_cost'] * (1 - (GETCONFIG['加速基数'] * mix_elixir_info['药材速度'])),
+                                 2):
                 farm = "可收取！！"
             else:
-                next_get_time = round(GETCONFIG['time_cost'] * (1 - (GETCONFIG['加速基数'] * mix_elixir_info['药材速度'])),
-                                      2) - timedeff
+                next_get_time = round(
+                    GETCONFIG['time_cost'] * (1 - (GETCONFIG['加速基数'] * mix_elixir_info['药材速度'])),
+                    2) - timedeff
                 farm = f"{round(next_get_time, 2)}小时后成熟"
         else:
             farm = '未知生长状态'

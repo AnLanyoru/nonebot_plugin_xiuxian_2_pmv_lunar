@@ -4,6 +4,7 @@ from . import DRIVER
 from .xiuxian_utils.database_cur_get import XiuxianDateCur
 from nonebot.log import logger
 from pathlib import Path
+
 try:
     import ujson as json
 except ImportError:
@@ -76,6 +77,8 @@ async def read_places_():
         merge(PlaceSet(int(place_id), name, (x, y, world)).get_place_dict(), place_all)
         merge(PlaceSet(int(place_id), name, (x, y, world)).get_place_id_map(), place_id_map)
     logger.opt(colors=True).info(f"<green>地区数据读取成功</green>")
+
+
 # 创建位置对象
 
 
@@ -283,4 +286,3 @@ class Place:
 
 
 place = Place()
-

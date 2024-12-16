@@ -51,6 +51,7 @@ class XiuxianDateCur:
         self.conn.close()
         logger.opt(colors=True).info(f"<green>修仙数据库关闭！</green>")
 
+
 @DRIVER.on_shutdown
 async def close_db():
     XiuxianDateCur().close()

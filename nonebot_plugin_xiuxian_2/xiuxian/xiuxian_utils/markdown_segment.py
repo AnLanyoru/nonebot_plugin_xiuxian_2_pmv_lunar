@@ -56,6 +56,7 @@ class MessageSegmentPlus(MessageSegment):
             }
         )
 
+
 def markdown_param(key, value):
     """
     markdown模板参数定义
@@ -66,6 +67,7 @@ def markdown_param(key, value):
     return {"key": key,
             "value": [value]}
 
+
 def cmd_urlencoded(cmd_str):
     """
     in line cmd编码urlencoded工具
@@ -73,6 +75,7 @@ def cmd_urlencoded(cmd_str):
     :return:
     """
     return quote(cmd_str)
+
 
 """
 构造范例

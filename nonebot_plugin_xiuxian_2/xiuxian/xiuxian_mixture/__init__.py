@@ -16,12 +16,11 @@ from ..xiuxian_utils.utils import (
 from ..xiuxian_utils.item_json import items
 
 sql_message = XiuxianDateManage()  # sql类
-mixture = on_command('合成', priority=15, permission=GROUP,block=True)
+mixture = on_command('合成', priority=15, permission=GROUP, block=True)
 
 
 @mixture.handle(parameterless=[Cooldown(at_sender=False)])
 async def use_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
-
     _, user_info, _ = await check_user(event)
 
     user_id = user_info['user_id']
@@ -30,6 +29,3 @@ async def use_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg())
         msg = "道友的背包空空如也！"
         await bot.send(event=event, message=msg)
         await mixture.finish()
-
-
-

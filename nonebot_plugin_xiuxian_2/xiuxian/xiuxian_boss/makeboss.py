@@ -31,6 +31,7 @@ JINGJIEEXP = {  # 数值为中期和圆满的平均值
 jinjie_list = [k for k, v in JINGJIEEXP.items()]
 sql_message = XiuxianDateManage()  # sql类
 
+
 def get_boss_jinjie_dict():
     CONFIGJSONPATH = Path() / "data" / "xiuxian" / "境界.json"
     with open(CONFIGJSONPATH, "r", encoding="UTF-8") as f:
@@ -60,8 +61,8 @@ async def createboss():
     top_user_info = await sql_message.get_top1_user()
     top_user_level = top_user_info['level']
     if len(top_user_level) == 5:
-        level = top_user_level[:3] 
-    elif len(top_user_level) == 4: # 对求道者判断
+        level = top_user_level[:3]
+    elif len(top_user_level) == 4:  # 对求道者判断
         level = "炼体境"
 
     boss_jj = random.choice(jinjie_list[:jinjie_list.index(level) + 1])
@@ -81,5 +82,3 @@ def createboss_jj(boss_jj, boss_name=None):
         return bossinfo
     else:
         return None
-
-

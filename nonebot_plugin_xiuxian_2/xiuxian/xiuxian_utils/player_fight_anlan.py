@@ -140,7 +140,7 @@ def get_fight(pre_fight_dict: dict, max_turn: int = 20):
                 break
             enemy_id = random.choice(enemy_list)
             enemy = fight_dict[enemy_id]
-            msg= fight_player.active(enemy, msg)
+            msg = fight_player.active(enemy, msg)
             if kill_user := fight_player.turn_kill:
                 loser.append(kill_user)
                 fight_dict[kill_user].status = 0

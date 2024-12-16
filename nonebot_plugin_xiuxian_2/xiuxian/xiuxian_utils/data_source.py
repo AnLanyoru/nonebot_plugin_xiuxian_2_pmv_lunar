@@ -17,7 +17,7 @@ class JsonDate:
         self.level_jsonpath = DATABASE / "境界.json"
         self.sect_json_pth = DATABASE / "宗门玩法配置.json"
         self.BACKGROUND_FILE = DATABASE / "image" / "background.png"
-        self.BOSS_IMG = DATABASE / "boss_img" 
+        self.BOSS_IMG = DATABASE / "boss_img"
         self.BANNER_FILE = DATABASE / "image" / "banner.png"
         self.FONT_FILE = DATABASE / "font" / "SarasaMonoSC-Bold.ttf"
 
@@ -48,7 +48,7 @@ class JsonDate:
             file_data = e.read()
             data = json.loads(file_data)
             return data
-        
+
     def exercises_level_data(self):
         """获取炼体境界数据"""
         with open(self.exercises_level_jsonpath, 'r', encoding='utf-8') as e:

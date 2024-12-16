@@ -36,7 +36,6 @@ from ..xiuxian_utils.xiuxian2_handle import (
 )
 from ..xiuxian_config import XiuConfig, convert_rank
 
-
 config = get_auction_config()
 groups = config['open']  # list，群交流会使用
 auction = {}
@@ -73,7 +72,8 @@ offer_auction = on_command("拍卖", priority=5, permission=GROUP, block=True)
 back_help = on_command("背包帮助", aliases={"坊市帮助"}, priority=8, permission=GROUP, block=True)
 xiuxian_stone = on_fullmatch("灵石", priority=4, permission=GROUP, block=True)
 master_rename = on_command("超管改名", priority=2, permission=SUPERUSER, block=True)
-check_items = on_command("查看", aliases={"查", "查看物品", "查看效果", "详情"}, priority=25, permission=GROUP, block=True)
+check_items = on_command("查看", aliases={"查", "查看物品", "查看效果", "详情"}, priority=25, permission=GROUP,
+                         block=True)
 back_fix = on_fullmatch("背包修复", priority=1, permission=GROUP, block=True)
 test_md = on_command("测试模板", priority=25, permission=SUPERUSER, block=True)
 
@@ -102,9 +102,10 @@ async def md_test_(bot: Bot, event: GroupMessageEvent):
         '<qqbot-cmd-input text="', '指令1指令0" /> a[aa', '悬赏令接取1', "测试",
         '指令2', '悬赏令接取2', "测试",
         '指令3', '悬赏令接取3', "测试",
-                             )
+    )
     await bot.send(event, msg)
     await test_md.finish()
+
 
 @back_fix.handle(parameterless=[Cooldown(at_sender=False, parallel_block=True)])
 async def back_help_(bot: Bot, event: GroupMessageEvent):
@@ -133,7 +134,7 @@ async def back_help_(bot: Bot, event: GroupMessageEvent):
             if old_type == '丹药':
                 old_bind_num = old_num
             await sql_message.del_back_item(user_id, item_id)
-            await  sql_message.send_back(user_id, item_id, old_name, old_type, max((old_num-old_bind_num), 0))
+            await  sql_message.send_back(user_id, item_id, old_name, old_type, max((old_num - old_bind_num), 0))
             await  sql_message.send_back(user_id, item_id, old_name, old_type, old_bind_num, 1)
             msg += f"\r检测到 {old_name} 重复，遗失数据：{old_num}个，绑定数量{old_bind_num}个"
         else:
@@ -521,7 +522,7 @@ async def main_back_(bot: Bot, event: GroupMessageEvent, args: Message = Command
         msg = f"\r{user_info['user_name']}的背包，持有灵石：{number_to(user_info['stone'])}枚"
         msg = main_md(
             msg, text,
-            '下一页', f'我的背包{argp} {page+1}',
+            '下一页', f'我的背包{argp} {page + 1}',
             '丹药背包', '丹药背包',
             '药材背包', '药材背包',
             '背包帮助', '背包帮助')
@@ -555,7 +556,7 @@ async def skill_back_(bot: Bot, event: GroupMessageEvent, args: Message = Comman
             '背包帮助', '背包帮助',
             '丹药背包', '丹药背包',
             '药材背包', '药材背包',
-            '下一页', f'功法背包 {page+1}')
+            '下一页', f'功法背包 {page + 1}')
     else:
         msg = "道友的背包空空如也！"
     await bot.send(event, msg)
@@ -589,7 +590,7 @@ async def check_back_(bot: Bot, event: GroupMessageEvent, args: Message = Comman
         msg = f"\r{user_info['user_name']}的背包，持有灵石：{number_to(user_info['stone'])}枚"
         msg = main_md(
             msg, text,
-            '下一页', f'我的背包{page+1}',
+            '下一页', f'我的背包{page + 1}',
             '丹药背包', '丹药背包',
             '药材背包', '药材背包',
             '背包帮助', '背包帮助')
@@ -831,8 +832,8 @@ async def use_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg())
             await use.finish()
         goods_info = items.get_data_by_item_id(goods_id)
         power = limit_handle.get_user_world_power_data(user_id)
-        msg = f"道友使用天地奇物{goods_info['name']}{num}个，将{goods_info['buff']*num}点天地精华纳入丹田。\r请尽快利用！！否则天地精华将会消散于天地间！！"
-        power += goods_info['buff']*num
+        msg = f"道友使用天地奇物{goods_info['name']}{num}个，将{goods_info['buff'] * num}点天地精华纳入丹田。\r请尽快利用！！否则天地精华将会消散于天地间！！"
+        power += goods_info['buff'] * num
         limit_handle.update_user_world_power_data(user_id, power)
         await sql_message.update_back_j(user_id, goods_id, num, 2)
         await bot.send(event=event, message=msg)
@@ -922,8 +923,8 @@ async def shop_off_all_(bot: Bot, event: GroupMessageEvent, args: Message = Comm
             save_shop(shop_data)
         else:
             await sql_message.send_back(shop_data[group_id][str(x)]['user_id'], shop_data[group_id][str(x)]['goods_id'],
-                                  shop_data[group_id][str(x)]['goods_name'],
-                                  shop_data[group_id][str(x)]['goods_type'], shop_data[group_id][str(x)]['stock'])
+                                        shop_data[group_id][str(x)]['goods_name'],
+                                        shop_data[group_id][str(x)]['goods_type'], shop_data[group_id][str(x)]['stock'])
             msg += f"成功下架{shop_data[group_id][str(x)]['user_name']}的{shop_data[group_id][str(x)]['stock']}个{shop_data[group_id][str(x)]['goods_name']}!\r"
             del shop_data[group_id][str(x)]
             save_shop(shop_data)

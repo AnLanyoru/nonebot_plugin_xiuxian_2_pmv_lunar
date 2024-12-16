@@ -6,6 +6,7 @@ params = database_config()
 
 db_dict = {}
 
+
 async def create_pool():
     pool = await asyncpg.create_pool(
         database=params['database'],
@@ -14,6 +15,7 @@ async def create_pool():
         host=params['host'],
         port=params['post'])
     return pool
+
 
 class DataBase:
     def __init__(self):
@@ -32,8 +34,8 @@ class DataBase:
 async def make_db():
     db_dict[1] = DataBase()
 
-if __name__ == '__main__':
 
+if __name__ == '__main__':
     loop = asyncio.get_event_loop()
     loop.run_until_complete(make_db())
     loop.run_until_complete(db_dict[1].connect_pool_make())

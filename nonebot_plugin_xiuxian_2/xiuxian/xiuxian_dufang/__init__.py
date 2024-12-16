@@ -20,6 +20,7 @@ from ..xiuxian_utils.utils import (
     get_msg_pic,
     CommandObjectID
 )
+
 cache_help = {}
 sql_message = XiuxianDateManage()  # sql类
 
@@ -32,7 +33,6 @@ dufang_help = on_command("金银阁帮助", permission=GROUP, priority=7, block=
 
 @dufang_help.handle(parameterless=[Cooldown(at_sender=False)])
 async def dufang_help_(bot: Bot, event: GroupMessageEvent, session_id: int = CommandObjectID()):
-
     msg = __dufang_help__
     await bot.send(event=event, message=msg)
     await dufang_help.finish()

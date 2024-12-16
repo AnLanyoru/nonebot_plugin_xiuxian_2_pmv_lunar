@@ -2,8 +2,10 @@ class Player:
     def __init__(self, hp):
         self.hp = hp
         self.atk_dg = 1
+
     def atk(self, enemy):
         enemy.hp -= self.atk_dg
+
 
 fight_dict = {}
 no = 1

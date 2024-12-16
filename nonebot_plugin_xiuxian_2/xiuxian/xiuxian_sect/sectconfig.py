@@ -5,7 +5,6 @@ except ImportError:
 import os
 from pathlib import Path
 
-
 configkey = [
     "LEVLECOST",
     "等级建设度",

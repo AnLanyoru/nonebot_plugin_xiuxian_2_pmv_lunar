@@ -20,15 +20,17 @@ userstask = {}
 
 help_in = on_command("修仙帮助", aliases={"/菜单", "/修仙帮助"}, priority=12, permission=GROUP, block=True)
 help_newer = on_command("新手", aliases={"怎么玩", "教", "玩法", "不明白", "教程", "修仙新手", "刚玩",
-                                              "怎么弄", "干什么", "玩什么", "新手", "有什么", "玩不来", "/新手教程",
-                                              "不会", "不懂", "帮助"}, priority=12, permission=GROUP, block=True)
+                                         "怎么弄", "干什么", "玩什么", "新手", "有什么", "玩不来", "/新手教程",
+                                         "不会", "不懂", "帮助"}, priority=12, permission=GROUP, block=True)
 sect_help = on_command("宗门帮助", aliases={"宗门", "工会"}, priority=21, permission=GROUP, block=True)
 sect_help_control = on_command("管理宗门", aliases={"宗门管理"}, priority=6, permission=GROUP, block=True)
 sect_help_owner = on_command("宗主必看", aliases={"宗主"}, priority=20, permission=GROUP, block=True)
 sect_help_member = on_command("成员必看", aliases={"宗门指令"}, priority=20, permission=GROUP, block=True)
 buff_help = on_command("功法帮助", aliases={"功法", "技能", "神通"}, priority=2, permission=GROUP, block=True)
-buff_home = on_command("洞天福地帮助", aliases={"灵田帮助", "灵田", "洞天福地"}, priority=20, permission=GROUP, block=True)
-store_help = on_command("灵宝楼帮助", aliases={"灵宝楼", "个人摊位", "个人摊位帮助"}, priority=20, permission=GROUP, block=True)
+buff_home = on_command("洞天福地帮助", aliases={"灵田帮助", "灵田", "洞天福地"}, priority=20, permission=GROUP,
+                       block=True)
+store_help = on_command("灵宝楼帮助", aliases={"灵宝楼", "个人摊位", "个人摊位帮助"}, priority=20, permission=GROUP,
+                        block=True)
 tower_help = on_command("位面挑战帮助", aliases={'挑战'}, priority=21, permission=GROUP, block=True)
 
 __xiuxian_notes__ = f"""
@@ -57,7 +59,6 @@ __xiuxian_notes__ = f"""
 官方群914556251
 """.strip()
 
-
 __sect_help__ = f"""
 \r————宗门帮助————
 1：我的宗门
@@ -79,7 +80,6 @@ __sect_help__ = f"""
 
 """.strip()
 
-
 __buff_help__ = f"""
 ——功法帮助——
 1：我的功法:
@@ -93,7 +93,6 @@ __buff_help__ = f"""
 ——tips——
 官方群914556251
 """.strip()
-
 
 __home_help__ = f"""
 ——洞天福地帮助——
@@ -110,7 +109,6 @@ __home_help__ = f"""
 ——tips——
 灵田基础成长时间为47小时
 """.strip()
-
 
 __store_help__ = f"""
 ——灵宝楼帮助——
@@ -131,7 +129,6 @@ __store_help__ = f"""
 ——tips——
 官方群914556251
 """.strip()
-
 
 __tower_help__ = f"""
 ——位面挑战指令帮助——

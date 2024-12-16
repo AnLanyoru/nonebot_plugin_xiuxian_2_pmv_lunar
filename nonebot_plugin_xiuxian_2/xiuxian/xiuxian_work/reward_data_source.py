@@ -2,7 +2,6 @@ import os
 from nonebot.log import logger
 from ..xiuxian_utils.data_source import *
 
-
 WORKDATA = Path() / "data" / "xiuxian" / "work"
 
 

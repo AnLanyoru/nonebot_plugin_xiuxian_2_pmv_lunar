@@ -428,7 +428,6 @@ def three_md(text_1,
 
 
 def msg_handler(*args):
-
     if len(args) == 3:
         name, uin, msgs = args
         messages = '\r'.join(msgs)

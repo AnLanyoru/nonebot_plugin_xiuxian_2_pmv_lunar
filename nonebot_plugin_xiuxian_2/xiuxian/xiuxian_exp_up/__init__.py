@@ -72,7 +72,8 @@ async def exp_up_(bot: Bot, event: GroupMessageEvent):
     await sql_message.in_closing(user_id, user_type)  # 进入修炼状态
     exp_time = 6  # 闭关时长计算(分钟) = second // 60
     sleep_time = exp_time * 10
-    msg = simple_md(f"{user_info['user_name']}道友开始屏息凝神，感受道韵流动，进入{int(sleep_time)}秒", "修炼", "修炼", ".....")
+    msg = simple_md(f"{user_info['user_name']}道友开始屏息凝神，感受道韵流动，进入{int(sleep_time)}秒", "修炼", "修炼",
+                    ".....")
     await bot.send(event=event, message=msg)
     await asyncio.sleep(sleep_time)
     user_mes = await sql_message.get_user_info_with_id(user_id)  # 获取用户信息
@@ -118,9 +119,10 @@ async def exp_up_(bot: Bot, event: GroupMessageEvent):
         await sql_message.update_power2(user_id)  # 更新战力
 
         result_msg, result_hp_mp = await OtherSet().send_hp_mp(user_id, int(exp * hp_speed * (1 + mainbuffclors)),
-                                                         int(exp * mp_speed))
+                                                               int(exp * mp_speed))
         await sql_message.update_user_attribute(user_id, result_hp_mp[0], result_hp_mp[1], int(result_hp_mp[2] / 10))
-        msg = simple_md(f"\r{user_mes['user_name']}道友修炼结束，本次修炼触及", "瓶颈", "突破", f"，共增加修为：{number_to(user_get_exp_max)}{result_msg[0]}{result_msg[1]}")
+        msg = simple_md(f"\r{user_mes['user_name']}道友修炼结束，本次修炼触及", "瓶颈", "突破",
+                        f"，共增加修为：{number_to(user_get_exp_max)}{result_msg[0]}{result_msg[1]}")
         await bot.send(event=event, message=msg)
         await exp_up.finish()
     else:
@@ -128,9 +130,10 @@ async def exp_up_(bot: Bot, event: GroupMessageEvent):
         await sql_message.update_exp(user_id, exp)
         await sql_message.update_power2(user_id)  # 更新战力
         result_msg, result_hp_mp = await OtherSet().send_hp_mp(user_id, int(exp * hp_speed * (1 + mainbuffclors)),
-                                                         int(exp * mp_speed))
+                                                               int(exp * mp_speed))
         await sql_message.update_user_attribute(user_id, result_hp_mp[0], result_hp_mp[1], int(result_hp_mp[2] / 10))
-        msg = simple_md(f"\r{user_mes['user_name']}道友", "修炼", "修炼", f"结束，本次修炼增加修为：{number_to(exp)}{result_msg[0]}{result_msg[1]}")
+        msg = simple_md(f"\r{user_mes['user_name']}道友", "修炼", "修炼",
+                        f"结束，本次修炼增加修为：{number_to(exp)}{result_msg[0]}{result_msg[1]}")
         await bot.send(event=event, message=msg)
         await exp_up.finish()
 
@@ -219,7 +222,8 @@ async def world_rank_up_(bot: Bot, event: GroupMessageEvent, state: T_State):
         break_rank = convert_rank(need_level)[0]
         if user_rank >= break_rank:
             msg = simple_md(f"道友修为超凡，已然足矣踏破虚空离开【{now_world_name}】前往【{next_world_name}】"
-                   f"\r注意：突破位面后将不可回到【{now_world_name}】，确认踏破虚空请回复我：", "确认飞升", "确认飞升", "!")
+                            f"\r注意：突破位面后将不可回到【{now_world_name}】，确认踏破虚空请回复我：", "确认飞升",
+                            "确认飞升", "!")
             state["world_up"] = next_world
             await bot.send(event=event, message=msg)
         else:
@@ -303,8 +307,9 @@ async def power_break_up_help_(bot: Bot, event: GroupMessageEvent):
 
     user_id = user_info['user_id']
     power = limit_handle.get_user_world_power_data(user_id)
-    msg = simple_md(f"道友体内拥有天地精华：{power}\r天地精华由使用天地奇物获得\r可以发送 ", "吸收天地精华", "吸收天地精华", "将体内天地精华吸收！！\r增加少许修为与突破概率"
-           f"\r天地精华还是练就顶级神通的必备能量！！\r请尽快使用天地精华，否则天地精华将会归于天地之间！！！")
+    msg = simple_md(f"道友体内拥有天地精华：{power}\r天地精华由使用天地奇物获得\r可以发送 ", "吸收天地精华",
+                    "吸收天地精华", "将体内天地精华吸收！！\r增加少许修为与突破概率"
+                                    f"\r天地精华还是练就顶级神通的必备能量！！\r请尽快使用天地精华，否则天地精华将会归于天地之间！！！")
     await bot.send(event=event, message=msg)
     await power_break_up_help.finish()
 
@@ -318,6 +323,3 @@ async def active_gift_(bot: Bot, event: GroupMessageEvent):
     msg = f"国庆已经结束啦！！明年国庆再来吧！"
     await bot.send(event=event, message=msg)
     await active_gift.finish()
-
-
-
