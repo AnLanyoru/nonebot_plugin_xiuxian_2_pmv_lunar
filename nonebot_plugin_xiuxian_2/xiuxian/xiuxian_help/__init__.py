@@ -1,5 +1,8 @@
-from ..xiuxian_sect import get_config
+from nonebot.permission import SUPERUSER
+
+from ..xiuxian_sect import CONFIG
 from ..xiuxian_utils.clean_utils import help_md
+from ..xiuxian_utils.item_json import items
 from ..xiuxian_utils.xiuxian2_handle import (
     XiuxianDateManage
 )
@@ -14,7 +17,7 @@ from ..xiuxian_utils.data_source import jsondata
 from ..xiuxian_config import XiuConfig
 
 sql_message = XiuxianDateManage()  # sql类
-config = get_config()
+config = CONFIG
 LEVLECOST = config["LEVLECOST"]
 userstask = {}
 
@@ -32,6 +35,19 @@ buff_home = on_command("洞天福地帮助", aliases={"灵田帮助", "灵田", 
 store_help = on_command("灵宝楼帮助", aliases={"灵宝楼", "个人摊位", "个人摊位帮助"}, priority=20, permission=GROUP,
                         block=True)
 tower_help = on_command("位面挑战帮助", aliases={'挑战'}, priority=21, permission=GROUP, block=True)
+items_reload = on_command("重载物品", priority=21, permission=SUPERUSER, block=True)
+
+
+@items_reload.handle()
+async def help_in_(bot: Bot, event: GroupMessageEvent):
+    """运行时数据热重载"""
+    msg = "开始重载物品数据"
+    await bot.send(event=event, message=msg)
+    items.load_items()
+    msg = "成功重新载入物品数据"
+    await bot.send(event=event, message=msg)
+    await items_reload.finish()
+
 
 __xiuxian_notes__ = f"""
 ————修仙帮助————

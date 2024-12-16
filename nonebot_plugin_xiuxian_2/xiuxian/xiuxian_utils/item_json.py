@@ -31,6 +31,15 @@ class Items:
         self.sw_jsonpath = ELIXIRPATH / "神物.json"
         self.world_qw_jsonpath = ELIXIRPATH / "天地奇物.json"
         self.items = {}
+        self.items_map = {}
+
+    @staticmethod
+    def readf(FILEPATH):
+        with open(FILEPATH, "r", encoding="UTF-8") as f:
+            data = f.read()
+        return json.loads(data)
+
+    def load_items(self):
         self.set_item_data(self.get_armor_data(), "防具")
         self.set_item_data(self.get_weapon_data(), "法器")
         self.set_item_data(self.get_main_buff_data(), "功法")
@@ -46,20 +55,6 @@ class Items:
         self.set_item_data(self.get_sw_data(), "神物")
         self.set_item_data(self.get_world_qw_data(), "天地奇物")
         self.items_map = {self.items[item_id]['name']: item_id for item_id in self.items}
-        self.savef(self.items)
-
-    def readf(self, FILEPATH):
-        with open(FILEPATH, "r", encoding="UTF-8") as f:
-            data = f.read()
-        return json.loads(data)
-
-    def savef(self, data):
-        FILEPATH = Path() / "data" / "xiuxian" / "items.json"
-        data = json.dumps(data, ensure_ascii=False, indent=4)
-        save_mode = "w" if os.path.exists(FILEPATH) else "x"
-        with open(FILEPATH, mode=save_mode, encoding="UTF-8") as f:
-            f.write(data)
-            f.close()
 
     def get_armor_data(self):
         return self.readf(self.armor_jsonpath)
@@ -161,3 +156,6 @@ class Items:
 
 
 items = Items()
+items.load_items()
+
+
