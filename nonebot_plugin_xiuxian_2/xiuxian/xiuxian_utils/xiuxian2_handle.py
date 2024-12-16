@@ -1,5 +1,6 @@
 import operator
 from .database_cur_get import XiuxianDateCur
+
 try:
     import ujson as json
 except ImportError:
@@ -56,13 +57,11 @@ class XiuxianDateManage:
         self.get_db().close()
         logger.opt(colors=True).info(f"<green>修仙数据库关闭！</green>")
 
-
     async def get_db(self):
         db_instance = getattr(threading_data, 'db_instance', None)
         if db_instance is None:
             threading_data.db_instance = await aiosqlite.connect(self.database_path, check_same_thread=False)
         return threading_data.db_instance
-
 
     async def _check_data(self):
         """检查数据完整性"""
@@ -331,7 +330,7 @@ WHERE last_check_info_time = '0' OR last_check_info_time IS NULL
         place_name = "缘起小镇"
         if not result:
             await self._create_user(user_id, args[0], args[1], args[2], args[3],
-                              args[4])  # root, type, power, create_time, user_name
+                                    args[4])  # root, type, power, create_time, user_name
             await db.commit()
             welcome_msg = f"必死之境机逢仙缘，修仙之路波澜壮阔！\r恭喜{args[4]}踏入仙途，你的灵根为：{args[0]},类型是：{args[1]},你的战力为：{args[2]}\r当前境界：求道者，所处位置：{place_name}"
             return True, welcome_msg
@@ -411,7 +410,8 @@ WHERE last_check_info_time = '0' OR last_check_info_time IS NULL
         level = jsondata.level_data()
         root = jsondata.root_data()
         sql = f"UPDATE user_xiuxian SET power=round(exp*?*?,0) WHERE user_id=?"
-        await db.execute(sql, (root[user_info['root_type']]["type_speeds"], level[user_info['level']]["spend"], user_id))
+        await db.execute(sql,
+                         (root[user_info['root_type']]["type_speeds"], level[user_info['level']]["spend"], user_id))
         await db.commit()
 
     async def update_ls(self, user_id, price, key):
@@ -1077,7 +1077,7 @@ WHERE last_check_info_time = '0' OR last_check_info_time IS NULL
         """重置用户hp,mp信息"""
         user_msg = await self.get_user_info_with_id(user_id)
         user_buff_data = UserBuffDate(user_id)
-        main_buff_data =await  user_buff_data.get_user_main_buff_data()
+        main_buff_data = await  user_buff_data.get_user_main_buff_data()
         impart_data = await xiuxian_impart.get_user_info_with_id(user_id)
         await impart_data['impart_hp_per'] if impart_data is not None else 0
         await main_buff_data['hpbuff'] if main_buff_data is not None else 0
@@ -1645,7 +1645,6 @@ class XIUXIAN_IMPART_BUFF:
             logger.opt(colors=True).info(f"<green>xiuxian_impart数据库已连接!</green>")
             self._check_data()
 
-
     async def get_db(self):
         db_instance = getattr(xu_threading_data, 'db_instance', None)
         if db_instance is None:
@@ -1969,6 +1968,7 @@ class XIUXIAN_IMPART_BUFF:
         await db.commit()
         return True
 
+
 async def leave_harm_time(user_id):
     hp_speed = 25
     user_mes = await sql_message.get_user_info_with_id(user_id)
@@ -2057,7 +2057,7 @@ class UserBuffDate:
 
     async def get_user_sec_buff_data(self):
         sec_buff_data = None
-        buff_info =await  self.BuffInfo
+        buff_info = await self.BuffInfo
         sec_buff_id = buff_info.get('sec_buff', 0)
         if sec_buff_id != 0:
             sec_buff_data = items.get_data_by_item_id(sec_buff_id)
@@ -2065,7 +2065,7 @@ class UserBuffDate:
 
     async def get_user_weapon_data(self):
         weapon_data = None
-        buff_info =await  self.BuffInfo
+        buff_info = await self.BuffInfo
         weapon_id = buff_info.get('faqi_buff', 0)
         if weapon_id != 0:
             weapon_data = items.get_data_by_item_id(weapon_id)

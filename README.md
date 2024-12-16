@@ -10,6 +10,8 @@ _✨ QQ群聊修仙文字游戏✨_
 
 🧬 主要是青木猫画饼3.0期间少姜做的一些魔改和优化上再魔改但是没优化！🎉
 
+改用了异步数据库aiosqlite，大幅提升并发场景下的数据处理能力
+
 <p align="center">
 </p>
 </div>
@@ -18,23 +20,28 @@ _✨ QQ群聊修仙文字游戏✨_
 
 一款适用于QQ群的修仙插件,设定征集中，有好的想法可以推送给少姜哦~~~
 
-原插件地址：https://github.com/QingMuCat/nonebot_plugin_xiuxian_2
+修仙2原版件地址：https://github.com/QingMuCat/nonebot_plugin_xiuxian_2
+
+修仙2魔改版地址：https://github.com/MyXiaoNan/nonebot_plugin_xiuxian_2_pmv
 
 修仙3.0地址在这，欢迎pr：https://github.com/MyXiaoNan/nonebot-plugin-ascension
 
 # 🎉 和原版有什么区别？
+1、将原版的sqlite模块更改为异步模块aiosqlite，避免了读写数据时的异步阻塞。
 
-1、修复了少许Bug，又加了更更更多bug：报错与原版相比多很多，有少许功能优化
+2、修复了少许Bug，又加了更更更多bug：报错与原版相比多很多，有少许功能优化
 
-2、删除了很多指令，例如：合成系统，拍卖系统，世界boss等等
+3、删除了很多指令，例如：合成系统，拍卖系统，世界boss等等
 
-3、不支持图片发送，全文字发送
+4、不支持图片发送，全文字发送
 
-4、新增少量物品
+5、新增少量物品类型
 
-5、更多不同请自行探索
+6、使用本fork代码需要完善部分data下json定义
 
-# 💿 安装原版
+7、部分物品随机名称需要安装node.js
+
+# 💿 建议安装原版
 
 1、手动安装
 
@@ -114,7 +121,7 @@ self.layout_bot_dict = {{}}  # QQ所负责的群聊{{群 :bot}}   其中 bot类�
 # 🎉 支持
 
 - 大家喜欢的话可以给少姜的项目点个star
-- 有bug、意见和建议都欢迎提交 [Issues](https://github.com/wsdtl/nonebot_plugin_xiuxian_2_pmv/issues)
+- 有bug、意见和建议都欢迎提交给少姜 [Issues](https://github.com/wsdtl/nonebot_plugin_xiuxian_2_pmv/issues)
 - 3.0版本正在路上，敬请期待(日常拷打青木猫)
 
 # 🎉 许可证
