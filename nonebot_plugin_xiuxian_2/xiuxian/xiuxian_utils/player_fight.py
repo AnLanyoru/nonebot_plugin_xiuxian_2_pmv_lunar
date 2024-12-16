@@ -666,29 +666,12 @@ async def boss_fight(player1: dict, boss: dict, type_in=2, bot_id=0):
         user1_main_buff = random.randint(0, 100)
         if 0 <= user1_main_buff <= 25:
             random_buff.random_break = random.randint(15, 40) / 100
-            random_buff.random_xx = 0
-            random_buff.random_hx = 0
-            random_buff.random_def = 0
         elif 26 <= user1_main_buff <= 50:
-            random_buff.random_break = 0
             random_buff.random_xx = random.randint(2, 10) / 100
-            random_buff.random_hx = 0
-            random_buff.random_def = 0
         elif 51 <= user1_main_buff <= 75:
-            random_buff.random_break = 0
-            random_buff.random_xx = 0
             random_buff.random_hx = random.randint(5, 40) / 100
-            random_buff.random_def = 0
         elif 76 <= user1_main_buff <= 100:
-            random_buff.random_break = 0
-            random_buff.random_xx = 0
-            random_buff.random_hx = 0
             random_buff.random_def = random.randint(5, 15) / 100
-    else:
-        random_buff.random_break = 0
-        random_buff.random_xx = 0
-        random_buff.random_hx = 0
-        random_buff.random_def = 0
 
     user1_break = random_buff.random_break + sub_break
 
@@ -750,15 +733,6 @@ async def boss_fight(player1: dict, boss: dict, type_in=2, bot_id=0):
     player1_turn_cost = 0  # 先设定为初始值 0
     player1_f_js = await get_user_def_buff(player1['user_id'])
     player1_js = player1_f_js  # 减伤率
-
-    # global boss_buff.boss_zs
-    # global boss_buff.boss_hx
-    # global boss_buff.boss_bs
-    # global boss_buff.boss_xx
-    # global boss_buff.boss_jg
-    # global boss_buff.boss_jh
-    # global boss_buff.boss_jb
-    # global boss_buff.boss_xl
 
     # 回旋镖
     
@@ -970,61 +944,61 @@ async def boss_fight(player1: dict, boss: dict, type_in=2, bot_id=0):
         play_list.append(boss_js_data)
 
     if boss_buff.boss_zs > 0:
-        boss_buff.boss_zs_data = {"type": "node", "data": {"name": f"{boss['name']}",
+        boss_zs_data = {"type": "node", "data": {"name": f"{boss['name']}",
                                                  "uin": int(bot_id),
                                                  "content": f"{boss['name']}使用了真龙九变,提升了{int(boss_buff.boss_zs * 100)}%攻击力!"}}
 
-        play_list.append(boss_buff.boss_zs_data)
+        play_list.append(boss_zs_data)
 
     if boss_buff.boss_hx > 0:
-        boss_buff.boss_hx_data = {"type": "node", "data": {"name": f"{boss['name']}",
+        boss_hx_data = {"type": "node", "data": {"name": f"{boss['name']}",
                                                  "uin": int(bot_id),
                                                  "content": f"{boss['name']}使用了无瑕七绝剑,提升了{int(boss_buff.boss_hx * 100)}%会心率!"}}
 
-        play_list.append(boss_buff.boss_hx_data)
+        play_list.append(boss_hx_data)
 
     if boss_buff.boss_bs > 0:
-        boss_buff.boss_bs_data = {"type": "node", "data": {"name": f"{boss['name']}",
+        boss_bs_data = {"type": "node", "data": {"name": f"{boss['name']}",
                                                  "uin": int(bot_id),
                                                  "content": f"{boss['name']}使用了太乙剑诀,提升了{int(boss_buff.boss_bs * 100)}%会心伤害!"}}
 
-        play_list.append(boss_buff.boss_bs_data)
+        play_list.append(boss_bs_data)
 
     if boss_buff.boss_xx > 0:
-        boss_buff.boss_xx_data = {"type": "node", "data": {"name": f"{boss['name']}",
+        boss_xx_data = {"type": "node", "data": {"name": f"{boss['name']}",
                                                  "uin": int(bot_id),
                                                  "content": f"{boss['name']}使用了七煞灭魂聚血杀阵,降低了{player1['道号']}{int(boss_buff.boss_xx * 100)}%气血吸取!"}}
 
-        play_list.append(boss_buff.boss_xx_data)
+        play_list.append(boss_xx_data)
 
     if boss_buff.boss_jg > 0:
-        boss_buff.boss_jg_data = {"type": "node", "data": {"name": f"{boss['name']}",
+        boss_jg_data = {"type": "node", "data": {"name": f"{boss['name']}",
                                                  "uin": int(bot_id),
                                                  "content": f"{boss['name']}使用了子午安息香,降低了{player1['道号']}{int(boss_buff.boss_jg * 100)}%伤害!"}}
 
-        play_list.append(boss_buff.boss_jg_data)
+        play_list.append(boss_jg_data)
 
     if boss_buff.boss_jh > 0:
-        boss_buff.boss_jh_data = {"type": "node", "data": {"name": f"{boss['name']}",
+        boss_jh_data = {"type": "node", "data": {"name": f"{boss['name']}",
                                                  "uin": int(bot_id),
                                                  "content": f"{boss['name']}使用了玄冥剑气,降低了{player1['道号']}{int(boss_buff.boss_jh * 100)}%会心率!"}}
 
-        play_list.append(boss_buff.boss_jh_data)
+        play_list.append(boss_jh_data)
 
     if boss_buff.boss_jb > 0:
-        boss_buff.boss_jb_data = {"type": "node", "data": {"name": f"{boss['name']}",
+        boss_jb_data = {"type": "node", "data": {"name": f"{boss['name']}",
                                                  "uin": int(bot_id),
                                                  "content": f"{boss['name']}使用了大德琉璃金刚身,降低了{player1['道号']}{int(boss_buff.boss_jb * 100)}%会心伤害!"}}
 
-        play_list.append(boss_buff.boss_jb_data)
+        play_list.append(boss_jb_data)
 
     if boss_buff.boss_xl > 0:
         # effect_name = BOSSDEF[boss['name']]
-        boss_buff.boss_xl_data = {"type": "node", "data": {"name": f"{boss['name']}",
+        boss_xl_data = {"type": "node", "data": {"name": f"{boss['name']}",
                                                  "uin": int(bot_id),
                                                  "content": f"{boss['name']}使用了千煌锁灵阵,降低了{player1['道号']}{int(boss_buff.boss_xl * 100)}%真元吸取!"}}
 
-        play_list.append(boss_buff.boss_xl_data)
+        play_list.append(boss_xl_data)
 
     if random_buff.random_break > 0:
         random_buff.random_break_data = {"type": "node", "data": {"name": f"{player1['道号']}",
