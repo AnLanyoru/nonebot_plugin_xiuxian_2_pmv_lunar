@@ -24,7 +24,6 @@ from .back_util import (
     get_item_msg, get_item_msg_rank, check_use_elixir,
     get_use_jlq_msg, get_no_use_equipment_sql, get_use_tool_msg, get_user_main_back_msg_easy, get_user_back_msg
 )
-from .backconfig import get_auction_config, savef_auction, remove_auction_item
 from ..xiuxian_utils.item_json import items
 from ..xiuxian_utils.utils import (
     check_user, send_msg_handler,
@@ -36,8 +35,6 @@ from ..xiuxian_utils.xiuxian2_handle import (
 )
 from ..xiuxian_config import XiuConfig, convert_rank
 
-config = get_auction_config()
-groups = config['open']  # list，群交流会使用
 auction = {}
 AUCTIONSLEEPTIME = 120  # 拍卖初始等待时间（秒）
 cache_help = {}
@@ -45,7 +42,6 @@ auction_offer_flag = False  # 拍卖标志
 AUCTIONOFFERSLEEPTIME = 30  # 每次拍卖增加拍卖剩余的时间（秒）
 auction_offer_time_count = 0  # 计算剩余时间
 auction_offer_all_count = 0  # 控制线程等待时间
-auction_time_config = config['拍卖会定时参数']  # 定时配置
 sql_message = XiuxianDateManage()  # sql类
 # 定时任务
 set_auction_by_scheduler = require("nonebot_plugin_apscheduler").scheduler
@@ -948,50 +944,6 @@ def reset_dict_num(dict_):
         temp_dict[i]['编号'] = i
         i += 1
     return temp_dict
-
-
-def get_user_auction_id_list():
-    user_auctions = config['user_auctions']
-    user_auction_id_list = []
-    for auction in user_auctions:
-        for k, v in auction.items():
-            user_auction_id_list.append(v['id'])
-    return user_auction_id_list
-
-
-def get_auction_id_list():
-    auctions = config['auctions']
-    auction_id_list = []
-    for k, v in auctions.items():
-        auction_id_list.append(v['id'])
-    return auction_id_list
-
-
-def get_user_auction_price_by_id(item_id):
-    user_auctions = config['user_auctions']
-    user_auction_info = None
-    for auction in user_auctions:
-        for k, v in auction.items():
-            if int(v['id']) == int(item_id):
-                user_auction_info = v
-                break
-        if user_auction_info:
-            break
-    return user_auction_info
-
-
-def get_auction_price_by_id(id):
-    auctions = config['auctions']
-    auction_info = None
-    for k, v in auctions.items():
-        if int(v['id']) == int(id):
-            auction_info = v
-            break
-    return auction_info
-
-
-def is_in_groups(event: GroupMessageEvent):
-    return str(event.group_id) in groups
 
 
 def get_auction_msg(auction_id):

@@ -22,7 +22,7 @@ from ..xiuxian_utils.lay_out import Cooldown
 from nonebot.params import CommandArg
 from ..xiuxian_utils.data_source import jsondata
 from ..xiuxian_config import XiuConfig, convert_rank
-from .sectconfig import get_config
+from .sectconfig import CONFIG
 from ..xiuxian_utils.utils import (
     check_user, number_to,
     get_msg_pic, send_msg_handler,
@@ -32,7 +32,7 @@ from ..xiuxian_utils.clean_utils import get_num_from_str, get_strs_from_str, sim
 from ..xiuxian_utils.item_json import items
 
 sql_message = XiuxianDateManage()  # sql类
-config = get_config()
+config = CONFIG
 LEVLECOST = config["LEVLECOST"]
 cache_help = {}
 userstask = {}

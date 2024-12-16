@@ -17,11 +17,11 @@ from nonebot.adapters.onebot.v11 import (
 from ..xiuxian_utils.lay_out import Cooldown
 from ..xiuxian_utils.xiuxian2_handle import XiuxianDateManage
 from datetime import datetime
-from .bankconfig import get_config
+from .bankconfig import CONFIG
 from ..xiuxian_utils.utils import check_user, get_msg_pic, number_to
 from ..xiuxian_config import XiuConfig
 
-config = get_config()
+config = CONFIG
 BANKLEVEL = config["BANKLEVEL"]
 sql_message = XiuxianDateManage()  # sql类
 PLAYERSDATA = Path() / "data" / "xiuxian" / "players"

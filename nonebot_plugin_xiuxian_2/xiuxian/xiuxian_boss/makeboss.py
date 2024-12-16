@@ -1,10 +1,11 @@
 import random
 from pathlib import Path
+
+from .bossconfig import CONFIG
 from ..xiuxian_utils.xiuxian2_handle import XiuxianDateManage
-from .bossconfig import get_boss_config
 import json
 
-config = get_boss_config()
+config = CONFIG
 JINGJIEEXP = {  # 数值为中期和圆满的平均值
     "炼体境": [1000, 2000, 3000],
     "感气境": [6000, 8000.10000],

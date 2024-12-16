@@ -1,3 +1,5 @@
+from .bossconfig import CONFIG
+
 try:
     import ujson as json
 except ImportError:
@@ -7,7 +9,7 @@ from pathlib import Path
 import random
 import os
 from nonebot.rule import Rule
-from nonebot import get_bots, get_bot, on_command, require
+from nonebot import on_command, require
 from nonebot.params import CommandArg
 from nonebot.adapters.onebot.v11 import (
     Bot,
@@ -29,24 +31,20 @@ from ..xiuxian_utils.xiuxian2_handle import (
 from ..xiuxian_utils.other_set import OtherSet
 from ..xiuxian_config import convert_rank, XiuConfig, JsonConfig
 from .makeboss import createboss, createboss_jj
-from .bossconfig import get_boss_config, savef_boss
 from .old_boss_info import old_boss_info
 from ..xiuxian_utils.player_fight import boss_fight
 from ..xiuxian_utils.item_json import items
 
 from ..xiuxian_utils.utils import (
     number_to, check_user,
-    get_msg_pic, CommandObjectID,
-    pic_msg_format, send_msg_handler
+    get_msg_pic, send_msg_handler
 )
 from .. import DRIVER
-
-from nonebot_plugin_apscheduler import scheduler
 
 # boss定时任务
 require('nonebot_plugin_apscheduler')
 conf_data = JsonConfig().read_data()
-config = get_boss_config()
+config = CONFIG
 cache_help = {}
 del_boss_id = XiuConfig().del_boss_id
 gen_boss_id = XiuConfig().gen_boss_id
@@ -416,18 +414,12 @@ async def set_group_boss_(bot: Bot, event: GroupMessageEvent, args: Message = Co
                 }
             }
             config['open'].update(info)
-            savef_boss(config)
             msg = f"已开启本群世界Boss!"
             await bot.send(event=event, message=msg)
             await set_group_boss.finish()
 
     elif mode == '关闭':
         if isInGroup:
-            try:
-                del config['open'][str(group_id)]
-            except:
-                pass
-            savef_boss(config)
             msg = f"已关闭本群世界Boss!"
             await bot.send(event=event, message=msg)
             await set_group_boss.finish()

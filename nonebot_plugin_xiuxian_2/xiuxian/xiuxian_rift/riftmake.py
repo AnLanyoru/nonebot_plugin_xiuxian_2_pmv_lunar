@@ -1,9 +1,8 @@
 import random
 from .riftconfig import get_rift_config
-from ..xiuxian_utils.data_source import jsondata
+from .skill_rate import skill_rate
 from ..xiuxian_utils.utils import number_to
 from ..xiuxian_utils.other_set import OtherSet
-from .jsondata import read_f
 from ..xiuxian_utils.xiuxian2_handle import XiuxianDateManage, UserBuffDate, XIUXIAN_IMPART_BUFF
 from ..xiuxian_utils.player_fight import boss_fight
 from ..xiuxian_utils.item_json import items
@@ -11,7 +10,7 @@ from ..xiuxian_config import convert_rank
 
 sql_message = XiuxianDateManage()
 xiuxian_impart = XIUXIAN_IMPART_BUFF()
-skill_data = read_f()
+skill_data = skill_rate
 
 NONEMSG = [
     "道友在秘境中晕头转向，等到清醒时竟然发现已被秘境踢出，毫无所获！",

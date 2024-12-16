@@ -1,8 +1,6 @@
 import pickle
 from pathlib import Path
 import os
-import datetime
-from .riftmake import Rift
 
 
 class OLD_RIFT_INFO(object):
