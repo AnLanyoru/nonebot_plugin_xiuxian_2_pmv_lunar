@@ -14,7 +14,7 @@ from nonebot.adapters.onebot.v11 import (
     GROUP,
     GroupMessageEvent
 )
-from ..xiuxian_utils.xiuxian2_handle import XiuxianDateManage
+from ..xiuxian_utils.xiuxian2_handle import sql_message
 from ..xiuxian_utils.other_set import OtherSet
 from .work_handle import workhandle
 from datetime import datetime
@@ -27,7 +27,6 @@ from ..xiuxian_config import convert_rank, XiuConfig
 # 定时任务
 resetrefreshnum = require("nonebot_plugin_apscheduler").scheduler
 work = {}  # 悬赏令信息记录
-sql_message = XiuxianDateManage()  # sql类
 count = 6  # 免费次数
 
 

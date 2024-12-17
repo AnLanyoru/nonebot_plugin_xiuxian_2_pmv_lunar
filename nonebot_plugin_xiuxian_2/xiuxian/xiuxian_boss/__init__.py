@@ -25,11 +25,11 @@ from ..xiuxian_utils.lay_out import Cooldown
 from nonebot.permission import SUPERUSER
 from nonebot.log import logger
 from ..xiuxian_utils.xiuxian2_handle import (
-    XiuxianDateManage, UserBuffDate,
-    XIUXIAN_IMPART_BUFF, leave_harm_time
+    sql_message, UserBuffDate,
+    xiuxian_impart, leave_harm_time
 )
 from ..xiuxian_utils.other_set import OtherSet
-from ..xiuxian_config import convert_rank, XiuConfig, JsonConfig
+from ..xiuxian_config import convert_rank, XiuConfig
 from .makeboss import createboss, createboss_jj
 from .old_boss_info import old_boss_info
 from ..xiuxian_utils.player_fight import boss_fight
@@ -43,7 +43,6 @@ from .. import DRIVER
 
 # boss定时任务
 require('nonebot_plugin_apscheduler')
-conf_data = JsonConfig().read_data()
 config = CONFIG
 cache_help = {}
 del_boss_id = XiuConfig().del_boss_id
@@ -51,8 +50,7 @@ gen_boss_id = XiuConfig().gen_boss_id
 group_boss = {}
 groups = config['open']
 battle_flag = {}
-sql_message = XiuxianDateManage()  # sql类
-xiuxian_impart = XIUXIAN_IMPART_BUFF()
+# 替换模块
 
 
 def check_rule_bot_boss() -> Rule:  # 消息检测，是超管，群主或者指定的qq号传入的消息就响应，其他的不响应

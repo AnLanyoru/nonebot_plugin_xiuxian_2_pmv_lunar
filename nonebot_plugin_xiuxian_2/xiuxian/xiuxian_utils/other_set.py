@@ -1,10 +1,11 @@
 import random
 
+from .clean_utils import number_to
 from .. import XiuConfig
+from ..xiuxian_data.data.境界_data import level_data
 from ..xiuxian_place import place
-from .data_source import jsondata
-from .xiuxian2_handle import XiuxianDateManage, sql_message, \
-    number_to, UserBuffDate, xiuxian_impart
+from .xiuxian2_handle import sql_message, \
+    UserBuffDate, xiuxian_impart
 
 
 class OtherSet(XiuConfig):
@@ -19,7 +20,7 @@ class OtherSet(XiuConfig):
             need_exp = 0.001
         else:
             is_updata_level = self.level[now_index + 1]
-            need_exp = await XiuxianDateManage().get_level_power(is_updata_level)
+            need_exp = await xiuxian_impart.get_level_power(is_updata_level)
         return need_exp
 
     async def get_type(self, user_exp, rate, user_level, user_id):
@@ -29,7 +30,7 @@ class OtherSet(XiuConfig):
             return "道友已是最高境界，无法突破！"
 
         is_updata_level = self.level[now_index + 1]
-        need_exp = await XiuxianDateManage().get_level_power(is_updata_level)
+        need_exp = await xiuxian_impart.get_level_power(is_updata_level)
 
         # 判断修为是否足够突破
         if user_exp >= need_exp:
@@ -76,7 +77,8 @@ class OtherSet(XiuConfig):
         else:
             return '失败'
 
-    def calculated(self, rate: dict) -> str:
+    @staticmethod
+    def calculated(rate: dict) -> str:
         """
         根据概率计算，轮盘型
         :rate:格式{"数据名":"获取几率"}
@@ -103,7 +105,8 @@ class OtherSet(XiuConfig):
 
         return list(rate.keys())[index_num]
 
-    def get_power_rate(self, mind, other):
+    @staticmethod
+    def get_power_rate(mind, other):
         power_rate = mind / (other + mind)
         if power_rate >= 0.8:
             return "道友偷窃小辈实属天道所不齿！"
@@ -112,7 +115,8 @@ class OtherSet(XiuConfig):
         else:
             return int(power_rate * 100)
 
-    def player_fight(self, player1: dict, player2: dict):
+    @staticmethod
+    def player_fight(player1: dict, player2: dict):
         """
         回合制战斗
         type_in : 1 为完整返回战斗过程（未加）
@@ -146,23 +150,23 @@ class OtherSet(XiuConfig):
             play_list.append(msg1.format(player1['道号'], number_to(play1_sh)))
             player2['气血'] = player2['气血'] - play1_sh
             play_list.append(f"{player2['道号']}剩余血量{number_to(player2['气血'])}")
-            XiuxianDateManage().update_user_hp_mp(player2['user_id'], player2['气血'], player2['真元'])
+            xiuxian_impart.update_user_hp_mp(player2['user_id'], player2['气血'], player2['真元'])
 
             if player2['气血'] <= 0:
                 play_list.append(f"{player1['道号']}胜利")
                 suc = f"{player1['道号']}"
-                XiuxianDateManage().update_user_hp_mp(player2['user_id'], 1, player2['真元'])
+                xiuxian_impart.update_user_hp_mp(player2['user_id'], 1, player2['真元'])
                 break
 
             play_list.append(msg2.format(player2['道号'], number_to(play2_sh)))
             player1['气血'] = player1['气血'] - play2_sh
             play_list.append(f"{player1['道号']}剩余血量{number_to(player1['气血'])}\r")
-            XiuxianDateManage().update_user_hp_mp(player1['user_id'], player1['气血'], player1['真元'])
+            xiuxian_impart.update_user_hp_mp(player1['user_id'], player1['气血'], player1['真元'])
 
             if player1['气血'] <= 0:
                 play_list.append(f"{player2['道号']}胜利")
                 suc = f"{player2['道号']}"
-                XiuxianDateManage().update_user_hp_mp(player1['user_id'], 1, player1['真元'])
+                xiuxian_impart.update_user_hp_mp(player1['user_id'], 1, player1['真元'])
                 break
             if player1['气血'] <= 0 or player2['气血'] <= 0:
                 play_list.append("逻辑错误！！！")
@@ -172,42 +176,37 @@ class OtherSet(XiuConfig):
 
     @staticmethod
     async def send_hp_mp(user_id, hp, mp):
-        user_msg = await XiuxianDateManage().get_user_info_with_id(user_id)
-        user_buff_data = UserBuffDate(user_id)
-        main_buff_data = await user_buff_data.get_user_main_buff_data()
-        impart_data = await xiuxian_impart.get_user_info_with_id(user_id)
-        impart_hp_per = impart_data['impart_hp_per'] if impart_data is not None else 0
-        main_hp_buff = main_buff_data['hpbuff'] if main_buff_data is not None else 0
-        max_hp = int((user_msg['exp'] / 2) * jsondata.level_data()[user_msg['level']]["HP"])
-        max_mp = int(user_msg['exp'])
+        user_info = await xiuxian_impart.get_user_info_with_id(user_id)
+        max_hp = int(user_info['exp'] / 2)
+        max_mp = int(user_info['exp'])
 
         msg = []
         hp_mp = []
 
-        if user_msg['hp'] < max_hp:
-            if user_msg['hp'] + hp < max_hp:
-                new_hp = user_msg['hp'] + hp
+        if user_info['hp'] < max_hp:
+            if user_info['hp'] + hp < max_hp:
+                new_hp = user_info['hp'] + hp
                 msg.append(f',回复气血：{number_to(hp)}|{hp}')
             else:
                 new_hp = max_hp
                 msg.append(f',回复气血：{number_to(hp)}|{hp},气血已回满！')
         else:
-            new_hp = user_msg['hp']
+            new_hp = user_info['hp']
             msg.append('')
 
-        if user_msg['mp'] < max_mp:
-            if user_msg['mp'] + mp < max_mp:
-                new_mp = user_msg['mp'] + mp
+        if user_info['mp'] < max_mp:
+            if user_info['mp'] + mp < max_mp:
+                new_mp = user_info['mp'] + mp
                 msg.append(f',回复真元：{number_to(mp)}|{mp}')
             else:
                 new_mp = max_mp
                 msg.append(',真元已回满！')
         else:
-            new_mp = user_msg['mp']
+            new_mp = user_info['mp']
             msg.append('')
 
         hp_mp.append(new_hp)
         hp_mp.append(new_mp)
-        hp_mp.append(user_msg['exp'])
+        hp_mp.append(user_info['exp'])
 
         return msg, hp_mp

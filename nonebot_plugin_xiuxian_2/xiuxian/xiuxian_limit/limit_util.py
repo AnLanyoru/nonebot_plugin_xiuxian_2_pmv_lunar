@@ -1,8 +1,8 @@
 from .limit_database import limit_data
 from .. import XiuConfig
-from ..xiuxian_utils.xiuxian2_handle import UserBuffDate, XIUXIAN_IMPART_BUFF
+from ..xiuxian_utils.xiuxian2_handle import UserBuffDate, xiuxian_impart
 
-xiuxian_impart = XIUXIAN_IMPART_BUFF()
+# 替换模块
 
 
 # 施工中

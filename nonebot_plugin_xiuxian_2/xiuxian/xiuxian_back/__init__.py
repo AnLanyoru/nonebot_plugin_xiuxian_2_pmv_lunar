@@ -9,11 +9,12 @@ from nonebot.adapters.onebot.v11 import (
     GROUP_OWNER,
     ActionFailed
 )
+
+from ..xiuxian_data.data.境界_data import level_data
 from ..xiuxian_limit import limit_handle
 from ..xiuxian_place import place
 from ..xiuxian_utils.clean_utils import get_args_num, get_num_from_str, get_strs_from_str, get_paged_msg, main_md, \
     msg_handler, three_md
-from ..xiuxian_utils.data_source import jsondata
 from ..xiuxian_utils.lay_out import Cooldown, CooldownIsolateLevel
 from nonebot.log import logger
 from nonebot.params import CommandArg, RawCommand
@@ -30,7 +31,7 @@ from ..xiuxian_utils.utils import (
     number_to, get_id_from_str
 )
 from ..xiuxian_utils.xiuxian2_handle import (
-    XiuxianDateManage, get_weapon_info_msg, get_armor_info_msg,
+    sql_message, get_weapon_info_msg, get_armor_info_msg,
     get_sec_msg, get_main_info_msg, get_sub_info_msg, UserBuffDate
 )
 from ..xiuxian_config import XiuConfig, convert_rank
@@ -42,7 +43,6 @@ auction_offer_flag = False  # 拍卖标志
 AUCTIONOFFERSLEEPTIME = 30  # 每次拍卖增加拍卖剩余的时间（秒）
 auction_offer_time_count = 0  # 计算剩余时间
 auction_offer_all_count = 0  # 控制线程等待时间
-sql_message = XiuxianDateManage()  # sql类
 # 定时任务
 set_auction_by_scheduler = require("nonebot_plugin_apscheduler").scheduler
 reset_day_num_scheduler = require("nonebot_plugin_apscheduler").scheduler
@@ -777,7 +777,7 @@ async def use_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg())
             await sql_message.update_back_j(user_id, goods_id, num, 2)
             goods_buff = goods_info["buff"]
             exp = goods_buff * num
-            user_hp = int(user_info['hp'] + (exp / 2) * jsondata.level_data()[user_info["level"]]["HP"])
+            user_hp = int(user_info['hp'] + (exp / 2) * level_data[user_info["level"]]["HP"])
             user_mp = int(user_info['mp'] + exp)
             user_atk = int(user_info['atk'] + (exp / 10))
             await sql_message.update_exp(user_id, exp)

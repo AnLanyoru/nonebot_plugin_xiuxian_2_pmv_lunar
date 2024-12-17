@@ -1,10 +1,11 @@
 import re
 import random
 
+from ..xiuxian_data.data.境界_data import level_data
 from ..xiuxian_limit.limit_database import limit_data, limit_handle
 from ..xiuxian_utils.random_names import get_random_sect_name
 from ..xiuxian_utils.xiuxian2_handle import (
-    XiuxianDateManage, BuffJsonDate,
+    sql_message, BuffJsonDate,
     get_main_info_msg, UserBuffDate, get_sec_msg
 )
 from ..xiuxian_utils.other_set import OtherSet
@@ -31,7 +32,6 @@ from ..xiuxian_utils.utils import (
 from ..xiuxian_utils.clean_utils import get_num_from_str, get_strs_from_str, simple_md, three_md
 from ..xiuxian_utils.item_json import items
 
-sql_message = XiuxianDateManage()  # sql类
 config = CONFIG
 LEVLECOST = config["LEVLECOST"]
 cache_help = {}
@@ -1057,7 +1057,7 @@ async def create_sect_(bot: Bot, event: GroupMessageEvent):
     user_id = user_info['user_id']
     # 首先判断是否满足创建宗门的三大条件
     level = user_info['level']
-    list_level_all = list(jsondata.level_data().keys())
+    list_level_all = list(level_data.keys())
     if list_level_all.index(level) < list_level_all.index(XiuConfig().sect_min_level):
         msg = f"创建宗门要求:创建者境界最低要求为{XiuConfig().sect_min_level}"
 

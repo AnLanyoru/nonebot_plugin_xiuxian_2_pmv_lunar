@@ -1,15 +1,11 @@
+from ..xiuxian_data.data.境界_data import level_data
 from ..xiuxian_place import place
 from ..xiuxian_utils.xiuxian2_handle import (
-    XiuxianDateManage, UserBuffDate,
-    XIUXIAN_IMPART_BUFF
+    sql_message, UserBuffDate,
+    xiuxian_impart
 )
 from ..xiuxian_utils.other_set import OtherSet
 from ..xiuxian_config import XiuConfig
-from ..xiuxian_utils.data_source import jsondata
-
-sql_message = XiuxianDateManage()  # sql类
-
-xiuxian_impart = XIUXIAN_IMPART_BUFF()
 
 
 async def exp_up_by_time(user_info, exp_time) -> tuple[str, int, dict]:
@@ -31,7 +27,7 @@ async def exp_up_by_time(user_info, exp_time) -> tuple[str, int, dict]:
     max(user_get_exp_max, 0)
 
     level_rate = await sql_message.get_root_rate(user_info['root_type'])  # 灵根倍率
-    realm_rate = jsondata.level_data()[level]["spend"]  # 境界倍率
+    realm_rate = level_data[level]["spend"]  # 境界倍率
 
     # 功法修炼加成
     user_buff_data = UserBuffDate(user_id)
@@ -66,7 +62,7 @@ async def exp_up_by_time(user_info, exp_time) -> tuple[str, int, dict]:
 
     # 闭关回复计算
     main_buff_clo_rs = main_buff_data['clo_rs'] if main_buff_data is not None else 0  # 功法闭关回复
-    main_hp_rank = jsondata.level_data()[user_info['level']]["HP"]
+    main_hp_rank = level_data[user_info['level']]["HP"]
     hp_speed = 25 * main_hp_rank * (1 + main_buff_clo_rs)
     mp_speed = 50
 

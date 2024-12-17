@@ -1,8 +1,8 @@
 from typing import List
 import random
-from ..xiuxian_utils.xiuxian2_handle import XIUXIAN_IMPART_BUFF
+from ..xiuxian_utils.xiuxian2_handle import xiuxian_impart
 
-xiuxian_impart = XIUXIAN_IMPART_BUFF()
+# 替换模块
 
 
 def random_bullet() -> List[int]:

@@ -1,13 +1,11 @@
 import random
 
 from .data_source import jsondata
-from .xiuxian2_handle import XiuxianDateManage, UserBuffDate, XIUXIAN_IMPART_BUFF
+from .xiuxian2_handle import sql_message, UserBuffDate, xiuxian_impart
 from .other_set import OtherSet
 from ..xiuxian_config import convert_rank
 from .utils import number_to
-
-sql_message = XiuxianDateManage()  # sql类
-xiuxian_impart = XIUXIAN_IMPART_BUFF()
+from ..xiuxian_data.data.境界_data import level_data
 
 
 class BossBuff:
@@ -1662,7 +1660,7 @@ def after_atk_sub_buff_handle(
     buff_type = subbuffdata1['buff_type']
     exp = int(player1['exp'])
     try:
-        main_hp_rank = jsondata.level_data()[player1['level']]["HP"]
+        main_hp_rank = level_data[player1['level']]["HP"]
     except KeyError:
         main_hp_rank = 1
     user1_main_hp_buff = user1_main_buff_data.get('hpbuff', 0) if user1_main_buff_data is not None else 0

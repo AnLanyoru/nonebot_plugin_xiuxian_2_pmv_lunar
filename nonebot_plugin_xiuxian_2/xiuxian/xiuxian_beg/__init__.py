@@ -1,28 +1,24 @@
 import random
 from datetime import datetime
+
+from ..xiuxian_data.data.境界_data import level_data
 from ..xiuxian_utils.lay_out import Cooldown
 from nonebot import require, on_command
 from nonebot.adapters.onebot.v11 import (
     Bot,
     GROUP,
-    GroupMessageEvent,
-    MessageSegment
+    GroupMessageEvent
 )
 from nonebot.log import logger
 from ..xiuxian_utils.xiuxian2_handle import XiuxianDateManage
 from ..xiuxian_config import XiuConfig
-from ..xiuxian_utils.item_json import items
-from ..xiuxian_utils.data_source import jsondata
 from ..xiuxian_utils.utils import (
-    check_user,
-    get_msg_pic,
-    CommandObjectID,
+    check_user
 )
 
 cache_level_help = {}
 scheduler = require("nonebot_plugin_apscheduler").scheduler
 cache_beg_help = {}
-sql_message = XiuxianDateManage()  # sql类
 
 
 # 重置奇缘
@@ -62,7 +58,7 @@ async def beg_stone_(bot: Bot, event: GroupMessageEvent):
     user_root = user_msg['root_type']
     sect = user_info['sect_id']
     level = user_info['level']
-    list_level_all = list(jsondata.level_data().keys())
+    list_level_all = list(level_data.keys())
 
     create_time = datetime.strptime(user_info['create_time'], "%Y-%m-%d %H:%M:%S.%f")
     now_time = datetime.now()

@@ -12,6 +12,7 @@ from nonebot import on_command, on_fullmatch, require
 from nonebot.permission import SUPERUSER
 
 from .limit import check_limit, reset_send_stone, reset_stone_exp_up
+from ..xiuxian_data.data.境界_data import level_data
 from ..xiuxian_exp_up.exp_up_def import exp_up_by_time
 from ..xiuxian_impart_pk import impart_pk_check
 from ..xiuxian_limit.limit_database import limit_handle, limit_data
@@ -20,10 +21,10 @@ from ..xiuxian_place import place
 from ..xiuxian_tower import tower_handle
 from ..xiuxian_utils.clean_utils import get_datetime_from_str, date_sub, main_md, msg_handler, simple_md
 from ..xiuxian_utils.xiuxian2_handle import (
-    XiuxianDateManage, get_player_info,
+    sql_message, get_player_info,
     save_player_info, UserBuffDate, get_main_info_msg,
     get_user_buff, get_sec_msg, get_sub_info_msg,
-    XIUXIAN_IMPART_BUFF
+    xiuxian_impart
 )
 from ..xiuxian_utils.other_set import OtherSet
 from ..xiuxian_config import XiuConfig
@@ -31,15 +32,13 @@ from ..xiuxian_utils.data_source import jsondata
 from nonebot.params import CommandArg
 from ..xiuxian_utils.player_fight import player_fight
 from ..xiuxian_utils.utils import (
-    number_to, check_user, send_msg_handler,
+    number_to, check_user,
     check_user_type, get_id_from_str
 )
 from ..xiuxian_utils.lay_out import Cooldown
 from .two_exp_cd import two_exp_cd
 
 cache_help = {}
-sql_message = XiuxianDateManage()  # sql类
-xiuxian_impart = XIUXIAN_IMPART_BUFF()
 BLESSEDSPOTCOST = 3500000
 two_exp_limit = XiuConfig().two_exp_limit  # 默认双修次数上限，修仙之人一天7次也不奇怪（
 
@@ -553,14 +552,12 @@ async def mind_state_(bot: Bot, event: GroupMessageEvent):
 
     user_id = user_info['user_id']
     await sql_message.update_last_check_info_time(user_id)  # 更新查看修仙信息时间
-    main_hp_rank = jsondata.level_data()[user_info['level']]["HP"]  # 添加血量补偿测试
-    # 意义不明的回满血机制
     if user_info['hp'] is None or user_info['hp'] == 0:
         await sql_message.update_user_hp(user_id)
 
     user_info = await sql_message.get_user_real_info(user_id)
     level_rate = await sql_message.get_root_rate(user_info['root_type'])  # 灵根倍率
-    realm_rate = jsondata.level_data()[user_info['level']]["spend"]  # 境界倍率
+    realm_rate = level_data[user_info['level']]["spend"]  # 境界倍率
     user_buff_data = UserBuffDate(user_id)
     main_buff_data = await user_buff_data.get_user_main_buff_data()
     user_armor_crit_data = await user_buff_data.get_user_armor_buff_data()  # 我的状态防具会心
@@ -666,7 +663,7 @@ async def select_state_(bot: Bot, event: GroupMessageEvent, args: Message = Comm
         await select_state.finish()
     await sql_message.update_last_check_info_time(user_id)  # 更新查看修仙信息时间
     try:
-        main_hp_rank = jsondata.level_data()[user_msg['level']]["HP"]  # 添加血量补偿测试
+        main_hp_rank = level_data[user_msg['level']]["HP"]  # 添加血量补偿测试
     except:
         main_hp_rank = 1
         await bot.send(event=event, message="修仙界中找不到此人！！")
@@ -675,7 +672,7 @@ async def select_state_(bot: Bot, event: GroupMessageEvent, args: Message = Comm
         await sql_message.update_user_hp(user_id)
     user_msg = await sql_message.get_user_real_info(user_id)
     level_rate = await sql_message.get_root_rate(user_msg['root_type'])  # 灵根倍率
-    realm_rate = jsondata.level_data()[user_msg['level']]["spend"]  # 境界倍率
+    realm_rate = level_data[user_msg['level']]["spend"]  # 境界倍率
     user_buff_data = UserBuffDate(user_id)
     main_buff_data = await user_buff_data.get_user_main_buff_data()
     user_armor_crit_data = await user_buff_data.get_user_armor_buff_data()  # 我的状态防具会心

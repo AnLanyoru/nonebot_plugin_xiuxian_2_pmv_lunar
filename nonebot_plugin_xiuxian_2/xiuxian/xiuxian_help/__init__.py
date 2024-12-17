@@ -3,9 +3,6 @@ from nonebot.permission import SUPERUSER
 from ..xiuxian_sect import CONFIG
 from ..xiuxian_utils.clean_utils import help_md
 from ..xiuxian_utils.item_json import items
-from ..xiuxian_utils.xiuxian2_handle import (
-    XiuxianDateManage
-)
 from nonebot import on_command
 from nonebot.adapters.onebot.v11 import (
     Bot,
@@ -16,7 +13,6 @@ from ..xiuxian_utils.lay_out import Cooldown
 from ..xiuxian_utils.data_source import jsondata
 from ..xiuxian_config import XiuConfig
 
-sql_message = XiuxianDateManage()  # sql类
 config = CONFIG
 LEVLECOST = config["LEVLECOST"]
 userstask = {}

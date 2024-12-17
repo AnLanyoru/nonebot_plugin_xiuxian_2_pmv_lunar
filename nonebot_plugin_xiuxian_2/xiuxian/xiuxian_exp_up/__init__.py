@@ -10,10 +10,12 @@ from nonebot import on_command
 import asyncio
 
 from nonebot.typing import T_State
+
+from ..xiuxian_data.data.境界_data import level_data
 from ..xiuxian_limit.limit_database import limit_handle
 from ..xiuxian_place import place
 from ..xiuxian_utils.xiuxian2_handle import (
-    XiuxianDateManage, UserBuffDate
+    sql_message, UserBuffDate
 )
 from ..xiuxian_utils.other_set import OtherSet
 from ..xiuxian_config import XiuConfig, convert_rank
@@ -23,8 +25,6 @@ from ..xiuxian_utils.utils import (
 )
 from ..xiuxian_utils.clean_utils import get_strs_from_str, main_md, simple_md
 from ..xiuxian_utils.lay_out import Cooldown
-
-sql_message = XiuxianDateManage()  # sql实例化至sql_massage
 
 exp_up = on_command("修炼", aliases={"/修炼"}, priority=1, permission=GROUP, block=True)
 power_break_up = on_command("吸收天地精华", aliases={"融合天地精华"}, priority=12, permission=GROUP, block=True)
@@ -79,7 +79,7 @@ async def exp_up_(bot: Bot, event: GroupMessageEvent):
     user_mes = await sql_message.get_user_info_with_id(user_id)  # 获取用户信息
     level = user_mes['level']
     use_exp = user_mes['exp']
-    main_hp_rank = jsondata.level_data()[user_mes['level']]["HP"]
+    main_hp_rank = level_data[user_mes['level']]["HP"]
     hp_speed = 25 * main_hp_rank
     mp_speed = 50
 
@@ -92,7 +92,7 @@ async def exp_up_(bot: Bot, event: GroupMessageEvent):
         # 校验当当前修为超出上限的问题，不可为负数
         user_get_exp_max = 0
     level_rate = await sql_message.get_root_rate(user_mes['root_type'])  # 灵根倍率
-    realm_rate = jsondata.level_data()[level]["spend"]  # 境界倍率
+    realm_rate = level_data[level]["spend"]  # 境界倍率
     user_buff_data = UserBuffDate(user_id)
     mainbuffdata = await user_buff_data.get_user_main_buff_data()
     mainbuffratebuff = mainbuffdata['ratebuff'] if mainbuffdata is not None else 0  # 功法修炼倍率
@@ -275,7 +275,7 @@ async def power_break_up_(bot: Bot, event: GroupMessageEvent):
         rate_up = power / user_rank if power / user_rank > 10 else 10
         level = user_info['level']
         level_rate = await sql_message.get_root_rate(user_info['root_type'])  # 灵根倍率
-        realm_rate = jsondata.level_data()[level]["spend"]  # 境界倍率
+        realm_rate = level_data[level]["spend"]  # 境界倍率
         user_buff_data = UserBuffDate(user_id)
         mainbuffdata = await user_buff_data.get_user_main_buff_data()
         mainbuffratebuff = mainbuffdata['ratebuff'] if mainbuffdata is not None else 0  # 功法修炼倍率

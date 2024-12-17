@@ -15,8 +15,8 @@ from nonebot.permission import SUPERUSER
 from ..xiuxian_utils.clean_utils import get_strs_from_str, get_args_num, get_paged_msg
 from ..xiuxian_utils.lay_out import Cooldown
 from ..xiuxian_utils.xiuxian2_handle import (
-    XiuxianDateManage, get_player_info, save_player_info,
-    UserBuffDate, XIUXIAN_IMPART_BUFF
+    sql_message, get_player_info, save_player_info,
+    UserBuffDate, xiuxian_impart
 )
 from ..xiuxian_utils.utils import (
     check_user, send_msg_handler,
@@ -29,8 +29,6 @@ from datetime import datetime
 from .mix_elixir_config import MIXELIXIRCONFIG
 from ..xiuxian_back.back_util import get_user_elixir_back_msg, get_user_yaocai_back_msg, get_user_yaocai_back_msg_easy
 
-sql_message = XiuxianDateManage()  # sql类
-xiuxian_impart = XIUXIAN_IMPART_BUFF()
 cache_help = {}
 
 mix_elixir = on_fullmatch("炼丹", priority=17, permission=GROUP, block=True)

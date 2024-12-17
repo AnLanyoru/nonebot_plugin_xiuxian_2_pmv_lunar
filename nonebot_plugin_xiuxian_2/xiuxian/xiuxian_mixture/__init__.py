@@ -1,21 +1,16 @@
 from ..xiuxian_utils.lay_out import Cooldown
 from nonebot.params import CommandArg
 from nonebot import on_command
-from ..xiuxian_config import XiuConfig
-from ..xiuxian_utils.xiuxian2_handle import XiuxianDateManage
+from ..xiuxian_utils.xiuxian2_handle import sql_message
 from nonebot.adapters.onebot.v11 import (
     Bot,
     GROUP,
     Message,
-    GroupMessageEvent,
-    MessageSegment
+    GroupMessageEvent
 )
-from ..xiuxian_utils.utils import (
-    check_user, get_msg_pic
-)
-from ..xiuxian_utils.item_json import items
+from ..xiuxian_utils.utils import check_user
 
-sql_message = XiuxianDateManage()  # sql类
+
 mixture = on_command('合成', priority=15, permission=GROUP, block=True)
 
 

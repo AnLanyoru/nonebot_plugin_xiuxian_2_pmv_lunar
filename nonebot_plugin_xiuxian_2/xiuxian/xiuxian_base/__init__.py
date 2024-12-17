@@ -4,6 +4,8 @@ from datetime import datetime
 from nonebot.typing import T_State
 
 from ..xiuxian_buff import check_limit
+from ..xiuxian_data.data.境界_data import level_data
+from ..xiuxian_data.data.灵根_data import root_data
 from ..xiuxian_limit.limit_database import limit_handle
 from ..xiuxian_place import place
 from ..xiuxian_utils.clean_utils import date_sub, get_num_from_str, get_strs_from_str, main_md
@@ -22,7 +24,7 @@ from nonebot.log import logger
 from nonebot.params import CommandArg
 from ..xiuxian_utils.data_source import jsondata
 from ..xiuxian_utils.xiuxian2_handle import (
-    XiuxianDateManage, UserBuffDate, XIUXIAN_IMPART_BUFF, leave_harm_time
+    sql_message, UserBuffDate, xiuxian_impart, leave_harm_time
 )
 from ..xiuxian_utils.other_set import OtherSet
 from ..xiuxian_config import XiuConfig
@@ -37,8 +39,6 @@ from ..xiuxian_utils.item_json import items
 scheduler = require("nonebot_plugin_apscheduler").scheduler
 cache_help = {}
 cache_level_help = {}
-sql_message = XiuxianDateManage()  # sql类
-xiuxian_impart = XIUXIAN_IMPART_BUFF()
 
 run_xiuxian = on_command("踏入仙途", aliases={"/踏入仙途", "我要修仙"}, priority=8, permission=GROUP, block=True)
 restart = on_command("重入仙途", permission=GROUP, priority=7, block=True)
@@ -219,7 +219,7 @@ async def handle_user_choice(bot: Bot, event: GroupMessageEvent, state: T_State)
     linggen_options = state["linggen_options"]
     choice_msg_pass = state["linggen_msg"]
     selected_name, selected_root_type = max(linggen_options,
-                                            key=lambda x: jsondata.root_data()[x[1]]["type_speeds"])
+                                            key=lambda x: root_data[x[1]]["type_speeds"])
     if state["msg_pass"] == 2:
         if user_choice.isdigit():  # 判断数字
             user_choice = get_num_from_str(user_choice)[0]
@@ -418,7 +418,7 @@ async def level_up_zj_(bot: Bot, event: GroupMessageEvent):
         main_hp_buff = main_buff_data['hpbuff'] if main_buff_data is not None else 0
         hp_down = int(
             (now_exp / 2) *
-            (1 + main_hp_buff + impart_hp_per) * jsondata.level_data()[user_msg['level']]["HP"]) \
+            (1 + main_hp_buff + impart_hp_per) * level_data[user_msg['level']]["HP"]) \
             if (user_msg['hp'] - (now_exp / 2)) > 0 else 1
         nowhp = user_msg['hp'] - hp_down
         nowmp = user_msg['mp'] - now_exp if (user_msg['mp'] - now_exp) > 0 else 1
@@ -498,7 +498,7 @@ async def level_up_zj_all_(bot: Bot, event: GroupMessageEvent):
             impart_hp_per = impart_data['impart_hp_per'] if impart_data is not None else 0
             main_hp_buff = main_buff_data['hpbuff'] if main_buff_data is not None else 0
             hp_down = int(
-                (now_exp / 2) * (1 + main_hp_buff + impart_hp_per) * jsondata.level_data()[user_msg['level']]["HP"]) \
+                (now_exp / 2) * (1 + main_hp_buff + impart_hp_per) * level_data[user_msg['level']]["HP"]) \
                 if (user_msg['hp'] - (now_exp / 2)) > 0 else 1
             nowhp = user_msg['hp'] - hp_down
             nowmp = user_msg['mp'] - now_exp if (user_msg['mp'] - now_exp) > 0 else 1
@@ -600,7 +600,7 @@ async def level_up_dr_(bot: Bot, event: GroupMessageEvent):
             main_hp_buff = main_buff_data['hpbuff'] if main_buff_data is not None else 0
 
             nowhp = user_msg['hp'] - int(
-                (now_exp / 2) * (1 + main_hp_buff + impart_hp_per) * jsondata.level_data()[user_msg['level']][
+                (now_exp / 2) * (1 + main_hp_buff + impart_hp_per) * level_data[user_msg['level']][
                     "HP"]) if (user_msg['hp'] - (now_exp / 2)) > 0 else 1
             nowmp = user_msg['mp'] - now_exp if (user_msg['mp'] - now_exp) > 0 else 1
             await sql_message.update_user_hp_mp(user_id, nowhp, nowmp)  # 修为掉了，血量、真元也要掉

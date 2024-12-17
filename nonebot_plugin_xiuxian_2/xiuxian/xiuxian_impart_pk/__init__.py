@@ -14,11 +14,9 @@ from nonebot.log import logger
 from ..xiuxian_utils.utils import check_user, check_user_type
 from .impart_pk_uitls import impart_pk_check
 from .impart_pk import impart_pk
-from ..xiuxian_utils.xiuxian2_handle import XiuxianDateManage, XIUXIAN_IMPART_BUFF
+from ..xiuxian_utils.xiuxian2_handle import sql_message, xiuxian_impart
 from .. import NICKNAME
 
-xiuxian_impart = XIUXIAN_IMPART_BUFF()
-sql_message = XiuxianDateManage()  # sql类
 
 impart_re = require("nonebot_plugin_apscheduler").scheduler
 impart_pk_now_all = on_command("虚神界对决", priority=3, permission=GROUP, block=True)

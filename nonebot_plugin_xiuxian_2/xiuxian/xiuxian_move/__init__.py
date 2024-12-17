@@ -12,9 +12,7 @@ from nonebot.adapters.onebot.v11 import (
     GroupMessageEvent
 )
 from nonebot.params import CommandArg
-from ..xiuxian_utils.xiuxian2_handle import (
-    XiuxianDateManage
-)
+from ..xiuxian_utils.xiuxian2_handle import sql_message
 from ..xiuxian_place import place
 
 from ..xiuxian_utils.utils import (
@@ -22,7 +20,6 @@ from ..xiuxian_utils.utils import (
 )
 from ..xiuxian_utils.clean_utils import get_num_from_str, get_strs_from_str
 
-sql_message = XiuxianDateManage()
 
 go_to = on_command("移动", aliases={"前往", "去"}, permission=GROUP, priority=10, block=True)
 get_map = on_fullmatch("地图", permission=GROUP, priority=10, block=True)

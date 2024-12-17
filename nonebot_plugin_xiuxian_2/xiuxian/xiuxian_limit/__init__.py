@@ -19,7 +19,6 @@ from ..xiuxian_utils.utils import (
 from ..xiuxian_utils.clean_utils import get_num_from_str
 from ..xiuxian_utils.item_json import items
 
-sql_message = XiuxianDateManage()  # sql类
 limit = limit_data
 offset = on_command('补偿', priority=1, permission=GROUP, block=True)
 offset_get = on_command('领取补偿', priority=1, permission=GROUP, block=True)

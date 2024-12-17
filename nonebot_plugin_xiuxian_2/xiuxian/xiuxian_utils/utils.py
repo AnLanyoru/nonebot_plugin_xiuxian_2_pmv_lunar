@@ -11,7 +11,7 @@ import unicodedata
 
 from .clean_utils import simple_md
 from .other_set import OtherSet
-from .xiuxian2_handle import XiuxianDateManage, PLAYERSDATA
+from .xiuxian2_handle import sql_message, PLAYERSDATA
 from nonebot.adapters.onebot.v11 import (
     GroupMessageEvent
 )
@@ -25,9 +25,11 @@ from nonebot.adapters.onebot.v11 import MessageSegment
 from .data_source import jsondata
 from pathlib import Path
 from base64 import b64encode
+
+from ..xiuxian_data.data.灵根_data import root_data
 from ..xiuxian_place import place
 
-sql_message = XiuxianDateManage()  # sql类
+
 boss_img_path = Path() / "data" / "xiuxian" / "boss_img"
 
 
@@ -642,7 +644,7 @@ async def pic_msg_format(msg, event):
 
 def linggen_get():
     """获取灵根信息"""
-    data = jsondata.root_data()
+    data = root_data
     rate_dict = {}
     for i, v in data.items():
         rate_dict[i] = v["type_rate"]

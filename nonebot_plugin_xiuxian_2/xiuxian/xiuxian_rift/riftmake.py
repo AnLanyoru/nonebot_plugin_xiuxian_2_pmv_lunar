@@ -3,13 +3,12 @@ from .riftconfig import get_rift_config
 from .skill_rate import skill_rate
 from ..xiuxian_utils.utils import number_to
 from ..xiuxian_utils.other_set import OtherSet
-from ..xiuxian_utils.xiuxian2_handle import XiuxianDateManage, UserBuffDate, XIUXIAN_IMPART_BUFF
+from ..xiuxian_utils.xiuxian2_handle import sql_message, UserBuffDate, xiuxian_impart
 from ..xiuxian_utils.player_fight import boss_fight
 from ..xiuxian_utils.item_json import items
 from ..xiuxian_config import convert_rank
 
-sql_message = XiuxianDateManage()
-xiuxian_impart = XIUXIAN_IMPART_BUFF()
+
 skill_data = skill_rate
 
 NONEMSG = [

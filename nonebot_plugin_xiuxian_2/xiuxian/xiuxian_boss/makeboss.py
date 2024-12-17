@@ -30,7 +30,6 @@ JINGJIEEXP = {  # 数值为中期和圆满的平均值
 }
 
 jinjie_list = [k for k, v in JINGJIEEXP.items()]
-sql_message = XiuxianDateManage()  # sql类
 
 
 def get_boss_jinjie_dict():

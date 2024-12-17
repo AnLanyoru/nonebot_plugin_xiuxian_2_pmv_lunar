@@ -1,16 +1,16 @@
 import operator
 import random
 
+from ..xiuxian_data.data.境界_data import level_data
 from ..xiuxian_place import place
-from ..xiuxian_utils.data_source import jsondata
 import json
 from ..xiuxian_utils.item_json import items
 from ..xiuxian_utils.xiuxian2_handle import (
-    XIUXIAN_IMPART_BUFF
+    xiuxian_impart
 )
 
 from ..xiuxian_utils.xiuxian2_handle import (
-    XiuxianDateManage, UserBuffDate,
+    sql_message, UserBuffDate,
     get_weapon_info_msg, get_armor_info_msg,
     get_player_info, save_player_info,
     get_sec_msg, get_main_info_msg, get_sub_info_msg
@@ -19,8 +19,7 @@ from datetime import datetime
 from pathlib import Path
 from ..xiuxian_config import convert_rank, XiuConfig
 
-sql_message = XiuxianDateManage()
-xiuxian_impart = XIUXIAN_IMPART_BUFF()
+# 替换模块
 
 YAOCAIINFOMSG = {
     "-1": "性寒",
@@ -695,7 +694,7 @@ async def check_use_elixir(user_id, goods_id, num):
             impart_data = await xiuxian_impart.get_user_info_with_id(user_id)
             impart_hp_per = impart_data['impart_hp_per'] if impart_data is not None else 0
             main_hp_buff = main_buff_data['hpbuff'] if main_buff_data is not None else 0
-            user_max_hp = int((user_msg['exp'] / 2) * jsondata.level_data()[user_msg['level']]["HP"])
+            user_max_hp = int((user_msg['exp'] / 2) * level_data[user_msg['level']]["HP"])
             user_max_mp = int(user_info['exp'])
             if user_info['hp'] == user_max_hp and user_info['mp'] == user_max_mp:
                 msg = f"道友的状态是满的，用不了哦！"
@@ -710,7 +709,7 @@ async def check_use_elixir(user_id, goods_id, num):
                 impart_data = await xiuxian_impart.get_user_info_with_id(user_id)
                 impart_hp_per = impart_data['impart_hp_per'] if impart_data is not None else 0
                 main_hp_buff = main_buff_data['hpbuff'] if main_buff_data is not None else 0
-                max_hp = int((user_msg['exp'] / 2) * jsondata.level_data()[user_msg['level']]["HP"])
+                max_hp = int((user_msg['exp'] / 2) * level_data[user_msg['level']]["HP"])
                 if user_info['hp'] + recover_hp > max_hp:
                     new_hp = max_hp  # 超过最大
                 else:
@@ -733,7 +732,7 @@ async def check_use_elixir(user_id, goods_id, num):
                 impart_data = await xiuxian_impart.get_user_info_with_id(user_id)
                 impart_hp_per = impart_data['impart_hp_per'] if impart_data is not None else 0
                 main_hp_buff = main_buff_data['hpbuff'] if main_buff_data is not None else 0
-                max_hp = int((user_msg['exp'] / 2) * jsondata.level_data()[user_msg['level']]["HP"])
+                max_hp = int((user_msg['exp'] / 2) * level_data[user_msg['level']]["HP"])
                 user_max_mp = int(user_info['exp'])
                 if user_info['hp'] == max_hp and user_info['mp'] == user_max_mp:
                     msg = f"道友的状态是满的，用不了哦！"
@@ -763,7 +762,7 @@ async def check_use_elixir(user_id, goods_id, num):
             impart_data = await xiuxian_impart.get_user_info_with_id(user_id)
             impart_hp_per = impart_data['impart_hp_per'] if impart_data is not None else 0
             main_hp_buff = main_buff_data['hpbuff'] if main_buff_data is not None else 0
-            user_max_hp = int((user_msg['exp'] / 2) * jsondata.level_data()[user_msg['level']]["HP"])
+            user_max_hp = int((user_msg['exp'] / 2) * level_data[user_msg['level']]["HP"])
 
             user_max_mp = int(user_info['exp'])
             if user_info['hp'] == user_max_hp and user_info['mp'] == user_max_mp:
@@ -782,7 +781,7 @@ async def check_use_elixir(user_id, goods_id, num):
                 impart_data = await xiuxian_impart.get_user_info_with_id(user_id)
                 impart_hp_per = impart_data['impart_hp_per'] if impart_data is not None else 0
                 main_hp_buff = main_buff_data['hpbuff'] if main_buff_data is not None else 0
-                user_max_hp = int((user_msg['exp'] / 2) * jsondata.level_data()[user_msg['level']]["HP"])
+                user_max_hp = int((user_msg['exp'] / 2) * level_data[user_msg['level']]["HP"])
                 user_max_mp = int(user_info['exp'])
                 if user_info['hp'] == user_max_hp and user_info['mp'] == user_max_mp:
                     msg = f"道友的状态是满的，用不了哦！"
@@ -811,7 +810,7 @@ async def check_use_elixir(user_id, goods_id, num):
             msg = f"丹药：{goods_name}的使用境界为{goods_info['境界']}以上，道友不满足使用条件！"
         else:
             exp = goods_info['buff'] * num
-            user_hp = int(user_info['hp'] + (exp / 2)) * jsondata.level_data()[user_info['level']]["HP"]
+            user_hp = int(user_info['hp'] + (exp / 2))
             user_mp = int(user_info['mp'] + exp)
             user_atk = int(user_info['atk'] + (exp / 10))
             await sql_message.update_exp(user_id, exp)

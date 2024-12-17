@@ -11,12 +11,11 @@ from typing import DefaultDict, Dict, Any
 from nonebot.matcher import Matcher
 from nonebot.params import Depends
 from nonebot.adapters.onebot.v11.event import MessageEvent, GroupMessageEvent
-from nonebot.adapters.onebot.v11 import Bot, MessageSegment
+from nonebot.adapters.onebot.v11 import Bot
 from .. import DRIVER
 from ..xiuxian_config import XiuConfig
-from .xiuxian2_handle import XiuxianDateManage
+from .xiuxian2_handle import sql_message
 
-sql_message = XiuxianDateManage()
 
 limit_all_message = require("nonebot_plugin_apscheduler").scheduler
 limit_all_stamina = require("nonebot_plugin_apscheduler").scheduler

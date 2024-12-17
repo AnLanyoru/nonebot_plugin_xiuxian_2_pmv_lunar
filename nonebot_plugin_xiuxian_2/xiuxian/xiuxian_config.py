@@ -146,7 +146,6 @@ class XiuConfig:
 class JsonConfig:
     def __init__(self):
         self.config_jsonpath = DATABASE / "config.json"
-        self.create_default_config()
 
     def read_data(self):
         """读取配置数据"""
@@ -157,49 +156,3 @@ class JsonConfig:
                 with open(self.config_jsonpath, 'w', encoding='utf-8') as f:
                     json.dump(data, f)
         return data
-
-    def create_default_config(self):
-        """创建默认配置文件"""
-        if not self.config_jsonpath.exists():
-            default_data = {"group": []}
-            with open(self.config_jsonpath, 'w', encoding='utf-8') as f:
-                json.dump(default_data, f)
-
-    def write_data(self, key, group_id=None):
-        """
-        说明：设置修仙开启或关闭
-        参数：
-        key: 群聊 1 为开启， 2为关闭,默认关闭
-        """
-        json_data = self.read_data()
-        group_list = json_data.get('group', [])
-        if key == 1:
-            if group_id not in group_list:
-                try:
-                    group_list.append(group_id)
-                    json_data['group'] = group_list
-                except Exception as e:
-                    logger.opt(colors=True).info(f"<red>错误:{e}</red>")
-                    return False
-        elif key == 2:
-            if group_id in group_list:
-                try:
-                    group_list.remove(group_id)
-                    json_data['group'] = group_list
-                except Exception as e:
-                    logger.opt(colors=True).info(f"<red>错误:{e}</ewd>")
-                    return False
-        else:
-            logger.opt(colors=True).info("<red>未知key</red>")
-            return False
-
-        # 去重
-        json_data['group'] = list(set(json_data['group']))
-
-        with open(self.config_jsonpath, 'w', encoding='utf-8') as f:
-            json.dump(json_data, f, ensure_ascii=False, indent=4)
-
-    def get_enabled_groups(self):
-        """获取开启修仙功能的群聊列表，去除重复项"""
-        data = self.read_data()
-        return list(set(data.get("group", [])))

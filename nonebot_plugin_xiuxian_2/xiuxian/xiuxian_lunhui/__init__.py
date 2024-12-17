@@ -1,27 +1,22 @@
 import json
 import random
-import time
-import aiosqlite
-from pathlib import Path
 from nonebot import on_command
 from nonebot.permission import SUPERUSER
 from nonebot.typing import T_State
 
 from ..xiuxian_buff import two_exp_cd
+from ..xiuxian_data.data.境界_data import level_data
 from ..xiuxian_impart_pk import impart_pk
 from ..xiuxian_utils.lay_out import Cooldown
 from ..xiuxian_config import XiuConfig
-from ..xiuxian_utils.xiuxian2_handle import XiuxianDateManage
-from ..xiuxian_utils.data_source import jsondata
+from ..xiuxian_utils.xiuxian2_handle import sql_message
 from nonebot.adapters.onebot.v11 import (
     Bot,
     GROUP,
-    GroupMessageEvent,
-    MessageSegment
+    GroupMessageEvent
 )
 from ..xiuxian_utils.utils import (
-    check_user, get_msg_pic,
-    CommandObjectID, number_to, check_user_type
+    check_user, number_to, check_user_type
 )
 
 __warring_help__ = """
@@ -43,7 +38,6 @@ __warring_help__ = """
 from ..xiuxian_work.reward_data_source import savef
 
 cache_help_fk = {}
-sql_message = XiuxianDateManage()  # sql类
 
 warring_help = on_command("轮回重修帮助", aliases={"轮回重修", "轮回"}, priority=12, permission=GROUP, block=True)
 lunhui = on_command('进入轮回', priority=15, permission=GROUP, block=True)
@@ -72,7 +66,7 @@ async def lunhui_(bot: Bot, event: GroupMessageEvent):
     user_msg = await sql_message.get_user_info_with_id(user_id)
     user_name = user_msg['user_name']
     user_root = user_msg['root_type']
-    list_level_all = list(jsondata.level_data().keys())
+    list_level_all = list(level_data.keys())
     level = user_info['level']
 
     if user_root == '轮回灵根':
@@ -122,7 +116,7 @@ async def twolun_(bot: Bot, event: GroupMessageEvent):
     user_msg = await sql_message.get_user_info_with_id(user_id)
     user_name = user_msg['user_name']
     user_root = user_msg['root_type']
-    list_level_all = list(jsondata.level_data().keys())
+    list_level_all = list(level_data.keys())
     level = user_info['level']
 
     if user_root == '源宇道根':
@@ -172,7 +166,7 @@ async def threelun_(bot: Bot, event: GroupMessageEvent):
     user_msg = await sql_message.get_user_info_with_id(user_id)
     user_name = user_msg['user_name']
     user_root = user_msg['root_type']
-    list_level_all = list(jsondata.level_data().keys())
+    list_level_all = list(level_data.keys())
     level = user_info['level']
 
     if user_root == '道之本源':
@@ -252,7 +246,7 @@ async def gettest_(bot: Bot, event: GroupMessageEvent, state: T_State):
 @gettest.receive()
 async def gettest_(bot: Bot, event: GroupMessageEvent, state: T_State):
     # 这里曾经是风控模块，但是已经不再需要了
-    isUser, user_info, msg = await check_user(event)
+    is_user, user_info, msg = await check_user(event)
     input_key = event.get_plaintext().strip()
 
     if input_key == state["key"]:

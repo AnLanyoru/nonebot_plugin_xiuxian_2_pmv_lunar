@@ -24,10 +24,10 @@ from ..xiuxian_utils.clean_utils import get_num_from_str, main_md
 from .impart_uitls import impart_check, get_rank, re_impart_data, get_rank_plus
 from .impart_data import impart_data_json
 from ..xiuxian_config import XiuConfig
-from ..xiuxian_utils.xiuxian2_handle import XIUXIAN_IMPART_BUFF
+from ..xiuxian_utils.xiuxian2_handle import xiuxian_impart
 from .. import NICKNAME
 
-xiuxian_impart = XIUXIAN_IMPART_BUFF()
+# 替换模块
 
 cache_help = {}
 img_path = Path(f"{os.getcwd()}/data/xiuxian/卡图")

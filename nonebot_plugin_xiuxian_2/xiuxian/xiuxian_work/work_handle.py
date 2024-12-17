@@ -1,12 +1,10 @@
 from ..xiuxian_utils.xiuxian2_handle import *
 from .workmake import *
-from ..xiuxian_utils.xiuxian2_handle import XiuxianDateManage
+from ..xiuxian_utils.xiuxian2_handle import sql_message
 from ..xiuxian_utils.item_json import items
 
-sql_message = XiuxianDateManage()  # sql类
 
-
-class workhandle(XiuxianJsonDate):
+class workhandle():
 
     @staticmethod
     async def do_work(key, work_list=None, name=None, level="求道者", exp=None, user_id=None):

@@ -11,7 +11,7 @@ from ..xiuxian_utils.clean_utils import msg_handler, main_md, get_args_num, get_
 from ..xiuxian_utils.item_json import items
 from ..xiuxian_utils.utils import check_user, check_user_type, send_msg_handler
 from ..xiuxian_utils.xiuxian2_handle import (
-    XiuxianDateManage, sql_message
+    sql_message, sql_message
 )
 from nonebot import on_command, logger, require
 from nonebot.adapters.onebot.v11 import (

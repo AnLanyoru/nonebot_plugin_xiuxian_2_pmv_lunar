@@ -1,6 +1,5 @@
 import random
-from nonebot import on_command, require, on_fullmatch
-
+from nonebot import on_command, require
 from nonebot.adapters.onebot.v11 import (
     Bot,
     GROUP,
@@ -17,13 +16,12 @@ from ..xiuxian_utils.clean_utils import get_strs_from_str, simple_md, main_md, m
 from ..xiuxian_utils.lay_out import Cooldown
 from nonebot.permission import SUPERUSER
 from nonebot.log import logger
-from ..xiuxian_utils.xiuxian2_handle import XiuxianDateManage
+from ..xiuxian_utils.xiuxian2_handle import sql_message
 from ..xiuxian_utils.utils import (
     check_user, check_user_type,
     send_msg_handler, CommandObjectID
 )
-from .riftconfig import get_rift_config, savef_rift
-from .jsondata import save_rift_data, read_rift_data
+from .riftconfig import get_rift_config
 from .riftmake import (
     Rift, get_rift_type, get_story_type, NONEMSG, get_battle_type,
     get_dxsj_info, get_boss_battle_info, get_treasure_info
@@ -31,7 +29,6 @@ from .riftmake import (
 
 config = get_rift_config()
 groups = config['open']  # list，群发秘境开启信息
-sql_message = XiuxianDateManage()  # sql类
 cache_help = {}
 world_rift = {}  # dict
 # 定时任务

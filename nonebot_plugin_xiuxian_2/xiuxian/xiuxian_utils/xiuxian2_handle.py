@@ -1,5 +1,9 @@
 import operator
+
+from .clean_utils import number_to
 from .database_cur_get import XiuxianDateCur
+from ..xiuxian_data.data.境界_data import level_data
+from ..xiuxian_data.data.灵根_data import root_data
 
 try:
     import ujson as json
@@ -11,7 +15,6 @@ import aiosqlite
 from datetime import datetime
 from pathlib import Path
 from nonebot.log import logger
-from .data_source import jsondata
 from ..xiuxian_config import XiuConfig, convert_rank
 from .. import DRIVER
 from .item_json import items
@@ -382,33 +385,21 @@ WHERE last_check_info_time = '0' OR last_check_info_time IS NULL
     @staticmethod
     async def get_root_rate(name):
         """获取灵根倍率"""
-        data = jsondata.root_data()
+        data = root_data
         return data[name]['type_speeds']
 
     @staticmethod
     async def get_level_power(name):
         """获取境界倍率|exp"""
-        data = jsondata.level_data()
+        data = level_data
         return data[name]['power']
-
-    @staticmethod
-    async def get_level_hp(name):  # 笑死根本没用
-        """获取境界血量倍率|HP"""
-        data = jsondata.level_data()
-        return data[name]['HP']
-
-    @staticmethod
-    async def get_level_cost(name):  # 笑死根本没用
-        """获取炼体境界倍率"""
-        data = jsondata.exercises_level_data()
-        return data[name]['cost_exp'], data[name]['cost_stone']
 
     async def update_power2(self, user_id) -> None:
         """更新战力"""
         user_info = await self.get_user_info_with_id(user_id)
         db = await self.get_db()
-        level = jsondata.level_data()
-        root = jsondata.root_data()
+        level = level_data
+        root = root_data
         sql = f"UPDATE user_xiuxian SET power=round(exp*?*?,0) WHERE user_id=?"
         await db.execute(sql,
                          (root[user_info['root_type']]["type_speeds"], level[user_info['level']]["spend"], user_id))
@@ -1081,7 +1072,7 @@ WHERE last_check_info_time = '0' OR last_check_info_time IS NULL
         impart_data = await xiuxian_impart.get_user_info_with_id(user_id)
         await impart_data['impart_hp_per'] if impart_data is not None else 0
         await main_buff_data['hpbuff'] if main_buff_data is not None else 0
-        max_hp = ((user_msg['exp'] / 2) * jsondata.level_data()[user_msg['level']]["HP"])
+        max_hp = ((user_msg['exp'] / 2) * level_data[user_msg['level']]["HP"])
         sql = f"UPDATE user_xiuxian SET hp=?,mp=exp,atk=exp/10 WHERE user_id=?"
         db = await self.get_db()
         await db.execute(sql, (str(max_hp), user_id))
@@ -1264,46 +1255,46 @@ WHERE last_check_info_time = '0' OR last_check_info_time IS NULL
         else:
             return None
 
-    async def updata_user_main_buff(self, user_id, id):
+    async def updata_user_main_buff(self, user_id, buff_id):
         """更新用户主功法信息"""
         sql = f"UPDATE BuffInfo SET main_buff = ? WHERE user_id = ?"
         db = await self.get_db()
-        await db.execute(sql, (id, user_id,))
+        await db.execute(sql, (buff_id, user_id,))
         await db.commit()
 
-    async def updata_user_sub_buff(self, user_id, id):  # 辅修功法3
+    async def updata_user_sub_buff(self, user_id, buff_id):  # 辅修功法3
         """更新用户辅修功法信息"""
         sql = f"UPDATE BuffInfo SET sub_buff = ? WHERE user_id = ?"
         db = await self.get_db()
-        await db.execute(sql, (id, user_id,))
+        await db.execute(sql, (buff_id, user_id,))
         await db.commit()
 
-    async def updata_user_sec_buff(self, user_id, id):
+    async def updata_user_sec_buff(self, user_id, buff_id):
         """更新用户副功法信息"""
         sql = f"UPDATE BuffInfo SET sec_buff = ? WHERE user_id = ?"
         db = await self.get_db()
-        await db.execute(sql, (id, user_id,))
+        await db.execute(sql, (buff_id, user_id,))
         await db.commit()
 
-    async def updata_user_faqi_buff(self, user_id, id):
+    async def updata_user_faqi_buff(self, user_id, buff_id):
         """更新用户法器信息"""
         sql = f"UPDATE BuffInfo SET faqi_buff = ? WHERE user_id = ?"
         db = await self.get_db()
-        await db.execute(sql, (id, user_id,))
+        await db.execute(sql, (buff_id, user_id,))
         await db.commit()
 
-    async def updata_user_fabao_weapon(self, user_id, id):
+    async def updata_user_fabao_weapon(self, user_id, buff_id):
         """更新用户法宝信息"""
         sql = f"UPDATE BuffInfo SET fabao_weapon = ? WHERE user_id = ?"
         db = await self.get_db()
-        await db.execute(sql, (id, user_id,))
+        await db.execute(sql, (buff_id, user_id,))
         await db.commit()
 
-    async def updata_user_armor_buff(self, user_id, id):
+    async def updata_user_armor_buff(self, user_id, buff_id):
         """更新用户防具信息"""
         sql = f"UPDATE BuffInfo SET armor_buff = ? WHERE user_id = ?"
         db = await self.get_db()
-        await db.execute(sql, (id, user_id,))
+        await db.execute(sql, (buff_id, user_id,))
         await db.commit()
 
     async def updata_user_atk_buff(self, user_id, buff):
@@ -1488,92 +1479,7 @@ async def close_db():
     XiuxianDateManage().close()
 
 
-class XiuxianJsonDate:
-    def __init__(self):
-        self.root_jsonpath = DATABASE / "灵根.json"
-        self.level_jsonpath = DATABASE / "突破概率.json"
-
-    def beifen_linggen_get(self):
-        with open(self.root_jsonpath, 'r', encoding='utf-8') as e:
-            a = e.read()
-            data = json.loads(a)
-            lg = random.choice(data)
-            return lg['name'], lg['type']
-
-    def level_rate(self, level):
-        with open(self.level_jsonpath, 'r', encoding='utf-8') as e:
-            a = e.read()
-            data = json.loads(a)
-            return data[0][level]
-
-
-def number_to(num):
-    """
-    递归实现，精确为最大单位值 + 小数点后一位
-    处理科学计数法表示的数值
-    """
-
-    def strofsize(num_per, level):
-        if level >= 29:
-            return num_per, level
-        elif num_per >= 10000:
-            num_per /= 10000
-            level += 1
-            return strofsize(num_per, level)
-        else:
-            return num_per, level
-
-    units = ['', '万', '亿', '万亿', '兆', '万兆', '亿兆', '万亿兆', '京', '万京', '亿京', '万亿京', '兆京',
-             '万兆京', '亿兆京', '万亿兆京', '垓', '万垓', '亿垓', '万亿垓',
-             '兆垓', '万兆垓', '亿兆垓', '万亿兆垓', '京垓', '万京垓',
-             '亿京垓', '万亿京垓', '兆京垓', '万兆京垓']
-
-    # 处理列表类数据
-    if type(num) is str:
-        num = num.split("、")
-        final_num = []
-        for num_per in num:
-            # 对列表型数值每个处理输出到新list
-            # 处理坑爹的伤害列表
-            # 处理负数输出和字符串输入
-            if type(num_per) is not int:
-                # 处理坑爹的伤害列表
-                if num_per[-2:] == "伤害":
-                    num_per = num_per[:-2]
-                num_per = int(num_per)
-            fh = ""
-            if num_per < 0:
-                fh = "-"
-                num_per = abs(num_per)
-            # 处理科学计数法
-            if "e" in str(num_per):
-                num_per = float(f"{num_per:.1f}")
-            num_per, level = strofsize(num_per, 0)
-            if level >= len(units):
-                level = len(units) - 1
-            final_num += "、" + f"{fh}{round(num_per, 1)}{units[level]}"
-        return final_num[1:]
-    else:
-        # 处理负数输出
-        fh = ""
-        if num < 0:
-            fh = "-"
-            num = abs(num)
-        # 处理科学计数法
-        if "e" in str(num):
-            num = float(f"{num:.1f}")
-        num, level = strofsize(num, 0)
-        if level >= len(units):
-            level = len(units) - 1
-        final_num = f"{fh}{round(num, 1)}{units[level]}"
-    return final_num
-
-
-"""
-这里以前有一个糟糕的模块
-"""
-
-sql_message = XiuxianDateManage()  # sql类
+sql_message, = XiuxianDateManage()  # sql类
 
 
 async def final_user_data(user_data, columns):
@@ -1611,25 +1517,34 @@ async def final_user_data(user_data, columns):
     main_mp_buff = main_buff_data['mpbuff'] if main_buff_data is not None else 0
     main_atk_buff = main_buff_data['atkbuff'] if main_buff_data is not None else 0
 
+    hp_rate = level_data[user_dict['level']]["HP"]
+
     # 改成字段名称来获取相应的值
-    user_dict['hp'] = int(user_dict['hp'] * (1 + main_hp_buff + impart_hp_per))
+    user_dict['hp'] = int(user_dict['hp'] * (1 + main_hp_buff + impart_hp_per) * hp_rate)
     user_dict['mp'] = int(user_dict['mp'] * (1 + main_mp_buff + impart_mp_per))
-    user_dict['atk'] = int((user_dict['atk'] * (user_dict['atkpractice'] * 0.04 + 1) * (1 + main_atk_buff) * (
-            1 + weapon_atk_buff) * (1 + armor_atk_buff)) * (1 + impart_atk_per)) + int(user_buff_data['atk_buff'])
+
+
+    user_dict['atk'] = (int((user_dict['atk']
+                            * (user_dict['atkpractice'] * 0.04 + 1)  # 攻击修炼
+                            * (1 + main_atk_buff)    # 功法攻击加成
+                            * (1 + weapon_atk_buff)  # 武器攻击加成
+                            * (1 + armor_atk_buff))  # 防具攻击加成
+                            * (1 + impart_atk_per))  # 传承攻击加成
+                        + int(user_buff_data['atk_buff']))  # 攻击丹药加成
 
     return user_dict
 
 
 # 这里是虚神界部分
 
-class XIUXIAN_IMPART_BUFF:
+class XiuxianImpartBuff:
     global impart_number
     _instance = {}
     _has_init = {}
 
     def __new__(cls):
         if cls._instance.get(impart_number) is None:
-            cls._instance[impart_number] = super(XIUXIAN_IMPART_BUFF, cls).__new__(cls)
+            cls._instance[impart_number] = super(XiuxianImpartBuff, cls).__new__(cls)
         return cls._instance[impart_number]
 
     def __init__(self):
@@ -1696,7 +1611,7 @@ class XIUXIAN_IMPART_BUFF:
 
     @classmethod
     async def close_dbs(cls):
-        await XIUXIAN_IMPART_BUFF().close()
+        await XiuxianImpartBuff().close()
 
     async def create_user(self, user_id):
         """校验用户是否存在"""
@@ -1974,7 +1889,7 @@ async def leave_harm_time(user_id):
     user_mes = await sql_message.get_user_info_with_id(user_id)
     level = user_mes['level']
     level_rate = await sql_message.get_root_rate(user_mes['root_type'])  # 灵根倍率
-    realm_rate = jsondata.level_data()[level]["spend"]  # 境界倍率
+    realm_rate = level_data[level]["spend"]  # 境界倍率
     main_buff_data = await UserBuffDate(user_id).get_user_main_buff_data()  # 主功法数据
     main_buff_rate_buff = main_buff_data['ratebuff'] if main_buff_data else 0  # 主功法修炼倍率
 
@@ -1988,12 +1903,12 @@ async def leave_harm_time(user_id):
     return time
 
 
-xiuxian_impart = XIUXIAN_IMPART_BUFF()
+xiuxian_impart = XiuxianImpartBuff()
 
 
 @DRIVER.on_shutdown
 async def close_db():
-    await XIUXIAN_IMPART_BUFF().close()
+    await xiuxian_impart.close()
 
 
 # 这里是buff部分

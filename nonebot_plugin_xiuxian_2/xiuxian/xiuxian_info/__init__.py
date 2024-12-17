@@ -9,9 +9,9 @@ from nonebot.permission import SUPERUSER
 
 from .draw_user_info import draw_user_info_img
 from .send_image_tool import convert_img
+from ..xiuxian_data.data.境界_data import level_data
 from ..xiuxian_utils.xiuxian2_handle import (
-    XiuxianDateManage, BuffJsonDate,
-    get_main_info_msg, UserBuffDate, get_sec_msg
+    sql_message, UserBuffDate
 )
 from ..xiuxian_utils.other_set import OtherSet
 from nonebot import on_command
@@ -34,7 +34,6 @@ from ..xiuxian_utils.clean_utils import get_strs_from_str, simple_md
 xiuxian_message = on_command("我的修仙信息", aliases={"我的存档", "我的信息", "存档", "修仙信息"}, priority=23,
                              permission=GROUP, block=True)
 pic_test = on_command("测试图片", aliases={"图片测试"}, priority=23, permission=SUPERUSER, block=True)
-sql_message = XiuxianDateManage()  # sql类
 
 
 def img2b64(out_img) -> str:
@@ -86,7 +85,7 @@ async def xiuxian_message_(bot: Bot, event: GroupMessageEvent, args: Message = C
         user_name = f"无名氏(发送指令 改头换面 更新)"
 
     level_rate = await sql_message.get_root_rate(user_info['root_type'])  # 灵根倍率
-    realm_rate = jsondata.level_data()[user_info['level']]["spend"]  # 境界倍率
+    realm_rate = level_data[user_info['level']]["spend"]  # 境界倍率
     sect_id = user_info['sect_id']
     if sect_id:
         sect_info = await sql_message.get_sect_info(sect_id)
