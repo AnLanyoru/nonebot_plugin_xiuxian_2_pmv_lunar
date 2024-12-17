@@ -19,7 +19,6 @@ from ..xiuxian_utils.xiuxian2_handle import (
 )
 from ..xiuxian_utils.other_set import OtherSet
 from ..xiuxian_config import XiuConfig, convert_rank
-from ..xiuxian_utils.data_source import jsondata
 from ..xiuxian_utils.utils import (
     number_to, check_user, check_user_type
 )

@@ -6,6 +6,7 @@ from nonebot.typing import T_State
 from ..xiuxian_buff import check_limit
 from ..xiuxian_data.data.境界_data import level_data
 from ..xiuxian_data.data.灵根_data import root_data
+from ..xiuxian_data.data.突破概率_data import break_rate
 from ..xiuxian_limit.limit_database import limit_handle
 from ..xiuxian_place import place
 from ..xiuxian_utils.clean_utils import date_sub, get_num_from_str, get_strs_from_str, main_md
@@ -22,7 +23,6 @@ from nonebot.adapters.onebot.v11 import (
 from nonebot.permission import SUPERUSER
 from nonebot.log import logger
 from nonebot.params import CommandArg
-from ..xiuxian_utils.data_source import jsondata
 from ..xiuxian_utils.xiuxian2_handle import (
     sql_message, UserBuffDate, xiuxian_impart, leave_harm_time
 )
@@ -341,7 +341,7 @@ async def level_up_(bot: Bot, event: GroupMessageEvent):
         pass
 
     level_name = user_msg['level']  # 用户境界
-    level_rate = jsondata.level_rate_data()[level_name]  # 对应境界突破的概率
+    level_rate = break_rate[level_name]  # 对应境界突破的概率
     user_backs = await sql_message.get_back_msg(user_id)  # list(back)
     pause_flag = False
     elixir_name = None
@@ -393,7 +393,7 @@ async def level_up_zj_(bot: Bot, event: GroupMessageEvent):
         pass
     level_name = user_msg['level']  # 用户境界
     exp = user_msg['exp']  # 用户修为
-    level_rate = jsondata.level_rate_data()[level_name]  # 对应境界突破的概率
+    level_rate = break_rate[level_name]  # 对应境界突破的概率
     leveluprate = int(user_msg['level_up_rate'])  # 用户失败次数加成
     main_rate_buff = await UserBuffDate(user_id).get_user_main_buff_data()  # 功法突破概率提升，别忘了还有渡厄突破
     main_exp_buff = await UserBuffDate(user_id).get_user_main_buff_data()  # 功法突破扣修为减少
@@ -410,7 +410,7 @@ async def level_up_zj_(bot: Bot, event: GroupMessageEvent):
         now_exp = int(int(exp) * ((percentage / 100) * (1 - exp_buff)))  # 功法突破扣修为减少
         await sql_message.update_j_exp(user_id, now_exp)  # 更新用户修为
 
-        user_msg = await XiuxianDateManage().get_user_info_with_id(user_id)
+        user_msg = await xiuxian_impart.get_user_info_with_id(user_id)
         user_buff_data = UserBuffDate(user_id)
         main_buff_data = await user_buff_data.get_user_main_buff_data()
         impart_data = await xiuxian_impart.get_user_info_with_id(user_id)
@@ -461,11 +461,11 @@ async def level_up_zj_all_(bot: Bot, event: GroupMessageEvent):
     user_msg = await sql_message.get_user_info_with_id(user_id)  # 用户信息
     level_name = user_msg['level']  # 用户境界
     exp = user_msg['exp']  # 用户修为
-    level_rate = jsondata.level_rate_data()[level_name]  # 对应境界突破的概率
+    level_rate = break_rate[level_name]  # 对应境界突破的概率
     leveluprate = int(user_msg['level_up_rate'])  # 用户失败次数加成
     main_rate_buff = await UserBuffDate(user_id).get_user_main_buff_data()  # 功法突破概率提升，别忘了还有渡厄突破
     number = main_rate_buff['number'] if main_rate_buff is not None else 0
-    msg = "开始进行快速突破\r———————————————\r"
+    msg = "开始进行快速突破\r"
     while "道友" not in (await OtherSet().get_type(exp, level_rate + leveluprate + number, level_name, user_id)):
         run = 1
         if user_info['hp'] is None:
@@ -474,7 +474,7 @@ async def level_up_zj_all_(bot: Bot, event: GroupMessageEvent):
         user_msg = await sql_message.get_user_info_with_id(user_id)  # 用户信息
         level_name = user_msg['level']  # 用户境界
         exp = user_msg['exp']  # 用户修为
-        level_rate = jsondata.level_rate_data()[level_name]  # 对应境界突破的概率
+        level_rate = break_rate[level_name]  # 对应境界突破的概率
         leveluprate = int(user_msg['level_up_rate'])  # 用户失败次数加成
         main_rate_buff = await UserBuffDate(user_id).get_user_main_buff_data()  # 功法突破概率提升，别忘了还有渡厄突破
         main_exp_buff = await UserBuffDate(user_id).get_user_main_buff_data()  # 功法突破扣修为减少
@@ -491,7 +491,7 @@ async def level_up_zj_all_(bot: Bot, event: GroupMessageEvent):
             now_exp = int(int(exp) * ((percentage / 100) * (1 - exp_buff)))  # 功法突破扣修为减少
             await sql_message.update_j_exp(user_id, now_exp)  # 更新用户修为
 
-            user_msg = await XiuxianDateManage().get_user_info_with_id(user_id)
+            user_msg = await xiuxian_impart.get_user_info_with_id(user_id)
             user_buff_data = UserBuffDate(user_id)
             main_buff_data = await user_buff_data.get_user_main_buff_data()
             impart_data = await xiuxian_impart.get_user_info_with_id(user_id)
@@ -522,7 +522,7 @@ async def level_up_zj_all_(bot: Bot, event: GroupMessageEvent):
             msg += le + "\r"
     final_level = (await sql_message.get_user_info_with_id(user_id))["level"]
     if run == 1:
-        msg += f"———————————————\r快速突破结束本次快速突破损失{number_to(lost_exp)}|{lost_exp}点修为\r成功突破至{final_level}"
+        msg += f"快速突破结束本次快速突破损失{number_to(lost_exp)}|{lost_exp}点修为\r成功突破至{final_level}"
     else:
         msg += await OtherSet().get_type(exp, level_rate + leveluprate + number, level_name, user_id)
     await bot.send(event=event, message=msg)
@@ -554,7 +554,7 @@ async def level_up_dr_(bot: Bot, event: GroupMessageEvent):
     elixir_name = "渡厄丹"
     level_name = user_msg['level']  # 用户境界
     exp = user_msg['exp']  # 用户修为
-    level_rate = jsondata.level_rate_data()[level_name]  # 对应境界突破的概率
+    level_rate = break_rate[level_name]  # 对应境界突破的概率
     user_leveluprate = int(user_msg['level_up_rate'])  # 用户失败次数加成
     main_rate_buff = await UserBuffDate(user_id).get_user_main_buff_data()  # 功法突破概率提升
     number = main_rate_buff['number'] if main_rate_buff is not None else 0
@@ -592,7 +592,7 @@ async def level_up_dr_(bot: Bot, event: GroupMessageEvent):
             exp_buff = main_exp_buff['exp_buff'] if main_exp_buff is not None else 0
             now_exp = int(int(exp) * ((percentage / 100) * (1 - exp_buff)))
             await sql_message.update_j_exp(user_id, now_exp)  # 更新用户修为
-            user_msg = await XiuxianDateManage().get_user_info_with_id(user_id)
+            user_msg = await xiuxian_impart.get_user_info_with_id(user_id)
             user_buff_data = UserBuffDate(user_id)
             main_buff_data = await  user_buff_data.get_user_main_buff_data()
             impart_data = await xiuxian_impart.get_user_info_with_id(user_id)
@@ -636,7 +636,7 @@ async def user_leveluprate_(bot: Bot, event: GroupMessageEvent):
     user_id = user_info['user_id']
     leveluprate = int(user_info['level_up_rate'])  # 用户失败次数加成
     level_name = user_info['level']  # 用户境界
-    level_rate = jsondata.level_rate_data()[level_name]  # 
+    level_rate = break_rate[level_name]  # 
     main_rate_buff = await UserBuffDate(user_id).get_user_main_buff_data()  # 功法突破概率提升
     number = main_rate_buff['number'] if main_rate_buff is not None else 0
     msg = f"道友下一次突破成功概率为{level_rate + leveluprate + number}%"

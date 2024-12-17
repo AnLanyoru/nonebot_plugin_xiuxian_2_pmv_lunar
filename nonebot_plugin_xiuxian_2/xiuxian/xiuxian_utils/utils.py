@@ -22,7 +22,6 @@ from PIL import Image, ImageDraw, ImageFont
 from wcwidth import wcwidth
 from nonebot.adapters import MessageSegment
 from nonebot.adapters.onebot.v11 import MessageSegment
-from .data_source import jsondata
 from pathlib import Path
 from base64 import b64encode
 
@@ -30,6 +29,7 @@ from ..xiuxian_data.data.灵根_data import root_data
 from ..xiuxian_place import place
 
 
+DATABASE = Path() / "data" / "xiuxian"
 boss_img_path = Path() / "data" / "xiuxian" / "boss_img"
 
 
@@ -125,7 +125,11 @@ class Txt2Img:
     """文字转图片"""
 
     def __init__(self, size=32):
-        self.font = str(jsondata.FONT_FILE)
+        self.BACKGROUND_FILE = DATABASE / "image" / "background.png"
+        self.BOSS_IMG = DATABASE / "boss_img"
+        self.FONT_FILE = DATABASE / "font" / "SarasaMonoSC-Bold.ttf"
+        self.BANNER_FILE = DATABASE / "image" / "banner.png"
+        self.font = str(self.FONT_FILE)
         self.font_size = int(size)
         self.use_font = ImageFont.truetype(font=self.font, size=self.font_size)
         self.upper_size = 30
@@ -139,7 +143,7 @@ class Txt2Img:
 
         self.user_font_size = int(size * 1.5)
         self.lrc_font_size = int(size)
-        self.font_family = str(jsondata.FONT_FILE)
+        self.font_family = str(self.FONT_FILE)
         self.share_img_width = 1080
         self.line_space = int(size)
         self.lrc_line_space = int(size / 2)
@@ -199,8 +203,8 @@ class Txt2Img:
         banner_size = 12
         border_color = (220, 211, 196)
         out_padding = 15
-        mi_img = Image.open(jsondata.BACKGROUND_FILE)
-        mi_banner = Image.open(jsondata.BANNER_FILE).resize(
+        mi_img = Image.open(self.BACKGROUND_FILE)
+        mi_banner = Image.open(self.BANNER_FILE).resize(
             (banner_size, banner_size), resample=3
         )
 
@@ -245,7 +249,7 @@ class Txt2Img:
         )
         # 贴boss图
         if boss_name:
-            boss_img_path = jsondata.BOSS_IMG / f"{boss_name}.png"
+            boss_img_path = self.BOSS_IMG / f"{boss_name}.png"
             if os.path.exists(boss_img_path):
                 boss_img = Image.open(boss_img_path)
                 base_cc = boss_img.height / img_hight
@@ -318,8 +322,8 @@ class Txt2Img:
         out_img = Image.new(mode="RGB", size=(w, h), color=(255, 255, 255))
         draw = ImageDraw.Draw(out_img)
 
-        mi_img = Image.open(jsondata.BACKGROUND_FILE)
-        mi_banner = Image.open(jsondata.BANNER_FILE).resize(
+        mi_img = Image.open(self.BACKGROUND_FILE)
+        mi_banner = Image.open(self.BANNER_FILE).resize(
             (banner_size, banner_size), resample=3
         )
 

@@ -5,7 +5,7 @@ from ..xiuxian_utils.data_source import *
 WORKDATA = Path() / "data" / "xiuxian" / "work"
 
 
-class reward(JsonDate):
+class reward:
 
     def __init__(self):
         super().__init__()

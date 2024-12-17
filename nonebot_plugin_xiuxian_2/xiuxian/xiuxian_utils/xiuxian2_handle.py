@@ -1521,7 +1521,9 @@ async def final_user_data(user_data, columns):
 
     # 改成字段名称来获取相应的值
     user_dict['hp'] = int(user_dict['hp'] * (1 + main_hp_buff + impart_hp_per) * hp_rate)
+    user_dict['max_hp'] = int(user_dict['exp'] * (1 + main_hp_buff + impart_hp_per) * hp_rate / 2)
     user_dict['mp'] = int(user_dict['mp'] * (1 + main_mp_buff + impart_mp_per))
+    user_dict['max_mp'] = int(user_dict['exp'] * (1 + main_mp_buff + impart_mp_per))
 
 
     user_dict['atk'] = (int((user_dict['atk']

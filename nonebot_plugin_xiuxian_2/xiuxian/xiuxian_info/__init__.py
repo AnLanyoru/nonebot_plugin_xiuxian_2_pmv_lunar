@@ -10,6 +10,7 @@ from nonebot.permission import SUPERUSER
 from .draw_user_info import draw_user_info_img
 from .send_image_tool import convert_img
 from ..xiuxian_data.data.境界_data import level_data
+from ..xiuxian_data.data.突破概率_data import break_rate
 from ..xiuxian_utils.xiuxian2_handle import (
     sql_message, UserBuffDate
 )
@@ -20,12 +21,10 @@ from nonebot.adapters.onebot.v11 import (
     GROUP,
     Message,
     GroupMessageEvent,
-    MessageSegment,
-    ActionFailed
+    MessageSegment
 )
 from ..xiuxian_utils.lay_out import Cooldown
 from nonebot.params import CommandArg
-from ..xiuxian_utils.data_source import jsondata
 from ..xiuxian_utils.utils import (
     check_user, number_to
 )
@@ -90,7 +89,7 @@ async def xiuxian_message_(bot: Bot, event: GroupMessageEvent, args: Message = C
     if sect_id:
         sect_info = await sql_message.get_sect_info(sect_id)
         sectmsg = sect_info['sect_name']
-        sectzw = jsondata.sect_config_data()[f"{user_info['sect_position']}"]["title"]
+        sectzw = sect_config_data[f"{user_info['sect_position']}"]["title"]
     else:
         sectmsg = f"无宗门"
         sectzw = f"无"
@@ -141,7 +140,7 @@ async def xiuxian_message_(bot: Bot, event: GroupMessageEvent, args: Message = C
         "灵石": f"{number_to(user_info['stone'])}",
         "战力": f"{number_to(int(user_info['exp'] * level_rate * realm_rate))}",
         "灵根": f"{user_info['root']}({user_info['root_type']}+{int(level_rate * 100)}%)",
-        "突破状态": f"{exp_meg}概率：{jsondata.level_rate_data()[user_info['level']] + leveluprate + number}%",
+        "突破状态": f"{exp_meg}概率：{break_rate[user_info['level']] + leveluprate + number}%",
         "攻击力": f"{number_to(user_info['atk'])}，攻修等级{user_info['atkpractice']}级",
         "所在宗门": sectmsg,
         "宗门职位": sectzw,
@@ -168,7 +167,7 @@ async def xiuxian_message_(bot: Bot, event: GroupMessageEvent, args: Message = C
                f"战力: {number_to(int(user_info['exp'] * level_rate * realm_rate))}\r"
                f"灵根: {user_info['root']}\r"
                f"({user_info['root_type']}+{int(level_rate * 100)}%)\r"
-               f"突破状态: {exp_meg} (概率：{jsondata.level_rate_data()[user_info['level']] + leveluprate + number}%)\r"
+               f"突破状态: {exp_meg} (概率：{break_rate[user_info['level']] + leveluprate + number}%)\r"
                f"攻击力: {number_to(user_info['atk'])} (攻修等级{user_info['atkpractice']}级)\r"
                f"所在宗门: {sectmsg} (职位: {sectzw})\r"
                f"主修功法: {main_buff_name}\r"

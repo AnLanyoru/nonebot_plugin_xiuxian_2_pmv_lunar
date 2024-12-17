@@ -1,5 +1,6 @@
 from nonebot.permission import SUPERUSER
 
+from ..xiuxian_data.data.宗门玩法配置_data import sect_config_data
 from ..xiuxian_sect import CONFIG
 from ..xiuxian_utils.clean_utils import help_md
 from ..xiuxian_utils.item_json import items
@@ -10,7 +11,6 @@ from nonebot.adapters.onebot.v11 import (
     GroupMessageEvent
 )
 from ..xiuxian_utils.lay_out import Cooldown
-from ..xiuxian_utils.data_source import jsondata
 from ..xiuxian_config import XiuConfig
 
 config = CONFIG
@@ -275,7 +275,7 @@ async def sect_help_member_(bot: Bot, event: GroupMessageEvent):
 ——tips——
 宗主|长老|亲传弟子|内门弟子|外门弟子
 宗门任务获得修为上限分别为：
-{jsondata.sect_config_data()[str(0)]["max_exp"]}|{jsondata.sect_config_data()[str(1)]["max_exp"]}|{jsondata.sect_config_data()[str(2)]["max_exp"]}|{jsondata.sect_config_data()[str(3)]["max_exp"]}|{jsondata.sect_config_data()[str(4)]["max_exp"]}
+{sect_config_data[str(0)]["max_exp"]}|{sect_config_data[str(1)]["max_exp"]}|{sect_config_data[str(2)]["max_exp"]}|{sect_config_data[str(3)]["max_exp"]}|{sect_config_data[str(4)]["max_exp"]}
 """
     await bot.send(event=event, message=msg)
     await sect_help_member.finish()

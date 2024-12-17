@@ -1,6 +1,4 @@
 import random
-
-from .data_source import jsondata
 from .xiuxian2_handle import sql_message, UserBuffDate, xiuxian_impart
 from .other_set import OtherSet
 from ..xiuxian_config import convert_rank
@@ -1015,11 +1013,11 @@ async def boss_fight(player1: dict, boss: dict, type_in=2, bot_id=0):
         play_list.append(boss_xl_data)
 
     if random_buff.random_break > 0:
-        random_buff.random_break_data = {"type": "node",
+        random_buff.random_break_rate = {"type": "node",
                                          "data": {"name": f"{player1['道号']}",
                                                   "uin": int(bot_id),
                                                   "content": f"{player1['道号']}发动了八九玄功,获得了{int(random_buff.random_break * 100)}%穿甲！"}}
-        play_list.append(random_buff.random_break_data)
+        play_list.append(random_buff.random_break_rate)
 
     if random_buff.random_xx > 0:
         random_buff.random_xx_data = {"type": "node",

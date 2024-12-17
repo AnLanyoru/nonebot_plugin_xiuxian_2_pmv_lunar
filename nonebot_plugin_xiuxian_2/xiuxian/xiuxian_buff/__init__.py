@@ -13,6 +13,7 @@ from nonebot.permission import SUPERUSER
 
 from .limit import check_limit, reset_send_stone, reset_stone_exp_up
 from ..xiuxian_data.data.境界_data import level_data
+from ..xiuxian_data.data.突破概率_data import break_rate
 from ..xiuxian_exp_up.exp_up_def import exp_up_by_time
 from ..xiuxian_impart_pk import impart_pk_check
 from ..xiuxian_limit.limit_database import limit_handle, limit_data
@@ -28,7 +29,6 @@ from ..xiuxian_utils.xiuxian2_handle import (
 )
 from ..xiuxian_utils.other_set import OtherSet
 from ..xiuxian_config import XiuConfig
-from ..xiuxian_utils.data_source import jsondata
 from nonebot.params import CommandArg
 from ..xiuxian_utils.player_fight import player_fight
 from ..xiuxian_utils.utils import (
@@ -586,8 +586,6 @@ async def mind_state_(bot: Bot, event: GroupMessageEvent):
     else:
         def_buff = 0
 
-    user_armor_data = user_buff_data.get_user_armor_buff_data()
-
     if user_weapon_data is not None:
         weapon_def = user_weapon_data['def_buff'] * 100  # 我的状态武器减伤
     else:
@@ -613,10 +611,8 @@ async def mind_state_(bot: Bot, event: GroupMessageEvent):
 
     main_buff_rate_buff = main_buff_data['ratebuff'] if main_buff_data is not None else 0
     main_hp_buff = main_buff_data['hpbuff'] if main_buff_data is not None else 0
-    main_mp_buff = main_buff_data['mpbuff'] if main_buff_data is not None else 0
     impart_data = await xiuxian_impart.get_user_info_with_id(user_id)
     impart_hp_per = impart_data['impart_hp_per'] if impart_data is not None else 0
-    impart_mp_per = impart_data['impart_mp_per'] if impart_data is not None else 0
     impart_know_per = impart_data['impart_know_per'] if impart_data is not None else 0
     impart_burst_per = impart_data['impart_burst_per'] if impart_data is not None else 0
     boss_atk = impart_data['boss_atk'] if impart_data is not None else 0
@@ -629,11 +625,11 @@ async def mind_state_(bot: Bot, event: GroupMessageEvent):
     now_place = place.get_place_name(place.get_now_place_id(user_id))
 
     msg = simple_md(f"道号：{user_info['user_name']}\r"
-                    f"气血:{number_to(user_info['hp'])}/{number_to(int((user_info['exp'] / 2) * (1 + main_hp_buff + impart_hp_per) * main_hp_rank))}({(user_info['hp'] / ((user_info['exp'] / 2) * (1 + main_hp_buff + impart_hp_per) * main_hp_rank)) * 100:.2f}%)\r"
+                    f"气血:{number_to(user_info['hp'])}/{number_to(int((user_info['exp'] / 2) * (1 + main_hp_buff + impart_hp_per)))}({(user_info['hp'] / user_info['max_hp']) * 100:.2f}%)\r"
                     f"真元:{number_to(user_info['mp'])}/{number_to(user_info['exp'])}({((user_info['mp'] / user_info['exp']) * 100):.2f}%)\r"
                     f"攻击:{number_to(user_info['atk'])}\r"
                     f"突破状态: {exp_meg}\r"
-                    f"(概率：{jsondata.level_rate_data()[user_info['level']] + leveluprate + number}%)\r"
+                    f"(概率：{break_rate[user_info['level']] + leveluprate + number}%)\r"
                     f"攻击修炼:{user_info['atkpractice']}级\r"
                     f"(提升攻击力{user_info['atkpractice'] * 4}%)\r"
                     f"修炼效率:{int(((level_rate * realm_rate) * (1 + main_buff_rate_buff)) * 100)}%\r"
