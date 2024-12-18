@@ -17,7 +17,6 @@ current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
 connect_pool = threading.local()
 
 
-# 本模块用于独立化数据库操作光标对象，防止有需要独立读取时引发的循环导入
 class XiuxianDateBase:
 
     def __init__(self):

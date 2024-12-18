@@ -7,7 +7,7 @@ from nonebot.params import RegexGroup
 from ..xiuxian_limit import limit_handle
 from ..xiuxian_move import read_move_data
 from ..xiuxian_place import place
-from ..xiuxian_utils.clean_utils import get_datetime_from_str, get_num_from_str, main_md, simple_md, number_to, three_md
+from ..xiuxian_utils.clean_utils import get_datetime_from_str, simple_md, number_to, three_md
 from ..xiuxian_utils.lay_out import Cooldown
 from nonebot.adapters.onebot.v11 import (
     Bot,
@@ -181,7 +181,7 @@ async def do_work_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = R
             else:  # 移动结算逻辑
                 await sql_message.do_work(user_id, 0)
                 place_id = move_info["to_id"]
-                place.set_now_place_id(user_id, place_id)
+                await place.set_now_place_id(user_id, place_id)
                 place_name = place.get_place_name(place_id)
                 msg = f"道友成功抵达 {place_name}！"
         await bot.send(event=event, message=msg)

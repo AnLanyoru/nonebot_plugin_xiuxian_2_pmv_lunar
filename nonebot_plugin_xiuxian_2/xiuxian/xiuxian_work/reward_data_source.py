@@ -1,10 +1,12 @@
+import json
 import os
+from pathlib import Path
 from nonebot.log import logger
-from ..xiuxian_utils.data_source import *
 
 WORKDATA = Path() / "data" / "xiuxian" / "work"
 
 
+# todo 写入数据库
 class reward:
 
     def __init__(self):

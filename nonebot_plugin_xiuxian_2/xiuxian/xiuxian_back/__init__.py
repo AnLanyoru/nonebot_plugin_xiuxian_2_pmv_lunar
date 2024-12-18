@@ -9,8 +9,6 @@ from nonebot.adapters.onebot.v11 import (
     GROUP_OWNER,
     ActionFailed
 )
-
-from ..xiuxian_data.data.境界_data import level_data
 from ..xiuxian_limit import limit_handle
 from ..xiuxian_place import place
 from ..xiuxian_utils.clean_utils import get_args_num, get_num_from_str, get_strs_from_str, get_paged_msg, main_md, \
@@ -173,7 +171,7 @@ async def buy_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg())
         isUser, user_info, msg = await check_user(event)
         user_id = user_info['user_id']
         user_name = user_info['user_name']
-        place_id = str(place.get_now_place_id(user_id))
+        place_id = str(await place.get_now_place_id(user_id))
         shop_data = get_shop_data(place_id)
 
         if shop_data[place_id] == {}:
@@ -254,7 +252,7 @@ async def shop_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()
     """坊市查看"""
     _, user_info, _ = await check_user(event)
     user_id = user_info["user_id"]
-    place_id = str(place.get_now_place_id(user_id))
+    place_id = str(await place.get_now_place_id(user_id))
     shop_data = get_shop_data(place_id)
     data_list = []
     if shop_data[place_id] == {}:
@@ -777,7 +775,7 @@ async def use_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg())
             await sql_message.update_back_j(user_id, goods_id, num, 2)
             goods_buff = goods_info["buff"]
             exp = goods_buff * num
-            user_hp = int(user_info['hp'] + (exp / 2) * level_data[user_info["level"]]["HP"])
+            user_hp = int(user_info['hp'] + (exp / 2))
             user_mp = int(user_info['mp'] + exp)
             user_atk = int(user_info['atk'] + (exp / 10))
             await sql_message.update_exp(user_id, exp)
@@ -885,9 +883,9 @@ async def master_rename_(bot: Bot, event: GroupMessageEvent, args: Message = Com
     user_name = get_strs_from_str(arg)
     user_id = user_id[0] if user_id else None
     user_name = user_name[0] if user_name else None
-    user_info = await XiuxianDateManage().get_user_info_with_id(user_id)
+    user_info = await sql_message.get_user_info_with_id(user_id)
     if user_info:
-        msg = await XiuxianDateManage().update_user_name(user_id, user_name)
+        msg = await sql_message.update_user_name(user_id, user_name)
         pass
     else:
         msg = f"没有ID：{user_id} 的用户！！"

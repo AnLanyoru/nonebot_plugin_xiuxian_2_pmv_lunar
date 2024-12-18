@@ -1,6 +1,4 @@
 import random
-import time
-
 from nonebot.adapters.onebot.v11 import (
     Bot,
     GROUP,
@@ -22,7 +20,7 @@ from ..xiuxian_config import XiuConfig, convert_rank
 from ..xiuxian_utils.utils import (
     number_to, check_user, check_user_type
 )
-from ..xiuxian_utils.clean_utils import get_strs_from_str, main_md, simple_md
+from ..xiuxian_utils.clean_utils import get_strs_from_str, simple_md
 from ..xiuxian_utils.lay_out import Cooldown
 
 exp_up = on_command("修炼", aliases={"/修炼"}, priority=1, permission=GROUP, block=True)
@@ -96,7 +94,7 @@ async def exp_up_(bot: Bot, event: GroupMessageEvent):
     mainbuffdata = await user_buff_data.get_user_main_buff_data()
     mainbuffratebuff = mainbuffdata['ratebuff'] if mainbuffdata is not None else 0  # 功法修炼倍率
     mainbuffclors = mainbuffdata['clo_rs'] if mainbuffdata is not None else 0  # 功法闭关回复
-    place_id = place.get_now_place_id(user_id)
+    place_id = await place.get_now_place_id(user_id)
     world_id = place.get_world_id(place_id)
     world_buff = world_id * 0.3  # 位面灵气加成
     exp = int(
@@ -207,7 +205,7 @@ async def world_rank_up_(bot: Bot, event: GroupMessageEvent, state: T_State):
         await world_rank_up.finish()
 
     else:
-        now_place = place.get_now_place_id(user_id)
+        now_place = await place.get_now_place_id(user_id)
         now_world = place.get_world_id(now_place)
         if now_world == 3:
             msg = "神域之上，谜团重重，敬请期待！"
@@ -247,7 +245,7 @@ async def world_rank_up_(bot: Bot, event: GroupMessageEvent, state: T_State):
         next_place_all = place.get_world_place_list(next_world)
         next_place = random.choice(next_place_all)
         next_place_name = place.get_place_name(next_place)
-        place.set_now_place_id(user_id, next_place)
+        await place.set_now_place_id(user_id, next_place)
         msg = f"恭喜大能{user_name}踏破虚空离开【{now_world_name}】，前往【{next_world_name}:{next_place_name}】！！！！"
     else:
         msg = "回答有误，取消飞升！！"

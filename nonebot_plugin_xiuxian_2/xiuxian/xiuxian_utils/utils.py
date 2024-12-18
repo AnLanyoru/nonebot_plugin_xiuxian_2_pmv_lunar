@@ -99,7 +99,7 @@ async def check_user_type(user_id, need_type):
             else:  # 移动结算逻辑
                 await sql_message.do_work(user_id, 0)
                 place_id = move_info["to_id"]
-                place.set_now_place_id(user_id, place_id)
+                await place.set_now_place_id(user_id, place_id)
                 msg = f"道友成功抵达【{place_name}】！！！"
         else:
             msg = '未知状态错误！！！'

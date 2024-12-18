@@ -44,7 +44,7 @@ async def go_to_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg(
         await complete_move.finish()
 
     msg_text = args.extract_plain_text()
-    start_id = place.get_now_place_id(user_id)
+    start_id = await place.get_now_place_id(user_id)
     num = get_num_from_str(msg_text)
     name = get_strs_from_str(msg_text)
     place_id = None
@@ -127,7 +127,7 @@ async def complete_move_(bot: Bot, event: GroupMessageEvent):
         else:  # 移动结算逻辑
             await sql_message.do_work(user_id, 0)
             place_id = move_info["to_id"]
-            place.set_now_place_id(user_id, place_id)
+            await place.set_now_place_id(user_id, place_id)
             msg = f"道友雷厉风行，成功到达【{place_name}】！"
             await bot.send(event=event, message=msg)
             await complete_move.finish()
@@ -142,7 +142,7 @@ async def get_map_(bot: Bot, event: GroupMessageEvent):
     _, user_info, _ = await check_user(event)
 
     user_id = user_info['user_id']
-    place_id = place.get_now_place_id(user_id)
+    place_id = await place.get_now_place_id(user_id)
     world_name = place.get_world_name(place_id)
     world_id = place.get_world_id(place_id)
     msg = f"\r————{world_name}地图————\r"

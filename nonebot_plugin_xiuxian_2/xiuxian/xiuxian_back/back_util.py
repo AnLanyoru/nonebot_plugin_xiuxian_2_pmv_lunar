@@ -1,14 +1,8 @@
 import operator
 import random
-
-from ..xiuxian_data.data.境界_data import level_data
 from ..xiuxian_place import place
 import json
 from ..xiuxian_utils.item_json import items
-from ..xiuxian_utils.xiuxian2_handle import (
-    xiuxian_impart
-)
-
 from ..xiuxian_utils.xiuxian2_handle import (
     sql_message, UserBuffDate,
     get_weapon_info_msg, get_armor_info_msg,
@@ -688,13 +682,8 @@ async def check_use_elixir(user_id, goods_id, num):
 
     elif goods_info['buff_type'] == "hp":  # 回复状态的丹药
         if user_info['root'] == "器师":
-            user_msg = await XiuxianDateManage().get_user_info_with_id(user_id)
-            user_buff_data = UserBuffDate(user_id)
-            main_buff_data = await user_buff_data.get_user_main_buff_data()
-            impart_data = await xiuxian_impart.get_user_info_with_id(user_id)
-            impart_hp_per = impart_data['impart_hp_per'] if impart_data is not None else 0
-            main_hp_buff = main_buff_data['hpbuff'] if main_buff_data is not None else 0
-            user_max_hp = int((user_msg['exp'] / 2) * level_data[user_msg['level']]["HP"])
+            user_info = await sql_message.get_user_info_with_id(user_id)
+            user_max_hp = int((user_info['exp'] / 2))
             user_max_mp = int(user_info['exp'])
             if user_info['hp'] == user_max_hp and user_info['mp'] == user_max_mp:
                 msg = f"道友的状态是满的，用不了哦！"
@@ -703,13 +692,8 @@ async def check_use_elixir(user_id, goods_id, num):
                 buff = round((0.016 * user_rank + 0.104) * buff, 2)
                 recover_hp = int(buff * user_max_hp * num)
                 recover_mp = int(buff * user_max_mp * num)
-                user_msg = await XiuxianDateManage().get_user_info_with_id(user_id)
-                user_buff_data = UserBuffDate(user_id)
-                main_buff_data = await user_buff_data.get_user_main_buff_data()
-                impart_data = await xiuxian_impart.get_user_info_with_id(user_id)
-                impart_hp_per = impart_data['impart_hp_per'] if impart_data is not None else 0
-                main_hp_buff = main_buff_data['hpbuff'] if main_buff_data is not None else 0
-                max_hp = int((user_msg['exp'] / 2) * level_data[user_msg['level']]["HP"])
+                user_info = await sql_message.get_user_info_with_id(user_id)
+                max_hp = int((user_info['exp'] / 2))
                 if user_info['hp'] + recover_hp > max_hp:
                     new_hp = max_hp  # 超过最大
                 else:
@@ -726,13 +710,8 @@ async def check_use_elixir(user_id, goods_id, num):
                 msg = f"丹药：{goods_name}的使用境界为{goods_info['境界']}以上，道友不满足使用条件！"
             else:
 
-                user_msg = await XiuxianDateManage().get_user_info_with_id(user_id)
-                user_buff_data = UserBuffDate(user_id)
-                main_buff_data = await user_buff_data.get_user_main_buff_data()
-                impart_data = await xiuxian_impart.get_user_info_with_id(user_id)
-                impart_hp_per = impart_data['impart_hp_per'] if impart_data is not None else 0
-                main_hp_buff = main_buff_data['hpbuff'] if main_buff_data is not None else 0
-                max_hp = int((user_msg['exp'] / 2) * level_data[user_msg['level']]["HP"])
+                user_info = await sql_message.get_user_info_with_id(user_id)
+                max_hp = int((user_info['exp'] / 2))
                 user_max_mp = int(user_info['exp'])
                 if user_info['hp'] == max_hp and user_info['mp'] == user_max_mp:
                     msg = f"道友的状态是满的，用不了哦！"
@@ -756,13 +735,8 @@ async def check_use_elixir(user_id, goods_id, num):
     elif goods_info['buff_type'] == "all":  # 回满状态的丹药
         if user_info['root'] == "器师":
 
-            user_msg = await XiuxianDateManage().get_user_info_with_id(user_id)
-            user_buff_data = UserBuffDate(user_id)
-            main_buff_data = await user_buff_data.get_user_main_buff_data()
-            impart_data = await xiuxian_impart.get_user_info_with_id(user_id)
-            impart_hp_per = impart_data['impart_hp_per'] if impart_data is not None else 0
-            main_hp_buff = main_buff_data['hpbuff'] if main_buff_data is not None else 0
-            user_max_hp = int((user_msg['exp'] / 2) * level_data[user_msg['level']]["HP"])
+            user_info = await sql_message.get_user_info_with_id(user_id)
+            user_max_hp = int((user_info['exp'] / 2))
 
             user_max_mp = int(user_info['exp'])
             if user_info['hp'] == user_max_hp and user_info['mp'] == user_max_mp:
@@ -775,13 +749,8 @@ async def check_use_elixir(user_id, goods_id, num):
             if abs(goods_rank - 55) > user_rank:  # 使用限制
                 msg = f"丹药：{goods_name}的使用境界为{goods_info['境界']}以上，道友不满足使用条件！"
             else:
-                user_msg = await XiuxianDateManage().get_user_info_with_id(user_id)
-                user_buff_data = UserBuffDate(user_id)
-                main_buff_data = await user_buff_data.get_user_main_buff_data()
-                impart_data = await xiuxian_impart.get_user_info_with_id(user_id)
-                impart_hp_per = impart_data['impart_hp_per'] if impart_data is not None else 0
-                main_hp_buff = main_buff_data['hpbuff'] if main_buff_data is not None else 0
-                user_max_hp = int((user_msg['exp'] / 2) * level_data[user_msg['level']]["HP"])
+                user_info = await sql_message.get_user_info_with_id(user_id)
+                user_max_hp = int((user_info['exp'] / 2))
                 user_max_mp = int(user_info['exp'])
                 if user_info['hp'] == user_max_hp and user_info['mp'] == user_max_mp:
                     msg = f"道友的状态是满的，用不了哦！"
@@ -873,7 +842,7 @@ async def get_use_tool_msg(user_id, goods_id, use_num) -> (str, bool):
         if world_change is not None:
             place_goal_list = place.get_world_place_list(world_change)
             place_goal = random.choice(place_goal_list)
-            place.set_now_place_id(user_id, place_goal)
+            await place.set_now_place_id(user_id, place_goal)
             place_name = place.get_place_name(place_goal)
             msg += f"\r霎时间天旋地转,回过神来道友竟被{item_info['name']}带到了【{place_name}】!!!"
         if root_change:
@@ -894,7 +863,7 @@ def get_shop_data(place_id):
         print("无法获取到商店文件开始创建")
     try:
         data[place_id]
-    except:
+    except IndexError:
         data[place_id] = {}
         print("该地区商店为空，开始创建")
     save_shop(data)

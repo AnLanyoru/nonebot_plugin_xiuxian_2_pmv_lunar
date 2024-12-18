@@ -19,7 +19,7 @@ from nonebot.log import logger
 from ..xiuxian_utils.xiuxian2_handle import sql_message
 from ..xiuxian_utils.utils import (
     check_user, check_user_type,
-    send_msg_handler, CommandObjectID
+    CommandObjectID
 )
 from .riftconfig import get_rift_config
 from .riftmake import (
@@ -153,7 +153,7 @@ async def complete_rift_(bot: Bot, event: GroupMessageEvent):
         await bot.send(event=event, message=msg)
         await complete_rift.finish()
 
-    place_id = place.get_now_place_id(user_id)
+    place_id = await place.get_now_place_id(user_id)
     world_id = place.get_world_id(place_id)
     world_name = place.get_world_name(place_id)
     try:

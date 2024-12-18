@@ -172,7 +172,7 @@ async def fast_sell_items_(
                 # 卖完了
                 user_store.store_data.del_want_item(want_user_id, item_id)
             else:
-                user_store.update_user_want(user_info, sell_item_num, want_user_id, want_item)
+                await user_store.update_user_want(user_info, sell_item_num, want_user_id, want_item)
         else:  # 无数量限制，检查资金是否充足
             want_item_funds = user_store.get_user_funds(want_user_id)  # 获取玩家摊位资金
             if get_stone > want_item_funds:  # 资金不足
@@ -388,7 +388,7 @@ async def user_sell_to_(
                 # 卖完了
                 user_store.store_data.del_want_item(want_user_id, item_id)
             else:
-                user_store.update_user_want(user_info, sell_item_num, want_user_id, want_item)
+                await user_store.update_user_want(user_info, sell_item_num, want_user_id, want_item)
         else:  # 无数量限制，检查资金是否充足
             want_item_funds = user_store.get_user_funds(want_user_id)  # 获取玩家摊位资金
             if get_stone > want_item_funds:  # 资金不足
@@ -532,6 +532,6 @@ async def user_want_item_(bot: Bot, event: GroupMessageEvent, args: Message = Co
         funds_msg = "请使用【灵宝楼存灵石】预存灵石来维持摊位运转"
         item_num = "不限"
     msg = f"成功向本位面灵宝楼提交求购申请\r物品：{item_name}\r价格：{number_to(item_price)}|{item_price}灵石\r需求数量：{item_num}\r{funds_msg}"
-    user_store.create_user_want(user_id, want_dict)
+    await user_store.create_user_want(user_id, want_dict)
     await bot.send(event=event, message=msg)
     await user_want_item.finish()

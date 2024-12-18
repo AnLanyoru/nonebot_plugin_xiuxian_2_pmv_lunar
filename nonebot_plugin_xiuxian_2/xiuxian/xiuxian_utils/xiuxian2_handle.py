@@ -276,7 +276,10 @@ WHERE last_check_info_time = '0' OR last_check_info_time IS NULL
             await db.commit()
 
     async def get_user_real_info(self, user_id):
-        """根据USER_ID获取用户信息,获取功法加成"""
+        """
+        根据USER_ID获取用户信息,获取功法加成
+        战斗面板
+        """
         db = await self.get_db()
         sql = f"select * from user_xiuxian WHERE user_id=?"
         cursor = await db.execute(sql, (user_id,))
@@ -1064,16 +1067,9 @@ WHERE last_check_info_time = '0' OR last_check_info_time IS NULL
 
     async def update_user_hp(self, user_id):
         """重置用户hp,mp信息"""
-        user_msg = await self.get_user_info_with_id(user_id)
-        user_buff_data = UserBuffDate(user_id)
-        main_buff_data = await  user_buff_data.get_user_main_buff_data()
-        impart_data = await xiuxian_impart.get_user_info_with_id(user_id)
-        await impart_data['impart_hp_per'] if impart_data is not None else 0
-        await main_buff_data['hpbuff'] if main_buff_data is not None else 0
-        max_hp = ((user_msg['exp'] / 2) * level_data[user_msg['level']]["HP"])
-        sql = f"UPDATE user_xiuxian SET hp=?,mp=exp,atk=exp/10 WHERE user_id=?"
+        sql = f"UPDATE user_xiuxian SET hp=exp/2,mp=exp,atk=exp/10 WHERE user_id=?"
         db = await self.get_db()
-        await db.execute(sql, (str(max_hp), user_id))
+        await db.execute(sql, (user_id,))
         await db.commit()
 
     async def restate(self, user_id=None):

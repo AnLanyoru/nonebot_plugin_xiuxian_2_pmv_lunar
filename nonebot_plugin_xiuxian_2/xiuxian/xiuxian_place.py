@@ -1,7 +1,7 @@
 from math import *
 
 from . import DRIVER
-from .xiuxian_utils.database_cur_get import XiuxianDateCur
+from .xiuxian_utils.database_conn import XiuxianDateBase
 from nonebot.log import logger
 from pathlib import Path
 
@@ -82,11 +82,11 @@ async def read_places_():
 # 创建位置对象
 
 
-class Place:
+class Place(XiuxianDateBase):
     def __init__(self):
+        super().__init__()
         self.distance = 0
         self.world_names = ["凡界", "灵界", "仙界", "无尽神域", "万界洞天中枢"]
-        self.conn = XiuxianDateCur().conn
         self.place_all = place_all
         self.place_id_map = place_id_map
         self.worlds = {}
@@ -192,15 +192,15 @@ class Place:
                 pass
         return place_list
 
-    def get_user_place(self, user_id):
+    async def get_user_place(self, user_id):
         """
         获取用户信息
         :param user_id: QQ
         :return: 用户信息的字典
         """
         sql = f"SELECT place_id FROM user_xiuxian  WHERE user_id=?"
-        cur = self.conn.cursor()
-        cur.execute(sql, (user_id,))
+        db = await self.get_db()
+        cur = await db.execute(sql, (user_id,))
         result = cur.fetchone()
         if result:
             if result[0]:
@@ -209,29 +209,29 @@ class Place:
             else:
                 # 兼容性更新，搬迁旧place_id
                 sql = f"SELECT place_id FROM user_cd  WHERE user_id=?"
-                cur = self.conn.cursor()
-                cur.execute(sql, (user_id,))
+                db = await self.get_db()
+                cur = await db.execute(sql, (user_id,))
                 result = cur.fetchone()
                 if result:
                     place_id = result[0]
                 else:
                     print("迁移失败无法找到原位置")
                     place_id = 1
-                self.set_now_place_id(user_id, place_id)
+                await self.set_now_place_id(user_id, place_id)
                 user_info = {'place_id': place_id}
                 return user_info
 
-    def get_now_place_id(self, user_id):
+    async def get_now_place_id(self, user_id):
         """
         通过用户ID获取用户当前位置
         :param user_id: type = str 用户id
         :return: type = int 位置ID
         """
-        user_info = self.get_user_place(user_id)
+        user_info = await self.get_user_place(user_id)
         user_place_id = user_info["place_id"]
         return user_place_id
 
-    def set_now_place_id(self, user_id, place_id):
+    async def set_now_place_id(self, user_id, place_id):
         """
         更新用户位置
         :param user_id: 用户ID
@@ -239,30 +239,29 @@ class Place:
         :return:
         """
         sql = "UPDATE user_xiuxian SET place_id=? WHERE user_id=?"
-        cur = self.conn.cursor()
-        cur.execute(sql, (place_id, user_id))
-        self.conn.commit()
-        pass
+        db = await self.get_db()
+        await db.execute(sql, (place_id, user_id))
+        await db.commit()
 
-    def get_now_world_id(self, user_id):
+    async def get_now_world_id(self, user_id):
         """
         获取玩家当前位面
         :param user_id:
         :return:
         """
-        user_place = self.get_now_place_id(user_id)
+        user_place = await self.get_now_place_id(user_id)
         user_world = self.get_world_id(user_place)
         return user_world
 
-    def is_the_same_world(self, player_1, player_2) -> bool:
+    async def is_the_same_world(self, player_1, player_2) -> bool:
         """
         判断两位玩家是否在同一位面
         :param player_1: 玩家1 ID
         :param player_2: 玩家2 ID
         :return: 布尔值
         """
-        player_1_place = self.get_now_place_id(player_1)
-        player_2_place = self.get_now_place_id(player_2)
+        player_1_place = await self.get_now_place_id(player_1)
+        player_2_place = await self.get_now_place_id(player_2)
         player_1_world = self.get_world_id(player_1_place)
         player_2_world = self.get_world_id(player_2_place)
         if player_1_world == player_2_world:
@@ -270,15 +269,15 @@ class Place:
         else:
             return False
 
-    def is_the_same_place(self, player_1, player_2) -> bool:
+    async def is_the_same_place(self, player_1, player_2) -> bool:
         """
         判断两位玩家是否在同一位置
         :param player_1: 玩家1 ID
         :param player_2: 玩家2 ID
         :return: 布尔值
         """
-        player_1_place = self.get_now_place_id(player_1)
-        player_2_place = self.get_now_place_id(player_2)
+        player_1_place = await self.get_now_place_id(player_1)
+        player_2_place = await self.get_now_place_id(player_2)
         if player_1_place == player_2_place:
             return True
         else:

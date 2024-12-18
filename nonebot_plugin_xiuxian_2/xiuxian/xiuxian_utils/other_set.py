@@ -2,10 +2,8 @@ import random
 
 from .clean_utils import number_to
 from .. import XiuConfig
-from ..xiuxian_data.data.境界_data import level_data
 from ..xiuxian_place import place
-from .xiuxian2_handle import sql_message, \
-    UserBuffDate, xiuxian_impart
+from .xiuxian2_handle import sql_message, xiuxian_impart
 
 
 class OtherSet(XiuConfig):
@@ -40,7 +38,7 @@ class OtherSet(XiuConfig):
         # 判断目标境界是否需要特殊灵根
         user_msg = await sql_message.get_user_info_with_id(user_id)
         now_root = user_msg["root_type"]
-        user_place = place.get_now_place_id(user_id)
+        user_place = await place.get_now_place_id(user_id)
         user_world = place.get_world_id(user_place)
         world_name = place.get_world_name(user_place)
         # 哼，我就写垃圾代码怎么了？
@@ -183,27 +181,19 @@ class OtherSet(XiuConfig):
         msg = []
         hp_mp = []
 
-        if user_info['hp'] < max_hp:
-            if user_info['hp'] + hp < max_hp:
-                new_hp = user_info['hp'] + hp
-                msg.append(f',回复气血：{number_to(hp)}|{hp}')
-            else:
-                new_hp = max_hp
-                msg.append(f',回复气血：{number_to(hp)}|{hp},气血已回满！')
+        if user_info['hp'] + hp < max_hp:
+            new_hp = user_info['hp'] + hp
+            msg.append(f',回复气血：{number_to(hp)}|{hp}')
         else:
-            new_hp = user_info['hp']
-            msg.append('')
+            new_hp = max_hp
+            msg.append(f',回复气血：{number_to(hp)}|{hp},气血已回满！')
 
-        if user_info['mp'] < max_mp:
-            if user_info['mp'] + mp < max_mp:
-                new_mp = user_info['mp'] + mp
-                msg.append(f',回复真元：{number_to(mp)}|{mp}')
-            else:
-                new_mp = max_mp
-                msg.append(',真元已回满！')
+        if user_info['mp'] + mp < max_mp:
+            new_mp = user_info['mp'] + mp
+            msg.append(f',回复真元：{number_to(mp)}|{mp}')
         else:
-            new_mp = user_info['mp']
-            msg.append('')
+            new_mp = max_mp
+            msg.append(',真元已回满！')
 
         hp_mp.append(new_hp)
         hp_mp.append(new_mp)

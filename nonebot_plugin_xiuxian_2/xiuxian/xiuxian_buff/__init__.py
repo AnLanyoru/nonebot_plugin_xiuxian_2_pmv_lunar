@@ -314,7 +314,7 @@ async def two_exp_(bot: Bot, event: GroupMessageEvent, args: Message = CommandAr
                 await bot.send(event=event, message=msg)
                 await two_exp.finish()
             else:
-                if place.is_the_same_place(int(user_1_id), int(user_2_id)) is False:
+                if await place.is_the_same_place(int(user_1_id), int(user_2_id)) is False:
                     msg = "道友与你的道侣不在同一位置，请邀约道侣前来双修！！！"
                     await bot.send(event=event, message=msg)
                     await two_exp.finish()
@@ -622,7 +622,7 @@ async def mind_state_(bot: Bot, event: GroupMessageEvent):
     main_critatk = user_main_critatk['critatk'] if user_main_critatk is not None else 0  # 我的状态功法会心伤害
     leveluprate = int(user_info['level_up_rate'])  # 用户失败次数加成
     number = user_main_critatk["number"] if user_main_critatk is not None else 0
-    now_place = place.get_place_name(place.get_now_place_id(user_id))
+    now_place = place.get_place_name(await place.get_now_place_id(user_id))
 
     msg = simple_md(f"道号：{user_info['user_name']}\r"
                     f"气血:{number_to(user_info['hp'])}/{number_to(int((user_info['exp'] / 2) * (1 + main_hp_buff + impart_hp_per)))}({(user_info['hp'] / user_info['max_hp']) * 100:.2f}%)\r"
@@ -648,25 +648,13 @@ async def mind_state_(bot: Bot, event: GroupMessageEvent):
 async def select_state_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """查看其他角色状态信息"""
 
-    _, user_msg, _ = await check_user(event)
-
-    user_id = user_msg['user_id']  # 需要改为获取对方id实现查看
-    try:
-        user_id = await sql_message.get_user_id(args)  # 获取目标id
-        user_msg = await sql_message.get_user_info_with_id(user_id)
-    except:
+    user_id = await sql_message.get_user_id(args)  # 获取目标id
+    if not user_id:
         await bot.send(event=event, message="修仙界中找不到此人！！")
         await select_state.finish()
     await sql_message.update_last_check_info_time(user_id)  # 更新查看修仙信息时间
-    try:
-        main_hp_rank = level_data[user_msg['level']]["HP"]  # 添加血量补偿测试
-    except:
-        main_hp_rank = 1
-        await bot.send(event=event, message="修仙界中找不到此人！！")
-        await select_state.finish()
-    if user_msg['hp'] is None or user_msg['hp'] == 0:
-        await sql_message.update_user_hp(user_id)
     user_msg = await sql_message.get_user_real_info(user_id)
+    main_hp_rank = level_data[user_msg['level']]["HP"]  # 添加血量补偿测试
     level_rate = await sql_message.get_root_rate(user_msg['root_type'])  # 灵根倍率
     realm_rate = level_data[user_msg['level']]["spend"]  # 境界倍率
     user_buff_data = UserBuffDate(user_id)
@@ -697,7 +685,6 @@ async def select_state_(bot: Bot, event: GroupMessageEvent, args: Message = Comm
     else:
         def_buff = 0
 
-    user_armor_data = user_buff_data.get_user_armor_buff_data()
 
     if user_weapon_data is not None:
         weapon_def = user_weapon_data['def_buff'] * 100  # 我的状态武器减伤
@@ -709,25 +696,10 @@ async def select_state_(bot: Bot, event: GroupMessageEvent, args: Message = Comm
     else:
         main_crit_buff = 0
 
-    list_all = len(OtherSet().level) - 1
-    now_index = OtherSet().level.index(user_msg['level'])
-    if list_all == now_index:
-        exp_meg = f"位面至高"
-    else:
-        is_updata_level = OtherSet().level[now_index + 1]
-        need_exp = await sql_message.get_level_power(is_updata_level)
-        get_exp = need_exp - user_msg['exp']
-        if get_exp > 0:
-            exp_meg = f"还需{number_to(get_exp)}修为可突破！"
-        else:
-            exp_meg = f"可突破！"
-
     main_buff_rate_buff = main_buff_data['ratebuff'] if main_buff_data is not None else 0
     main_hp_buff = main_buff_data['hpbuff'] if main_buff_data is not None else 0
-    main_mp_buff = main_buff_data['mpbuff'] if main_buff_data is not None else 0
     impart_data = await xiuxian_impart.get_user_info_with_id(user_id)
     impart_hp_per = impart_data['impart_hp_per'] if impart_data is not None else 0
-    impart_mp_per = impart_data['impart_mp_per'] if impart_data is not None else 0
     impart_know_per = impart_data['impart_know_per'] if impart_data is not None else 0
     impart_burst_per = impart_data['impart_burst_per'] if impart_data is not None else 0
     boss_atk = impart_data['boss_atk'] if impart_data is not None else 0
@@ -735,8 +707,6 @@ async def select_state_(bot: Bot, event: GroupMessageEvent, args: Message = Comm
     weapon_critatk = weapon_critatk_data['critatk'] if weapon_critatk_data is not None else 0  # 我的状态武器会心伤害
     user_main_critatk = await UserBuffDate(user_id).get_user_main_buff_data()  # 我的状态功法会心伤害
     main_critatk = user_main_critatk['critatk'] if user_main_critatk is not None else 0  # 我的状态功法会心伤害
-    leveluprate = int(user_msg['level_up_rate'])  # 用户失败次数加成
-    number = user_main_critatk["number"] if user_main_critatk is not None else 0
 
     msg = f"""
 道号：{user_msg['user_name']}

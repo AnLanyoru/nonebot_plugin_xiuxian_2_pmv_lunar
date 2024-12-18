@@ -300,7 +300,7 @@ class UserStoreHandle:
         self.blob_data_list = UserStoreData().blob_data_list
         self.store_data = UserStoreData()
 
-    def create_user_want(self, user_id, want_dict):
+    async def create_user_want(self, user_id, want_dict):
         """
         根据字典创建用户求购
         :param user_id: 用户id
@@ -316,7 +316,7 @@ class UserStoreHandle:
         need_item_id = want_dict['need_items_id']
         need_items_price = want_dict['need_items_price']
         need_items_num = want_dict['need_items_num']
-        need_world = want_dict.get('need_world', place.get_now_world_id(user_id))
+        need_world = want_dict.get('need_world', await place.get_now_world_id(user_id))
         sell_user = want_dict['sell_user']
 
         is_new = self.store_data.user_item_want_make(
@@ -329,7 +329,7 @@ class UserStoreHandle:
         )
         return is_new
 
-    def update_user_want(self, seller_info, sell_num, user_id, want_dict):
+    async def update_user_want(self, seller_info, sell_num, user_id, want_dict):
         """
         用户出售事件，更新用户求购
         :param seller_info: 卖家信息
@@ -354,7 +354,7 @@ class UserStoreHandle:
         need_item_id = want_dict['need_items_id']
         need_items_price = want_dict['need_items_price']
         need_items_num = want_dict['need_items_num'] - sell_num if want_dict['need_items_num'] else 0
-        need_world = want_dict.get('need_world', place.get_now_world_id(user_id))
+        need_world = want_dict.get('need_world', await place.get_now_world_id(user_id))
         sell_user = want_dict['sell_user']
         is_new = self.store_data.user_item_want_make(
             user_id,
