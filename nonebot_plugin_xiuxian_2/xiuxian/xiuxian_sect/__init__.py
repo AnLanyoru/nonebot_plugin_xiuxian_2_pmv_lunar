@@ -1,12 +1,13 @@
 import re
 import random
 
+from ..xiuxian_data.data.功法概率设置_data import skill_rate_set
 from ..xiuxian_data.data.境界_data import level_data
 from ..xiuxian_data.data.宗门玩法配置_data import sect_config_data
 from ..xiuxian_limit.limit_database import limit_data, limit_handle
 from ..xiuxian_utils.random_names import get_random_sect_name
 from ..xiuxian_utils.xiuxian2_handle import (
-    sql_message, BuffJsonDate,
+    sql_message,
     get_main_info_msg, UserBuffDate, get_sec_msg
 )
 from ..xiuxian_utils.other_set import OtherSet
@@ -407,7 +408,7 @@ async def sect_mainbuff_get_(bot: Bot, event: GroupMessageEvent):
 
                 for i in range(10):
                     if random.randint(0, 100) <= mainbuffconfig['获取到功法的概率']:
-                        mainbuffid = random.choice(BuffJsonDate().get_gfpeizhi()[mainbufftype]['gf_list'])
+                        mainbuffid = random.choice(skill_rate_set[mainbufftype]['gf_list'])
                         if mainbuffid in mainbuffidlist:
                             mainbuff, mainbuffmsg = get_main_info_msg(mainbuffid)
                             repeat_count += 1
@@ -480,7 +481,7 @@ async def sect_secbuff_get_(bot: Bot, event: GroupMessageEvent):
 
                 for i in range(10):
                     if random.randint(0, 100) <= secbuffconfig['获取到神通的概率']:
-                        secbuffid = random.choice(BuffJsonDate().get_gfpeizhi()[secbufftype]['st_list'])
+                        secbuffid = random.choice(skill_rate_set[secbufftype]['st_list'])
                         if secbuffid in secbuffidlist:
                             secbuff = items.get_data_by_item_id(secbuffid)
                             repeat_count += 1

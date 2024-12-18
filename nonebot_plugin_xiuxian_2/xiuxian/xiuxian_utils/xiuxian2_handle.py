@@ -1907,39 +1907,6 @@ async def close_db():
     await xiuxian_impart.close()
 
 
-# 这里是buff部分
-class BuffJsonDate:
-
-    def __init__(self):
-        """json文件路径"""
-        self.mainbuff_jsonpath = SKILLPATHH / "主功法.json"
-        self.secbuff_jsonpath = SKILLPATHH / "神通.json"
-        self.gfpeizhi_jsonpath = SKILLPATHH / "功法概率设置.json"
-        self.weapon_jsonpath = WEAPONPATH / "法器.json"
-        self.armor_jsonpath = WEAPONPATH / "防具.json"
-
-    def get_main_buff(self, id):
-        return readf(self.mainbuff_jsonpath)[str(id)]
-
-    def get_sec_buff(self, id):
-        return readf(self.secbuff_jsonpath)[str(id)]
-
-    def get_gfpeizhi(self):
-        return readf(self.gfpeizhi_jsonpath)
-
-    def get_weapon_data(self):
-        return readf(self.weapon_jsonpath)
-
-    def get_weapon_info(self, id):
-        return readf(self.weapon_jsonpath)[str(id)]
-
-    def get_armor_data(self):
-        return readf(self.armor_jsonpath)
-
-    def get_armor_info(self, id):
-        return readf(self.armor_jsonpath)[str(id)]
-
-
 class UserBuffDate:
     def __init__(self, user_id):
         """用户Buff数据"""
@@ -2004,7 +1971,6 @@ def get_weapon_info_msg(weapon_id, weapon_info=None):
     atk_buff_msg = f"提升{int(weapon_info['atk_buff'] * 100)}%攻击力！" if weapon_info['atk_buff'] != 0 else ''
     crit_buff_msg = f"提升{int(weapon_info['crit_buff'] * 100)}%会心率！" if weapon_info['crit_buff'] != 0 else ''
     crit_atk_msg = f"提升{int(weapon_info['critatk'] * 100)}%会心伤害！" if weapon_info['critatk'] != 0 else ''
-    # def_buff_msg = f"提升{int(weapon_info['def_buff'] * 100)}%减伤率！" if weapon_info['def_buff'] != 0 else ''
     def_buff_msg = f"{'提升' if weapon_info['def_buff'] > 0 else '降低'}{int(abs(weapon_info['def_buff']) * 100)}%减伤率！" if \
         weapon_info['def_buff'] != 0 else ''
     zw_buff_msg = f"装备专属武器时提升伤害！！" if weapon_info['zw'] != 0 else ''
@@ -2034,8 +2000,8 @@ def get_armor_info_msg(armor_id, armor_info=None):
     return msg
 
 
-def get_main_info_msg(id):
-    mainbuff = items.get_data_by_item_id(id)
+def get_main_info_msg(item_id):
+    mainbuff = items.get_data_by_item_id(item_id)
     hpmsg = f"提升{round(mainbuff['hpbuff'] * 100, 0)}%气血" if mainbuff['hpbuff'] != 0 else ''
     mpmsg = f"，提升{round(mainbuff['mpbuff'] * 100, 0)}%真元" if mainbuff['mpbuff'] != 0 else ''
     atkmsg = f"，提升{round(mainbuff['atkbuff'] * 100, 0)}%攻击力" if mainbuff['atkbuff'] != 0 else ''
@@ -2060,8 +2026,8 @@ def get_main_info_msg(id):
     return mainbuff, msg
 
 
-def get_sub_info_msg(id):  # 辅修功法8
-    subbuff = items.get_data_by_item_id(id)
+def get_sub_info_msg(item_id):  # 辅修功法8
+    subbuff = items.get_data_by_item_id(item_id)
     submsg = ""
     if subbuff['buff_type'] == '1':
         submsg = "提升" + subbuff['buff'] + "%攻击力"
