@@ -288,7 +288,7 @@ def get_strs_from_str(msg: str) -> list:
 
 def simple_md(msg_head, inlinecmd,
               inlinecmd_url, msg_end):
-    if NICKNAME == "枫林晚":
+    if NICKNAME != "凌云":
         return msg_head + inlinecmd + msg_end
     param = [
         {
@@ -317,7 +317,7 @@ def main_md(title, text,
             cmd_see_2, cmd_2,
             cmd_see_3, cmd_3,
             cmd_see_4, cmd_4):
-    if NICKNAME == "枫林晚":
+    if NICKNAME != "凌云":
         return title + '\r' + text
     param = [
         {
@@ -366,7 +366,7 @@ def main_md(title, text,
 
 
 def help_md(md_id, text):
-    if NICKNAME == "枫林晚":
+    if NICKNAME != "凌云":
         return text
     param = [
         {
@@ -382,6 +382,8 @@ def three_md(text_1,
              cmd_see_1, cmd_1, text_2,
              cmd_see_2, cmd_2, text_3,
              cmd_see_3, cmd_3, text_4):
+    if NICKNAME != "凌云":
+        return text_1 + cmd_see_1 + text_2 + cmd_see_2 + text_3 + cmd_see_3 + text_4
     param = [
         {
             "key": "data_1",

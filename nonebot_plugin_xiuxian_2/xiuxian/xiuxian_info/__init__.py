@@ -10,6 +10,7 @@ from nonebot.permission import SUPERUSER
 from .draw_user_info import draw_user_info_img
 from .send_image_tool import convert_img
 from ..xiuxian_data.data.境界_data import level_data
+from ..xiuxian_data.data.宗门玩法配置_data import sect_config_data
 from ..xiuxian_data.data.突破概率_data import break_rate
 from ..xiuxian_utils.xiuxian2_handle import (
     sql_message, UserBuffDate

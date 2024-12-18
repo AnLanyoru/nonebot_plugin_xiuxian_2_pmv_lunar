@@ -28,7 +28,6 @@ from .riftmake import (
 )
 
 config = get_rift_config()
-groups = config['open']  # list，群发秘境开启信息
 cache_help = {}
 world_rift = {}  # dict
 # 定时任务
@@ -88,10 +87,6 @@ async def set_rift_(place_cls=place):
             rift.count = config['rift'][rift.name]['count']
             rift.time = config['rift'][rift.name]['time']
             world_rift[world_id] = rift
-            world_name = place_cls.get_world_name(place_id)
-            place_name = place_cls.get_place_name(place_id)
-            msg = (f"秘境：【{rift.name}】已在【{world_name}】的【{place_name}】开启！\r"
-                   f"请诸位身在{world_name}的道友前往{place_name}(ID:{place_id})发送 探索秘境 来加入吧！")
 
 
 @rift_help.handle(parameterless=[Cooldown(at_sender=False)])
@@ -260,6 +255,3 @@ async def rift_protect_msg_(bot: Bot, event: GroupMessageEvent):
     await bot.send(event=event, message=msg)
     await rift_protect_msg.finish()
 
-
-def is_in_groups(event: GroupMessageEvent):
-    return str(event.group_id) in groups

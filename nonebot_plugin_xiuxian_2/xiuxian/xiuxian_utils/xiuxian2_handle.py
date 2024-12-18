@@ -53,7 +53,6 @@ class XiuxianDateManage:
             else:
                 self.database_path /= "xiuxian.db"
             logger.opt(colors=True).info(f"<green>修仙数据库已连接！</green>")
-            self._check_data()
 
     def close(self):
         self.get_db().close()
@@ -65,7 +64,7 @@ class XiuxianDateManage:
             threading_data.db_instance = await aiosqlite.connect(self.database_path, check_same_thread=False)
         return threading_data.db_instance
 
-    async def _check_data(self):
+    async def check_data(self):
         """检查数据完整性"""
         db = await self.get_db()
 
@@ -843,7 +842,7 @@ WHERE last_check_info_time = '0' OR last_check_info_time IS NULL
         else:
             temp = name_x + random.choice(first_m if sex == 1 else first_f) + random.choice(
                 two_m if sex == 1 else two_f)
-        return self.no_same_name(temp)
+        return await self.no_same_name(temp)
 
     async def no_same_name(self, name):
         sql = f"SELECT * FROM user_xiuxian WHERE user_name "
@@ -854,7 +853,7 @@ WHERE last_check_info_time = '0' OR last_check_info_time IS NULL
             return name
         else:
             name += "_"
-            return self.no_same_name(name)
+            return await self.no_same_name(name)
 
     async def stone_top(self, world_id):
         """这也是灵石排行榜"""
@@ -1473,7 +1472,7 @@ async def close_db():
     XiuxianDateManage().close()
 
 
-sql_message, = XiuxianDateManage()  # sql类
+sql_message = XiuxianDateManage()  # sql类
 
 
 async def final_user_data(user_data, columns):
@@ -1554,7 +1553,6 @@ class XiuxianImpartBuff:
             else:
                 self.database_path /= "xiuxian_impart.db"
             logger.opt(colors=True).info(f"<green>xiuxian_impart数据库已连接!</green>")
-            self._check_data()
 
     async def get_db(self):
         db_instance = getattr(xu_threading_data, 'db_instance', None)
@@ -1566,7 +1564,7 @@ class XiuxianImpartBuff:
         self.get_db().close()
         logger.opt(colors=True).info(f"<green>xiuxian_impart数据库关闭!</green>")
 
-    async def _check_data(self):
+    async def check_data(self):
         """检查数据完整性"""
         c = await self.get_db()
 
@@ -1900,6 +1898,12 @@ async def leave_harm_time(user_id):
 
 
 xiuxian_impart = XiuxianImpartBuff()
+
+
+@DRIVER.on_startup
+async def check_db():
+    await sql_message.check_data()
+    await xiuxian_impart.check_data()
 
 
 @DRIVER.on_shutdown
