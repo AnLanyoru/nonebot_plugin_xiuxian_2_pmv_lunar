@@ -1,7 +1,6 @@
 import operator
 
 from .clean_utils import number_to
-from .database_cur_get import XiuxianDateCur
 from ..xiuxian_data.data.境界_data import level_data
 from ..xiuxian_data.data.灵根_data import root_data
 
@@ -254,15 +253,14 @@ WHERE last_check_info_time = '0' OR last_check_info_time IS NULL
 
     async def update_all_users_stamina(self, max_stamina, stamina):
         """体力未满用户更新体力值"""
-        with XiuxianDateCur().lock:
-            db = await self.get_db()
-            sql = f"""
-                UPDATE user_xiuxian
-                SET user_stamina = MIN(user_stamina + ?, ?)
-                WHERE user_stamina < ?
-            """
-            await db.execute(sql, (stamina, max_stamina, max_stamina))
-            await db.commit()
+        db = await self.get_db()
+        sql = f"""
+            UPDATE user_xiuxian
+            SET user_stamina = MIN(user_stamina + ?, ?)
+            WHERE user_stamina < ?
+        """
+        await db.execute(sql, (stamina, max_stamina, max_stamina))
+        await db.commit()
 
     async def update_user_stamina(self, user_id, stamina_change, key):
         """更新用户体力值 1为增加，2为减少"""
