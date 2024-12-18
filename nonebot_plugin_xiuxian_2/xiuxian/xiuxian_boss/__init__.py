@@ -45,8 +45,6 @@ from .. import DRIVER
 require('nonebot_plugin_apscheduler')
 config = CONFIG
 cache_help = {}
-del_boss_id = XiuConfig().del_boss_id
-gen_boss_id = XiuConfig().gen_boss_id
 group_boss = {}
 groups = config['open']
 battle_flag = {}
@@ -56,9 +54,7 @@ battle_flag = {}
 def check_rule_bot_boss() -> Rule:  # 消息检测，是超管，群主或者指定的qq号传入的消息就响应，其他的不响应
     async def _check_bot_(bot: Bot, event: GroupMessageEvent) -> bool:
         if (event.sender.role == "admin" or
-                event.sender.role == "owner" or
-                event.get_user_id() in bot.config.superusers or
-                event.get_user_id() in del_boss_id):
+                event.sender.role == "owner"):
             return True
         else:
             return False
@@ -68,8 +64,7 @@ def check_rule_bot_boss() -> Rule:  # 消息检测，是超管，群主或者指
 
 def check_rule_bot_boss_s() -> Rule:  # 消息检测，是超管或者指定的qq号传入的消息就响应，其他的不响应
     async def _check_bot_(bot: Bot, event: GroupMessageEvent) -> bool:
-        if (event.get_user_id() in bot.config.superusers or
-                event.get_user_id() in gen_boss_id):
+        if event.get_user_id() in bot.config.superusers:
             return True
         else:
             return False

@@ -252,7 +252,3 @@ def Cooldown(
 
     return Depends(dependency)
 
-
-put_bot = XiuConfig().put_bot
-main_bot = XiuConfig().main_bo
-layout_bot_dict = XiuConfig().layout_bot_dict

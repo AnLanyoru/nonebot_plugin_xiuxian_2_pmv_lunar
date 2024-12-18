@@ -2,12 +2,6 @@
 # -*- coding: utf-8 -*-
 from .xiuxian_utils.download_xiuxian_data import download_xiuxian_data
 from nonebot.plugin import PluginMetadata
-from nonebot.log import logger
-from nonebot.message import event_preprocessor, IgnoredException
-from nonebot.adapters.onebot.v11 import (
-    Bot,
-    GroupMessageEvent
-)
 from nonebot import get_driver
 from .xiuxian_config import XiuConfig
 from pathlib import Path
@@ -24,15 +18,6 @@ except Exception as e:
     logger.opt(colors=True).info(f"<red>缺少超级用户配置文件，{e}!</red>")
     logger.opt(colors=True).info(f"<red>请去.env.dev文件中设置超级用户QQ号以及nickname!</red>")
     NICKNAME = 'bot'
-
-# try:
-#     download_xiuxian_data()
-# except Exception as e:
-#     logger.opt(colors=True).info(f"<red>下载配置文件失败，修仙插件无法加载，{e}!</red>")
-#     raise ImportError
-
-put_bot = XiuConfig().put_bot
-shield_group = XiuConfig().shield_group
 
 require('nonebot_plugin_apscheduler')
 
@@ -64,18 +49,3 @@ __plugin_meta__ = PluginMetadata(
         "priority": 15
     }
 )
-
-
-@event_preprocessor
-async def do_something(bot: Bot, event: GroupMessageEvent):
-    global put_bot
-    if not put_bot:
-        pass
-    else:
-        if str(bot.self_id) in put_bot:
-            if str(event.group_id) in shield_group:
-                raise IgnoredException("为屏蔽群消息,已忽略")
-            else:
-                pass
-        else:
-            raise IgnoredException("非主bot信息,已忽略")

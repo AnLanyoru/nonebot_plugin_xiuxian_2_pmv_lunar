@@ -100,12 +100,6 @@ class XiuConfig:
         self.closing_exp = 60  # 闭关每分钟获取的修为
         self.two_exp_limit = 7  # 基础双修次数
         self.two_exp = 1000000000  # 双修获取的修为上限
-        self.put_bot = []  # 接收消息qq,主qq，框架将只处理此qq的消息
-        self.main_bo = []  # 负责发送消息的qq
-        self.shield_group = []  # 屏蔽的群聊
-        self.layout_bot_dict = {}
-        # QQ所负责的群聊 #{群 ：bot}   其中 bot类型 []或str }
-        # "123456":"123456",
         self.sect_min_level = "归元境四重"  # 创建宗门最低境界
         self.sect_create_cost = 5000000  # 创建宗门消耗
         self.sect_rename_cost = 50000000  # 宗门改名消耗
@@ -132,27 +126,10 @@ class XiuConfig:
         self.lunhui_min_level = "天人境圆满"  # 千世轮回最低境界
         self.twolun_min_level = "羽化境后期"  # 万世轮回最低境界
         self.threelun_min_level = "仙帝境后期"  # 无上轮回最低境界
-        self.del_boss_id = []  # 支持非管理员和超管天罚boss
-        self.gen_boss_id = []  # 支持非管理员和超管生成boss
         self.merge_forward_send = 2  # 消息合并转发,1是分条发送，2是合成单消息转发，3是长图发送，建议长图发送
         self.img_compression_limit = 90  # 图片压缩率，0为不压缩，最高100
         self.img_type = "webp"  # 图片类型，webp或者jpeg，如果机器人的图片消息不显示请使用jpeg，jpeg请调低压缩率
         self.img_send_type = "base64"  # 图片发送类型,默认io,官方bot建议base64
-        self.version = "xiuxian_2.2"  # 修仙插件版本，别动
+        self.version = "xiuxian_2.2"  # 修仙插件资源包版本，todo 制作资源包 lunar_1.0
         self.elixir_def = {'回血丹药': 'hp', '回血丹': 'hp', '恢复丹': 'hp', '恢复丹药': 'hp', '回复丹': 'hp',
                            '突破丹药': 'level_up_rate', '突破丹': 'level_up_rate', '突破概率丹': 'level_up_rate'}
-
-
-class JsonConfig:
-    def __init__(self):
-        self.config_jsonpath = DATABASE / "config.json"
-
-    def read_data(self):
-        """读取配置数据"""
-        with open(self.config_jsonpath, 'r', encoding='utf-8') as f:
-            data = json.load(f)
-            if "group" not in data:
-                data["group"] = []
-                with open(self.config_jsonpath, 'w', encoding='utf-8') as f:
-                    json.dump(data, f)
-        return data
