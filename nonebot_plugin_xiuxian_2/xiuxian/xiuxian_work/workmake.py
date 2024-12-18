@@ -1,5 +1,8 @@
-from .reward_data_source import *
 import random
+from ..xiuxian_data.work_data.暗杀 import work_data_kill
+from ..xiuxian_data.work_data.灵材 import work_data_plant
+from ..xiuxian_data.work_data.等级奖励稿 import level_prise_data
+from ..xiuxian_data.work_data.镇妖 import work_data_fight
 from ..xiuxian_utils.item_json import items as item_s
 from ..xiuxian_config import convert_rank
 from ..xiuxian_utils.other_set import OtherSet
@@ -11,11 +14,10 @@ def workmake(work_level, exp, user_level):
     else:
         work_level = work_level[:3]  # 取境界前3位，补全初期、中期、圆满任务可不取
 
-    jsondata_ = reward()
-    yaocai_data = jsondata_.reward_yaocai_data()
-    levelpricedata = jsondata_.reward_levelprice_data()
-    ansha_data = jsondata_.reward_ansa_data()
-    zuoyao_data = jsondata_.reward_zuoyao_data()
+    yaocai_data = work_data_plant
+    levelpricedata = level_prise_data
+    ansha_data = work_data_kill
+    zuoyao_data = work_data_fight
     work_json = {}
     work_list = [yaocai_data[work_level], ansha_data[work_level], zuoyao_data[work_level]]
     i = 1
@@ -26,7 +28,7 @@ def workmake(work_level, exp, user_level):
         work_name = random.choice(work_name_list)
         work_info = w[work_name]
         level_price_data = levelpricedata[work_level][work_info['level']]
-        rate, isOut = countrate(exp, level_price_data["needexp"])
+        rate, is_out = countrate(exp, level_price_data["needexp"])
         success_msg = work_info['succeed']
         fail_msg = work_info['fail']
         item_type = get_random_item_type()
@@ -37,7 +39,7 @@ def workmake(work_level, exp, user_level):
             item_id = random.choice(item_id)
         if work_name in work_json:
             work_name = "和凌云一起" + work_name
-        work_json[work_name] = [rate, level_price_data["award"], int(level_price_data["time"] * isOut), item_id,
+        work_json[work_name] = [rate, level_price_data["award"], int(level_price_data["time"] * is_out), item_id,
                                 success_msg, fail_msg]
         i += 1
     return work_json
@@ -67,7 +69,7 @@ def get_random_item_type():
 
 def countrate(exp, needexp):
     rate = int(exp / needexp * 100)
-    isOut = 1
+    is_out = 1
     if rate >= 100:
         tp = 1
         flag = True
@@ -80,7 +82,7 @@ def countrate(exp, needexp):
                 flag = False
 
         rate = 100
-        isOut = float(1 - tp * 0.05)
-        if isOut < 0.5:
-            isOut = 0.5
-    return rate, round(isOut, 2)
+        is_out = float(1 - tp * 0.05)
+        if is_out < 0.5:
+            is_out = 0.5
+    return rate, round(is_out, 2)

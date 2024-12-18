@@ -15,7 +15,7 @@ class OtherSet(XiuConfig):
         list_all = len(self.level) - 1
         now_index = self.level.index(user_level)
         if list_all == now_index:
-            need_exp = 0.001
+            need_exp = 1
         else:
             is_updata_level = self.level[now_index + 1]
             need_exp = await xiuxian_impart.get_level_power(is_updata_level)
@@ -31,9 +31,7 @@ class OtherSet(XiuConfig):
         need_exp = await xiuxian_impart.get_level_power(is_updata_level)
 
         # 判断修为是否足够突破
-        if user_exp >= need_exp:
-            pass
-        else:
+        if user_exp < need_exp:
             return f"道友的修为不足以突破！距离下次突破需要{need_exp - user_exp}修为！突破境界为：{is_updata_level}"
         # 判断目标境界是否需要特殊灵根
         user_msg = await sql_message.get_user_info_with_id(user_id)
@@ -41,33 +39,20 @@ class OtherSet(XiuConfig):
         user_place = await place.get_now_place_id(user_id)
         user_world = place.get_world_id(user_place)
         world_name = place.get_world_name(user_place)
-        # 哼，我就写垃圾代码怎么了？
-        if user_level == "合道境后期":
-            if user_world < 1:
+        # 境界限制
+        limit_level = {
+            "合道境后期": 1,
+            "羽化境后期": 2,
+            "仙帝境后期": 3
+        }
+        if user_level in limit_level.keys():
+            if user_world < limit_level[user_level]:
                 msg = f"道友所在世界【{world_name}】天地法则限制道友无法突破\r【{world_name}】可承载的最高境界为{user_level}"
                 return msg
-            else:
-                pass
-        elif user_level == "羽化境后期":
-            if user_world < 2:
-                msg = f"道友所在世界【{world_name}】天地法则限制道友无法突破\r【{world_name}】可承载的最高境界为{user_level}"
-                return msg
-            else:
-                pass
-        elif user_level == "仙帝境后期":
-            if user_world < 3:
-                msg = f"道友所在世界【{world_name}】天地法则限制道友无法突破\r【{world_name}】可承载的最高境界为{user_level}"
-                return msg
-            else:
-                pass
         elif user_level == "道无涯后期":
-            if now_root == "道之本源":
-                pass
-            else:
+            if now_root != "道之本源":
                 msg = f"道友的根基不足支持本次以突破！突破{is_updata_level}需要拥有道之本源！！！"
                 return msg
-        else:
-            pass
         success_rate = True if random.randint(0, 99) < rate else False
 
         if success_rate:

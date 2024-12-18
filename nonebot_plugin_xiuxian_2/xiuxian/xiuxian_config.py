@@ -1,9 +1,4 @@
-try:
-    import ujson as json
-except ImportError:
-    import json
 from pathlib import Path
-from nonebot.log import logger
 
 DATABASE = Path() / "data" / "xiuxian"
 
