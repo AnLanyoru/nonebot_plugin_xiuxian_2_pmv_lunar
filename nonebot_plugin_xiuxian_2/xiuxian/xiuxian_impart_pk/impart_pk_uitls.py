@@ -18,11 +18,11 @@ def random_bullet() -> List[int]:
 
 
 async def impart_pk_check(user_id):
-    if xiuxian_impart.get_user_info_with_id(user_id) is None:
+    if await xiuxian_impart.get_user_info_with_id(user_id) is None:
         await xiuxian_impart._create_user(user_id)
-        return xiuxian_impart.get_user_info_with_id(user_id)
+        return await xiuxian_impart.get_user_info_with_id(user_id)
     else:
-        return xiuxian_impart.get_user_info_with_id(user_id)
+        return await xiuxian_impart.get_user_info_with_id(user_id)
 
 
 msg_pass = {

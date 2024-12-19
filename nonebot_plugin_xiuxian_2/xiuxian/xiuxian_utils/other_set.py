@@ -159,7 +159,7 @@ class OtherSet(XiuConfig):
 
     @staticmethod
     async def send_hp_mp(user_id, hp, mp):
-        user_info = await xiuxian_impart.get_user_info_with_id(user_id)
+        user_info = await sql_message.get_user_info_with_id(user_id)
         max_hp = int(user_info['exp'] / 2)
         max_mp = int(user_info['exp'])
 

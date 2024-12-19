@@ -12,6 +12,7 @@ from ..xiuxian_sect import CONFIG
 from ..xiuxian_utils.clean_utils import help_md
 from ..xiuxian_utils.item_json import items
 from ..xiuxian_utils.lay_out import Cooldown
+from ..xiuxian_utils.xiuxian2_handle import threading_data
 
 config = CONFIG
 LEVLECOST = config["LEVLECOST"]
@@ -32,10 +33,11 @@ store_help = on_command("灵宝楼帮助", aliases={"灵宝楼", "个人摊位",
                         block=True)
 tower_help = on_command("位面挑战帮助", aliases={'挑战'}, priority=21, permission=GROUP, block=True)
 items_reload = on_command("重载物品", priority=21, permission=SUPERUSER, block=True)
+thread_check = on_command("数据库状态", priority=21, permission=SUPERUSER, block=True)
 
 
 @items_reload.handle()
-async def help_in_(bot: Bot, event: GroupMessageEvent):
+async def items_reload_(bot: Bot, event: GroupMessageEvent):
     """运行时数据热重载"""
     msg = "开始重载物品数据"
     await bot.send(event=event, message=msg)
@@ -43,6 +45,14 @@ async def help_in_(bot: Bot, event: GroupMessageEvent):
     msg = "成功重新载入物品数据"
     await bot.send(event=event, message=msg)
     await items_reload.finish()
+
+
+@thread_check.handle()
+async def thread_check_(bot: Bot, event: GroupMessageEvent):
+    """数据库线程查看"""
+    msg = f"当前线程池：{threading_data}"
+    await bot.send(event=event, message=msg)
+    await thread_check.finish()
 
 
 __xiuxian_notes__ = f"""
