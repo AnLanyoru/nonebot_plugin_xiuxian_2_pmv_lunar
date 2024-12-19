@@ -76,7 +76,7 @@ async def two_exp_cd_up_():
 
 
 @blessed_spot_create.handle(parameterless=[Cooldown(at_sender=False)])
-async def blessed_spot_creat_(bot: Bot, event: GroupMessageEvent):
+async def blessed_spot_create_(bot: Bot, event: GroupMessageEvent):
     """洞天福地购买"""
     _, user_info, _ = await check_user(event)
 
@@ -244,33 +244,31 @@ async def qc_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
             await qc.finish()
 
     if user1 and user2:
-        player1 = {"user_id": None, "道号": None, "气血": None,
-                   "攻击": None, "真元": None, '会心': None, '防御': 0, 'exp': 0}
-        player2 = {"user_id": None, "道号": None, "气血": None,
-                   "攻击": None, "真元": None, '会心': None, '防御': 0, 'exp': 0}
-        # 获取传承buff
-        user1_impart_data = await xiuxian_impart.get_user_info_with_id(user_id)
-        user2_impart_data = await xiuxian_impart.get_user_info_with_id(give_qq)
+        player1 = {'user_id': user1['user_id'],
+                   '道号': user1['user_name'],
+                   '气血': user1['hp'],
+                   'max_hp': user1['max_hp'],
+                   'hp_buff': user1['hp_buff'],
+                   '攻击': user1['atk'],
+                   '真元': user1['mp'],
+                   'max_mp': user1['max_mp'],
+                   'mp_buff': user1['mp_buff'],
+                   'level': user1['level'],
+                   'exp': user1['exp']
+                   }
 
-        player1['user_id'] = user1['user_id']
-        player1['道号'] = user1['user_name']
-        player1['气血'] = user1['hp']
-        player1['传承气血'] = user1_impart_data['impart_hp_per'] if user1_impart_data else 0
-        player1['攻击'] = user1['atk']
-        player1['真元'] = user1['mp']
-        player1['传承真元'] = user1_impart_data['impart_mp_per'] if user1_impart_data else 0
-        player1['exp'] = user1['exp']
-        player1['level'] = user1['level']
-
-        player2['user_id'] = user2['user_id']
-        player2['道号'] = user2['user_name']
-        player2['气血'] = user2['hp']
-        player2['传承气血'] = user2_impart_data['impart_hp_per'] if user2_impart_data else 0
-        player2['攻击'] = user2['atk']
-        player2['真元'] = user2['mp']
-        player2['传承真元'] = user2_impart_data['impart_mp_per'] if user2_impart_data else 0
-        player2['exp'] = user2['exp']
-        player2['level'] = user2['level']
+        player2 = {'user_id': user2['user_id'],
+                   '道号': user2['user_name'],
+                   '气血': user2['hp'],
+                   'max_hp': user2['max_hp'],
+                   'hp_buff': user2['hp_buff'],
+                   '攻击': user2['atk'],
+                   '真元': user2['mp'],
+                   'max_mp': user2['max_mp'],
+                   'mp_buff': user2['mp_buff'],
+                   'level': user2['level'],
+                   'exp': user2['exp']
+                   }
 
         result, victor = await player_fight(player1, player2, 1, bot.self_id)
         text = msg_handler(result)
