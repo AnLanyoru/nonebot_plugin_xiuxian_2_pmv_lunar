@@ -100,7 +100,7 @@ markdown源码：
 
 ---
 >更多：[{{.connect_cmd}}](mqqapi://aio/inlinecmd?command={{.connect_cmd_url}}&enter=false&reply=false)
-"""
+
 
 params = [markdown_param("title", "标题"),
           markdown_param("text", "内容"),
@@ -112,6 +112,8 @@ params = [markdown_param("title", "标题"),
           markdown_param("cmd_3_url", cmd_urlencoded("命令3")),
           markdown_param("connect_cmd", "命令4"),
           markdown_param("connect_cmd_url", cmd_urlencoded("命令4"))]
-print(params)
-markdown = MessageSegmentPlus.markdown_template("123456", params)
+          
+markdown = MessageSegmentPlus.markdown_template("123456_789456", params)
 # bot.send(event, markdown)
+
+"""

@@ -350,7 +350,7 @@ async def sect_mainbuff_learn_(bot: Bot, event: GroupMessageEvent, args: Message
                 await bot.send(event=event, message=msg)
                 await sect_mainbuff_learn.finish()
 
-            userbuffinfo = await UserBuffDate(user_info['user_id']).BuffInfo
+            userbuffinfo = await UserBuffDate(user_info['user_id']).buff_info
             mainbuffid = get_mainnameid(msg, sectmainbuffidlist)
             if str(userbuffinfo['main_buff']) == str(mainbuffid):
                 msg = f"道友请勿重复学习！"
@@ -561,7 +561,7 @@ async def sect_secbuff_learn_(bot: Bot, event: GroupMessageEvent, args: Message 
                 await bot.send(event=event, message=msg)
                 await sect_secbuff_learn.finish()
 
-            userbuffinfo = await UserBuffDate(user_info['user_id']).BuffInfo
+            userbuffinfo = await UserBuffDate(user_info['user_id']).buff_info
             secbuffid = get_secnameid(msg, sectsecbuffidlist)
             if str(userbuffinfo['sec_buff']) == str(secbuffid):
                 msg = f"道友请勿重复学习！"

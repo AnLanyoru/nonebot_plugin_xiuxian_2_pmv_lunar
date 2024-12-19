@@ -43,7 +43,7 @@ async def exp_up_by_time(user_info, exp_time) -> tuple[str, int, dict]:
     # 计算传承增益
     impart_data = await xiuxian_impart.get_user_info_with_id(user_id)
     impart_exp_up = impart_data['impart_exp_up'] if impart_data is not None else 0
-    user_buff_data = await UserBuffDate(user_id).BuffInfo
+    user_buff_data = await UserBuffDate(user_id).buff_info
 
     # 闭关获取的修为倍率
     exp = (

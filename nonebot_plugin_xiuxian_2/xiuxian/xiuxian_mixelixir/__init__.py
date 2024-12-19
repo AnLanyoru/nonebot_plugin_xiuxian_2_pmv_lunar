@@ -175,7 +175,7 @@ async def yaocai_get_(bot: Bot, event: GroupMessageEvent):
         timedeff = round((datetime.strptime(nowtime, '%Y-%m-%d %H:%M:%S') - datetime.strptime(last_time,
                                                                                               '%Y-%m-%d %H:%M:%S')).total_seconds() / 3600,
                          2)
-        user_buff_data = await UserBuffDate(user_id).BuffInfo
+        user_buff_data = await UserBuffDate(user_id).buff_info
         if timedeff >= round(GETCONFIG['time_cost'] * (1 - (GETCONFIG['加速基数'] * mix_elixir_info['药材速度'])), 2):
             yaocai_id_list = items.get_random_id_list_by_rank_and_item_type(convert_rank(user_info['level'])[0],
                                                                             ['药材'])
@@ -214,7 +214,7 @@ async def yaocai_get_(bot: Bot, event: GroupMessageEvent):
             await bot.send(event=event, message=msg)
             await yaocai_get.finish()
         else:
-            user_buff_data = await UserBuffDate(user_id).BuffInfo
+            user_buff_data = await UserBuffDate(user_id).buff_info
             next_get_time = round(GETCONFIG['time_cost'] * (1 - (GETCONFIG['加速基数'] * mix_elixir_info['药材速度'])),
                                   2) - timedeff
             msg = f"道友的灵田还不能收取，下次收取时间为：{round(next_get_time, 2)}小时之后"

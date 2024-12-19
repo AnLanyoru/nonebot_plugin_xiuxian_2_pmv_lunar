@@ -103,7 +103,7 @@ async def exp_up_(bot: Bot, event: GroupMessageEvent):
         # 洞天福地为加法
     )  # 本次闭关获取的修为
     user_type = 0  # 状态0为空闲中
-    user_buff_data = await UserBuffDate(user_id).BuffInfo
+    user_buff_data = await UserBuffDate(user_id).buff_info
     exp = int(exp * (1 + user_buff_data['blessed_spot'] + world_buff))
 
     is_type, msg = await check_user_type(user_id, 4)

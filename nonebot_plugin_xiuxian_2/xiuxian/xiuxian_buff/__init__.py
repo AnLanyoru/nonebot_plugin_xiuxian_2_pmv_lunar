@@ -113,7 +113,7 @@ async def blessed_spot_info_(bot: Bot, event: GroupMessageEvent):
         await bot.send(event=event, message=msg)
         await blessed_spot_info.finish()
     msg = f"\r道友的洞天福地:\r"
-    user_buff_data = await UserBuffDate(user_id).BuffInfo
+    user_buff_data = await UserBuffDate(user_id).buff_info
     if user_info['blessed_spot_name'] == 0:
         blessed_spot_name = "尚未命名"
     else:

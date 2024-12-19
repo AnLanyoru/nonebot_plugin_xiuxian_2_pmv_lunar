@@ -22,7 +22,7 @@ async def final_user_data(user_data, columns):
     impart_mp_per = impart_data['impart_mp_per'] if impart_data is not None else 0
     impart_atk_per = impart_data['impart_atk_per'] if impart_data is not None else 0
 
-    user_buff_data = await UserBuffDate(user_dict['user_id']).BuffInfo
+    user_buff_data = await UserBuffDate(user_dict['user_id']).buff_info
 
     armor_atk_buff = 0
     if int(user_buff_data['armor_buff']) != 0:

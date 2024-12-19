@@ -1493,7 +1493,7 @@ async def final_user_data(user_data, columns):
     impart_mp_per = impart_data['impart_mp_per'] if impart_data is not None else 0
     impart_atk_per = impart_data['impart_atk_per'] if impart_data is not None else 0
 
-    user_buff_data = await UserBuffDate(user_dict['user_id']).BuffInfo
+    user_buff_data = await UserBuffDate(user_dict['user_id']).buff_info
 
     armor_atk_buff = 0
     if int(user_buff_data['armor_buff']) != 0:
@@ -1916,13 +1916,13 @@ class UserBuffDate:
         self.user_id = user_id
 
     @property
-    async def BuffInfo(self):
+    async def buff_info(self):
         """获取最新的 Buff 信息"""
         return await get_user_buff(self.user_id)
 
     async def get_user_main_buff_data(self):
         main_buff_data = None
-        buff_info = await self.BuffInfo
+        buff_info = await self.buff_info
         main_buff_id = buff_info.get('main_buff', 0)
         if main_buff_id != 0:
             main_buff_data = items.get_data_by_item_id(main_buff_id)
@@ -1930,7 +1930,7 @@ class UserBuffDate:
 
     async def get_user_sub_buff_data(self):
         sub_buff_data = None
-        buff_info = await self.BuffInfo
+        buff_info = await self.buff_info
         sub_buff_id = buff_info.get('sub_buff', 0)
         if sub_buff_id != 0:
             sub_buff_data = items.get_data_by_item_id(sub_buff_id)
@@ -1938,7 +1938,7 @@ class UserBuffDate:
 
     async def get_user_sec_buff_data(self):
         sec_buff_data = None
-        buff_info = await self.BuffInfo
+        buff_info = await self.buff_info
         sec_buff_id = buff_info.get('sec_buff', 0)
         if sec_buff_id != 0:
             sec_buff_data = items.get_data_by_item_id(sec_buff_id)
@@ -1946,7 +1946,7 @@ class UserBuffDate:
 
     async def get_user_weapon_data(self):
         weapon_data = None
-        buff_info = await self.BuffInfo
+        buff_info = await self.buff_info
         weapon_id = buff_info.get('faqi_buff', 0)
         if weapon_id != 0:
             weapon_data = items.get_data_by_item_id(weapon_id)
@@ -1954,7 +1954,7 @@ class UserBuffDate:
 
     async def get_user_armor_buff_data(self):
         armor_buff_data = None
-        buff_info = await self.BuffInfo
+        buff_info = await self.buff_info
         armor_buff_id = buff_info.get('armor_buff', 0)
         if armor_buff_id != 0:
             armor_buff_data = items.get_data_by_item_id(armor_buff_id)
@@ -2064,16 +2064,16 @@ def get_sub_info_msg(item_id):  # 辅修功法8
 
 
 async def get_user_buff(user_id):
-    BuffInfo = await sql_message.get_user_buff_info(user_id)
-    if BuffInfo is None:
+    buff_info = await sql_message.get_user_buff_info(user_id)
+    if buff_info is None:
         await sql_message.initialize_user_buff_info(user_id)
         return await sql_message.get_user_buff_info(user_id)
     else:
-        return BuffInfo
+        return buff_info
 
 
-def readf(FILEPATH):
-    with open(FILEPATH, "r", encoding="UTF-8") as f:
+def readf(filepath):
+    with open(filepath, "r", encoding="UTF-8") as f:
         data = f.read()
     return json.loads(data)
 
@@ -2110,10 +2110,10 @@ def get_sec_msg(secbuffdata):
 def get_player_info(user_id, info_name):
     player_info = None
     if info_name == "mix_elixir_info":  # 灵田信息
-        mix_elixir_infoconfigkey = ["收取时间", "收取等级", "灵田数量", '药材速度', "丹药控火", "丹药耐药性",
+        mix_elixir_info_config_key = ["收取时间", "收取等级", "灵田数量", '药材速度', "丹药控火", "丹药耐药性",
                                     "炼丹记录", "炼丹经验"]
         nowtime = datetime.now().strftime('%Y-%m-%d %H:%M:%S')  # str
-        MIXELIXIRINFOCONFIG = {
+        mix_elixir_info_config = {
             "收取时间": nowtime,
             "收取等级": 0,
             "灵田数量": 1,
@@ -2125,20 +2125,20 @@ def get_player_info(user_id, info_name):
         }
         try:
             player_info = read_player_info(user_id, info_name)
-            for key in mix_elixir_infoconfigkey:
+            for key in mix_elixir_info_config_key:
                 if key not in list(player_info.keys()):
-                    player_info[key] = MIXELIXIRINFOCONFIG[key]
+                    player_info[key] = mix_elixir_info_config[key]
             save_player_info(user_id, player_info, info_name)
         except:
-            player_info = MIXELIXIRINFOCONFIG
+            player_info = mix_elixir_info_config
             save_player_info(user_id, player_info, info_name)
     return player_info
 
 
 def read_player_info(user_id, info_name):
     user_id = str(user_id)
-    FILEPATH = PLAYERSDATA / user_id / f"{info_name}.json"
-    with open(FILEPATH, "r", encoding="UTF-8") as f:
+    filepath = PLAYERSDATA / user_id / f"{info_name}.json"
+    with open(filepath, "r", encoding="UTF-8") as f:
         data = f.read()
     return json.loads(data)
 
@@ -2150,9 +2150,9 @@ def save_player_info(user_id, data, info_name):
         logger.opt(colors=True).info(f"<green>用户目录不存在，创建目录</green>")
         os.makedirs(PLAYERSDATA / user_id)
 
-    FILEPATH = PLAYERSDATA / user_id / f"{info_name}.json"
+    filepath = PLAYERSDATA / user_id / f"{info_name}.json"
     data = json.dumps(data, ensure_ascii=False, indent=4)
-    save_mode = "w" if os.path.exists(FILEPATH) else "x"
-    with open(FILEPATH, mode=save_mode, encoding="UTF-8") as f:
+    save_mode = "w" if os.path.exists(filepath) else "x"
+    with open(filepath, mode=save_mode, encoding="UTF-8") as f:
         f.write(data)
         f.close()

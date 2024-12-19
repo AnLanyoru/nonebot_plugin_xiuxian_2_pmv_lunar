@@ -704,7 +704,7 @@ async def use_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg())
             await bot.send(event=event, message=msg)
             await use.finish()
     elif goods_type == "技能":
-        user_buff_info = await UserBuffDate(user_id).BuffInfo
+        user_buff_info = await UserBuffDate(user_id).buff_info
         skill_info = items.get_data_by_item_id(goods_id)
         skill_type = skill_info['item_type']
         if skill_type == "神通":
