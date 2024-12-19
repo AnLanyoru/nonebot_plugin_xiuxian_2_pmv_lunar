@@ -61,4 +61,4 @@ CONFIG = {
 
 
 def get_rift_config():
-    config = CONFIG
+    return CONFIG
