@@ -191,7 +191,6 @@ async def battle_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg
     user_armor_data = await UserBuffDate(userinfo['user_id']).get_user_armor_buff_data()  # boss战防具会心
     user_main_data = await UserBuffDate(userinfo['user_id']).get_user_main_buff_data()  # boss战功法会心
     user1_sub_buff_data = await UserBuffDate(userinfo['user_id']).get_user_sub_buff_data()  # boss战辅修功法信息
-    integral_buff = user1_sub_buff_data['integral'] if user1_sub_buff_data is not None else 0
     exp_buff = user1_sub_buff_data['exp'] if user1_sub_buff_data is not None else 0
 
     if user_main_data is not None:  # boss战功法会心
@@ -437,8 +436,8 @@ async def set_group_boss_(bot: Bot, event: GroupMessageEvent, args: Message = Co
 async def boss_integral_info_(bot: Bot, event: GroupMessageEvent):
     """世界积分商店"""
     # 这里曾经是风控模块，但是已经不再需要了
-    isUser, user_info, msg = await check_user(event)
-    if not isUser:
+    isInGroup, user_info, msg = await check_user(event)
+    if not isInGroup:
         await bot.send(event=event, message=msg)
         await boss_integral_info.finish()
 

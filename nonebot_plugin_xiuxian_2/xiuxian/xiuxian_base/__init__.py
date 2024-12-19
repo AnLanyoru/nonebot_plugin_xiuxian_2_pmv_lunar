@@ -326,7 +326,7 @@ async def level_up_(bot: Bot, event: GroupMessageEvent):
         # 判断用户气血是否为空
         await sql_message.update_user_hp(user_id)
     user_msg = await sql_message.get_user_info_with_id(user_id)  # 用户信息
-    user_leveluprate = int(user_msg['level_up_rate'])  # 用户失败次数加成
+    user_level_up_rate = int(user_msg['level_up_rate'])  # 用户失败次数加成
     level_cd = user_msg['level_up_cd']
     if level_cd:
         # 校验是否存在CD
@@ -342,27 +342,25 @@ async def level_up_(bot: Bot, event: GroupMessageEvent):
 
     level_name = user_msg['level']  # 用户境界
     level_rate = break_rate[level_name]  # 对应境界突破的概率
-    user_backs = await sql_message.get_back_msg(user_id)  # list(back)
+    user_backs = await sql_message.get_item_by_good_id_and_user_id(user_id, 1999)  # list(back)
     pause_flag = False
     elixir_name = None
     elixir_desc = None
-    if user_backs is not None:
-        for back in user_backs:
-            if int(back['goods_id']) == 1999:  # 检测到有对应丹药
-                pause_flag = True
-                elixir_name = back['goods_name']
-                elixir_desc = items.get_data_by_item_id(1999)['desc']
-                break
+    if user_backs:
+        if int(user_backs['goods_num']) > 0:  # 检测到有对应丹药
+            pause_flag = True
+            elixir_name = user_backs['goods_name']
+            elixir_desc = items.get_data_by_item_id(1999)['desc']
     main_rate_buff = await UserBuffDate(user_id).get_user_main_buff_data()  # 功法突破概率提升，别忘了还有渡厄突破
     number = main_rate_buff['number'] if main_rate_buff is not None else 0
     if pause_flag:
-        msg = f"由于检测到背包有丹药：{elixir_name}，效果：{elixir_desc}，突破已经准备就绪\r请发送 ，【渡厄突破】 或 【直接突破】来选择是否使用丹药突破！\r本次突破概率为：{level_rate + user_leveluprate + number}% "
+        msg = f"由于检测到背包有丹药：{elixir_name}，效果：{elixir_desc}，突破已经准备就绪\r请发送 ，【渡厄突破】 或 【直接突破】来选择是否使用丹药突破！\r本次突破概率为：{level_rate + user_level_up_rate + number}% "
         msg = main_md("提示", msg, '渡厄突破', '渡厄突破', '直接突破', '直接突破', '继续修炼', '修炼', '修仙帮助',
                       '修仙帮助')
         await bot.send(event=event, message=msg)
         await level_up.finish()
     else:
-        msg = f"由于检测到背包没有【渡厄丹】，突破已经准备就绪\r请发送，【直接突破】来突破！请注意，本次突破失败将会损失部分修为！\r本次突破概率为：{level_rate + user_leveluprate + number}% "
+        msg = f"由于检测到背包没有【渡厄丹】，突破已经准备就绪\r请发送，【直接突破】来突破！请注意，本次突破失败将会损失部分修为！\r本次突破概率为：{level_rate + user_level_up_rate + number}% "
         msg = main_md("提示", msg, '确认直接突破', '直接突破', '领取宗门丹药', '宗门丹药领取', '继续修炼', '修炼',
                       '修仙帮助', '修仙帮助')
         await bot.send(event=event, message=msg)
@@ -378,8 +376,8 @@ async def level_up_zj_(bot: Bot, event: GroupMessageEvent):
     if user_info['hp'] is None:
         # 判断用户气血是否为空
         await sql_message.update_user_hp(user_id)
-    user_msg = await sql_message.get_user_info_with_id(user_id)  # 用户信息
-    level_cd = user_msg['level_up_cd']
+    user_info = await sql_message.get_user_info_with_id(user_id)  # 用户信息
+    level_cd = user_info['level_up_cd']
     if level_cd:
         # 校验是否存在CD
         time_now = datetime.now()
@@ -391,10 +389,10 @@ async def level_up_zj_(bot: Bot, event: GroupMessageEvent):
             await level_up_zj.finish()
     else:
         pass
-    level_name = user_msg['level']  # 用户境界
-    exp = user_msg['exp']  # 用户修为
+    level_name = user_info['level']  # 用户境界
+    exp = user_info['exp']  # 用户修为
     level_rate = break_rate[level_name]  # 对应境界突破的概率
-    leveluprate = int(user_msg['level_up_rate'])  # 用户失败次数加成
+    leveluprate = int(user_info['level_up_rate'])  # 用户失败次数加成
     main_rate_buff = await UserBuffDate(user_id).get_user_main_buff_data()  # 功法突破概率提升，别忘了还有渡厄突破
     main_exp_buff = await UserBuffDate(user_id).get_user_main_buff_data()  # 功法突破扣修为减少
     exp_buff = main_exp_buff['exp_buff'] if main_exp_buff is not None else 0
@@ -410,10 +408,10 @@ async def level_up_zj_(bot: Bot, event: GroupMessageEvent):
         now_exp = int(int(exp) * ((percentage / 100) * (1 - exp_buff)))  # 功法突破扣修为减少
         await sql_message.update_j_exp(user_id, now_exp)  # 更新用户修为
 
-        user_msg = await xiuxian_impart.get_user_info_with_id(user_id)
-        hp_down = int((now_exp / 2)) if (user_msg['hp'] - (now_exp / 2)) > 0 else 1
-        nowhp = user_msg['hp'] - hp_down
-        nowmp = user_msg['mp'] - now_exp if (user_msg['mp'] - now_exp) > 0 else 1
+        user_info = await sql_message.get_user_info_with_id(user_id)
+        hp_down = int((now_exp / 2))
+        nowhp = max(user_info['hp'] - hp_down, 1)
+        nowmp = max(user_info['mp'] - now_exp, 1)
         await sql_message.update_user_hp_mp(user_id, nowhp, nowmp)  # 修为掉了，血量、真元也要掉
         update_rate = 1 if int(level_rate * XiuConfig().level_up_probability) <= 1 else int(
             level_rate * XiuConfig().level_up_probability)  # 失败增加突破几率
@@ -482,10 +480,10 @@ async def level_up_zj_all_(bot: Bot, event: GroupMessageEvent):
             now_exp = int(int(exp) * ((percentage / 100) * (1 - exp_buff)))  # 功法突破扣修为减少
             await sql_message.update_j_exp(user_id, now_exp)  # 更新用户修为
 
-            user_info = await xiuxian_impart.get_user_info_with_id(user_id)
-            hp_down = int((now_exp / 2)) if (user_info['hp'] - (now_exp / 2)) > 0 else 1
-            nowhp = user_info['hp'] - hp_down
-            nowmp = user_info['mp'] - now_exp if (user_info['mp'] - now_exp) > 0 else 1
+            user_info = await sql_message.get_user_info_with_id(user_id)
+            hp_down = int((now_exp / 2))
+            nowhp = max(user_info['hp'] - hp_down, 1)
+            nowmp = max(user_info['mp'] - now_exp, 1)
             await sql_message.update_user_hp_mp(user_id, nowhp, nowmp)  # 修为掉了，血量、真元也要掉
             update_rate = 1 if int(level_rate * XiuConfig().level_up_probability) <= 1 else int(
                 level_rate * XiuConfig().level_up_probability)  # 失败增加突破几率
@@ -538,10 +536,10 @@ async def level_up_dr_(bot: Bot, event: GroupMessageEvent):
     level_name = user_info['level']  # 用户境界
     exp = user_info['exp']  # 用户修为
     level_rate = break_rate[level_name]  # 对应境界突破的概率
-    user_leveluprate = int(user_info['level_up_rate'])  # 用户失败次数加成
+    user_level_up_rate = int(user_info['level_up_rate'])  # 用户失败次数加成
     main_rate_buff = await UserBuffDate(user_id).get_user_main_buff_data()  # 功法突破概率提升
     number = main_rate_buff['number'] if main_rate_buff is not None else 0
-    le = await OtherSet().get_type(exp, level_rate + user_leveluprate + number, level_name, user_id)
+    le = await OtherSet().get_type(exp, level_rate + user_level_up_rate + number, level_name, user_id)
     user_backs = await sql_message.get_item_by_good_id_and_user_id(user_id=user_id, goods_id=1999)
     pause_flag = False
     if user_backs:
@@ -560,7 +558,7 @@ async def level_up_dr_(bot: Bot, event: GroupMessageEvent):
             await sql_message.update_back_j(user_id, 1999, use_key=1)
             update_rate = 1 if int(level_rate * XiuConfig().level_up_probability) <= 1 else int(
                 level_rate * XiuConfig().level_up_probability)  # 失败增加突破几率
-            await sql_message.update_levelrate(user_id, user_leveluprate + update_rate)
+            await sql_message.update_levelrate(user_id, user_level_up_rate + update_rate)
             msg = f"道友突破失败，但是使用了丹药{elixir_name}，本次突破失败不扣除修为下次突破成功率增加{update_rate}%，道友不要放弃！"
         else:
             # 失败惩罚，随机扣减修为
@@ -571,14 +569,14 @@ async def level_up_dr_(bot: Bot, event: GroupMessageEvent):
             exp_buff = main_exp_buff['exp_buff'] if main_exp_buff is not None else 0
             now_exp = int(int(exp) * ((percentage / 100) * (1 - exp_buff)))
             await sql_message.update_j_exp(user_id, now_exp)  # 更新用户修为
-            user_info = await xiuxian_impart.get_user_info_with_id(user_id)
+            user_info = await sql_message.get_user_info_with_id(user_id)
 
-            nowhp = user_info['hp'] - int((now_exp / 2)) if (user_info['hp'] - (now_exp / 2)) > 0 else 1
-            nowmp = user_info['mp'] - now_exp if (user_info['mp'] - now_exp) > 0 else 1
+            nowhp = max(user_info['hp'] - int((now_exp / 2)), 1)
+            nowmp = max(user_info['mp'] - now_exp, 1)
             await sql_message.update_user_hp_mp(user_id, nowhp, nowmp)  # 修为掉了，血量、真元也要掉
             update_rate = 1 if int(level_rate * XiuConfig().level_up_probability) <= 1 else int(
                 level_rate * XiuConfig().level_up_probability)  # 失败增加突破几率
-            await sql_message.update_levelrate(user_id, user_leveluprate + update_rate)
+            await sql_message.update_levelrate(user_id, user_level_up_rate + update_rate)
             msg = f"没有检测到{elixir_name}，道友突破失败,境界受损,修为减少{now_exp}，下次突破成功率增加{update_rate}%，道友不要放弃！"
         await bot.send(event=event, message=msg)
         await level_up_dr.finish()
