@@ -1,8 +1,10 @@
 import os
 import zipfile
-import wget
 from pathlib import Path
+
+import wget
 from nonebot.log import logger
+
 from ..xiuxian_config import XiuConfig
 
 

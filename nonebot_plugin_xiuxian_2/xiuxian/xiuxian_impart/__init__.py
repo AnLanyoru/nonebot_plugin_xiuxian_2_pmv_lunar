@@ -1,31 +1,26 @@
 import operator
 import os
+import random
 from base64 import b64encode
 from io import BytesIO
 from pathlib import Path
-import random
+
 from nonebot import on_command, on_fullmatch
-from nonebot.params import CommandArg
 from nonebot.adapters.onebot.v11 import (
     Bot,
     GROUP,
     Message,
-    GroupMessageEvent,
-    MessageSegment,
-    ActionFailed
+    GroupMessageEvent
 )
-from ..xiuxian_utils.lay_out import Cooldown
-from ..xiuxian_utils.utils import (
-    check_user,
-    get_msg_pic, send_msg_handler,
-    CommandObjectID
-)
-from ..xiuxian_utils.clean_utils import get_num_from_str, main_md
-from .impart_uitls import impart_check, get_rank, re_impart_data, get_rank_plus
+from nonebot.params import CommandArg
+
 from .impart_data import impart_data_json
-from ..xiuxian_config import XiuConfig
-from ..xiuxian_utils.xiuxian2_handle import xiuxian_impart
+from .impart_uitls import impart_check, re_impart_data, get_rank_plus
 from .. import NICKNAME
+from ..xiuxian_utils.clean_utils import get_num_from_str, main_md
+from ..xiuxian_utils.lay_out import Cooldown
+from ..xiuxian_utils.utils import check_user
+from ..xiuxian_utils.xiuxian2_handle import xiuxian_impart
 
 # 替换模块
 
@@ -73,7 +68,7 @@ __impart_help__ = f"""
 
 
 @impart_help.handle(parameterless=[Cooldown(at_sender=False)])
-async def impart_help_(bot: Bot, event: GroupMessageEvent, session_id: int = CommandObjectID()):
+async def impart_help_(bot: Bot, event: GroupMessageEvent):
     """传承帮助"""
     # 这里曾经是风控模块，但是已经不再需要了
     msg = __impart_help__
@@ -89,8 +84,7 @@ async def impart_img_(bot: Bot, event: GroupMessageEvent, args: Message = Comman
     all_data = impart_data_json.data_all_()
     x = img_name
     try:
-        test = all_data[x]["type"]
-        pass
+        all_data[x]["type"]
     except KeyError:
         msg = f"没有找到此卡图！"
         await bot.send(event=event, message=msg)
@@ -209,7 +203,6 @@ async def impart_back_(bot: Bot, event: GroupMessageEvent):
             f"每日双修次数提升：{impart_data_draw['impart_two_exp']}次\r"
             f"boss战攻击提升:{int(impart_data_draw['boss_atk'] * 100)}%\r"
             f"道友拥有的传承卡片如下:")
-    img_tp = impart_data_json.data_person_list(user_id)
 
     text += "\r".join(img_tp)
     msg = main_md(msg, text, '传承卡图 【卡图名称】', '传承卡图', '传承抽卡', '传承抽卡', '虚神界对决', '虚神界对决',

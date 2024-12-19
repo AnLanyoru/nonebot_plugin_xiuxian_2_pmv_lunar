@@ -1,16 +1,15 @@
 import pickle
 import sqlite3
+import threading
 from datetime import datetime
 from pathlib import Path
-from nonebot.log import logger
-from .. import DRIVER
-import threading
 
+from nonebot.log import logger
+
+from .point_shop import shop_1, shop_2, point_give_1, point_give_2
 from ..xiuxian_place import place
 from ..xiuxian_utils.clean_utils import number_to_msg
-from .point_shop import shop_1, shop_2, point_give_1, point_give_2
 from ..xiuxian_utils.item_json import items
-from ..xiuxian_utils.xiuxian2_handle import sql_message
 
 DATABASE = Path() / "data" / "xiuxian" / "players_database"
 xiuxian_num = "578043031"  # 这里其实是修仙1作者的QQ号

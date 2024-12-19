@@ -1,13 +1,13 @@
-import re
-from datetime import datetime
 import math
 import operator
+import re
+from datetime import datetime
 from urllib.parse import quote
 
 from nonebot.adapters.onebot.v11 import Message
 
-from .. import NICKNAME
 from .markdown_segment import MessageSegmentPlus
+from .. import NICKNAME
 
 """
 纯函数工具

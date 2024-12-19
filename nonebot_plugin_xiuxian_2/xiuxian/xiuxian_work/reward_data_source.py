@@ -1,7 +1,9 @@
 import json
 import os
 from pathlib import Path
+
 from nonebot.log import logger
+
 # todo 写入数据库
 
 PLAYERSDATA = Path() / "data" / "xiuxian" / "players"

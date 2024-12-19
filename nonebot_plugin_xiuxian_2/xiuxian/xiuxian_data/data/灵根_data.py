@@ -104,16 +104,16 @@ root_data = {
         "type_speeds": 2.5,
         "type_flag": []
     },
-        "异世界之力": {
-            "type_rate": 1,
-            "type_list": [
-                "直死之魔眼",
-                "死亡笔记",
-                "天地乖离开辟之星",
-                "泰拉光棱剑"
-            ],
-            "type_speeds": 2.5,
-            "type_flag": []
+    "异世界之力": {
+        "type_rate": 1,
+        "type_list": [
+            "直死之魔眼",
+            "死亡笔记",
+            "天地乖离开辟之星",
+            "泰拉光棱剑"
+        ],
+        "type_speeds": 2.5,
+        "type_flag": []
     },
     "轮回灵根": {
         "type_rate": 0,

@@ -48,6 +48,8 @@ cache_help = {}
 group_boss = {}
 groups = config['open']
 battle_flag = {}
+
+
 # 替换模块
 
 

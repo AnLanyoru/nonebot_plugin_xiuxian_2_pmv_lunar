@@ -2,17 +2,6 @@ import asyncio
 import operator
 from datetime import datetime
 
-from nonebot.params import CommandArg
-from nonebot.permission import SUPERUSER
-from .tower_database import tower_handle
-from .tower_fight import get_tower_battle_info
-from ..xiuxian_place import place
-from ..xiuxian_utils.clean_utils import msg_handler, main_md, get_args_num, get_num_from_str
-from ..xiuxian_utils.item_json import items
-from ..xiuxian_utils.utils import check_user, check_user_type, send_msg_handler
-from ..xiuxian_utils.xiuxian2_handle import (
-    sql_message, sql_message
-)
 from nonebot import on_command, logger, require
 from nonebot.adapters.onebot.v11 import (
     Bot,
@@ -21,7 +10,19 @@ from nonebot.adapters.onebot.v11 import (
     Message,
     PRIVATE
 )
+from nonebot.params import CommandArg
+from nonebot.permission import SUPERUSER
+
+from .tower_database import tower_handle
+from .tower_fight import get_tower_battle_info
+from ..xiuxian_place import place
+from ..xiuxian_utils.clean_utils import msg_handler, main_md, get_num_from_str
+from ..xiuxian_utils.item_json import items
 from ..xiuxian_utils.lay_out import Cooldown
+from ..xiuxian_utils.utils import check_user, check_user_type
+from ..xiuxian_utils.xiuxian2_handle import (
+    sql_message
+)
 
 scheduler = require("nonebot_plugin_apscheduler").scheduler
 

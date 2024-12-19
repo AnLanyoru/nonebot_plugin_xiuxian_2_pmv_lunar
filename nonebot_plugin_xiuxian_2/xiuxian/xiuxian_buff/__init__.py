@@ -1,5 +1,8 @@
 import random
 import re
+from datetime import datetime
+
+from nonebot import on_command, on_fullmatch, require
 from nonebot.adapters.onebot.v11 import (
     Bot,
     GROUP,
@@ -7,11 +10,12 @@ from nonebot.adapters.onebot.v11 import (
     GroupMessageEvent
 )
 from nonebot.log import logger
-from datetime import datetime
-from nonebot import on_command, on_fullmatch, require
+from nonebot.params import CommandArg
 from nonebot.permission import SUPERUSER
 
 from .limit import check_limit, reset_send_stone, reset_stone_exp_up
+from .two_exp_cd import two_exp_cd
+from ..xiuxian_config import XiuConfig
 from ..xiuxian_data.data.境界_data import level_data
 from ..xiuxian_data.data.突破概率_data import break_rate
 from ..xiuxian_exp_up.exp_up_def import exp_up_by_time
@@ -21,22 +25,19 @@ from ..xiuxian_limit.limit_util import limit_check
 from ..xiuxian_place import place
 from ..xiuxian_tower import tower_handle
 from ..xiuxian_utils.clean_utils import get_datetime_from_str, date_sub, main_md, msg_handler, simple_md
+from ..xiuxian_utils.lay_out import Cooldown
+from ..xiuxian_utils.other_set import OtherSet
+from ..xiuxian_utils.player_fight import player_fight
+from ..xiuxian_utils.utils import (
+    number_to, check_user,
+    check_user_type, get_id_from_str
+)
 from ..xiuxian_utils.xiuxian2_handle import (
     sql_message, get_player_info,
     save_player_info, UserBuffDate, get_main_info_msg,
     get_user_buff, get_sec_msg, get_sub_info_msg,
     xiuxian_impart
 )
-from ..xiuxian_utils.other_set import OtherSet
-from ..xiuxian_config import XiuConfig
-from nonebot.params import CommandArg
-from ..xiuxian_utils.player_fight import player_fight
-from ..xiuxian_utils.utils import (
-    number_to, check_user,
-    check_user_type, get_id_from_str
-)
-from ..xiuxian_utils.lay_out import Cooldown
-from .two_exp_cd import two_exp_cd
 
 cache_help = {}
 BLESSEDSPOTCOST = 3500000
@@ -684,7 +685,6 @@ async def select_state_(bot: Bot, event: GroupMessageEvent, args: Message = Comm
         def_buff = int(user_armor_data['def_buff'] * 100)  # 我的状态防具减伤
     else:
         def_buff = 0
-
 
     if user_weapon_data is not None:
         weapon_def = user_weapon_data['def_buff'] * 100  # 我的状态武器减伤

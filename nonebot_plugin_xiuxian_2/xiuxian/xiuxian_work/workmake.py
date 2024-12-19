@@ -1,10 +1,11 @@
 import random
+
+from ..xiuxian_config import convert_rank
 from ..xiuxian_data.work_data.暗杀 import work_data_kill
 from ..xiuxian_data.work_data.灵材 import work_data_plant
 from ..xiuxian_data.work_data.等级奖励稿 import level_prise_data
 from ..xiuxian_data.work_data.镇妖 import work_data_fight
 from ..xiuxian_utils.item_json import items as item_s
-from ..xiuxian_config import convert_rank
 from ..xiuxian_utils.other_set import OtherSet
 
 

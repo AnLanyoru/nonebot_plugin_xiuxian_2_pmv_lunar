@@ -3,10 +3,12 @@ try:
 except ImportError:
     import json
 import asyncio
-from nonebot.log import logger
+from pathlib import Path
+
 from PIL import Image, ImageDraw, ImageFont
 from aiohttp import ClientSession
-from pathlib import Path
+from nonebot.log import logger
+
 from .download import get_avatar_by_user_id_and_save
 from .send_image_tool import convert_img
 

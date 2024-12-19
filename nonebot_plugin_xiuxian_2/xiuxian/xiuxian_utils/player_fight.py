@@ -1,8 +1,9 @@
 import random
-from .xiuxian2_handle import sql_message, UserBuffDate, xiuxian_impart
+
 from .other_set import OtherSet
-from ..xiuxian_config import convert_rank
 from .utils import number_to
+from .xiuxian2_handle import sql_message, UserBuffDate, xiuxian_impart
+from ..xiuxian_config import convert_rank
 from ..xiuxian_data.data.境界_data import level_data
 
 

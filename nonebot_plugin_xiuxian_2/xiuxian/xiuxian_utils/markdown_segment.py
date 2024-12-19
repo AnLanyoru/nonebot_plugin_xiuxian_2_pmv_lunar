@@ -6,8 +6,8 @@ FrontMatter:
 """
 from urllib.parse import quote
 
-from typing_extensions import Self
 from nonebot.adapters.onebot.v11 import MessageSegment
+from typing_extensions import Self
 
 
 class MessageSegmentPlus(MessageSegment):

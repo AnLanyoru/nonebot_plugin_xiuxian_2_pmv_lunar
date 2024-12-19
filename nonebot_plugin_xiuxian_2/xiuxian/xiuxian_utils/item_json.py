@@ -2,7 +2,6 @@ try:
     import ujson as json
 except ImportError:
     import json
-import os
 from pathlib import Path
 from typing import List
 
@@ -157,5 +156,3 @@ class Items:
 
 items = Items()
 items.load_items()
-
-

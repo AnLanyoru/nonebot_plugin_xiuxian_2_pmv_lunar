@@ -1,15 +1,15 @@
-from ..xiuxian_utils.lay_out import Cooldown
-from nonebot.params import CommandArg
 from nonebot import on_command
-from ..xiuxian_utils.xiuxian2_handle import sql_message
 from nonebot.adapters.onebot.v11 import (
     Bot,
     GROUP,
     Message,
     GroupMessageEvent
 )
-from ..xiuxian_utils.utils import check_user
+from nonebot.params import CommandArg
 
+from ..xiuxian_utils.lay_out import Cooldown
+from ..xiuxian_utils.utils import check_user
+from ..xiuxian_utils.xiuxian2_handle import sql_message
 
 mixture = on_command('合成', priority=15, permission=GROUP, block=True)
 

@@ -1,9 +1,10 @@
 from math import *
+from pathlib import Path
+
+from nonebot.log import logger
 
 from . import DRIVER
 from .xiuxian_utils.database_conn import XiuxianDateBase
-from nonebot.log import logger
-from pathlib import Path
 
 try:
     import ujson as json
@@ -201,7 +202,7 @@ class Place(XiuxianDateBase):
         sql = f"SELECT place_id FROM user_xiuxian  WHERE user_id=?"
         db = await self.get_db()
         cur = await db.execute(sql, (user_id,))
-        result = cur.fetchone()
+        result = await cur.fetchone()
         if result:
             if result[0]:
                 user_info = {'place_id': result[0]}
@@ -211,7 +212,7 @@ class Place(XiuxianDateBase):
                 sql = f"SELECT place_id FROM user_cd  WHERE user_id=?"
                 db = await self.get_db()
                 cur = await db.execute(sql, (user_id,))
-                result = cur.fetchone()
+                result = await cur.fetchone()
                 if result:
                     place_id = result[0]
                 else:

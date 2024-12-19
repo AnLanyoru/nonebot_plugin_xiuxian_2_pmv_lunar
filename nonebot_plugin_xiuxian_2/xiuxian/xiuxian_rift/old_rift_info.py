@@ -1,6 +1,6 @@
+import os
 import pickle
 from pathlib import Path
-import os
 
 
 class OLD_RIFT_INFO(object):

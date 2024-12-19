@@ -2,8 +2,8 @@ try:
     import ujson as json
 except ImportError:
     import json
-from pathlib import Path
 import os
+from pathlib import Path
 
 
 class OLD_BOSS_INFO(object):

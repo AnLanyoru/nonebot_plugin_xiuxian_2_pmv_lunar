@@ -4,6 +4,7 @@ except ImportError:
     import json
 import os
 from pathlib import Path
+
 from nonebot.log import logger
 
 PLAYERSDATA = Path() / "data" / "xiuxian" / "players"

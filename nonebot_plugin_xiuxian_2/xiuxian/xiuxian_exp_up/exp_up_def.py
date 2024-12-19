@@ -1,11 +1,11 @@
+from ..xiuxian_config import XiuConfig
 from ..xiuxian_data.data.境界_data import level_data
 from ..xiuxian_place import place
+from ..xiuxian_utils.other_set import OtherSet
 from ..xiuxian_utils.xiuxian2_handle import (
     sql_message, UserBuffDate,
     xiuxian_impart
 )
-from ..xiuxian_utils.other_set import OtherSet
-from ..xiuxian_config import XiuConfig
 
 
 async def exp_up_by_time(user_info, exp_time) -> tuple[str, int, dict]:

@@ -1,14 +1,16 @@
 #!usr/bin/env python3
 # -*- coding: utf-8 -*-
-from .xiuxian_utils.download_xiuxian_data import download_xiuxian_data
-from nonebot.plugin import PluginMetadata
-from nonebot import get_driver
-from .xiuxian_config import XiuConfig
 from pathlib import Path
 from pkgutil import iter_modules
-from nonebot.log import logger
+
+from nonebot import get_driver
 from nonebot import require, load_all_plugins, get_plugin_by_module_name
+from nonebot.log import logger
+from nonebot.plugin import PluginMetadata
+
+from .xiuxian_config import XiuConfig
 from .xiuxian_utils.config import config as _config
+from .xiuxian_utils.download_xiuxian_data import download_xiuxian_data
 
 DRIVER = get_driver()
 

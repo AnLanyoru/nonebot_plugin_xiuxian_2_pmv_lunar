@@ -1,33 +1,32 @@
 import random
-import asyncio
 import re
+from datetime import datetime
+
 from nonebot import on_command, on_fullmatch
-from nonebot.params import EventPlainText, CommandArg, RawCommand
 from nonebot.adapters.onebot.v11 import (
     Bot,
     GROUP,
     GroupMessageEvent,
-    MessageSegment,
     ActionFailed, Message
 )
+from nonebot.params import EventPlainText, CommandArg, RawCommand
 from nonebot.permission import SUPERUSER
 
+from .mix_elixir_config import MIXELIXIRCONFIG
+from .mixelixirutil import get_mix_elixir_msg, tiaohe, check_mix, make_dict
+from ..xiuxian_back.back_util import get_user_elixir_back_msg, get_user_yaocai_back_msg, get_user_yaocai_back_msg_easy
+from ..xiuxian_config import convert_rank
 from ..xiuxian_utils.clean_utils import get_strs_from_str, get_args_num, get_paged_msg
+from ..xiuxian_utils.item_json import items
 from ..xiuxian_utils.lay_out import Cooldown
+from ..xiuxian_utils.utils import (
+    check_user, send_msg_handler,
+    CommandObjectID
+)
 from ..xiuxian_utils.xiuxian2_handle import (
     sql_message, get_player_info, save_player_info,
     UserBuffDate, xiuxian_impart
 )
-from ..xiuxian_utils.utils import (
-    check_user, send_msg_handler,
-    get_msg_pic, CommandObjectID, number_to
-)
-from ..xiuxian_utils.item_json import items
-from .mixelixirutil import get_mix_elixir_msg, tiaohe, check_mix, make_dict
-from ..xiuxian_config import convert_rank, XiuConfig
-from datetime import datetime
-from .mix_elixir_config import MIXELIXIRCONFIG
-from ..xiuxian_back.back_util import get_user_elixir_back_msg, get_user_yaocai_back_msg, get_user_yaocai_back_msg_easy
 
 cache_help = {}
 

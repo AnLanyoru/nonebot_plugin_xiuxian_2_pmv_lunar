@@ -3,23 +3,23 @@ try:
 except ImportError:
     import json
 import os
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Tuple
+
 from nonebot import on_regex
-from nonebot.log import logger
-from nonebot.params import RegexGroup
 from nonebot.adapters.onebot.v11 import (
     Bot,
     GroupMessageEvent,
     GROUP,
-    MessageSegment,
 )
-from ..xiuxian_utils.lay_out import Cooldown
-from ..xiuxian_utils.xiuxian2_handle import sql_message
-from datetime import datetime
+from nonebot.log import logger
+from nonebot.params import RegexGroup
+
 from .bankconfig import CONFIG
-from ..xiuxian_utils.utils import check_user, get_msg_pic, number_to
-from ..xiuxian_config import XiuConfig
+from ..xiuxian_utils.lay_out import Cooldown
+from ..xiuxian_utils.utils import check_user, number_to
+from ..xiuxian_utils.xiuxian2_handle import sql_message
 
 config = CONFIG
 BANKLEVEL = config["BANKLEVEL"]

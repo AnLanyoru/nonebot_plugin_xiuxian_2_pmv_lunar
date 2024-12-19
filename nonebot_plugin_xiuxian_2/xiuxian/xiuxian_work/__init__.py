@@ -1,37 +1,38 @@
 import math
 import os
+from datetime import datetime
 from typing import Any, Tuple
-from nonebot import on_regex, require, on_command, logger
-from nonebot.params import RegexGroup
 
-from ..xiuxian_limit import limit_handle
-from ..xiuxian_move import read_move_data
-from ..xiuxian_place import place
-from ..xiuxian_utils.clean_utils import get_datetime_from_str, simple_md, number_to, three_md
-from ..xiuxian_utils.lay_out import Cooldown
+from nonebot import on_regex, require, on_command, logger
 from nonebot.adapters.onebot.v11 import (
     Bot,
     GROUP,
     GroupMessageEvent
 )
-from ..xiuxian_utils.xiuxian2_handle import sql_message
-from ..xiuxian_utils.other_set import OtherSet
-from .work_handle import workhandle
-from datetime import datetime
-from ..xiuxian_utils.xiuxian_opertion import do_is_work
-from ..xiuxian_utils.utils import check_user, check_user_type
+from nonebot.params import RegexGroup
+
 from .reward_data_source import PLAYERSDATA
-from ..xiuxian_utils.item_json import items
+from .work_handle import work_handle
 from ..xiuxian_config import convert_rank, XiuConfig
+from ..xiuxian_limit import limit_handle
+from ..xiuxian_move import read_move_data
+from ..xiuxian_place import place
+from ..xiuxian_utils.clean_utils import get_datetime_from_str, simple_md, number_to, three_md
+from ..xiuxian_utils.item_json import items
+from ..xiuxian_utils.lay_out import Cooldown
+from ..xiuxian_utils.other_set import OtherSet
+from ..xiuxian_utils.utils import check_user, check_user_type
+from ..xiuxian_utils.xiuxian2_handle import sql_message
+from ..xiuxian_utils.xiuxian_opertion import do_is_work
 
 # 定时任务
-resetrefreshnum = require("nonebot_plugin_apscheduler").scheduler
+reset_refresh_num = require("nonebot_plugin_apscheduler").scheduler
 work = {}  # 悬赏令信息记录
 count = 6  # 免费次数
 
 
-@resetrefreshnum.scheduled_job("cron", hour=0, minute=0)
-async def resetrefreshnum_():
+@reset_refresh_num.scheduled_job("cron", hour=0, minute=0)
+async def reset_refresh_num_():
     await sql_message.reset_work_num()
     logger.opt(colors=True).info(f"<green>用户悬赏令刷新次数重置成功</green>")
 
@@ -74,7 +75,7 @@ async def last_work_(bot: Bot, event: GroupMessageEvent):
             user_cd_message['create_time'], "%Y-%m-%d %H:%M:%S.%f"
         )
         exp_time = (datetime.now() - work_time).seconds // 60  # 时长计算
-        time2 = await workhandle().do_work(
+        time2 = await work_handle(
             # key=1, name=user_cd_message.scheduled_time  修改点
             key=1, name=user_cd_message['scheduled_time'], level=user_level, exp=user_info['exp'],
             user_id=user_info['user_id']
@@ -84,7 +85,7 @@ async def last_work_(bot: Bot, event: GroupMessageEvent):
             await bot.send(event=event, message=msg)
             await last_work.finish()
         else:
-            msg, give_stone, s_o_f, item_id, big_suc = await workhandle().do_work(
+            msg, give_stone, s_o_f, item_id, big_suc = await work_handle(
                 2,
                 work_list=user_cd_message['scheduled_time'],
                 level=user_level,
@@ -203,7 +204,7 @@ async def do_work_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = R
                 user_cd_info['create_time'], "%Y-%m-%d %H:%M:%S.%f"
             )
             exp_time = (datetime.now() - work_time).seconds // 60  # 时长计算
-            time2 = await workhandle().do_work(key=1, name=user_cd_info['scheduled_time'], user_id=user_info['user_id'])
+            time2 = await work_handle(key=1, name=user_cd_info['scheduled_time'], user_id=user_info['user_id'])
             if exp_time < time2:
                 msg = f"进行中的悬赏令【{user_cd_info['scheduled_time']}】，预计{time2 - exp_time}分钟后可结束"
             else:
@@ -232,7 +233,7 @@ async def do_work_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = R
                 user_cd_info['create_time'], "%Y-%m-%d %H:%M:%S.%f"
             )
             exp_time = (datetime.now() - work_time).seconds // 60
-            time2 = await workhandle().do_work(key=1, name=user_cd_info['scheduled_time'], user_id=user_info['user_id'])
+            time2 = await work_handle(key=1, name=user_cd_info['scheduled_time'], user_id=user_info['user_id'])
             if exp_time < time2:
                 msg = f"进行中的悬赏令【{user_cd_info['scheduled_time']}】，预计{time2 - exp_time}分钟后可结束"
             else:
@@ -240,10 +241,10 @@ async def do_work_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = R
                                 "悬赏令结算", "悬赏令结算", "来结算任务信息！")
             await bot.send(event=event, message=msg)
             await do_work.finish()
-        usernums = await sql_message.get_work_num(user_id)
-        freenum = count - usernums - 1
-        if freenum < 0:
-            freenum = 0
+        user_nums = await sql_message.get_work_num(user_id)
+        free_num = count - user_nums - 1
+        if free_num < 0:
+            free_num = 0
             back_msg = await sql_message.get_item_by_good_id_and_user_id(user_id=user_id, goods_id=640001)
             goods_num = back_msg['goods_num'] if back_msg else 0
             if goods_num > 0:
@@ -255,15 +256,15 @@ async def do_work_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = R
                 msg = f"道友今日的悬赏令次数已然用尽！！"
                 await bot.send(event=event, message=msg)
                 await do_work.finish()
-        work_msg = await workhandle().do_work(0, level=user_level, exp=user_info['exp'], user_id=user_id)
+        work_msg = await work_handle(0, level=user_level, exp=user_info['exp'], user_id=user_id)
         work_list = []
         title = '☆--道友的个人悬赏令--☆\r'
         work_msg_f = []
         for i in work_msg:
             work_list.append([i[0], i[3]])
             work_msg_f.append(get_work_msg(i))
-        count_msg = f"(悬赏令每日次数：{count}, 今日余剩刷新次数：{freenum}次)"
-        await sql_message.update_work_num(user_id, usernums + 1)
+        count_msg = f"(悬赏令每日次数：{count}, 今日余剩刷新次数：{free_num}次)"
+        await sql_message.update_work_num(user_id, user_nums + 1)
         work[user_id] = do_is_work(user_id)
         work[user_id].msg = work_msg_f
         work[user_id].world = work_list
@@ -292,7 +293,7 @@ async def do_work_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = R
                 user_cd_info['create_time'], "%Y-%m-%d %H:%M:%S.%f"
             )
             exp_time = (datetime.now() - work_time).seconds // 60
-            time2 = await workhandle().do_work(key=1, name=user_cd_info['scheduled_time'], user_id=user_info['user_id'])
+            time2 = await work_handle(key=1, name=user_cd_info['scheduled_time'], user_id=user_info['user_id'])
             if exp_time < time2:
                 msg = f"进行中的悬赏令【{user_cd_info['scheduled_time']}】，预计{time2 - exp_time}分钟后可结束"
             else:
@@ -309,7 +310,7 @@ async def do_work_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = R
             await bot.send(event=event, message=msg)
             await do_work.finish()
 
-        work_msg = await workhandle().do_work(0, level=user_level, exp=user_info['exp'], user_id=user_id)
+        work_msg = await work_handle(0, level=user_level, exp=user_info['exp'], user_id=user_id)
         work_list = []
         title = '☆--道友的个人悬赏令--☆\r'
         work_msg_f = []
@@ -346,7 +347,7 @@ async def do_work_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = R
         user_cd_info = await sql_message.get_user_cd(user_id)
         work_time = get_datetime_from_str(user_cd_info['create_time'])
         exp_time = (datetime.now() - work_time).seconds // 60  # 时长计算
-        time2 = await workhandle().do_work(
+        time2 = await work_handle(
             key=1, name=user_cd_info['scheduled_time'], level=user_level, exp=user_info['exp'],
             user_id=user_info['user_id']
         )
@@ -355,7 +356,7 @@ async def do_work_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = R
             msg = f"进行中的悬赏令【{user_cd_info['scheduled_time']}】，预计{time2 - exp_time}分钟后可结束"
             await bot.send(event=event, message=msg)
             await do_work.finish()
-        msg, give_exp, s_o_f, item_id, big_suc = await workhandle().do_work(
+        msg, give_exp, s_o_f, item_id, big_suc = await work_handle(
             2,
             work_list=user_cd_info['scheduled_time'],
             level=user_level,

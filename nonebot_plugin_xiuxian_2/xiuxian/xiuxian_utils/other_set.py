@@ -1,9 +1,9 @@
 import random
 
 from .clean_utils import number_to
+from .xiuxian2_handle import sql_message, xiuxian_impart
 from .. import XiuConfig
 from ..xiuxian_place import place
-from .xiuxian2_handle import sql_message, xiuxian_impart
 
 
 class OtherSet(XiuConfig):
@@ -18,7 +18,7 @@ class OtherSet(XiuConfig):
             need_exp = 1
         else:
             is_updata_level = self.level[now_index + 1]
-            need_exp = await xiuxian_impart.get_level_power(is_updata_level)
+            need_exp = await sql_message.get_level_power(is_updata_level)
         return need_exp
 
     async def get_type(self, user_exp, rate, user_level, user_id):
@@ -28,7 +28,7 @@ class OtherSet(XiuConfig):
             return "道友已是最高境界，无法突破！"
 
         is_updata_level = self.level[now_index + 1]
-        need_exp = await xiuxian_impart.get_level_power(is_updata_level)
+        need_exp = await sql_message.get_level_power(is_updata_level)
 
         # 判断修为是否足够突破
         if user_exp < need_exp:

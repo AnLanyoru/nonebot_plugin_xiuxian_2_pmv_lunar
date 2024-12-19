@@ -1,4 +1,5 @@
 import random
+
 from nonebot import on_command, require
 from nonebot.adapters.onebot.v11 import (
     Bot,
@@ -6,26 +7,26 @@ from nonebot.adapters.onebot.v11 import (
     GroupMessageEvent,
     MessageSegment, Message
 )
+from nonebot.log import logger
 from nonebot.params import CommandArg
+from nonebot.permission import SUPERUSER
 
 from .old_rift_info import old_rift_info
-from .. import DRIVER
-from ..xiuxian_limit import limit_handle
-from ..xiuxian_place import place
-from ..xiuxian_utils.clean_utils import get_strs_from_str, simple_md, main_md, msg_handler
-from ..xiuxian_utils.lay_out import Cooldown
-from nonebot.permission import SUPERUSER
-from nonebot.log import logger
-from ..xiuxian_utils.xiuxian2_handle import sql_message
-from ..xiuxian_utils.utils import (
-    check_user, check_user_type,
-    CommandObjectID
-)
 from .riftconfig import get_rift_config
 from .riftmake import (
     Rift, get_rift_type, get_story_type, NONEMSG, get_battle_type,
     get_dxsj_info, get_boss_battle_info, get_treasure_info
 )
+from .. import DRIVER
+from ..xiuxian_limit import limit_handle
+from ..xiuxian_place import place
+from ..xiuxian_utils.clean_utils import get_strs_from_str, simple_md, main_md, msg_handler
+from ..xiuxian_utils.lay_out import Cooldown
+from ..xiuxian_utils.utils import (
+    check_user, check_user_type,
+    CommandObjectID
+)
+from ..xiuxian_utils.xiuxian2_handle import sql_message
 
 config = get_rift_config()
 cache_help = {}
@@ -72,7 +73,7 @@ async def save_rift_():
 # 定时任务生成秘境，原群私有，改公有
 @set_rift.scheduled_job("cron", hour=8, minute=0)
 async def set_rift_(place_cls=place):
-    global world_rift  # 挖坑，不同位置的秘境
+    global world_rift
     if place_cls.get_worlds():
         world_rift = {}
         for world_id in place_cls.get_worlds():
@@ -254,4 +255,3 @@ async def rift_protect_msg_(bot: Bot, event: GroupMessageEvent):
         msg = "道友未开启秘境战斗事件保底！！！"
     await bot.send(event=event, message=msg)
     await rift_protect_msg.finish()
-

@@ -1,8 +1,7 @@
-from ..xiuxian_limit.limit_database import limit_data
-from ..xiuxian_utils.xiuxian2_handle import sql_message
 from ..xiuxian_config import convert_rank
+from ..xiuxian_limit.limit_database import limit_data
 from ..xiuxian_utils.utils import number_to
-
+from ..xiuxian_utils.xiuxian2_handle import sql_message
 
 """
 这个系统是依托答辩，千万别用，会变的不幸

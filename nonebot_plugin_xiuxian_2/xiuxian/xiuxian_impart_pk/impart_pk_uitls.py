@@ -1,6 +1,8 @@
-from typing import List
 import random
+from typing import List
+
 from ..xiuxian_utils.xiuxian2_handle import xiuxian_impart
+
 
 # 替换模块
 

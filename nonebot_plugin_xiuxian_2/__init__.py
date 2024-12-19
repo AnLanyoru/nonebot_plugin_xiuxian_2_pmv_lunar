@@ -1,4 +1,5 @@
 from pathlib import Path
+
 from nonebot import require, load_plugins
 
 dir_ = Path(__file__).parent

@@ -1,4 +1,3 @@
-
 configkey = ["BANKLEVEL"]
 CONFIG = {
     "BANKLEVEL": {

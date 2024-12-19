@@ -1,9 +1,9 @@
+import json
 import random
 from pathlib import Path
 
 from .bossconfig import CONFIG
-from ..xiuxian_utils.xiuxian2_handle import XiuxianDateManage
-import json
+from ..xiuxian_utils.xiuxian2_handle import sql_message
 
 config = CONFIG
 JINGJIEEXP = {  # 数值为中期和圆满的平均值
@@ -64,6 +64,8 @@ async def createboss():
         level = top_user_level[:3]
     elif len(top_user_level) == 4:  # 对求道者判断
         level = "炼体境"
+    else:
+        level = '登仙境'
 
     boss_jj = random.choice(jinjie_list[:jinjie_list.index(level) + 1])
     bossinfo = get_boss_exp(boss_jj)

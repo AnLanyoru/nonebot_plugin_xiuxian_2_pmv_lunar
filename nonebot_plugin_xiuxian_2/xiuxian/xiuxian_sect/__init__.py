@@ -1,18 +1,7 @@
-import re
 import random
+import re
 
-from ..xiuxian_data.data.功法概率设置_data import skill_rate_set
-from ..xiuxian_data.data.境界_data import level_data
-from ..xiuxian_data.data.宗门玩法配置_data import sect_config_data
-from ..xiuxian_limit.limit_database import limit_data, limit_handle
-from ..xiuxian_utils.random_names import get_random_sect_name
-from ..xiuxian_utils.xiuxian2_handle import (
-    sql_message,
-    get_main_info_msg, UserBuffDate, get_sec_msg
-)
-from ..xiuxian_utils.other_set import OtherSet
 from nonebot import on_command, on_fullmatch, require
-from nonebot.log import logger
 from nonebot.adapters.onebot.v11 import (
     Bot,
     GROUP,
@@ -21,17 +10,29 @@ from nonebot.adapters.onebot.v11 import (
     MessageSegment,
     ActionFailed
 )
-from ..xiuxian_utils.lay_out import Cooldown
+from nonebot.log import logger
 from nonebot.params import CommandArg
-from ..xiuxian_config import XiuConfig, convert_rank
+
 from .sectconfig import CONFIG
+from ..xiuxian_config import XiuConfig, convert_rank
+from ..xiuxian_data.data.功法概率设置_data import skill_rate_set
+from ..xiuxian_data.data.境界_data import level_data
+from ..xiuxian_data.data.宗门玩法配置_data import sect_config_data
+from ..xiuxian_limit.limit_database import limit_data, limit_handle
+from ..xiuxian_utils.clean_utils import get_num_from_str, get_strs_from_str, simple_md, three_md
+from ..xiuxian_utils.item_json import items
+from ..xiuxian_utils.lay_out import Cooldown
+from ..xiuxian_utils.other_set import OtherSet
+from ..xiuxian_utils.random_names import get_random_sect_name
 from ..xiuxian_utils.utils import (
     check_user, number_to,
     get_msg_pic, send_msg_handler,
     get_id_from_str
 )
-from ..xiuxian_utils.clean_utils import get_num_from_str, get_strs_from_str, simple_md, three_md
-from ..xiuxian_utils.item_json import items
+from ..xiuxian_utils.xiuxian2_handle import (
+    sql_message,
+    get_main_info_msg, UserBuffDate, get_sec_msg
+)
 
 config = CONFIG
 LEVLECOST = config["LEVLECOST"]
@@ -109,8 +110,8 @@ async def resetusertask_():
         sect_info = await sql_message.get_sect_info(s[0])
         if int(sect_info['elixir_room_level']) != 0:
             elixir_room_cost = \
-            config['宗门丹房参数']['elixir_room_level'][str(sect_info['elixir_room_level'])]['level_up_cost'][
-                '建设度']
+                config['宗门丹房参数']['elixir_room_level'][str(sect_info['elixir_room_level'])]['level_up_cost'][
+                    '建设度']
             if sect_info['sect_materials'] < elixir_room_cost:
                 logger.opt(colors=True).info(f"<red>宗门：{sect_info['sect_name']}的资材无法维持丹房</red>")
                 continue

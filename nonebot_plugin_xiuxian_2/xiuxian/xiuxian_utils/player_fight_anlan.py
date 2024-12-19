@@ -1,6 +1,7 @@
+import random
+
 from .item_json import items
 from .xiuxian2_handle import sql_message, xiuxian_impart, UserBuffDate
-import random
 
 
 async def final_user_data(user_data, columns):

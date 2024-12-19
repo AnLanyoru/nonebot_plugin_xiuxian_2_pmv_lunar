@@ -1518,12 +1518,11 @@ async def final_user_data(user_data, columns):
     user_dict['mp'] = int(user_dict['mp'] * (1 + main_mp_buff + impart_mp_per))
     user_dict['max_mp'] = int(user_dict['exp'] * (1 + main_mp_buff + impart_mp_per))
 
-
     user_dict['atk'] = (int((user_dict['atk']
-                            * (user_dict['atkpractice'] * 0.04 + 1)  # 攻击修炼
-                            * (1 + main_atk_buff)    # 功法攻击加成
-                            * (1 + weapon_atk_buff)  # 武器攻击加成
-                            * (1 + armor_atk_buff))  # 防具攻击加成
+                             * (user_dict['atkpractice'] * 0.04 + 1)  # 攻击修炼
+                             * (1 + main_atk_buff)  # 功法攻击加成
+                             * (1 + weapon_atk_buff)  # 武器攻击加成
+                             * (1 + armor_atk_buff))  # 防具攻击加成
                             * (1 + impart_atk_per))  # 传承攻击加成
                         + int(user_buff_data['atk_buff']))  # 攻击丹药加成
 

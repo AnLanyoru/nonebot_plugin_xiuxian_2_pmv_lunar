@@ -1,6 +1,3 @@
-import os
-from pathlib import Path
-
 configkey = ["open", "rift"]
 CONFIG = {
     "open": [],
@@ -64,4 +61,4 @@ CONFIG = {
 
 
 def get_rift_config():
-        config = CONFIG
+    config = CONFIG

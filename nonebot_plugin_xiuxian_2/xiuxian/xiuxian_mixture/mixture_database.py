@@ -3,12 +3,14 @@ try:
 except ImportError:
     import json
 import sqlite3
+import threading
 from datetime import datetime
 from pathlib import Path
+
 from nonebot.log import logger
-from ..xiuxian_config import XiuConfig
+
 from .. import DRIVER
-import threading
+from ..xiuxian_config import XiuConfig
 
 DATABASE = Path() / "data" / "xiuxian" / "items_database"
 xiuxian_num = "578043031"  # 这里其实是修仙1作者的QQ号

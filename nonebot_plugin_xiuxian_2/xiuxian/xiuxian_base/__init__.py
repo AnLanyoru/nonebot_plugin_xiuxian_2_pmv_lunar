@@ -1,15 +1,7 @@
-import re
 import random
+import re
 from datetime import datetime
-from nonebot.typing import T_State
 
-from ..xiuxian_buff import check_limit
-from ..xiuxian_data.data.灵根_data import root_data
-from ..xiuxian_data.data.突破概率_data import break_rate
-from ..xiuxian_limit.limit_database import limit_handle
-from ..xiuxian_place import place
-from ..xiuxian_utils.clean_utils import date_sub, get_num_from_str, get_strs_from_str, main_md
-from ..xiuxian_utils.lay_out import Cooldown
 from nonebot import require, on_command, on_fullmatch
 from nonebot.adapters.onebot.v11 import (
     Bot,
@@ -19,20 +11,29 @@ from nonebot.adapters.onebot.v11 import (
     MessageSegment,
     ActionFailed
 )
-from nonebot.permission import SUPERUSER
 from nonebot.log import logger
 from nonebot.params import CommandArg
-from ..xiuxian_utils.xiuxian2_handle import (
-    sql_message, UserBuffDate, xiuxian_impart, leave_harm_time
-)
-from ..xiuxian_utils.other_set import OtherSet
+from nonebot.permission import SUPERUSER
+from nonebot.typing import T_State
+
+from ..xiuxian_buff import check_limit
 from ..xiuxian_config import XiuConfig
+from ..xiuxian_data.data.灵根_data import root_data
+from ..xiuxian_data.data.突破概率_data import break_rate
+from ..xiuxian_limit.limit_database import limit_handle
+from ..xiuxian_place import place
+from ..xiuxian_utils.clean_utils import date_sub, get_num_from_str, get_strs_from_str, main_md
+from ..xiuxian_utils.item_json import items
+from ..xiuxian_utils.lay_out import Cooldown
+from ..xiuxian_utils.other_set import OtherSet
 from ..xiuxian_utils.utils import (
     check_user,
     get_msg_pic, number_to,
     send_msg_handler, get_id_from_str, linggen_get
 )
-from ..xiuxian_utils.item_json import items
+from ..xiuxian_utils.xiuxian2_handle import (
+    sql_message, UserBuffDate, xiuxian_impart, leave_harm_time
+)
 
 # 定时任务
 scheduler = require("nonebot_plugin_apscheduler").scheduler
@@ -545,7 +546,7 @@ async def level_up_dr_(bot: Bot, event: GroupMessageEvent):
     pause_flag = False
     if user_backs:
         if int(user_backs['goods_num']) > 0:  # 检测到有对应丹药
-                pause_flag = True
+            pause_flag = True
 
     if not pause_flag:
         msg = f"道友突破需要使用{elixir_name}，但您的背包中没有该丹药！"

@@ -1,11 +1,10 @@
-import httpx
-from nonebot.log import logger
 import asyncio
 import hashlib
-import os
-from PIL import Image
-import io
 from pathlib import Path
+
+import httpx
+from PIL import Image
+from nonebot.log import logger
 
 
 async def download_url(url: str) -> bytes:

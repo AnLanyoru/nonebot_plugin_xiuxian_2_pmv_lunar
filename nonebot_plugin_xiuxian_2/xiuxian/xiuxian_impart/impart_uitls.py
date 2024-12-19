@@ -1,6 +1,8 @@
 import numpy
-from ..xiuxian_utils.xiuxian2_handle import xiuxian_impart
+
 from .impart_data import impart_data_json
+from ..xiuxian_utils.xiuxian2_handle import xiuxian_impart
+
 
 # 替换模块
 
@@ -47,11 +49,11 @@ def get_rank_plus(wish_count):
 
 async def impart_check(user_id):
     impart_data_json.find_user_impart(user_id)
-    if xiuxian_impart.get_user_info_with_id(user_id) is None:
+    if await xiuxian_impart.get_user_info_with_id(user_id) is None:
         await xiuxian_impart._create_user(user_id)
-        return xiuxian_impart.get_user_info_with_id(user_id)
+        return await xiuxian_impart.get_user_info_with_id(user_id)
     else:
-        return xiuxian_impart.get_user_info_with_id(user_id)
+        return await xiuxian_impart.get_user_info_with_id(user_id)
 
 
 async def re_impart_data(user_id):
