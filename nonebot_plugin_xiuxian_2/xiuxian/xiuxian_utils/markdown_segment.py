@@ -65,7 +65,7 @@ def markdown_param(key, value):
     :return:
     """
     return {"key": key,
-            "value": [value]}
+            "values": [value]}
 
 
 def cmd_urlencoded(cmd_str):
@@ -112,5 +112,6 @@ params = [markdown_param("title", "标题"),
           markdown_param("cmd_3_url", cmd_urlencoded("命令3")),
           markdown_param("connect_cmd", "命令4"),
           markdown_param("connect_cmd_url", cmd_urlencoded("命令4"))]
+print(params)
 markdown = MessageSegmentPlus.markdown_template("123456", params)
 # bot.send(event, markdown)
