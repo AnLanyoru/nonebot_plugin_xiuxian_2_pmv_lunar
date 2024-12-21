@@ -25,8 +25,7 @@ from ..xiuxian_utils.lay_out import Cooldown
 from nonebot.permission import SUPERUSER
 from nonebot.log import logger
 from ..xiuxian_utils.xiuxian2_handle import (
-    sql_message, UserBuffDate,
-    xiuxian_impart, leave_harm_time
+    sql_message, leave_harm_time
 )
 from ..xiuxian_utils.other_set import OtherSet
 from ..xiuxian_config import convert_rank, XiuConfig
@@ -209,7 +208,7 @@ async def battle_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg
     boss_old_hp = bossinfo['气血']  # 打之前的血量
     more_msg = ''
     battle_flag[group_id] = True
-    result, victor, bossinfo_new, get_stone = await boss_fight(player, bossinfo, bot_id=bot.self_id)
+    result, victor, bossinfo_new, get_stone = await boss_fight(player, bossinfo)
     if victor == "Boss赢了":
         group_boss[group_id][boss_num - 1] = bossinfo_new
         await sql_message.update_ls(user_id, get_stone, 1)
