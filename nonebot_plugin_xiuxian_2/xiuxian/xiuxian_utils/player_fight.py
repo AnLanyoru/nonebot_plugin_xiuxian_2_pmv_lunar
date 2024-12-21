@@ -630,17 +630,11 @@ async def boss_fight(player1: dict, boss: dict, type_in=2, bot_id=0):
     else:
         user1_main_buff_data = await user1_buff_date.get_user_main_buff_data()
         user1_sub_buff_data = await user1_buff_date.get_user_sub_buff_data()  # 获取玩家1的辅修功法
-    user1_hp_buff = user1_main_buff_data['hpbuff'] if user1_main_buff_data is not None else 0
-    user1_mp_buff = user1_main_buff_data['mpbuff'] if user1_main_buff_data is not None else 0
     user1_random_buff = user1_main_buff_data['random_buff'] if user1_main_buff_data is not None else 0
     fan_buff = user1_sub_buff_data['fan'] if user1_sub_buff_data is not None else 0
     stone_buff = user1_sub_buff_data['stone'] if user1_sub_buff_data is not None else 0
     sub_break = user1_sub_buff_data['break'] if user1_sub_buff_data is not None else 0
-    impart_data = await xiuxian_impart.get_user_info_with_id(player1['user_id'])
-    impart_hp_per = impart_data['impart_hp_per'] if impart_data is not None else 0
-    impart_mp_per = impart_data['impart_mp_per'] if impart_data is not None else 0
-    user1_hp_buff = user1_hp_buff + impart_hp_per
-    user1_mp_buff = user1_mp_buff + impart_mp_per
+
     random_buff = UserRandomBuff()
     if user1_random_buff == 1:
         user1_main_buff = random.randint(0, 100)
@@ -717,7 +711,7 @@ async def boss_fight(player1: dict, boss: dict, type_in=2, bot_id=0):
         elif 51 <= boss_st1 <= 75:
             boss_buff.boss_bs = 0.5  # boss暴伤
         elif 75 <= boss_st1 <= 100:
-            boss_buff.boss_xx = random.randint(5, 100) / 100  # boss禁血
+            boss_buff.boss_xx = random.randint(5, 50) / 100  # boss禁血
 
         boss_st2 = random.randint(0, 100)  # boss神通2
         if 0 <= boss_st2 <= 25:
@@ -727,7 +721,7 @@ async def boss_fight(player1: dict, boss: dict, type_in=2, bot_id=0):
         elif 51 <= boss_st2 <= 75:
             boss_buff.boss_jb = 0.5  # boss降暴
         elif 76 <= boss_st2 <= 100:
-            boss_buff.boss_xl = random.randint(5, 100) / 100  # boss禁血
+            boss_buff.boss_xl = random.randint(5, 50) / 100  # boss禁血
 
     if convert_rank('羽化境初期')[0] > boss_rank > convert_rank('合道境后期')[0]:  # 虚劫境
         boss["减伤"] = random.randint(40, 45) / 100  # boss减伤率
@@ -739,17 +733,17 @@ async def boss_fight(player1: dict, boss: dict, type_in=2, bot_id=0):
         elif 51 <= boss_st1 <= 75:
             boss_buff.boss_bs = 0.7  # boss暴伤
         elif 75 <= boss_st1 <= 100:
-            boss_buff.boss_xx = random.randint(10, 100) / 100  # boss禁血
+            boss_buff.boss_xx = random.randint(10, 50) / 100  # boss禁血
 
         boss_st2 = random.randint(0, 100)  # boss神通2
         if 0 <= boss_st2 <= 25:
             boss_buff.boss_jg = 0.4  # boss降攻
         elif 26 <= boss_st2 <= 50:
-            boss_buff.boss_jh = 0.4  # boss降会
+            boss_buff.boss_jh = 0.2  # boss降会
         elif 51 <= boss_st2 <= 75:
             boss_buff.boss_jb = 0.7  # boss降暴
         elif 76 <= boss_st2 <= 100:
-            boss_buff.boss_xl = random.randint(10, 100) / 100  # boss禁血
+            boss_buff.boss_xl = random.randint(10, 50) / 100  # boss禁血
 
     if convert_rank('登仙境初期')[0] > boss_rank > convert_rank('虚劫境后期')[0]:  # 羽化境
         boss["减伤"] = random.randint(30, 35) / 100  # boss减伤率
@@ -887,8 +881,6 @@ async def boss_fight(player1: dict, boss: dict, type_in=2, bot_id=0):
     else:
         fan_data = False
 
-    # except:
-    #    boss["减伤"] = 0.9  # boss减伤率
     user1_skill_sh = 0
 
     get_stone = 0
@@ -903,6 +895,11 @@ async def boss_fight(player1: dict, boss: dict, type_in=2, bot_id=0):
                         "data": {"name": f"{boss['name']}",
                                  "uin": int(bot_id),
                                  "content": f"{effect_name},获得了{int((1 - boss_js) * 100)}%减伤!"}}
+    else:
+        boss_js_data = {"type": "node",
+                        "data": {"name": f"{boss['name']}",
+                                 "uin": int(bot_id),
+                                 "content": f"{boss['name']}展开了护体罡气,获得了{int((1 - boss_js) * 100)}%减伤!"}}
 
         play_list.append(boss_js_data)
 
@@ -964,7 +961,6 @@ async def boss_fight(player1: dict, boss: dict, type_in=2, bot_id=0):
         play_list.append(boss_jb_data)
 
     if boss_buff.boss_xl > 0:
-        # effect_name = BOSSDEF[boss['name']]
         boss_xl_data = {"type": "node",
                         "data": {"name": f"{boss['name']}",
                                  "uin": int(bot_id),
@@ -973,33 +969,33 @@ async def boss_fight(player1: dict, boss: dict, type_in=2, bot_id=0):
         play_list.append(boss_xl_data)
 
     if random_buff.random_break > 0:
-        random_buff.random_break_rate = {"type": "node",
-                                         "data": {"name": f"{player1['道号']}",
-                                                  "uin": int(bot_id),
-                                                  "content": f"{player1['道号']}发动了八九玄功,获得了{int(random_buff.random_break * 100)}%穿甲！"}}
-        play_list.append(random_buff.random_break_rate)
+        random_break_rate = {"type": "node",
+                             "data": {"name": f"{player1['道号']}",
+                                      "uin": int(bot_id),
+                                      "content": f"{player1['道号']}发动了八九玄功,获得了{int(random_buff.random_break * 100)}%穿甲！"}}
+        play_list.append(random_break_rate)
 
     if random_buff.random_xx > 0:
-        random_buff.random_xx_data = {"type": "node",
-                                      "data": {"name": f"{player1['道号']}",
-                                               "uin": int(bot_id),
-                                               "content": f"{player1['道号']}发动了八九玄功,提升了{int(random_buff.random_xx * 100)}%!吸血效果！"}}
-        play_list.append(random_buff.random_xx_data)
+        random_xx_data = {"type": "node",
+                          "data": {"name": f"{player1['道号']}",
+                                   "uin": int(bot_id),
+                                   "content": f"{player1['道号']}发动了八九玄功,提升了{int(random_buff.random_xx * 100)}%!吸血效果！"}}
+        play_list.append(random_xx_data)
 
     if random_buff.random_hx > 0:
-        random_buff.random_hx_data = {"type": "node",
-                                      "data": {"name": f"{player1['道号']}",
-                                               "uin": int(bot_id),
-                                               "content": f"{player1['道号']}发动了八九玄功,提升了{int(random_buff.random_hx * 100)}%!会心！"}}
-        play_list.append(random_buff.random_hx_data)
+        random_hx_data = {"type": "node",
+                          "data": {"name": f"{player1['道号']}",
+                                   "uin": int(bot_id),
+                                   "content": f"{player1['道号']}发动了八九玄功,提升了{int(random_buff.random_hx * 100)}%!会心！"}}
+        play_list.append(random_hx_data)
 
     if random_buff.random_def > 0:
-        random_buff.random_def_data = {"type": "node",
-                                       "data":
-                                           {"name": f"{player1['道号']}",
-                                            "uin": int(bot_id),
-                                            "content": f"{player1['道号']}发动了八九玄功,获得了{int(random_buff.random_def * 100)}%!减伤！"}}
-        play_list.append(random_buff.random_def_data)
+        random_def_data = {"type": "node",
+                           "data":
+                               {"name": f"{player1['道号']}",
+                                "uin": int(bot_id),
+                                "content": f"{player1['道号']}发动了八九玄功,获得了{int(random_buff.random_def * 100)}%!减伤！"}}
+        play_list.append(random_def_data)
 
     boss['会心'] = 30
 
@@ -1017,7 +1013,9 @@ async def boss_fight(player1: dict, boss: dict, type_in=2, bot_id=0):
 
         user1_battle_buff_date, user2_battle_buff_date, msg = start_sub_buff_handle(player1_sub_open,
                                                                                     user1_sub_buff_date,
-                                                                                    user1_battle_buff_date, False, {},
+                                                                                    user1_battle_buff_date,
+                                                                                    False,
+                                                                                    {},
                                                                                     {})
         if msg:
             play_list.append(get_msg_dict(player1, player_init_hp, msg))  # 辅修功法14
@@ -1235,8 +1233,8 @@ async def boss_fight(player1: dict, boss: dict, type_in=2, bot_id=0):
                 #
                 await sql_message.update_user_hp_mp(
                     player1['user_id'],
-                    int(player1['气血'] / (1 + user1_hp_buff)),
-                    int(player1['真元'] / (1 + user1_mp_buff))
+                    int(player1['气血'] / player1['hp_buff']),
+                    int(player1['真元'] / player1['mp_buff'])
                 )
 
             break
@@ -1311,7 +1309,7 @@ async def boss_fight(player1: dict, boss: dict, type_in=2, bot_id=0):
             if is_sql:
                 await sql_message.update_user_hp_mp(
                     player1['user_id'], 1,
-                    int(player1['真元'] / (1 + user1_mp_buff))
+                    int(player1['真元'] / player1['mp_buff'])
                 )
 
             break

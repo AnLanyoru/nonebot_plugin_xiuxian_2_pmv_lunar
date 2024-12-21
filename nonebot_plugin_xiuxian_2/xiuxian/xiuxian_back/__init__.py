@@ -840,7 +840,7 @@ async def use_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg())
             await bot.send(event=event, message=msg)
             await use.finish()
 
-        msg, is_pass = get_use_tool_msg(user_id, goods_id, num)
+        msg, is_pass = await get_use_tool_msg(user_id, goods_id, num)
         if is_pass:
             await sql_message.update_back_j(user_id, goods_id, num, 2)
         await bot.send(event=event, message=msg)

@@ -7,7 +7,7 @@ from ..xiuxian_utils.item_json import items
 from ..xiuxian_utils.other_set import OtherSet
 from ..xiuxian_utils.player_fight import boss_fight
 from ..xiuxian_utils.utils import number_to
-from ..xiuxian_utils.xiuxian2_handle import sql_message, UserBuffDate, xiuxian_impart
+from ..xiuxian_utils.xiuxian2_handle import sql_message
 
 skill_data = skill_rate
 
@@ -127,40 +127,13 @@ STORY = {
 async def get_boss_battle_info(user_info, rift_rank, bot_id):
     """获取Boss战事件的内容"""
     boss_data = STORY['战斗']['Boss战斗']["Boss数据"]
-    player = {"user_id": None, "道号": None, "气血": None, "攻击": None, "真元": None, '会心': None, '防御': 0}
-    userinfo = await sql_message.get_user_real_info(user_info['user_id'])
-    user1_weapon_data = await UserBuffDate(user_info['user_id']).get_user_weapon_data()
-    user_armor_data = await UserBuffDate(user_info['user_id']).get_user_armor_buff_data()  # 秘境战斗防具会心
-    user_main_crit_data = await UserBuffDate(user_info['user_id']).get_user_main_buff_data()  # 秘境战斗功法会心
+    player = await sql_message.get_user_real_info(user_info['user_id'])
+    player['道号'] = player['user_name']
+    player['气血'] = player['hp']
+    player['攻击'] = player['atk']
+    player['真元'] = player['mp']
 
-    if user_main_crit_data is not None:  # 秘境战斗功法会心
-        main_crit_buff = ((user_main_crit_data['crit_buff']) * 100)
-    else:
-        main_crit_buff = 0
-
-    if user_armor_data != None:  # 秘境战斗防具会心
-        armor_crit_buff = user_armor_data['crit_buff']
-    else:
-        armor_crit_buff = 0
-
-    if user1_weapon_data is not None:
-        player['会心'] = int(((user1_weapon_data['crit_buff']) + armor_crit_buff + main_crit_buff) * 100)
-    else:
-        player['会心'] = (armor_crit_buff + main_crit_buff) * 100
-
-    user1_impart_data = await xiuxian_impart.get_user_info_with_id(user_info['user_id'])
-
-    player['user_id'] = userinfo['user_id']
-    player['道号'] = userinfo['user_name']
-    player['气血'] = userinfo['hp']
-    player['传承气血'] = user1_impart_data['impart_hp_per'] if user1_impart_data else 0
-    player['攻击'] = userinfo['atk']
-    player['真元'] = userinfo['mp']
-    player['传承真元'] = user1_impart_data['impart_mp_per'] if user1_impart_data else 0
-    player['exp'] = userinfo['exp']
-    player['level'] = userinfo['level']
-
-    base_exp = userinfo['exp']
+    base_exp = player['exp']
     boss_info = {
         "name": random.choice(boss_data["name"]),
         "气血": int(base_exp * random.choice(boss_data["hp"])),
@@ -202,8 +175,8 @@ async def get_dxsj_info(rift_type, user_info):
         exp = int(user_info['exp'] * value)
         await sql_message.update_j_exp(user_info['user_id'], exp)
 
-        nowhp = user_info['hp'] - (exp / 2) if (user_info['hp'] - (exp / 2)) > 0 else 1
-        nowmp = user_info['mp'] - exp if (user_info['mp'] - exp) > 0 else 1
+        nowhp = max(user_info['hp'] - (exp / 2), 1)
+        nowmp = max(user_info['mp'] - exp, 1)
         await sql_message.update_user_hp_mp(user_info['user_id'], nowhp, nowmp)  # 修为掉了，血量、真元也要掉
 
         msg = random.choice(STORY[rift_type]['desc']).format(f"修为减少了：{exp}点！")
@@ -294,7 +267,7 @@ def get_dict_type_rate(data_dict):
     for i, v in data_dict.items():
         try:
             temp_dict[i] = v["type_rate"]
-        except:
+        except IndexError:
             continue
     key = OtherSet().calculated(temp_dict)
     return key
@@ -306,7 +279,7 @@ def get_rift_type():
     return get_dict_type_rate(data_dict)
 
 
-def get_story_type(rift_protect):
+def get_story_type():
     """根据概率返回事件类型"""
     data_dict = STORY
     return get_dict_type_rate(data_dict)

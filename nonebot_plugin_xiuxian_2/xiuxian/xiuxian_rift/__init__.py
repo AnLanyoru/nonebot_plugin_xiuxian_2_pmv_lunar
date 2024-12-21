@@ -63,13 +63,6 @@ async def read_rift_():
     logger.opt(colors=True).info(f"<green>历史rift数据读取成功</green>")
 
 
-@DRIVER.on_shutdown
-async def save_rift_():
-    global world_rift
-    old_rift_info.save_rift(world_rift)
-    logger.opt(colors=True).info(f"<green>rift数据已保存</green>")
-
-
 # 定时任务生成秘境，原群私有，改公有
 @set_rift.scheduled_job("cron", hour=8, minute=0)
 async def set_rift_(place_cls=place):
@@ -88,6 +81,8 @@ async def set_rift_(place_cls=place):
             rift.count = config['rift'][rift.name]['count']
             rift.time = config['rift'][rift.name]['time']
             world_rift[world_id] = rift
+        old_rift_info.save_rift(world_rift)
+        logger.opt(colors=True).info(f"<green>rift数据已保存</green>")
 
 
 @rift_help.handle(parameterless=[Cooldown(at_sender=False)])
@@ -132,6 +127,9 @@ async def create_rift_(bot: Bot, event: GroupMessageEvent):
             msg = (f"秘境：【{rift.name}】已在【{world_name}】的【{place_name}】开启！\r"
                    f"请诸位身在{world_name}的道友前往{place_name}(ID:{place_id})发送 探索秘境 来加入吧！")
             await bot.send(event=event, message=msg)
+        old_rift_info.save_rift(world_rift)
+        msg = f"rift数据已保存"
+        await bot.send(event=event, message=msg)
     await create_rift.finish()
 
 
@@ -173,7 +171,7 @@ async def complete_rift_(bot: Bot, event: GroupMessageEvent):
     await sql_message.do_work(user_id, 0)
     rift_rank = world_rift[world_id].rank  # 秘境等级
     rift_protect = limit_handle.get_user_rift_protect(user_id)
-    rift_type = get_story_type(rift_protect=rift_protect)  # 无事、宝物、战斗
+    rift_type = get_story_type()  # 无事、宝物、战斗
     if rift_protect:
         if rift_type != "战斗":
             if rift_protect == 1:

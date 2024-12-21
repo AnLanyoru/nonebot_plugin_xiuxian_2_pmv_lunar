@@ -609,9 +609,7 @@ async def mind_state_(bot: Bot, event: GroupMessageEvent):
             exp_meg = f"可突破！"
 
     main_buff_rate_buff = main_buff_data['ratebuff'] if main_buff_data is not None else 0
-    main_hp_buff = main_buff_data['hpbuff'] if main_buff_data is not None else 0
     impart_data = await xiuxian_impart.get_user_info_with_id(user_id)
-    impart_hp_per = impart_data['impart_hp_per'] if impart_data is not None else 0
     impart_know_per = impart_data['impart_know_per'] if impart_data is not None else 0
     impart_burst_per = impart_data['impart_burst_per'] if impart_data is not None else 0
     boss_atk = impart_data['boss_atk'] if impart_data is not None else 0
@@ -624,8 +622,10 @@ async def mind_state_(bot: Bot, event: GroupMessageEvent):
     now_place = place.get_place_name(await place.get_now_place_id(user_id))
 
     msg = simple_md(f"道号：{user_info['user_name']}\r"
-                    f"气血:{number_to(user_info['hp'])}/{number_to(int((user_info['exp'] / 2) * (1 + main_hp_buff + impart_hp_per)))}({(user_info['hp'] / user_info['max_hp']) * 100:.2f}%)\r"
-                    f"真元:{number_to(user_info['mp'])}/{number_to(user_info['exp'])}({((user_info['mp'] / user_info['exp']) * 100):.2f}%)\r"
+                    f"气血:{number_to(user_info['hp'])}/{number_to(user_info['max_hp'])}"
+                    f"({(user_info['hp'] / user_info['max_hp']) * 100:.2f}%)\r"
+                    f"真元:{number_to(user_info['mp'])}/{number_to(user_info['exp'])}"
+                    f"({((user_info['mp'] / user_info['exp']) * 100):.2f}%)\r"
                     f"攻击:{number_to(user_info['atk'])}\r"
                     f"突破状态: {exp_meg}\r"
                     f"(概率：{break_rate[user_info['level']] + leveluprate + number}%)\r"
