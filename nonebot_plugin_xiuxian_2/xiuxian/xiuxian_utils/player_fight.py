@@ -889,7 +889,7 @@ async def boss_fight(player1: dict, boss: dict, type_in=2, bot_id=0):
     boss_now_stone = boss['stone']
     boss_js = boss['减伤']
 
-    if boss_js <= 0.6 and boss['name'] in BOSSDEF:
+    if boss['name'] in BOSSDEF:
         effect_name = BOSSDEF[boss['name']]
         boss_js_data = {"type": "node",
                         "data": {"name": f"{boss['name']}",
@@ -901,7 +901,7 @@ async def boss_fight(player1: dict, boss: dict, type_in=2, bot_id=0):
                                  "uin": int(bot_id),
                                  "content": f"{boss['name']}展开了护体罡气,获得了{int((1 - boss_js) * 100)}%减伤!"}}
 
-        play_list.append(boss_js_data)
+    play_list.append(boss_js_data)
 
     if boss_buff.boss_zs > 0:
         boss_zs_data = {"type": "node",
