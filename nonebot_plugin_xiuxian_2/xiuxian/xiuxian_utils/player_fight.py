@@ -267,8 +267,7 @@ async def player_fight(player1: dict, player2: dict, type_in, bot_id):
             play_list.append(msg)
 
         if player2['气血'] <= 0:  # 玩家2气血小于0，结算
-            play_list.append(
-                {"type": "node", "data": {"name": "Bot", "uin": int(bot_id), "content": f"{player1['道号']}胜利"}})
+            play_list.append(f"{player1['道号']}胜利")
             suc = f"{player1['道号']}"
             if is_sql:
                 #
@@ -452,8 +451,7 @@ async def player_fight(player1: dict, player2: dict, type_in, bot_id):
                 play_list.append(f"☆------{player2['道号']}动弹不得！------☆")
 
         if player1['气血'] <= 0:  # 玩家1气血小于0，结算
-            play_list.append(
-                {"type": "node", "data": {"name": "Bot", "uin": int(bot_id), "content": f"{player2['道号']}胜利"}})
+            play_list.append(f"{player2['道号']}胜利")
             suc = f"{player2['道号']}"
             if is_sql:
                 await sql_message.update_user_hp_mp(player1['user_id'], 1, int(player1['真元'] / player1['mp_buff']))
@@ -476,8 +474,7 @@ async def player_fight(player1: dict, player2: dict, type_in, bot_id):
             play_list.append(msg)
 
         if player1['气血'] <= 0:  # 玩家2气血小于0，结算
-            play_list.append({"type": "node",
-                              "data": {"name": "Bot", "uin": int(bot_id), "content": f"{player2['道号']}胜利"}})
+            play_list.append(f"{player2['道号']}胜利")
             suc = f"{player2['道号']}"
             if is_sql:
                 await sql_message.update_user_hp_mp(player1['user_id'], 1, int(player1['真元'] / player1['mp_buff']))
@@ -828,6 +825,8 @@ async def boss_fight(player1: dict, boss: dict, type_in=2):
     qx = boss['气血']
     boss_now_stone = boss['stone']
     boss_js = boss['减伤']
+    if 'defence' in boss:
+        boss_js = boss['defence']
 
     if boss['name'] in BOSSDEF:
         effect_name = BOSSDEF[boss['name']]

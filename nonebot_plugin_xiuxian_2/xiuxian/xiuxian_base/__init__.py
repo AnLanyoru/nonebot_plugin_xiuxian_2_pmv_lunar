@@ -22,7 +22,8 @@ from ..xiuxian_data.data.灵根_data import root_data
 from ..xiuxian_data.data.突破概率_data import break_rate
 from ..xiuxian_limit.limit_database import limit_handle
 from ..xiuxian_place import place
-from ..xiuxian_utils.clean_utils import date_sub, get_num_from_str, get_strs_from_str, main_md
+from ..xiuxian_sect import sect_config
+from ..xiuxian_utils.clean_utils import date_sub, get_num_from_str, get_strs_from_str, main_md, number_to_pro
 from ..xiuxian_utils.item_json import items
 from ..xiuxian_utils.lay_out import Cooldown
 from ..xiuxian_utils.other_set import OtherSet
@@ -271,10 +272,17 @@ async def rank_(bot: Bot, event: GroupMessageEvent):
     elif message == "战力排行榜":
         lt_rank = await sql_message.power_top(world_id)
         scened_msg = "战力"
-    elif message in ["宗门排行榜", "宗门建设度排行榜"]:
-        lt_rank = await sql_message.scale_top()
+    elif message in "宗门排行榜":
+        lt_rank = await sql_message.scale_elixir_top()
         first_msg = "ID:"
-        scened_msg = "建设度"
+        scened_msg = "\r    丹房"
+        elixir_room_level_up_config = sect_config['宗门丹房参数']['elixir_room_level']
+        for sect_info, index in zip(lt_rank, range(60)):
+            lt_rank[index] = list(lt_rank[index])
+            if int(sect_info[2]) == 0:
+                lt_rank[index][2] = "暂无" + f"  建设度:{sect_info[3]}"
+            else:
+                lt_rank[index][2] = elixir_room_level_up_config[str(sect_info[2])]['name'] + f" 建设度:{sect_info[3]}"
     else:
         lt_rank = {}
     long_rank = len(lt_rank)
@@ -293,12 +301,12 @@ async def rank_(bot: Bot, event: GroupMessageEvent):
         num = item_num
         for i in lt_rank:
             num += 1
-            msg += f"第{num}位 {first_msg}{i[0]} {i[1]} {scened_msg}:{number_to(i[2])}\r"
+            msg += f"第{num}位 {first_msg}{i[0]} {i[1]} {scened_msg}:{number_to_pro(i[2])}\r"
         msg += f"第 {page}/{page_all} 页"
         msg = main_md(top_msg, msg, '下一页', f'{message}{page + 1}', '灵石排行榜', '灵石排行榜', '宗门排行榜',
                       '宗门排行榜', '修仙帮助', '修仙帮助')
     else:
-        msg = f"{message}空空如也！"
+        msg = f"该排行榜空空如也！"
     await bot.send(event=event, message=msg)
     await rank.finish()
 

@@ -1,4 +1,4 @@
-CONFIG = {
+sect_config = {
     "LEVLECOST": {
         "0": 1000000,
         "1": 2000000,

@@ -8,13 +8,13 @@ from nonebot.permission import SUPERUSER
 
 from ..xiuxian_config import XiuConfig
 from ..xiuxian_data.data.宗门玩法配置_data import sect_config_data
-from ..xiuxian_sect import CONFIG
+from ..xiuxian_sect import sect_config
 from ..xiuxian_utils.clean_utils import help_md
 from ..xiuxian_utils.item_json import items
 from ..xiuxian_utils.lay_out import Cooldown
 from ..xiuxian_utils.xiuxian2_handle import threading_data
 
-config = CONFIG
+config = sect_config
 LEVLECOST = config["LEVLECOST"]
 userstask = {}
 

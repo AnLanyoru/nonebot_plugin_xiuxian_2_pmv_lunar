@@ -693,7 +693,7 @@ async def use_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg())
             await bot.send(event=event, message=msg)
             await use.finish()
         else:  # 可以装备
-            sql_str, item_type = get_use_equipment_sql(user_id, goods_id)
+            sql_str, item_type = await get_use_equipment_sql(user_id, goods_id)
             for sql in sql_str:
                 await sql_message.update_back_equipment(sql)
             if item_type == "法器":

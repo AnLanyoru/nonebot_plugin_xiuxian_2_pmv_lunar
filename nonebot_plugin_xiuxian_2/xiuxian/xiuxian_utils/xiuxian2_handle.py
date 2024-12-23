@@ -888,6 +888,20 @@ WHERE last_check_info_time = '0' OR last_check_info_time IS NULL
         result = await cursor.fetchall()
         return result
 
+    async def scale_elixir_top(self):
+        """
+        宗门建设度排行榜
+        :return:
+        """
+        sql = (f"SELECT sect_id, sect_name, elixir_room_level, sect_scale "
+               f"FROM sects WHERE sect_owner is NOT NULL "
+               f"ORDER BY elixir_room_level DESC, sect_scale DESC "
+               f"LIMIT 60")
+        db = await self.get_db()
+        cursor = await db.execute(sql, )
+        result = await cursor.fetchall()
+        return result
+
     async def get_all_sects(self):
         """
         获取所有宗门信息
@@ -2116,7 +2130,7 @@ def get_player_info(user_id, info_name):
     player_info = None
     if info_name == "mix_elixir_info":  # 灵田信息
         mix_elixir_info_config_key = ["收取时间", "收取等级", "灵田数量", '药材速度', "丹药控火", "丹药耐药性",
-                                    "炼丹记录", "炼丹经验"]
+                                      "炼丹记录", "炼丹经验"]
         nowtime = datetime.now().strftime('%Y-%m-%d %H:%M:%S')  # str
         mix_elixir_info_config = {
             "收取时间": nowtime,

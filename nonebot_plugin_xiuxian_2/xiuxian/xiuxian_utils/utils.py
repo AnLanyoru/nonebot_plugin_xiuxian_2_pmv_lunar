@@ -546,7 +546,7 @@ def number_to(num):
         pass
     else:
         # 打回
-        return "无"
+        return "零"
     if isinstance(num, str):
         hf = ""
         num = num.split("、")

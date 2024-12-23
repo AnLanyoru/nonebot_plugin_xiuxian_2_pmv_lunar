@@ -267,7 +267,7 @@ def get_dict_type_rate(data_dict):
     for i, v in data_dict.items():
         try:
             temp_dict[i] = v["type_rate"]
-        except IndexError:
+        except (IndexError, TypeError):
             continue
     key = OtherSet().calculated(temp_dict)
     return key

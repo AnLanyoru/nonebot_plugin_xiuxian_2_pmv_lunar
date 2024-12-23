@@ -17,7 +17,8 @@ async def get_tower_battle_info(user_info, tower_floor_info: dict, bot_id):
         "攻击": int(tower_floor_info["atk"]),
         "真元": int(tower_floor_info["mp"]),
         "jj": "虚劫境",
-        'stone': 1
+        'stone': 1,
+        'defence': (1 - int(tower_floor_info['defence']) / 100)
     }
 
     result, victor, _, _ = await boss_fight(player, boss_info)  # 未开启，1不写入，2写入

@@ -13,7 +13,7 @@ from nonebot.adapters.onebot.v11 import (
 from nonebot.log import logger
 from nonebot.params import CommandArg
 
-from .sectconfig import CONFIG
+from .sectconfig import sect_config
 from ..xiuxian_config import XiuConfig, convert_rank
 from ..xiuxian_data.data.功法概率设置_data import skill_rate_set
 from ..xiuxian_data.data.境界_data import level_data
@@ -34,7 +34,7 @@ from ..xiuxian_utils.xiuxian2_handle import (
     get_main_info_msg, UserBuffDate, get_sec_msg
 )
 
-config = CONFIG
+config = sect_config
 LEVLECOST = config["LEVLECOST"]
 cache_help = {}
 userstask = {}
