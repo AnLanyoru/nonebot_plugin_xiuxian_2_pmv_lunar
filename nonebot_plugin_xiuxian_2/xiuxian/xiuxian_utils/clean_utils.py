@@ -323,7 +323,7 @@ def main_md(title, text,
     param = [
         {
             "key": "title",
-            "values": [f"{title}\r\r"]
+            "values": [f"\r{title}"]
         },
         {
             "key": "text",

@@ -28,28 +28,6 @@ YAOCAIINFOMSG = {
 }
 
 
-async def check_equipment_can_use(user_id, goods_id):
-    """
-    装备数据库字段：
-        good_type -> '装备'
-        state -> 0-未使用， 1-已使用
-        goods_num -> '目前数量'
-        all_num -> '总数量'
-        update_time ->使用的时候更新
-        action_time ->使用的时候更新
-    判断:
-        state = 0, goods_num = 1, all_num =1  可使用
-        state = 1, goods_num = 1, all_num =1  已使用
-        state = 1, goods_num = 2, all_num =2  已装备，多余的，不可重复使用
-    顶用：
-    """
-    flag = False
-    back_equipment = await sql_message.get_item_by_good_id_and_user_id(user_id, goods_id)
-    if back_equipment['state'] == 0:
-        flag = True
-    return flag
-
-
 async def get_use_equipment_sql(user_id, goods_id):
     """
     使用装备
@@ -146,7 +124,8 @@ async def get_user_main_back_msg(user_id):
         return l_msg
     for user_back in user_backs:
         if user_back['goods_type'] == "装备":
-            l_equipment_msg = get_equipment_msg(l_equipment_msg, user_id, user_back['goods_id'], user_back['goods_num'])
+            l_equipment_msg = get_equipment_msg(l_equipment_msg, user_back['goods_id'], user_back['goods_num'],
+                                                user_back['state'])
 
         elif user_back['goods_type'] == "技能":
             l_skill_msg = get_skill_msg(l_skill_msg, user_back['goods_id'], user_back['goods_num'])
@@ -284,7 +263,7 @@ async def get_user_back_msg(user_id, item_types: list):
                 l_types_sec_dict[item_type_sec].append(f"{level}{item['goods_name']} - "
                                                        f"数量：{item['goods_num']}{bind_msg}")
             for item_type_sec, l_items_sec_msg in l_types_sec_dict.items():
-                head_msg = f" ~ {item_type_sec}:\r" if item_type_sec != item_type else ''
+                head_msg = f"✨{item_type_sec}✨\r" if item_type_sec != item_type else ''
                 top_msg = head_msg + l_items_sec_msg[0]
                 l_items_msg.append(top_msg)
                 l_items_msg = operator.add(l_items_msg, l_items_sec_msg[1:])
@@ -301,7 +280,7 @@ async def get_user_skill_back_msg(user_id):
     获取背包内的技能信息, 未使用，并入背包
     """
     l_skill_msg = []
-    l_msg = [{'type': 'node', 'data': {'name': '技能背包', 'uin': 0, 'content': '道友还未拥有技能书'}}]
+    l_msg = ['道友还未拥有技能书']
     pull_skill = []
     user_backs = await sql_message.get_back_goal_type_msg(user_id, "技能")  # list(back)
     if user_backs is None:
@@ -484,7 +463,7 @@ def get_yaocai_info(yaocai_info):
     return msg
 
 
-def get_equipment_msg(l_msg, user_id, goods_id, goods_num):
+def get_equipment_msg(l_msg, goods_id, goods_num, is_use):
     """
     获取背包内的装备信息
     """
@@ -495,7 +474,6 @@ def get_equipment_msg(l_msg, user_id, goods_id, goods_num):
     elif item_info['item_type'] == '法器':
         msg = get_weapon_info_msg(goods_id, item_info)
     msg += f"\r拥有数量:{goods_num}"
-    is_use = check_equipment_use_msg(user_id, goods_id)
     if is_use:
         msg += f"\r已装备"
     else:

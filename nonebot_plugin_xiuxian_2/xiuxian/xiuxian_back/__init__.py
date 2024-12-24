@@ -15,16 +15,17 @@ from nonebot.params import CommandArg, RawCommand
 from nonebot.permission import SUPERUSER
 
 from .back_util import (
-    get_user_main_back_msg, check_equipment_can_use,
-    get_use_equipment_sql, get_shop_data, save_shop,
+    get_user_main_back_msg, get_use_equipment_sql, get_shop_data, save_shop,
     get_item_msg, get_item_msg_rank, check_use_elixir,
-    get_use_jlq_msg, get_no_use_equipment_sql, get_use_tool_msg, get_user_main_back_msg_easy, get_user_back_msg
-)
+    get_use_jlq_msg, get_no_use_equipment_sql, get_use_tool_msg,
+    get_user_main_back_msg_easy, get_user_back_msg)
 from ..xiuxian_config import XiuConfig, convert_rank
 from ..xiuxian_limit import limit_handle
 from ..xiuxian_place import place
-from ..xiuxian_utils.clean_utils import get_args_num, get_num_from_str, get_strs_from_str, get_paged_msg, main_md, \
-    msg_handler, three_md
+from ..xiuxian_utils.clean_utils import (
+    get_args_num, get_num_from_str,
+    get_strs_from_str, get_paged_msg, main_md,
+    msg_handler, three_md)
 from ..xiuxian_utils.item_json import items
 from ..xiuxian_utils.lay_out import Cooldown, CooldownIsolateLevel
 from ..xiuxian_utils.utils import (
@@ -604,37 +605,26 @@ async def no_use_zb_(bot: Bot, event: GroupMessageEvent, args: Message = Command
     """
     isUser, user_info, msg = await check_user(event)
     user_id = user_info['user_id']
-    arg = args.extract_plain_text().strip()
-
-    back_msg = await sql_message.get_back_msg(user_id)  # 背包sql信息,list(back)
-    if back_msg is None:
-        msg = "道友的背包空空如也！"
+    args = args.extract_plain_text()
+    msg_info = get_strs_from_str(args)
+    item_name = msg_info[0] if msg_info else None  # 获取第一个名称
+    goods_id = items.items_map.get(item_name)
+    item_info = await sql_message.get_item_by_good_id_and_user_id(user_id, goods_id)
+    goods_type = item_info['goods_type']
+    if not (item_info and item_info['goods_num']):
+        msg = f"请检查道具是否在背包内！"
         await bot.send(event=event, message=msg)
         await no_use_zb.finish()
-    in_flag = False  # 判断指令是否正确，道具是否在背包内
-    goods_id = None
-    goods_type = None
-    for back in back_msg:
-        if arg == back['goods_name']:
-            in_flag = True
-            goods_id = back['goods_id']
-            goods_type = back['goods_type']
-            break
-    if not in_flag:
-        msg = f"请检查道具 {arg} 是否在背包内！"
-        await bot.send(event=event, message=msg)
-        await no_use_zb.finish()
-
     if goods_type == "装备":
-        if not check_equipment_can_use(user_id, goods_id):
-            sql_str, item_type = get_no_use_equipment_sql(user_id, goods_id)
+        if item_info['state']:
+            sql_str, item_type = await get_no_use_equipment_sql(user_id, goods_id)
             for sql in sql_str:
                 await sql_message.update_back_equipment(sql)
             if item_type == "法器":
                 await sql_message.updata_user_faqi_buff(user_id, 0)
             if item_type == "防具":
                 await sql_message.updata_user_armor_buff(user_id, 0)
-            msg = f"成功卸载装备{arg}！"
+            msg = f"成功卸载装备{item_name}！"
             await bot.send(event=event, message=msg)
             await no_use_zb.finish()
         else:
@@ -658,37 +648,18 @@ async def use_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg())
     args = args.extract_plain_text()
     msg_info = get_strs_from_str(args)
     num_info = get_num_from_str(args)
-    if msg_info:
-        arg = msg_info[0]  # 获取第一个名称
-    else:
-        arg = None
-    if num_info:
-        num = int(num_info[0])  # 获取第一个数量
-    else:
-        num = 1
-    back_msg = await sql_message.get_back_msg(user_id)  # 背包sql信息,dict
-    if back_msg is None:
-        msg = "道友的背包空空如也！"
-        await bot.send(event=event, message=msg)
-        await use.finish()
-    in_flag = False  # 判断指令是否正确，道具是否在背包内
-    goods_id = None
-    goods_type = None
-    goods_num = None
-    var = None
-    for back in back_msg:
-        if arg == back['goods_name']:
-            in_flag = True
-            goods_id = back['goods_id']
-            goods_type = back['goods_type']
-            goods_num = back['goods_num']
-            break
-    if not in_flag:
-        msg = f"请检查该道具 {arg} 是否在背包内！"
+    item_name = msg_info[0] if msg_info else None  # 获取第一个名称
+    num = int(num_info[0]) if num_info else 1  # 获取第一个数量
+    goods_id = items.items_map.get(item_name)
+    item_info = await sql_message.get_item_by_good_id_and_user_id(user_id, goods_id)
+    goods_type = item_info['goods_type']
+    goods_num = item_info['goods_num']
+    if not (item_info and item_info['goods_num']):
+        msg = f"请检查该道具是否在背包内！"
         await bot.send(event=event, message=msg)
         await use.finish()
     if goods_type == "装备":
-        if not check_equipment_can_use(user_id, goods_id):
+        if item_info['state']:
             msg = "该装备已被装备，请勿重复装备！"
             await bot.send(event=event, message=msg)
             await use.finish()
@@ -700,7 +671,7 @@ async def use_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg())
                 await sql_message.updata_user_faqi_buff(user_id, goods_id)
             if item_type == "防具":
                 await sql_message.updata_user_armor_buff(user_id, goods_id)
-            msg = f"成功装备{arg}！"
+            msg = f"成功装备{item_name}！"
             await bot.send(event=event, message=msg)
             await use.finish()
     elif goods_type == "技能":
@@ -748,7 +719,7 @@ async def use_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg())
         await use.finish()
     elif goods_type == "丹药":
         if num > int(goods_num):
-            msg = f"道友背包中的{arg}数量不足，当前仅有{goods_num}个！"
+            msg = f"道友背包中的{item_name}数量不足，当前仅有{goods_num}个！"
             await bot.send(event=event, message=msg)
             await use.finish()
 
@@ -759,7 +730,7 @@ async def use_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg())
         if len(args) > 1 and 1 <= int(num) <= int(goods_num):
             num = int(num)
         elif len(args) > 1 and int(num) > int(goods_num):
-            msg = f"道友背包中的{arg}数量不足，当前仅有{goods_num}个！"
+            msg = f"道友背包中的{item_name}数量不足，当前仅有{goods_num}个！"
             await bot.send(event=event, message=msg)
             await use.finish()
         goods_info = items.get_data_by_item_id(goods_id)
@@ -770,10 +741,6 @@ async def use_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg())
         if abs(goods_rank - 55) > user_rank:  # 使用限制
             msg = f"神物：{goods_name}的使用境界为{goods_info['境界']}以上，道友不满足使用条件！"
         else:
-            try:
-                goods_info["level"]
-            except:
-                var = None
             await sql_message.update_back_j(user_id, goods_id, num, 2)
             goods_buff = goods_info["buff"]
             exp = goods_buff * num
@@ -791,12 +758,10 @@ async def use_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg())
         if len(args) > 1 and 1 <= int(num) <= int(goods_num):
             num = int(num)
         elif len(args) > 1 and int(num) > int(goods_num):
-            msg = f"道友背包中的{arg}数量不足，当前仅有{goods_num}个！"
+            msg = f"道友背包中的{item_name}数量不足，当前仅有{goods_num}个！"
             await bot.send(event=event, message=msg)
             await use.finish()
         goods_info = items.get_data_by_item_id(goods_id)
-        user_info = await sql_message.get_user_info_with_id(user_id)
-        var = convert_rank(user_info['level'])[0]
         goods_name = goods_info['name']
         goods_id1 = goods_info['buff_1']
         goods_id2 = goods_info['buff_2']
@@ -823,7 +788,7 @@ async def use_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg())
 
     elif goods_type == "天地奇物":
         if num > int(goods_num):
-            msg = f"道友背包中的{arg}数量不足，当前仅有{goods_num}个！"
+            msg = f"道友背包中的{item_name}数量不足，当前仅有{goods_num}个！"
             await bot.send(event=event, message=msg)
             await use.finish()
         goods_info = items.get_data_by_item_id(goods_id)
@@ -836,7 +801,7 @@ async def use_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg())
         await use.finish()
     elif goods_type == "道具":
         if num > int(goods_num):
-            msg = f"道友背包中的{arg}数量不足，当前仅有{goods_num}个！"
+            msg = f"道友背包中的{item_name}数量不足，当前仅有{goods_num}个！"
             await bot.send(event=event, message=msg)
             await use.finish()
 

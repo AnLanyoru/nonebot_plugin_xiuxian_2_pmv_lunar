@@ -12,6 +12,7 @@ from nonebot.adapters.onebot.v11 import (
 )
 from nonebot.log import logger
 from nonebot.params import CommandArg
+from nonebot.permission import SUPERUSER
 
 from .sectconfig import sect_config
 from ..xiuxian_config import XiuConfig, convert_rank
@@ -81,6 +82,7 @@ sect_users_donate_check = on_command("宗门周贡检查", aliases={"检查宗�
 sect_elixir_room_make = on_command("宗门丹房建设", aliases={"建设宗门丹房"}, priority=5, permission=GROUP, block=True)
 sect_elixir_get = on_command("宗门丹药领取", aliases={"领取宗门丹药领取"}, priority=5, permission=GROUP, block=True)
 sect_rename = on_fullmatch("宗门改名", priority=5, permission=GROUP, block=True)
+gm_sect_rename = on_fullmatch("超管宗门改名", priority=12, permission=SUPERUSER, block=True)
 
 
 @weekly_work.scheduled_job("cron", day_of_week='mon', hour=4)
@@ -99,6 +101,26 @@ async def materialsupdate_():
 
     logger.opt(colors=True).info(f"<green>已更新所有宗门的资材</green>")
 
+
+@gm_sect_rename.handle(parameterless=[Cooldown(stamina_cost=0, at_sender=False)])
+async def gm_sect_rename_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
+    arg_str = args.extract_plain_text()
+    strs = get_strs_from_str(arg_str)
+    num = get_num_from_str(arg_str)
+    sect_id = int(num[0]) if num else None
+    update_sect_name = strs[0] if strs else None
+    if not update_sect_name:
+        msg = '请输入要更改的宗门名称'
+        await bot.send(event, msg)
+        await gm_sect_rename.finish()
+    if not sect_id:
+        msg = '请输入要更改的宗门ID'
+        await bot.send(event, msg)
+        await gm_sect_rename.finish()
+    await sql_message.update_sect_name(sect_id, update_sect_name)
+    msg = f'ID为:{sect_id}的宗门, 名称已更改为：{update_sect_name}'
+    await bot.send(event, msg)
+    await gm_sect_rename.finish()
 
 # 每日0点重置用户宗门任务次数、宗门丹药领取次数
 @resetusertask.scheduled_job("cron", hour=0, minute=0)

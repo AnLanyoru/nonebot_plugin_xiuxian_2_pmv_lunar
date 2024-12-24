@@ -37,12 +37,12 @@ def read_place_data():
 
 # 施工中
 class PlaceSet:
-    def __init__(self, num, name, place):
+    def __init__(self, num, name, place_id):
         self.number = num
         self.name = name
-        self.place_set = place
-        self.place_type = {"number": num, "name": name, "place": place}
-        self.place_dict = {num: (name, place)}
+        self.place_set = place_id
+        self.place_type = {"number": num, "name": name, "place": place_id}
+        self.place_dict = {num: (name, place_id)}
         self.place_id_get = {name: num}
 
     def get_num(self):
@@ -199,28 +199,27 @@ class Place(XiuxianDateBase):
         :param user_id: QQ
         :return: 用户信息的字典
         """
-        sql = f"SELECT place_id FROM user_xiuxian  WHERE user_id=?"
-        db = await self.get_db()
-        cur = await db.execute(sql, (user_id,))
-        result = await cur.fetchone()
-        if result:
-            if result[0]:
-                user_info = {'place_id': result[0]}
-                return user_info
-            else:
-                # 兼容性更新，搬迁旧place_id
-                sql = f"SELECT place_id FROM user_cd  WHERE user_id=?"
-                db = await self.get_db()
-                cur = await db.execute(sql, (user_id,))
-                result = await cur.fetchone()
-                if result:
-                    place_id = result[0]
+        sql = f"SELECT place_id FROM user_xiuxian WHERE user_id=?"
+        async with self.get_db() as db:
+            async with db.execute(sql, (user_id,)) as cursor:
+                result = await cursor.fetchone()
+            if result:
+                if result[0]:
+                    user_info = {'place_id': result[0]}
+                    return user_info
                 else:
-                    print("迁移失败无法找到原位置")
-                    place_id = 1
-                await self.set_now_place_id(user_id, place_id)
-                user_info = {'place_id': place_id}
-                return user_info
+                    # 兼容性更新，搬迁旧place_id
+                    sql = f"SELECT place_id FROM user_cd  WHERE user_id=?"
+                    async with db.execute(sql, (user_id,)) as cursor:
+                        result = await cursor.fetchone()
+                        if result:
+                            place_id = result[0]
+                        else:
+                            print("迁移失败无法找到原位置")
+                            place_id = 1
+                        await self.set_now_place_id(user_id, place_id)
+                        user_info = {'place_id': place_id}
+                        return user_info
 
     async def get_now_place_id(self, user_id):
         """
@@ -240,9 +239,9 @@ class Place(XiuxianDateBase):
         :return:
         """
         sql = "UPDATE user_xiuxian SET place_id=? WHERE user_id=?"
-        db = await self.get_db()
-        await db.execute(sql, (place_id, user_id))
-        await db.commit()
+        async with self.get_db() as db:
+            await db.execute(sql, (place_id, user_id))
+            await db.commit()
 
     async def get_now_world_id(self, user_id):
         """
