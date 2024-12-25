@@ -805,7 +805,7 @@ async def daily_work_(bot: Bot, event: GroupMessageEvent):
     main_two = main_two_data['two_buff'] if main_two_data is not None else 0
 
     two_num = (two_exp_limit + impart_two_exp + main_two)
-    limit_dict, is_pass = limit_data.get_limit_by_user_id(user_id)
+    limit_dict, is_pass = await limit_data.get_limit_by_user_id(user_id)
     impart_pk_num = limit_dict['impart_pk']
     work_num = user_info["work_num"]
     if int(user_info['blessed_spot_flag']) == 0:

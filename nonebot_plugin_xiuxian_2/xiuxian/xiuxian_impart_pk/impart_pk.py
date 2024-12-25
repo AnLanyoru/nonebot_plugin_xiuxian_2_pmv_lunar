@@ -4,7 +4,7 @@ from ..xiuxian_limit.limit_database import limit_data, limit_handle
 class IMPART_PK(object):
     @staticmethod
     def get_impart_pk_num(user_id):
-        limit_dict, is_pass = limit_data.get_limit_by_user_id(user_id)
+        limit_dict, is_pass = await limit_data.get_limit_by_user_id(user_id)
         impart_pk_num = limit_dict['impart_pk']
         return impart_pk_num
 
@@ -18,7 +18,7 @@ class IMPART_PK(object):
         """
         重置数据
         """
-        limit_data.redata_limit_by_key('impart_pk')
+        await limit_data.redata_limit_by_key('impart_pk')
 
 
 impart_pk = IMPART_PK()

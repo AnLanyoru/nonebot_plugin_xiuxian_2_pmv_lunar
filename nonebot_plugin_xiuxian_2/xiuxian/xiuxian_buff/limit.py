@@ -30,7 +30,7 @@ class CheckLimit:
         user_info = await sql_message.get_user_info_with_id(user_id)
         user_rank = convert_rank(user_info["level"])[0]
         max_send_stone_num = user_rank * self.per_rank_give_stone
-        limit_dict, is_pass = limit_data.get_limit_by_user_id(user_id)
+        limit_dict, is_pass = await limit_data.get_limit_by_user_id(user_id)
         had_send_stone_num = limit_dict.get("send_stone")
         left_send_stone_num = max_send_stone_num - had_send_stone_num
         if stone_prepare_send > left_send_stone_num:
@@ -50,7 +50,7 @@ class CheckLimit:
         user_info = await sql_message.get_user_info_with_id(user_id)
         user_rank = convert_rank(user_info["level"])[0]
         max_receive_stone_num = user_rank * self.per_rank_give_stone
-        limit_dict, is_pass = limit_data.get_limit_by_user_id(user_id)
+        limit_dict, is_pass = await limit_data.get_limit_by_user_id(user_id)
         had_receive_stone_num = limit_dict.get("receive_stone")
         left_receive_stone_num = max_receive_stone_num - had_receive_stone_num
         if stone_prepare_receive > left_receive_stone_num:
@@ -69,9 +69,9 @@ class CheckLimit:
         """
         user_info = await sql_message.get_user_info_with_id(user_id)
         user_rank = convert_rank(user_info["level"])[0]
-        limit_dict, is_pass = limit_data.get_limit_by_user_id(user_id)
+        limit_dict, is_pass = await limit_data.get_limit_by_user_id(user_id)
         limit_dict["receive_stone"] = new_date
-        limit_data.update_limit_data(limit_dict)
+        await limit_data.update_limit_data(limit_dict)
         max_receive_stone_num = user_rank * self.per_rank_give_stone
         return max_receive_stone_num - new_date
 
@@ -85,9 +85,9 @@ class CheckLimit:
         user_info = await sql_message.get_user_info_with_id(user_id)
         user_rank = convert_rank(user_info["level"])[0]
         max_send_stone_num = user_rank * self.per_rank_give_stone
-        limit_dict, is_pass = limit_data.get_limit_by_user_id(user_id)
+        limit_dict, is_pass = await limit_data.get_limit_by_user_id(user_id)
         limit_dict["send_stone"] = new_date
-        limit_data.update_limit_data(limit_dict)
+        await limit_data.update_limit_data(limit_dict)
         return max_send_stone_num - new_date
 
     async def send_stone_check(self, send_user_id, receive_user_id, num) -> tuple[str, str, bool]:
@@ -118,7 +118,7 @@ class CheckLimit:
             return '', limit_msg, False
 
     async def stone_exp_up_check(self, user_id, num):
-        limit_dict, is_pass = limit_data.get_limit_by_user_id(user_id)
+        limit_dict, is_pass = await limit_data.get_limit_by_user_id(user_id)
         had_stone_exp_up = limit_dict.get("stone_exp_up")
         left_stone_exp_up = self.max_stone_exp_up - had_stone_exp_up
         if num <= left_stone_exp_up:
@@ -127,7 +127,7 @@ class CheckLimit:
                    f"|{left_stone_exp_up}/{self.max_stone_exp_up}")
             had_stone_exp_up += num
             limit_dict["stone_exp_up"] = had_stone_exp_up
-            limit_data.update_limit_data(limit_dict)
+            await limit_data.update_limit_data(limit_dict)
             return had_stone_exp_up, msg, True
         else:
             msg = (f"无法使用这么多的灵石修炼啦！！"
@@ -143,11 +143,11 @@ check_limit = CheckLimit()
 
 
 def reset_stone_exp_up():
-    limit_data.redata_limit_by_key("stone_exp_up")
+    await limit_data.redata_limit_by_key("stone_exp_up")
     return True
 
 
 def reset_send_stone():
-    limit_data.redata_limit_by_key("send_stone")
-    limit_data.redata_limit_by_key("receive_stone")
+    await limit_data.redata_limit_by_key("send_stone")
+    await limit_data.redata_limit_by_key("receive_stone")
     return True

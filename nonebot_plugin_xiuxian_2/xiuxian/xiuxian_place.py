@@ -235,7 +235,6 @@ class Place:
         sql = "UPDATE user_xiuxian SET place_id=$1 WHERE user_id=$2"
         async with self.pool.acquire() as db:
             await db.execute(sql, place_id, user_id)
-            await db.commit()
 
     async def get_now_world_id(self, user_id):
         """

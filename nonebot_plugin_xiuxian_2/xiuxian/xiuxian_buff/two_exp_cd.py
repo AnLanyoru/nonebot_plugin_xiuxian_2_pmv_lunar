@@ -8,7 +8,7 @@ class TWO_EXP_CD(object):
         匹配词条
         :param user_id:
         """
-        limit_dict, is_pass = limit_data.get_limit_by_user_id(user_id)
+        limit_dict, is_pass = await limit_data.get_limit_by_user_id(user_id)
         two_exp_num = limit_dict['two_exp_up']
         return two_exp_num
 
@@ -25,7 +25,7 @@ class TWO_EXP_CD(object):
         """
         重置数据
         """
-        limit_data.redata_limit_by_key('two_exp_up')
+        await limit_data.redata_limit_by_key('two_exp_up')
 
 
 two_exp_cd = TWO_EXP_CD()

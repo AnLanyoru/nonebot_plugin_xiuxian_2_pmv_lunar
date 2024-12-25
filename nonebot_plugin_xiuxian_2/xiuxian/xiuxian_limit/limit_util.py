@@ -14,8 +14,8 @@ class LimitCheck:
         self.two_exp_limit = XiuConfig().two_exp_limit
 
     async def two_exp_limit_check(self, user_id_1, user_id_2) -> tuple[bool, str]:
-        user_limit_1, is_pass_1 = limit_data.get_limit_by_user_id(user_id_1)
-        user_limit_2, is_pass_2 = limit_data.get_limit_by_user_id(user_id_2)
+        user_limit_1, is_pass_1 = await limit_data.get_limit_by_user_id(user_id_1)
+        user_limit_2, is_pass_2 = await limit_data.get_limit_by_user_id(user_id_2)
         user_exp_1 = user_limit_1['two_exp_up']
         user_exp_2 = user_limit_2['two_exp_up']
         # 加入传承
@@ -38,8 +38,8 @@ class LimitCheck:
         user_exp_2 += 1
         user_limit_1['two_exp_up'] = user_exp_1
         user_limit_2['two_exp_up'] = user_exp_2
-        limit_data.update_limit_data_with_key(user_limit_1, 'two_exp_up')
-        limit_data.update_limit_data_with_key(user_limit_2, 'two_exp_up')
+        await limit_data.update_limit_data_with_key(user_limit_1, 'two_exp_up')
+        await limit_data.update_limit_data_with_key(user_limit_2, 'two_exp_up')
         msg = "pass"
         return True, msg
         pass

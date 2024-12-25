@@ -34,26 +34,9 @@ current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
 
 
 class XiuxianDateManage:
-    global xiuxian_num
-    _instance = {}
-    _has_init = {}
-
-    def __new__(cls):
-        if cls._instance.get(xiuxian_num) is None:
-            cls._instance[xiuxian_num] = super(XiuxianDateManage, cls).__new__(cls)
-        return cls._instance[xiuxian_num]
 
     def __init__(self):
         self.pool = None
-        if not self._has_init.get(xiuxian_num):
-            self._has_init[xiuxian_num] = True
-            self.database_path = DATABASE
-            if not self.database_path.exists():
-                self.database_path.mkdir(parents=True)
-                self.database_path /= "xiuxian.db"
-            else:
-                self.database_path /= "xiuxian.db"
-            logger.opt(colors=True).info(f"<green>修仙数据库已连接！</green>")
 
     async def check_data(self):
         """检查数据完整性"""
@@ -80,7 +63,7 @@ class XiuxianDateManage:
           "is_ban" numeric DEFAULT 0,
           "exp" numeric DEFAULT 0,
           "user_name" TEXT DEFAULT NULL,
-          "level_up_cd" numeric DEFAULT NULL,
+          "level_up_cd" text,
           "level_up_rate" numeric DEFAULT 0
         );""")
                 elif i == "user_cd":
@@ -222,7 +205,7 @@ class XiuxianDateManage:
         async with self.pool.acquire() as db:
             sql = f"""
                 UPDATE user_xiuxian
-                SET user_stamina = MIN(user_stamina + $1, $2)
+                SET user_stamina = LEAST(user_stamina + $1, $2)
                 WHERE user_stamina < $3
             """
             await db.execute(sql, stamina, max_stamina, max_stamina)
@@ -234,11 +217,10 @@ class XiuxianDateManage:
             if key == 1:
                 sql = f"UPDATE user_xiuxian SET user_stamina=user_stamina+$1 WHERE user_id=$2"
                 await db.execute(sql, stamina_change, user_id)
-                
+
             elif key == 2:
                 sql = f"UPDATE user_xiuxian SET user_stamina=user_stamina-$1 WHERE user_id=$2"
                 await db.execute(sql, stamina_change, user_id)
-                
 
     async def get_user_real_info(self, user_id):
         """
@@ -359,11 +341,10 @@ class XiuxianDateManage:
             if key == 1:
                 sql = f"UPDATE user_xiuxian SET stone=stone+$1 WHERE user_id=$2"
                 await db.execute(sql, price, user_id)
-                
+
             elif key == 2:
                 sql = f"UPDATE user_xiuxian SET stone=stone-$1 WHERE user_id=$2"
                 await db.execute(sql, price, user_id)
-                
 
     async def update_root(self, user_id, key):
         """更新灵根  1为混沌,2为融合,3为超,4为龙,5为天,6为千世,7为万世"""
@@ -437,7 +418,7 @@ class XiuxianDateManage:
         """灵石排行榜"""
         sql = f"SELECT user_id,stone FROM user_xiuxian WHERE stone>0 ORDER BY stone DESC LIMIT 5"
         async with self.pool.acquire() as db:
-            result = await db.fetch(sql, )
+            result = await db.fetch(sql)
             result_all = [zips(**result_per) for result_per in result]
             return result_all
 
@@ -445,13 +426,13 @@ class XiuxianDateManage:
         """重置签到"""
         sql = f"UPDATE user_xiuxian SET is_sign=0"
         async with self.pool.acquire() as db:
-            await db.execute(sql, )
+            await db.execute(sql)
 
     async def beg_remake(self):
         """重置仙途奇缘"""
         sql = f"UPDATE user_xiuxian SET is_beg=0"
         async with self.pool.acquire() as db:
-            await db.execute(sql, )
+            await db.execute(sql)
 
     async def ban_user(self, user_id):
         """小黑屋"""
@@ -641,7 +622,7 @@ class XiuxianDateManage:
         """获取全部宗门id"""
         sql = "SELECT sect_id FROM sects"
         async with self.pool.acquire() as db:
-            result = await db.fetch(sql, )
+            result = await db.fetch(sql)
             if result:
                 return [result_per[0] for result_per in result]
             else:
@@ -651,7 +632,7 @@ class XiuxianDateManage:
         """获取全部用户id"""
         sql = "SELECT user_id FROM user_xiuxian"
         async with self.pool.acquire() as db:
-            result = await db.fetch(sql, )
+            result = await db.fetch(sql)
             if result:
                 return [row[0] for row in result]
             else:
@@ -714,7 +695,7 @@ class XiuxianDateManage:
         sql += """ELSE level END) ASC LIMIT 60"""
 
         async with self.pool.acquire() as db:
-            result = await db.fetch(sql, )
+            result = await db.fetch(sql)
             result_all = [zips(**result_per) for result_per in result]
             return result_all
 
@@ -761,7 +742,7 @@ class XiuxianDateManage:
         sql = (f"SELECT user_name,level,stone FROM user_xiuxian WHERE user_name is NOT NULL"
                f"and place_id > {place_min} and place_id < {place_max} ORDER BY stone DESC LIMIT 60")
         async with self.pool.acquire() as db:
-            result = await db.fetch(sql, )
+            result = await db.fetch(sql)
             result_all = [zips(**result_per) for result_per in result]
             return result_all
 
@@ -772,7 +753,7 @@ class XiuxianDateManage:
         sql = (f"SELECT user_name,level,power FROM user_xiuxian WHERE user_name is NOT NULL "
                f"and place_id > {place_min} and place_id < {place_max} ORDER BY power DESC LIMIT 60")
         async with self.pool.acquire() as db:
-            result = await db.fetch(sql, )
+            result = await db.fetch(sql)
             result_all = [zips(**result_per) for result_per in result]
             return result_all
 
@@ -783,7 +764,7 @@ class XiuxianDateManage:
         """
         sql = f"SELECT sect_id, sect_name, sect_scale FROM sects WHERE sect_owner is NOT NULL ORDER BY sect_scale DESC"
         async with self.pool.acquire() as db:
-            result = await db.fetch(sql, )
+            result = await db.fetch(sql)
             result_all = [zips(**result_per) for result_per in result]
             return result_all
 
@@ -797,7 +778,7 @@ class XiuxianDateManage:
                f"ORDER BY elixir_room_level DESC, sect_scale DESC "
                f"LIMIT 60")
         async with self.pool.acquire() as db:
-            result = await db.fetch(sql, )
+            result = await db.fetch(sql)
             result_all = [zips(**result_per) for result_per in result]
             return result_all
 
@@ -859,11 +840,10 @@ class XiuxianDateManage:
             if key == 1:
                 sql = f"UPDATE sects SET sect_used_stone=sect_used_stone+$1 WHERE sect_id=$2"
                 await db.execute(sql, sect_used_stone, sect_id)
-                
+
             elif key == 2:
                 sql = f"UPDATE sects SET sect_used_stone=sect_used_stone-$1 WHERE sect_id=$2"
                 await db.execute(sql, sect_used_stone, sect_id)
-                
 
     async def update_sect_materials(self, sect_id, sect_materials, key):
         """更新资材  1为增加,2为减少"""
@@ -872,11 +852,10 @@ class XiuxianDateManage:
             if key == 1:
                 sql = f"UPDATE sects SET sect_materials=sect_materials+$1 WHERE sect_id=$2"
                 await db.execute(sql, sect_materials, sect_id)
-                
+
             elif key == 2:
                 sql = f"UPDATE sects SET sect_materials=sect_materials-$1 WHERE sect_id=$2"
                 await db.execute(sql, sect_materials, sect_id)
-                
 
     async def get_all_sects_id_scale(self):
         """
@@ -888,7 +867,7 @@ class XiuxianDateManage:
         """
         sql = f"SELECT sect_id, sect_scale, elixir_room_level FROM sects WHERE sect_owner is NOT NULL ORDER BY sect_scale DESC"
         async with self.pool.acquire() as db:
-            result = await db.fetch(sql, )
+            result = await db.fetch(sql)
             result_all = [zips(**result_per) for result_per in result]
             return result_all
 
@@ -904,7 +883,7 @@ class XiuxianDateManage:
             results = sorted(result_all, key=operator.itemgetter('sect_contribution'), reverse=True)
             return results
 
-    async def do_work(self, user_id, the_type, sc_time=None):
+    async def do_work(self, user_id, the_type, sc_time: str = None):
         """
         更新用户操作CD
         :param sc_time: 任务耗时
@@ -915,21 +894,18 @@ class XiuxianDateManage:
         now_time = None
         if the_type == 1:
             now_time = datetime.now()
-            now_time = str(now_time)
         elif the_type == 0:
             now_time = 0
         elif the_type == 2:
             now_time = datetime.now()
-            now_time = str(now_time)
         elif the_type == 3:
             now_time = datetime.now()
-            now_time = str(now_time)
         elif the_type == -1:
             now_time = datetime.now()
-            now_time = str(now_time)
+        now_time = str(now_time)
         sql = f"UPDATE user_cd SET type=$1,create_time=$2,scheduled_time=$3 WHERE user_id=$4"
         async with self.pool.acquire() as db:
-            await db.execute(sql, the_type, now_time, sc_time, user_id)
+            await db.execute(sql, the_type, now_time, str(sc_time), user_id)
 
     async def update_levelrate(self, user_id, rate):
         """更新突破成功率"""
@@ -966,13 +942,12 @@ class XiuxianDateManage:
         if user_id is None:
             sql = f"UPDATE user_xiuxian SET hp=exp/2,mp=exp,atk=exp/10"
             async with self.pool.acquire() as db:
-                await db.execute(sql, )
+                await db.execute(sql)
 
         else:
             sql = f"UPDATE user_xiuxian SET hp=exp/2,mp=exp,atk=exp/10 WHERE user_id=$1"
             async with self.pool.acquire() as db:
                 await db.execute(sql, user_id)
-                
 
     async def get_back_msg(self, user_id):
         """获取用户背包信息"""
@@ -1019,7 +994,7 @@ class XiuxianDateManage:
         """查询所有对应大境界玩家的修为"""
         sql = f"SELECT exp FROM user_xiuxian  WHERE level like '{level}%'"
         async with self.pool.acquire() as db:
-            result = await db.fetch(sql, )
+            result = await db.fetch(sql)
             result_all = [result_per[0] for result_per in result]
             return result_all
 
@@ -1039,7 +1014,7 @@ class XiuxianDateManage:
         """重置宗门任务次数"""
         sql = f"UPDATE user_xiuxian SET sect_task=0"
         async with self.pool.acquire() as db:
-            await db.execute(sql, )
+            await db.execute(sql)
 
     async def update_sect_scale_and_used_stone(self, sect_id, sect_used_stone, sect_scale):
         """更新宗门灵石、建设度"""
@@ -1063,7 +1038,7 @@ class XiuxianDateManage:
         """重置宗门丹药领取次数"""
         sql = f"UPDATE user_xiuxian SET sect_elixir_get=0"
         async with self.pool.acquire() as db:
-            await db.execute(sql, )
+            await db.execute(sql)
 
     async def update_sect_mainbuff(self, sect_id, mainbuffid):
         """更新宗门当前的主修功法"""
@@ -1154,7 +1129,7 @@ class XiuxianDateManage:
         """重置丹药每日使用次数"""
         sql = f"UPDATE back SET day_num=0 WHERE goods_type='丹药'"
         async with self.pool.acquire() as db:
-            await db.execute(sql, )
+            await db.execute(sql)
 
     async def reset_work_num(self):
         """重置用户悬赏令刷新次数"""
@@ -1169,7 +1144,7 @@ class XiuxianDateManage:
         sql = f"SELECT work_num FROM user_xiuxian WHERE user_id=$1"
         async with self.pool.acquire() as db:
             result = await db.fetch(sql, user_id)
-            return zips(**result[0]) if result else None
+            return result[0][0] if result else None
 
     async def update_work_num(self, user_id, work_num):
         sql = f"UPDATE user_xiuxian SET work_num=$1 WHERE user_id=$2"
@@ -1201,7 +1176,7 @@ class XiuxianDateManage:
                 goods_nums = back['goods_num'] + goods_num
                 sql = f"UPDATE back set goods_num=$1,update_time=$2,bind_num={bind_num} WHERE user_id=$3 and goods_id=$4"
                 await db.execute(sql, goods_nums, now_time, user_id, goods_id)
-                
+
             else:
                 # 判断是否存在，不存在则INSERT
                 if bind_flag == 1:
@@ -1213,7 +1188,6 @@ class XiuxianDateManage:
                 VALUES ($1,$2,$3,$4,$5,$6,$7,$8)"""
                 await db.execute(sql, user_id, goods_id, goods_name, goods_type, goods_num, now_time, now_time,
                                  bind_num)
-                
 
     async def get_item_by_good_id_and_user_id(self, user_id, goods_id):
         """根据物品id、用户id获取物品信息"""
@@ -1351,14 +1325,6 @@ async def final_user_data(**user_dict):
 # 这里是虚神界部分
 
 class XiuxianImpartBuff:
-    global impart_number
-    _instance = {}
-    _has_init = {}
-
-    def __new__(cls):
-        if cls._instance.get(impart_number) is None:
-            cls._instance[impart_number] = super(XiuxianImpartBuff, cls).__new__(cls)
-        return cls._instance[impart_number]
 
     def __init__(self):
         self.pool = None
@@ -1400,7 +1366,6 @@ class XiuxianImpartBuff:
                     logger.opt(colors=True).info(f"<green>xiuxian_impart数据库核对成功!</green>")
                     await db.execute(sql)
 
-
     async def create_user(self, user_id):
         """校验用户是否存在"""
         async with self.pool.acquire() as db:
@@ -1419,7 +1384,6 @@ class XiuxianImpartBuff:
                        f"impart_burst_per, impart_mix_per, impart_reap_per, impart_two_exp, stone_num, exp_day, wish) "
                        f"VALUES($1, 0, 0, 0, 0 ,0, 0, 0, 0, 0 ,0 ,0 ,0, 0)")
                 await db.execute(sql, user_id)
-                
 
     async def get_user_info_with_id(self, user_id):
         """根据USER_ID获取用户impart_buff信息"""
@@ -1588,13 +1552,13 @@ class XiuxianImpartBuff:
             async with self.pool.acquire() as db:
                 sql = f"UPDATE xiuxian_impart SET stone_num=stone_num+$1 WHERE user_id=$2"
                 await db.execute(sql, impart_num, user_id)
-                
+
                 return True
         if type_ == 2:
             async with self.pool.acquire() as db:
                 sql = f"UPDATE xiuxian_impart SET stone_num=stone_num-$1 WHERE user_id=$2"
                 await db.execute(sql, impart_num, user_id)
-                
+
                 return True
 
     async def update_pray_stone_num(self, impart_num, user_id, type_):
@@ -1606,13 +1570,13 @@ class XiuxianImpartBuff:
             async with self.pool.acquire() as db:
                 sql = f"UPDATE xiuxian_impart SET pray_stone_num=pray_stone_num+$1 WHERE user_id=$2"
                 await db.execute(sql, impart_num, user_id)
-                
+
                 return True
         if type_ == 2:
             async with self.pool.acquire() as db:
                 sql = f"UPDATE xiuxian_impart SET pray_stone_num=pray_stone_num-$1 WHERE user_id=$2"
                 await db.execute(sql, impart_num, user_id)
-                
+
                 return True
 
     async def update_impart_stone_all(self, impart_stone):
@@ -1659,7 +1623,7 @@ xiuxian_impart = XiuxianImpartBuff()
 
 
 @DRIVER.on_startup
-async def check_db():
+async def check_main_db():
     sql_message.pool = database.pool
     logger.opt(colors=True).info(f"<green>xiuxian数据库已连接!</green>")
     xiuxian_impart.pool = database.pool

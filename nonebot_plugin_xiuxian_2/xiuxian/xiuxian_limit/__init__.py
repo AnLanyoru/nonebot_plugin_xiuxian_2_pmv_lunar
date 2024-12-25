@@ -63,7 +63,7 @@ async def offset_get_(bot: Bot, event: GroupMessageEvent, args: Message = Comman
     user_id = user_info['user_id']
     num_msg = get_num_from_str(args.extract_plain_text())
     num = int(num_msg[0]) if num_msg else 1
-    offset_info = limit_data.get_offset_by_id(num)
+    offset_info = await limit_data.get_offset_by_id(num)
     if not offset_info:  # 补偿合理性检测
         msg = f"不存在ID为 {num}，的补偿，请检查！！"
         await bot.send(event=event, message=msg)

@@ -403,8 +403,6 @@ async def level_up_zj_(bot: Bot, event: GroupMessageEvent):
     number = main_rate_buff['number'] if main_rate_buff is not None else 0
     le = await OtherSet().get_type(exp, level_rate + leveluprate + number, level_name, user_id)
     if le == "失败":
-        # 突破失败
-        await sql_message.updata_level_cd(user_id)  # 更新突破CD
         # 失败惩罚，随机扣减修为
         percentage = random.randint(
             XiuConfig().level_punishment_floor, XiuConfig().level_punishment_limit
@@ -475,8 +473,6 @@ async def level_up_zj_all_(bot: Bot, event: GroupMessageEvent):
         number = main_rate_buff['number'] if main_rate_buff is not None else 0
         le = await OtherSet().get_type(exp, level_rate + leveluprate + number, level_name, user_id)
         if le == "失败":
-            # 突破失败
-            await sql_message.updata_level_cd(user_id)  # 更新突破CD
             # 失败惩罚，随机扣减修为
             percentage = random.randint(
                 XiuConfig().level_punishment_floor, XiuConfig().level_punishment_limit
@@ -557,7 +553,6 @@ async def level_up_dr_(bot: Bot, event: GroupMessageEvent):
 
     if le == "失败":
         # 突破失败
-        await sql_message.updata_level_cd(user_id)  # 更新突破CD
         if pause_flag:
             await sql_message.update_back_j(user_id, 1999, use_key=1)
             update_rate = 1 if int(level_rate * XiuConfig().level_up_probability) <= 1 else int(

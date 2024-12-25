@@ -87,7 +87,7 @@ gm_sect_rename = on_fullmatch("超管宗门改名", priority=12, permission=SUPE
 
 @weekly_work.scheduled_job("cron", day_of_week='mon', hour=4)
 async def weekly_work_():
-    limit_data.redata_limit_by_key('state')
+    await limit_data.redata_limit_by_key('state')
     logger.opt(colors=True).info(f"<green>已更新周常事件</green>")
 
 
