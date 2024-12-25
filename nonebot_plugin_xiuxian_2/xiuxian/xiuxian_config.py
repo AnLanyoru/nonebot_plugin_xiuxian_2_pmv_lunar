@@ -63,7 +63,7 @@ def convert_rank(rank_name):
 
 class XiuConfig:
     def __init__(self):
-        self.sql_table = ["user_xiuxian", "user_cd", "sects", "back", "BuffInfo"]
+        self.sql_table = ["user_xiuxian", "user_cd", "sects", "back", "buff_info"]
         self.sql_user_xiuxian = ["id", "user_id", "user_name", "stone", "root",
                                  "root_type", "level", "power",
                                  "create_time", "is_sign", "is_beg", "is_ban",  # 玩家状态相关

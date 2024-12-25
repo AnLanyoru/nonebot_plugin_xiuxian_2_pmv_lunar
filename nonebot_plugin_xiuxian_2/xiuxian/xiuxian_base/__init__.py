@@ -8,8 +8,7 @@ from nonebot.adapters.onebot.v11 import (
     GROUP,
     Message,
     GroupMessageEvent,
-    MessageSegment,
-    ActionFailed
+    MessageSegment
 )
 from nonebot.log import logger
 from nonebot.params import CommandArg
@@ -147,11 +146,8 @@ async def sign_in_(bot: Bot, event: GroupMessageEvent):
     user_id = user_info['user_id']
     result = await sql_message.get_sign(user_id)
     msg = result
-    try:
-        await bot.send(event=event, message=msg)
-        await sign_in.finish()
-    except ActionFailed:
-        await sign_in.finish("修仙界网络堵塞，发送失败!", reply_message=True)
+    await bot.send(event=event, message=msg)
+    await sign_in.finish()
 
 
 @level_help.handle(parameterless=[Cooldown(at_sender=False)])

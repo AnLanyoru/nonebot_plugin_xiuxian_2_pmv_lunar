@@ -1,3 +1,4 @@
+import decimal
 import math
 import operator
 import re
@@ -13,6 +14,13 @@ from .. import NICKNAME
 纯函数工具
 无多余依赖项
 """
+
+
+def zips(**kwargs):
+    for key, value in kwargs.items():
+        if isinstance(value, decimal.Decimal):
+            kwargs[key] = int(value)
+    return kwargs
 
 
 def num_len(num):

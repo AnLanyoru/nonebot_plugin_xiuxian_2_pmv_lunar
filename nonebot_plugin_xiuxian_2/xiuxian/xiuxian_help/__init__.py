@@ -1,3 +1,5 @@
+from time import time
+
 from nonebot import on_command
 from nonebot.adapters.onebot.v11 import (
     Bot,
@@ -8,11 +10,11 @@ from nonebot.permission import SUPERUSER
 
 from ..xiuxian_config import XiuConfig
 from ..xiuxian_data.data.宗门玩法配置_data import sect_config_data
+from ..xiuxian_database.database_connect import database
 from ..xiuxian_sect import sect_config
 from ..xiuxian_utils.clean_utils import help_md
 from ..xiuxian_utils.item_json import items
 from ..xiuxian_utils.lay_out import Cooldown
-from ..xiuxian_utils.xiuxian2_handle import threading_data
 
 config = sect_config
 LEVLECOST = config["LEVLECOST"]
@@ -33,7 +35,7 @@ store_help = on_command("灵宝楼帮助", aliases={"灵宝楼", "个人摊位",
                         block=True)
 tower_help = on_command("位面挑战帮助", aliases={'挑战'}, priority=21, permission=GROUP, block=True)
 items_reload = on_command("重载物品", priority=21, permission=SUPERUSER, block=True)
-thread_check = on_command("数据库状态", priority=21, permission=SUPERUSER, block=True)
+db_ping = on_command("ping", priority=21, permission=SUPERUSER, block=True)
 
 
 @items_reload.handle()
@@ -47,12 +49,17 @@ async def items_reload_(bot: Bot, event: GroupMessageEvent):
     await items_reload.finish()
 
 
-@thread_check.handle()
-async def thread_check_(bot: Bot, event: GroupMessageEvent):
-    """数据库线程查看"""
-    msg = f"当前线程池：{threading_data}"
+@db_ping.handle()
+async def db_ping_(bot: Bot, event: GroupMessageEvent):
+    """运行时数据热重载"""
+    start_time = time()
+    await database.get_version()
+    end_time = time()
+    ping_ms = end_time - start_time
+    ping_ms = float(ping_ms)
+    msg = f"数据库延迟 {ping_ms * 1000} ms"
     await bot.send(event=event, message=msg)
-    await thread_check.finish()
+    await db_ping.finish()
 
 
 __xiuxian_notes__ = f"""

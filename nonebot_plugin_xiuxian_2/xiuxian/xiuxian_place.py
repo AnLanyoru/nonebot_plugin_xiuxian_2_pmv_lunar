@@ -1,10 +1,9 @@
 from math import *
 from pathlib import Path
-
 from nonebot.log import logger
 
 from . import DRIVER
-from .xiuxian_utils.database_conn import XiuxianDateBase
+from .xiuxian_database.database_connect import database
 
 try:
     import ujson as json
@@ -67,8 +66,6 @@ def merge(dict1, dict2):
 
 @DRIVER.on_startup
 async def read_places_():
-    global place_all
-    global place_id_map
     place_date = read_place_data()
     for place_id in place_date:
         name = place_date[place_id]["name"]
@@ -81,11 +78,9 @@ async def read_places_():
 
 
 # 创建位置对象
-
-
-class Place(XiuxianDateBase):
+class Place:
     def __init__(self):
-        super().__init__()
+        self.pool = None
         self.distance = 0
         self.world_names = ["凡界", "灵界", "仙界", "无尽神域", "万界洞天中枢"]
         self.place_all = place_all
@@ -199,27 +194,26 @@ class Place(XiuxianDateBase):
         :param user_id: QQ
         :return: 用户信息的字典
         """
-        sql = f"SELECT place_id FROM user_xiuxian WHERE user_id=?"
-        async with self.get_db() as db:
-            async with db.execute(sql, (user_id,)) as cursor:
-                result = await cursor.fetchone()
+        sql = f"SELECT place_id FROM user_xiuxian WHERE user_id=$1"
+        async with self.pool.acquire() as db:
+            result = await db.fetch(sql, user_id)
+            print(result)
             if result:
-                if result[0]:
-                    user_info = {'place_id': result[0]}
+                if result[0][0]:
+                    user_info = {'place_id': result[0][0]}
                     return user_info
                 else:
                     # 兼容性更新，搬迁旧place_id
-                    sql = f"SELECT place_id FROM user_cd  WHERE user_id=?"
-                    async with db.execute(sql, (user_id,)) as cursor:
-                        result = await cursor.fetchone()
-                        if result:
-                            place_id = result[0]
-                        else:
-                            print("迁移失败无法找到原位置")
-                            place_id = 1
-                        await self.set_now_place_id(user_id, place_id)
-                        user_info = {'place_id': place_id}
-                        return user_info
+                    sql = f"SELECT place_id FROM user_cd  WHERE user_id=$1"
+                    result = await db.fetch(sql, user_id)
+                    if result:
+                        place_id = result[0][0]
+                    else:
+                        print("迁移失败无法找到原位置")
+                        place_id = 1
+                    await self.set_now_place_id(user_id, place_id)
+                    user_info = {'place_id': place_id}
+                    return user_info
 
     async def get_now_place_id(self, user_id):
         """
@@ -238,9 +232,9 @@ class Place(XiuxianDateBase):
         :param place_id:
         :return:
         """
-        sql = "UPDATE user_xiuxian SET place_id=? WHERE user_id=?"
-        async with self.get_db() as db:
-            await db.execute(sql, (place_id, user_id))
+        sql = "UPDATE user_xiuxian SET place_id=$1 WHERE user_id=$2"
+        async with self.pool.acquire() as db:
+            await db.execute(sql, place_id, user_id)
             await db.commit()
 
     async def get_now_world_id(self, user_id):
@@ -285,3 +279,9 @@ class Place(XiuxianDateBase):
 
 
 place = Place()
+
+
+@DRIVER.on_startup
+async def check_db():
+    place.pool = database.pool
+    logger.opt(colors=True).info(f"<green>place数据库已连接!</green>")

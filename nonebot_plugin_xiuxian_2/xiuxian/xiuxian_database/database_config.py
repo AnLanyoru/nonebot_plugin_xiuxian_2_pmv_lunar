@@ -1,7 +1,8 @@
 from configparser import ConfigParser
+from pathlib import Path
 
 
-def database_config(filename='database.ini', section='postgresql'):
+def database_config(filename=Path(__file__).parent / 'database.ini', section='postgresql'):
     # create a parser
     parser = ConfigParser()
     # read config file

@@ -1,8 +1,7 @@
-import asyncio
-
 import asyncpg
 
-from database_config import database_config  # 这是上面的config()代码块，已经保存在config.py文件中
+from .database_config import database_config  # 这是上面的config()代码块，已经保存在config.py文件中
+from .. import DRIVER
 
 params = database_config()
 
@@ -33,12 +32,11 @@ class DataBase:
             print(f"登录数据库成功，数据库版本：{db_version}")
 
 
-async def make_db():
-    db_dict[1] = DataBase()
+database = DataBase()
 
 
-if __name__ == '__main__':
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(make_db())
-    loop.run_until_complete(db_dict[1].connect_pool_make())
-    loop.run_until_complete(db_dict[1].get_version())
+@DRIVER.on_startup
+async def connect_db():
+    global database
+    await database.connect_pool_make()
+    await database.get_version()

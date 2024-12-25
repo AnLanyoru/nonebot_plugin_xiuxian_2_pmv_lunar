@@ -5,11 +5,10 @@ Pillow
 wcwidth
 pathlib
 asyncio
-aiohttp
+aiohttp ~= 3.10.11
 pydantic
 aiofiles
 nonebot_plugin_apscheduler
-aiosqlite
 httpx
 typing_extensions
 asyncpg

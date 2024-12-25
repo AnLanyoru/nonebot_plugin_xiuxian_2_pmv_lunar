@@ -150,8 +150,8 @@ async def xiuxian_message_(bot: Bot, event: GroupMessageEvent, args: Message = C
         "法器": weapon_name,
         "防具": armor_name,
         "注册位数": f"道友是踏入修仙世界的第{int(user_num)}人",
-        "修为排行": f"道友的修为排在第{int(user_rank)}位",
-        "灵石排行": f"道友的灵石排在第{int(user_stone)}位",
+        "修为排行": f"道友的修为排在第{user_rank}位",
+        "灵石排行": f"道友的灵石排在第{user_stone}位",
     }
 
     if args == "图片版":

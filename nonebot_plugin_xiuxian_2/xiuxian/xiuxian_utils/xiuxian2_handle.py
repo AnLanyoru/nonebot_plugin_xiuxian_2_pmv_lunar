@@ -1,8 +1,13 @@
+import decimal
 import operator
 
-from .clean_utils import number_to
+import asyncpg
+
+from .clean_utils import number_to, zips
+from .. import DRIVER
 from ..xiuxian_data.data.境界_data import level_data
 from ..xiuxian_data.data.灵根_data import root_data
+from ..xiuxian_database.database_connect import database
 
 try:
     import ujson as json
@@ -10,15 +15,12 @@ except ImportError:
     import json
 import os
 import random
-import aiosqlite
 from datetime import datetime
 from pathlib import Path
 from nonebot.log import logger
 from ..xiuxian_config import XiuConfig, convert_rank
-from .. import DRIVER
 from .item_json import items
 from .xn_xiuxian_impart_config import config_impart
-import threading
 
 WORKDATA = Path() / "data" / "xiuxian" / "work"
 PLAYERSDATA = Path() / "data" / "xiuxian" / "players"
@@ -29,8 +31,6 @@ WEAPONPATH = DATABASE / "装备"
 xiuxian_num = "578043031"  # 这里其实是修仙1作者的QQ号
 impart_number = "123451234"
 current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
-threading_data = threading.local()
-xu_threading_data = threading.local()
 
 
 class XiuxianDateManage:
@@ -44,6 +44,7 @@ class XiuxianDateManage:
         return cls._instance[xiuxian_num]
 
     def __init__(self):
+        self.pool = None
         if not self._has_init.get(xiuxian_num):
             self._has_init[xiuxian_num] = True
             self.database_path = DATABASE
@@ -54,242 +55,200 @@ class XiuxianDateManage:
                 self.database_path /= "xiuxian.db"
             logger.opt(colors=True).info(f"<green>修仙数据库已连接！</green>")
 
-    def close(self):
-        self.get_db().close()
-        logger.opt(colors=True).info(f"<green>修仙数据库关闭！</green>")
-
-    async def get_db(self):
-        db_instance = getattr(threading_data, 'db_instance', None)
-        if db_instance is None:
-            threading_data.db_instance = await aiosqlite.connect(self.database_path, check_same_thread=False)
-        return threading_data.db_instance
-
     async def check_data(self):
         """检查数据完整性"""
-        async with self.get_db() as db:
+        async with self.pool.acquire() as db:
 
             for i in XiuConfig().sql_table:
                 if i == "user_xiuxian":
                     try:
                         await db.execute(f"select count(1) from {i}")
-                    except aiosqlite.OperationalError:
+                    except asyncpg.exceptions.UndefinedTableError:
                         await db.execute("""CREATE TABLE "user_xiuxian" (
-          "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-          "user_id" INTEGER NOT NULL,
-          "sect_id" INTEGER DEFAULT NULL,
-          "sect_position" INTEGER DEFAULT NULL,
-          "stone" integer DEFAULT 0,
+          "id" bigserial,
+          "user_id" numeric NOT NULL,
+          "sect_id" numeric DEFAULT NULL,
+          "sect_position" numeric DEFAULT NULL,
+          "stone" numeric DEFAULT 0,
           "root" TEXT,
           "root_type" TEXT,
           "level" TEXT,
-          "power" decimal(1000,0) DEFAULT 0,
-          "create_time" integer,
-          "is_sign" integer DEFAULT 0,
-          "is_beg" integer DEFAULT 0,
-          "is_ban" integer DEFAULT 0,
-          "exp" decimal(1000,0) DEFAULT 0,
+          "power" numeric DEFAULT 0,
+          "create_time" TEXT,
+          "is_sign" numeric DEFAULT 0,
+          "is_beg" numeric DEFAULT 0,
+          "is_ban" numeric DEFAULT 0,
+          "exp" numeric DEFAULT 0,
           "user_name" TEXT DEFAULT NULL,
-          "level_up_cd" integer DEFAULT NULL,
-          "level_up_rate" integer DEFAULT 0
+          "level_up_cd" numeric DEFAULT NULL,
+          "level_up_rate" numeric DEFAULT 0
         );""")
                 elif i == "user_cd":
                     try:
                         await db.execute(f"select count(1) from {i}")
-                    except aiosqlite.OperationalError:
+                    except asyncpg.exceptions.UndefinedTableError:
                         await db.execute("""CREATE TABLE "user_cd" (
-      "user_id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-      "type" integer DEFAULT 0,
-      "create_time" integer DEFAULT NULL,
-      "scheduled_time" integer,
-      "last_check_info_time" integer DEFAULT NULL,
-      "place_id" integer DEFAULT 1
+      "user_id" numeric NOT NULL,
+      "type" numeric DEFAULT 0,
+      "create_time" TEXT,
+      "scheduled_time" TEXT,
+      "last_check_info_time" TEXT,
+      "place_id" numeric DEFAULT 1
     );""")
                 elif i == "sects":
                     try:
                         await db.execute(f"select count(1) from {i}")
-                    except aiosqlite.OperationalError:
+                    except asyncpg.exceptions.UndefinedTableError:
                         await db.execute("""CREATE TABLE "sects" (
-      "sect_id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+      "sect_id" bigserial,
       "sect_name" TEXT NOT NULL,
-      "sect_owner" integer,
-      "sect_scale" integer NOT NULL,
-      "sect_used_stone" integer,
-      "sect_fairyland" integer
+      "sect_owner" numeric,
+      "sect_scale" numeric NOT NULL,
+      "sect_used_stone" numeric,
+      "sect_fairyland" numeric
     );""")
                 elif i == "back":
                     try:
                         await db.execute(f"select count(1) from {i}")
-                    except aiosqlite.OperationalError:
+                    except asyncpg.exceptions.UndefinedTableError:
                         await db.execute("""CREATE TABLE "back" (
-      "user_id" INTEGER NOT NULL,
-      "goods_id" INTEGER NOT NULL,
+      "user_id" numeric NOT NULL,
+      "goods_id" numeric NOT NULL,
       "goods_name" TEXT,
       "goods_type" TEXT,
-      "goods_num" INTEGER,
+      "goods_num" numeric,
       "create_time" TEXT,
       "update_time" TEXT,
       "remake" TEXT,
-      "day_num" INTEGER DEFAULT 0,
-      "all_num" INTEGER DEFAULT 0,
+      "day_num" numeric DEFAULT 0,
+      "all_num" numeric DEFAULT 0,
       "action_time" TEXT,
-      "state" INTEGER DEFAULT 0
+      "state" numeric DEFAULT 0
     );""")
 
-                elif i == "BuffInfo":
+                elif i == "buff_info":
                     try:
                         await db.execute(f"select count(1) from {i}")
-                    except aiosqlite.OperationalError:
-                        await db.execute("""CREATE TABLE "BuffInfo" (
-      "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-      "user_id" integer DEFAULT 0,
-      "main_buff" integer DEFAULT 0,
-      "sec_buff" integer DEFAULT 0,
-      "faqi_buff" integer DEFAULT 0,
-      "fabao_weapon" integer DEFAULT 0,
-      "sub_buff" integer DEFAULT 0
+                    except asyncpg.exceptions.UndefinedTableError:
+                        await db.execute("""CREATE TABLE "buff_info" (
+      "id" bigserial,
+      "user_id" numeric NOT NULL,
+      "main_buff" numeric DEFAULT 0,
+      "sec_buff" numeric DEFAULT 0,
+      "faqi_buff" numeric DEFAULT 0,
+      "fabao_weapon" numeric DEFAULT 0,
+      "sub_buff" numeric DEFAULT 0
     );""")
 
             for i in XiuConfig().sql_user_xiuxian:
                 try:
                     await db.execute(f"select {i} from user_xiuxian")
-                except aiosqlite.OperationalError:
+                except asyncpg.exceptions.UndefinedColumnError:
                     logger.opt(colors=True).info("<yellow>sql_user_xiuxian有字段不存在，开始创建\r</yellow>")
-                    sql = f"ALTER TABLE user_xiuxian ADD COLUMN {i} INTEGER DEFAULT 0;"
+                    sql = f"ALTER TABLE user_xiuxian ADD COLUMN {i} numeric DEFAULT 0;"
                     logger.opt(colors=True).info(f"<green>{sql}</green>")
                     await db.execute(sql)
 
             for d in XiuConfig().sql_user_cd:
                 try:
                     await db.execute(f"select {d} from user_cd")
-                except aiosqlite.OperationalError:
+                except asyncpg.exceptions.UndefinedColumnError:
                     logger.opt(colors=True).info("<yellow>sql_user_cd有字段不存在，开始创建</yellow>")
-                    if d == "place_id":
-                        sql = f"ALTER TABLE user_cd ADD COLUMN {d} INTEGER DEFAULT 1;"
-                    else:
-                        sql = f"ALTER TABLE user_cd ADD COLUMN {d} INTEGER DEFAULT 0;"
+                    sql = f"ALTER TABLE user_cd ADD COLUMN {d} numeric DEFAULT 0;"
                     logger.opt(colors=True).info(f"<green>{sql}</green>")
                     await db.execute(sql)
 
             for s in XiuConfig().sql_sects:
                 try:
                     await db.execute(f"select {s} from sects")
-                except aiosqlite.OperationalError:
+                except asyncpg.exceptions.UndefinedColumnError:
                     logger.opt(colors=True).info("<yellow>sql_sects有字段不存在，开始创建</yellow>")
-                    sql = f"ALTER TABLE sects ADD COLUMN {s} INTEGER DEFAULT 0;"
+                    sql = f"ALTER TABLE sects ADD COLUMN {s} numeric DEFAULT 0;"
                     logger.opt(colors=True).info(f"<green>{sql}</green>")
                     await db.execute(sql)
 
             for m in XiuConfig().sql_buff:
                 try:
-                    await db.execute(f"select {m} from BuffInfo")
-                except aiosqlite.OperationalError:
+                    await db.execute(f"select {m} from buff_info")
+                except asyncpg.exceptions.UndefinedColumnError:
                     logger.opt(colors=True).info("<yellow>sql_buff有字段不存在，开始创建</yellow>")
-                    sql = f"ALTER TABLE BuffInfo ADD COLUMN {m} INTEGER DEFAULT 0;"
+                    sql = f"ALTER TABLE buff_info ADD COLUMN {m} numeric DEFAULT 0;"
                     logger.opt(colors=True).info(f"<green>{sql}</green>")
                     await db.execute(sql)
 
             for b in XiuConfig().sql_back:
                 try:
                     await db.execute(f"select {b} from back")
-                except aiosqlite.OperationalError:
+                except asyncpg.exceptions.UndefinedColumnError:
                     logger.opt(colors=True).info("<yellow>sql_back有字段不存在，开始创建</yellow>")
-                    sql = f"ALTER TABLE back ADD COLUMN {b} INTEGER DEFAULT 0;"
+                    sql = f"ALTER TABLE back ADD COLUMN {b} numeric DEFAULT 0;"
                     logger.opt(colors=True).info(f"<green>{sql}</green>")
                     await db.execute(sql)
 
             # 检查并更新 last_check_info_time 列的记录
             await db.execute(f"""UPDATE user_cd
-    SET last_check_info_time = ?
+    SET last_check_info_time = $1
     WHERE last_check_info_time = '0' OR last_check_info_time IS NULL
-            """, (current_time,))
+            """, current_time)
 
-            await db.commit()
-
-    @classmethod
-    def close_dbs(cls):
-        XiuxianDateManage().close()
-
-    async def _create_user(self, user_id: str, root: str, root_type: str, power: str, create_time, user_name) -> None:
+    async def _create_user(self, user_id: int, root: str, root_type: str, power: str, create_time, user_name) -> None:
         """在数据库中创建用户并初始化"""
-        async with self.get_db() as db:
+        async with self.pool.acquire() as db:
             sql = (
                 f"INSERT INTO user_xiuxian (user_id,stone,root,root_type,level,power,create_time,user_name,exp,sect_id,"
-                f"sect_position,user_stamina,place_id) VALUES (?,0,?,?,'求道者',?,?,?,100,NULL,NULL,?,?)")
+                f"sect_position,user_stamina,place_id) VALUES ($1,0,$2,$3,'求道者',$4,$5,$6,100,NULL,NULL,$7,$8)")
             sql_cd = (f"INSERT INTO user_cd (user_id,type,create_time,scheduled_time,last_check_info_time"
-                      f") VALUES (?,?,?,?,?)")
+                      f") VALUES ($1,$2,$3,$4,$5)")
 
-            await db.execute(sql, (user_id, root, root_type, power, create_time, user_name, XiuConfig().max_stamina, 1))
-            await db.commit()
-            await db.execute(sql_cd, (user_id, 0, None, 0, None))
-            await db.commit()
+            await db.execute(sql, user_id, root, root_type, power, create_time, user_name, XiuConfig().max_stamina, 1)
+            await db.execute(sql_cd, user_id, 0, None, None, None)
 
     async def get_user_info_with_id(self, user_id):
         """根据USER_ID获取用户信息,不获取功法加成"""
-        async with self.get_db() as db:
-            sql = f"select * from user_xiuxian WHERE user_id=?"
-            async with db.execute(sql, (str(user_id),)) as cursor:
-                result = await cursor.fetchone()
-                if result:
-                    columns = cursor.description
-                    columns = [column[0] for column in columns]
-                    user_dict = dict(zip(columns, result))
-                    return user_dict
-                else:
-                    return None
+        async with self.pool.acquire() as db:
+            sql = f"select * from user_xiuxian WHERE user_id=$1"
+            result = await db.fetch(sql, user_id)
+            return zips(**result[0]) if result else None
 
     async def get_user_info_with_name(self, user_id):
         """根据user_name获取用户信息"""
-        async with self.get_db() as db:
-            sql = f"select * from user_xiuxian WHERE user_name=?"
-            async with db.execute(sql, (user_id,)) as cursor:
-                result = await cursor.fetchone()
-                if result:
-                    columns = cursor.description
-                    columns = [column[0] for column in columns]
-                    user_dict = dict(zip(columns, result))
-                    return user_dict
-                else:
-                    return None
+        async with self.pool.acquire() as db:
+            sql = f"select * from user_xiuxian WHERE user_name=$1"
+            result = await db.fetch(sql, user_id)
+            return zips(**result[0]) if result else None
 
     async def update_all_users_stamina(self, max_stamina, stamina):
         """体力未满用户更新体力值"""
-        async with self.get_db() as db:
+        async with self.pool.acquire() as db:
             sql = f"""
                 UPDATE user_xiuxian
-                SET user_stamina = MIN(user_stamina + ?, ?)
-                WHERE user_stamina < ?
+                SET user_stamina = MIN(user_stamina + $1, $2)
+                WHERE user_stamina < $3
             """
-            await db.execute(sql, (stamina, max_stamina, max_stamina))
-            await db.commit()
+            await db.execute(sql, stamina, max_stamina, max_stamina)
 
     async def update_user_stamina(self, user_id, stamina_change, key):
         """更新用户体力值 1为增加，2为减少"""
-        async with self.get_db() as db:
+        async with self.pool.acquire() as db:
 
             if key == 1:
-                sql = f"UPDATE user_xiuxian SET user_stamina=user_stamina+? WHERE user_id=?"
-                await db.execute(sql, (stamina_change, user_id))
-                await db.commit()
+                sql = f"UPDATE user_xiuxian SET user_stamina=user_stamina+$1 WHERE user_id=$2"
+                await db.execute(sql, stamina_change, user_id)
+                
             elif key == 2:
-                sql = f"UPDATE user_xiuxian SET user_stamina=user_stamina-? WHERE user_id=?"
-                await db.execute(sql, (stamina_change, user_id))
-                await db.commit()
+                sql = f"UPDATE user_xiuxian SET user_stamina=user_stamina-$1 WHERE user_id=$2"
+                await db.execute(sql, stamina_change, user_id)
+                
 
     async def get_user_real_info(self, user_id):
         """
         根据USER_ID获取用户信息,获取功法加成
         战斗面板
         """
-        async with self.get_db() as db:
-            sql = f"select * from user_xiuxian WHERE user_id=?"
-            async with db.execute(sql, (user_id,)) as cursor:
-                result = await cursor.fetchone()
-                if result:
-                    columns = cursor.description
-                    user_data_dict = await final_user_data(result, columns)  # 意义不明的分装，增加维护难度
-                    return user_data_dict
-                else:
-                    return None
+        async with self.pool.acquire() as db:
+            sql = f"select * from user_xiuxian WHERE user_id=$1"
+            result = await db.fetch(sql, user_id)
+            return await final_user_data(**result[0]) if result else None
 
     async def get_sect_info(self, sect_id):
         """
@@ -297,90 +256,77 @@ class XiuxianDateManage:
         :param sect_id: 宗门编号
         :return:
         """
-        async with self.get_db() as db:
-            sql = f"select * from sects WHERE sect_id=?"
-            async with db.execute(sql, (sect_id,)) as cursor:
-                result = await cursor.fetchone()
-                if result:
-                    columns = cursor.description
-                    columns = [column[0] for column in columns]
-                    sect_id_dict = dict(zip(columns, result))
-                    return sect_id_dict
-                else:
-                    return None
+        async with self.pool.acquire() as db:
+            sql = f"select * from sects WHERE sect_id=$1"
+            result = await db.fetch(sql, sect_id)
+            return zips(**result[0]) if result else None
 
     async def get_sect_owners(self):
         """获取所有宗主的 user_id"""
-        async with self.get_db() as db:
+        async with self.pool.acquire() as db:
             sql = f"SELECT user_id FROM user_xiuxian WHERE sect_position = 0"
-            async with db.execute(sql) as cursor:
-                result = await cursor.fetchall()
-                return [row[0] for row in result]
+            result = await db.fetch(sql)
+            return zips(**result[0]) if result else None
 
     async def get_elders(self):
         """获取所有长老的 user_id"""
-        async with self.get_db() as db:
+        async with self.pool.acquire() as db:
             sql = f"SELECT user_id FROM user_xiuxian WHERE sect_position = 1"
-            async with db.execute(sql) as cursor:
-                result = await cursor.fetchall()
-                return [row[0] for row in result]
+            result = await db.fetch(sql)
+            return zips(**result[0]) if result else None
 
     async def create_user(self, user_id, *args):
         """校验用户是否存在"""
-        async with self.get_db() as db:
-            sql = f"select * from user_xiuxian WHERE user_id=?"
-            async with db.execute(sql, (user_id,)) as cursor:
-                result = await cursor.fetchone()
-                place_name = "缘起小镇"
-                if not result:
-                    await self._create_user(user_id, args[0], args[1], args[2], args[3],
-                                            args[4])  # root, type, power, create_time, user_name
-                    await db.commit()
-                    welcome_msg = f"必死之境机逢仙缘，修仙之路波澜壮阔！\r恭喜{args[4]}踏入仙途，你的灵根为：{args[0]},类型是：{args[1]},你的战力为：{args[2]}\r当前境界：求道者，所处位置：{place_name}"
-                    return True, welcome_msg
-                else:
-                    return False, f"您已迈入修仙世界，输入【我的修仙信息】获取数据吧！"
+        async with self.pool.acquire() as db:
+            sql = f"select * from user_xiuxian WHERE user_id=$1"
+            result = await db.fetch(sql, user_id)
+            place_name = "缘起小镇"
+            if not result:
+                await self._create_user(user_id, args[0], args[1], args[2], args[3],
+                                        args[4])  # root, type, power, create_time, user_name
+
+                welcome_msg = f"必死之境机逢仙缘，修仙之路波澜壮阔！\r恭喜{args[4]}踏入仙途，你的灵根为：{args[0]},类型是：{args[1]},你的战力为：{args[2]}\r当前境界：求道者，所处位置：{place_name}"
+                return True, welcome_msg
+            else:
+                return False, f"您已迈入修仙世界，输入【我的修仙信息】获取数据吧！"
 
     async def get_sign(self, user_id):
         """获取用户签到信息"""
-        async with self.get_db() as db:
-            sql = "select is_sign from user_xiuxian WHERE user_id=?"
-            async with db.execute(sql, (user_id,)) as cursor:
-                result = await cursor.fetchone()
-                if not result:
-                    return f"修仙界没有你的足迹，输入【踏入仙途】加入修仙世界吧！"
-                elif result[0] == 0:
-                    ls = random.randint(XiuConfig().sign_in_lingshi_lower_limit,
-                                        XiuConfig().sign_in_lingshi_upper_limit)
-                    sql2 = f"UPDATE user_xiuxian SET is_sign=1,stone=stone+? WHERE user_id=?"
-                    await db.execute(sql2, (ls, user_id))
-                    await db.commit()
-                    return f"签到成功，获取{number_to(ls)}|{ls}块灵石!"
-                elif result[0] == 1:
-                    return f"贪心的人是不会有好运的！"
+        async with self.pool.acquire() as db:
+            sql = "select is_sign from user_xiuxian WHERE user_id=$1"
+            result = await db.fetch(sql, user_id)
+            if not result:
+                return f"修仙界没有你的足迹，输入【踏入仙途】加入修仙世界吧！"
+            elif result[0][0] == 0:
+                ls = random.randint(XiuConfig().sign_in_lingshi_lower_limit,
+                                    XiuConfig().sign_in_lingshi_upper_limit)
+                sql2 = f"UPDATE user_xiuxian SET is_sign=1,stone=stone+$1 WHERE user_id=$2"
+                await db.execute(sql2, ls, user_id)
+                return f"签到成功，获取{number_to(ls)}|{ls}块灵石!"
+            elif result[0][0] == 1:
+                return f"贪心的人是不会有好运的！"
 
     async def get_beg(self, user_id):
         """获取仙途奇缘信息"""
-        async with self.get_db() as db:
-            sql = f"select is_beg from user_xiuxian WHERE user_id=?"
-            async with db.execute(sql, (user_id,)) as cursor:
-                result = await cursor.fetchone()
-                if result[0] == 0:
-                    ls = random.randint(XiuConfig().beg_lingshi_lower_limit, XiuConfig().beg_lingshi_upper_limit)
-                    sql2 = f"UPDATE user_xiuxian SET is_beg=1,stone=stone+? WHERE user_id=?"
-                    await db.execute(sql2, (ls, user_id))
-                    await db.commit()
-                    return ls
-                elif result[0] == 1:
-                    return None
+        async with self.pool.acquire() as db:
+            sql = f"select is_beg from user_xiuxian WHERE user_id=$1"
+            result = await db.fetch(sql, user_id)
+            if not result:
+                return f"修仙界没有你的足迹，输入【踏入仙途】加入修仙世界吧！"
+            if result[0][0] == 0:
+                ls = random.randint(XiuConfig().beg_lingshi_lower_limit, XiuConfig().beg_lingshi_upper_limit)
+                sql2 = f"UPDATE user_xiuxian SET is_beg=1,stone=stone+$1 WHERE user_id=$2"
+                await db.execute(sql2, ls, user_id)
+
+                return ls
+            elif result[0][0] == 1:
+                return None
 
     async def ramaker(self, lg, root_type, user_id):
         """洗灵根"""
-        async with self.get_db() as db:
-            sql = f"UPDATE user_xiuxian SET root=?,root_type=?,stone=stone-? WHERE user_id=?"
-            await db.execute(sql, (lg, root_type, XiuConfig().remake, user_id))
-            await db.commit()
-
+        async with self.pool.acquire() as db:
+            sql = f"UPDATE user_xiuxian SET root=$1,root_type=$2,stone=stone-$3 WHERE user_id=$4"
+            await db.execute(sql, lg, root_type, XiuConfig().remake, user_id)
             await self.update_power2(user_id)  # 更新战力
             return f"逆天之行，重获新生，新的灵根为：{lg}，类型为：{root_type}"
 
@@ -399,181 +345,164 @@ class XiuxianDateManage:
     async def update_power2(self, user_id) -> None:
         """更新战力"""
         user_info = await self.get_user_info_with_id(user_id)
-        async with self.get_db() as db:
+        async with self.pool.acquire() as db:
             level = level_data
             root = root_data
-            sql = f"UPDATE user_xiuxian SET power=round(exp*?*?,0) WHERE user_id=?"
-            await db.execute(sql,
-                             (root[user_info['root_type']]["type_speeds"], level[user_info['level']]["spend"], user_id))
-            await db.commit()
+            sql = f"UPDATE user_xiuxian SET power=round(exp*$1*$2,0) WHERE user_id=$3"
+            await db.execute(sql, root[user_info['root_type']]["type_speeds"],
+                             level[user_info['level']]["spend"], user_id)
 
     async def update_ls(self, user_id, price, key):
         """更新灵石  1为增加，2为减少"""
-        async with self.get_db() as db:
+        async with self.pool.acquire() as db:
 
             if key == 1:
-                sql = f"UPDATE user_xiuxian SET stone=stone+? WHERE user_id=?"
-                await db.execute(sql, (str(price), user_id))
-                await db.commit()
+                sql = f"UPDATE user_xiuxian SET stone=stone+$1 WHERE user_id=$2"
+                await db.execute(sql, price, user_id)
+                
             elif key == 2:
-                sql = f"UPDATE user_xiuxian SET stone=stone-? WHERE user_id=?"
-                await db.execute(sql, (str(price), user_id))
-                await db.commit()
+                sql = f"UPDATE user_xiuxian SET stone=stone-$1 WHERE user_id=$2"
+                await db.execute(sql, price, user_id)
+                
 
     async def update_root(self, user_id, key):
         """更新灵根  1为混沌,2为融合,3为超,4为龙,5为天,6为千世,7为万世"""
-        async with self.get_db() as db:
+        async with self.pool.acquire() as db:
             root_name = None
+            sql = f"UPDATE user_xiuxian SET root=$1,root_type=$2 WHERE user_id=$3"
             if int(key) == 1:
-                sql = f"UPDATE user_xiuxian SET root=?,root_type=? WHERE user_id=?"
-                await db.execute(sql, ("全属性灵根", "混沌灵根", user_id))
+                await db.execute(sql, "全属性灵根", "混沌灵根", user_id)
                 root_name = "混沌灵根"
-                await db.commit()
+
 
             elif int(key) == 2:
-                sql = f"UPDATE user_xiuxian SET root=?,root_type=? WHERE user_id=?"
-                await db.execute(sql, ("融合万物灵根", "融合灵根", user_id))
+                await db.execute(sql, "融合万物灵根", "融合灵根", user_id)
                 root_name = "融合灵根"
-                await db.commit()
+
 
             elif int(key) == 3:
-                sql = f"UPDATE user_xiuxian SET root=?,root_type=? WHERE user_id=?"
-                await db.execute(sql, ("月灵根", "超灵根", user_id))
+                await db.execute(sql, "月灵根", "超灵根", user_id)
                 root_name = "超灵根"
-                await db.commit()
+
 
             elif int(key) == 4:
-                sql = f"UPDATE user_xiuxian SET root=?,root_type=? WHERE user_id=?"
-                await db.execute(sql, ("言灵灵根", "龙灵根", user_id))
+                await db.execute(sql, "言灵灵根", "龙灵根", user_id)
                 root_name = "龙灵根"
-                await db.commit()
+
 
             elif int(key) == 5:
-                sql = f"UPDATE user_xiuxian SET root=?,root_type=? WHERE user_id=?"
-                await db.execute(sql, ("金灵根", "天灵根", user_id))
+                await db.execute(sql, "金灵根", "天灵根", user_id)
                 root_name = "天灵根"
-                await db.commit()
+
 
             elif int(key) == 6:
-                sql = f"UPDATE user_xiuxian SET root=?,root_type=? WHERE user_id=?"
-                await db.execute(sql, ("一朝轮回散天人，凝练红尘化道根", "轮回灵根", user_id))
+                await db.execute(sql, "一朝轮回散天人，凝练红尘化道根", "轮回灵根", user_id)
                 root_name = "轮回灵根"
-                await db.commit()
+
 
             elif int(key) == 7:
-                sql = f"UPDATE user_xiuxian SET root=?,root_type=? WHERE user_id=?"
-                await db.execute(sql, ("求道散尽半仙躯，堪能窥得源宇秘", "源宇道根", user_id))
+                await db.execute(sql, "求道散尽半仙躯，堪能窥得源宇秘", "源宇道根", user_id)
                 root_name = "源宇道根"
-                await db.commit()
+
 
             elif int(key) == 8:
-                sql = f"UPDATE user_xiuxian SET root=?,root_type=? WHERE user_id=?"
-                await db.execute(sql, ("帝蕴浸灭求一道，触及本源登顶峰", "道之本源", user_id))
+                await db.execute(sql, "帝蕴浸灭求一道，触及本源登顶峰", "道之本源", user_id)
                 root_name = "道之本源"
-                await db.commit()
 
             return root_name  # 返回灵根名称
 
     async def update_ls_all(self, price):
         """所有用户增加灵石"""
-        async with self.get_db() as db:
-            sql = f"UPDATE user_xiuxian SET stone=stone+?"
-            await db.execute(sql, (str(price),))
-            await db.commit()
+        async with self.pool.acquire() as db:
+            sql = f"UPDATE user_xiuxian SET stone=stone+$1"
+            await db.execute(sql, price)
 
     async def get_exp_rank(self, user_id):
         """修为排行"""
-        sql = f"select rank from(select user_id,exp,dense_rank() over (ORDER BY exp desc) as 'rank' FROM user_xiuxian) WHERE user_id=?"
-        async with self.get_db() as db:
-            async with db.execute(sql, (user_id,)) as cursor:
-                result = await cursor.fetchone()
-                return result
+        sql = f"select rank from(select user_id,exp,dense_rank() over (ORDER BY exp desc) as rank FROM user_xiuxian) WHERE user_id=$1"
+        async with self.pool.acquire() as db:
+            result = await db.fetch(sql, user_id)
+            result_all = [result_per[0] for result_per in result]
+            return result_all
 
     async def get_stone_rank(self, user_id):
         """灵石排行"""
-        sql = f"select rank from(select user_id,stone,dense_rank() over (ORDER BY stone desc) as 'rank' FROM user_xiuxian) WHERE user_id=?"
-        async with self.get_db() as db:
-            async with db.execute(sql, (user_id,)) as cursor:
-                result = await cursor.fetchone()
-                return result
+        sql = f"select rank from(select user_id,stone,dense_rank() over (ORDER BY stone desc) as rank FROM user_xiuxian) WHERE user_id=$1"
+        async with self.pool.acquire() as db:
+            result = await db.fetch(sql, user_id)
+            result_all = [result_per[0] for result_per in result]
+            return result_all
 
     async def get_ls_rank(self):
         """灵石排行榜"""
-        sql = f"SELECT user_id,stone FROM user_xiuxian  WHERE stone>0 ORDER BY stone DESC LIMIT 5"
-        async with self.get_db() as db:
-            async with db.execute(sql, ) as cursor:
-                result = await cursor.fetchall()
-                return result
+        sql = f"SELECT user_id,stone FROM user_xiuxian WHERE stone>0 ORDER BY stone DESC LIMIT 5"
+        async with self.pool.acquire() as db:
+            result = await db.fetch(sql, )
+            result_all = [zips(**result_per) for result_per in result]
+            return result_all
 
     async def sign_remake(self):
         """重置签到"""
         sql = f"UPDATE user_xiuxian SET is_sign=0"
-        async with self.get_db() as db:
+        async with self.pool.acquire() as db:
             await db.execute(sql, )
-            await db.commit()
 
     async def beg_remake(self):
         """重置仙途奇缘"""
         sql = f"UPDATE user_xiuxian SET is_beg=0"
-        async with self.get_db() as db:
+        async with self.pool.acquire() as db:
             await db.execute(sql, )
-            await db.commit()
 
     async def ban_user(self, user_id):
         """小黑屋"""
-        sql = f"UPDATE user_xiuxian SET is_ban=1 WHERE user_id=?"
-        async with self.get_db() as db:
-            await db.execute(sql, (user_id,))
-            await db.commit()
+        sql = f"UPDATE user_xiuxian SET is_ban=1 WHERE user_id=$1"
+        async with self.pool.acquire() as db:
+            await db.execute(sql, user_id)
 
     async def update_user_name(self, user_id, user_name):
         """更新用户道号"""
-        async with self.get_db() as db:
-            get_name = f"select user_name from user_xiuxian WHERE user_name=?"
-            async with db.execute(get_name, (user_name,)) as cursor:
-                result = await cursor.fetchone()
-                if result:
-                    return "已存在该道号！"
-                else:
-                    sql = f"UPDATE user_xiuxian SET user_name=? WHERE user_id=?"
+        async with self.pool.acquire() as db:
+            get_name = f"select user_name from user_xiuxian WHERE user_name=$1"
+            result = await db.fetch(get_name, user_name)
+            if result:
+                return "已存在该道号！"
+            else:
+                sql = f"UPDATE user_xiuxian SET user_name=$1 WHERE user_id=$2"
 
-                    await db.execute(sql, (user_name, user_id))
-                    await db.commit()
-                    return '道友的道号更新成功拉~'
+                await db.execute(sql, user_name, user_id)
+                return '道友的道号更新成功拉~'
 
     async def updata_level_cd(self, user_id):
         """更新破镜CD"""
-        sql = f"UPDATE user_xiuxian SET level_up_cd=? WHERE user_id=?"
-        async with self.get_db() as db:
+        sql = f"UPDATE user_xiuxian SET level_up_cd=$1 WHERE user_id=$2"
+        async with self.pool.acquire() as db:
             now_time = datetime.now()
-            await db.execute(sql, (now_time, user_id))
-            await db.commit()
+            now_time = str(now_time)
+            await db.execute(sql, now_time, user_id)
 
     async def update_last_check_info_time(self, user_id):
         """更新查看修仙信息时间"""
-        sql = "UPDATE user_cd SET last_check_info_time = ? WHERE user_id = ?"
-        async with self.get_db() as db:
+        sql = "UPDATE user_cd SET last_check_info_time = $1 WHERE user_id = $2"
+        async with self.pool.acquire() as db:
             now_time = datetime.now()
-            await db.execute(sql, (now_time, user_id))
-            await db.commit()
+            now_time = str(now_time)
+            await db.execute(sql, now_time, user_id)
 
     async def get_last_check_info_time(self, user_id):
         """获取最后一次查看修仙信息时间"""
-        async with self.get_db() as db:
-            sql = "SELECT last_check_info_time FROM user_cd WHERE user_id = ?"
-            async with db.execute(sql, (user_id,)) as cursor:
-                result = await cursor.fetchone()
-                if result:
-                    return datetime.strptime(result[0], '%Y-%m-%d %H:%M:%S.%f')
-                else:
-                    return None
+        async with self.pool.acquire() as db:
+            sql = "SELECT last_check_info_time FROM user_cd WHERE user_id = $1"
+            result = await db.fetch(sql, user_id)
+            if result:
+                return datetime.strptime(result[0], '%Y-%m-%d %H:%M:%S.%f')
+            else:
+                return None
 
     async def updata_level(self, user_id, level_name):
         """更新境界"""
-        sql = f"UPDATE user_xiuxian SET level=? WHERE user_id=?"
-        async with self.get_db() as db:
-            await db.execute(sql, (level_name, user_id))
-            await db.commit()
+        sql = f"UPDATE user_xiuxian SET level=$1 WHERE user_id=$2"
+        async with self.pool.acquire() as db:
+            await db.execute(sql, level_name, user_id)
 
     async def get_user_id(self, user_nike_name):
         """
@@ -581,14 +510,12 @@ class XiuxianDateManage:
         :param user_nike_name: 用户道号
         :return: 用户id
         """
-        try:
-            async with self.get_db() as db:
-                sql = "SELECT user_id FROM user_xiuxian WHERE user_name =?"
-                async with db.execute(sql, (str(user_nike_name),)) as cursor:
-                    result = await cursor.fetchone()
-                    return result[0]
-        except TypeError:
-            return None
+        async with self.pool.acquire() as db:
+            sql = "SELECT user_id FROM user_xiuxian WHERE user_name =$1"
+            result = await db.fetch(sql, user_nike_name)
+            if not result:
+                return None
+            return result[0][0]
 
     async def get_user_cd(self, user_id):
         """
@@ -596,18 +523,15 @@ class XiuxianDateManage:
         :param user_id: QQ
         :return: 用户CD信息的字典
         """
-        sql = f"SELECT * FROM user_cd  WHERE user_id=?"
-        async with self.get_db() as db:
-            async with db.execute(sql, (user_id,)) as cursor:
-                result = await cursor.fetchone()
-                if result:
-                    columns = cursor.description
-                    columns = [column[0] for column in columns]
-                    user_cd_dict = dict(zip(columns, result))
-                    return user_cd_dict
-                else:
-                    await self.insert_user_cd(user_id)
-                    return None
+        sql = f"SELECT * FROM user_cd  WHERE user_id=$1"
+        async with self.pool.acquire() as db:
+            result = await db.fetch(sql, user_id)
+            if result:
+                user_cd_dict = zips(**result[0])
+                return user_cd_dict
+            else:
+                await self.insert_user_cd(user_id)
+                return None
 
     async def insert_user_cd(self, user_id) -> None:
         """
@@ -615,10 +539,9 @@ class XiuxianDateManage:
         :param user_id: qq
         :return:
         """
-        sql = f"INSERT INTO user_cd (user_id) VALUES (?)"
-        async with self.get_db() as db:
-            await db.execute(sql, (user_id,))
-            await db.commit()
+        sql = f"INSERT INTO user_cd (user_id) VALUES ($1)"
+        async with self.pool.acquire() as db:
+            await db.execute(sql, user_id)
 
     async def create_sect(self, user_id, sect_name) -> None:
         """
@@ -627,10 +550,9 @@ class XiuxianDateManage:
         :param sect_name:宗门名称
         :return:
         """
-        sql = f"INSERT INTO sects(sect_name, sect_owner, sect_scale, sect_used_stone) VALUES (?,?,0,0)"
-        async with self.get_db() as db:
-            await db.execute(sql, (sect_name, user_id))
-            await db.commit()
+        sql = f"INSERT INTO sects(sect_name, sect_owner, sect_scale, sect_used_stone) VALUES ($1,$2,0,0)"
+        async with self.pool.acquire() as db:
+            await db.execute(sql, sect_name, user_id)
 
     async def update_sect_name(self, sect_id, sect_name) -> bool:
         """
@@ -639,17 +561,15 @@ class XiuxianDateManage:
         :param sect_name: 宗门名称
         :return: 返回是否更新成功的标志，True表示更新成功，False表示更新失败（已存在同名宗门）
         """
-        async with self.get_db() as db:
-            get_sect_name = f"select sect_name from sects WHERE sect_name=?"
-            async with db.execute(get_sect_name, (sect_name,)) as cursor:
-                result = await cursor.fetchone()
-                if result:
-                    return False
-                else:
-                    sql = f"UPDATE sects SET sect_name=? WHERE sect_id=?"
-                    await db.execute(sql, (sect_name, sect_id))
-                    await db.commit()
-                    return True
+        async with self.pool.acquire() as db:
+            get_sect_name = f"select sect_name from sects WHERE sect_name=$1"
+            result = await db.fetch(get_sect_name, sect_name)
+            if result:
+                return False
+            else:
+                sql = f"UPDATE sects SET sect_name=$1 WHERE sect_id=$2"
+                await db.execute(sql, sect_name, sect_id)
+                return True
 
     async def get_sect_info_by_qq(self, user_id):
         """
@@ -657,17 +577,10 @@ class XiuxianDateManage:
         :param user_id:
         :return:
         """
-        async with self.get_db() as db:
-            sql = f"select * from sects WHERE sect_owner=?"
-            async with db.execute(sql, (user_id,)) as cursor:
-                result = await cursor.fetchone()
-                if result:
-                    columns = cursor.description
-                    columns = [column[0] for column in columns]
-                    sect_onwer_dict = dict(zip(columns, result))
-                    return sect_onwer_dict
-                else:
-                    return None
+        async with self.pool.acquire() as db:
+            sql = f"select * from sects WHERE sect_owner=$1"
+            result = await db.fetch(sql, user_id)
+            return zips(**result[0]) if result else None
 
     async def get_sect_info_by_id(self, sect_id):
         """
@@ -675,17 +588,10 @@ class XiuxianDateManage:
         :param sect_id:
         :return:
         """
-        async with self.get_db() as db:
-            sql = f"select * from sects WHERE sect_id=?"
-            async with db.execute(sql, (sect_id,)) as cursor:
-                result = await cursor.fetchone()
-                if result:
-                    columns = cursor.description
-                    columns = [column[0] for column in columns]
-                    sect_dict = dict(zip(columns, result))
-                    return sect_dict
-                else:
-                    return None
+        async with self.pool.acquire() as db:
+            sql = f"select * from sects WHERE sect_id=$1"
+            result = await db.fetch(sql, sect_id)
+            return zips(**result[0]) if result else None
 
     async def update_usr_sect(self, user_id, usr_sect_id, usr_sect_position):
         """
@@ -695,10 +601,9 @@ class XiuxianDateManage:
         :param usr_sect_position:
         :return:
         """
-        sql = f"UPDATE user_xiuxian SET sect_id=?,sect_position=? WHERE user_id=?"
-        async with self.get_db() as db:
-            await db.execute(sql, (usr_sect_id, usr_sect_position, user_id))
-            await db.commit()
+        sql = f"UPDATE user_xiuxian SET sect_id=$1,sect_position=$2 WHERE user_id=$3"
+        async with self.pool.acquire() as db:
+            await db.execute(sql, usr_sect_id, usr_sect_position, user_id)
 
     async def update_sect_owner(self, user_id, sect_id):
         """
@@ -707,10 +612,9 @@ class XiuxianDateManage:
         :param sect_id:
         :return:
         """
-        sql = f"UPDATE sects SET sect_owner=? WHERE sect_id=?"
-        async with self.get_db() as db:
-            await db.execute(sql, (user_id, sect_id))
-            await db.commit()
+        sql = f"UPDATE sects SET sect_owner=$1 WHERE sect_id=$2"
+        async with self.pool.acquire() as db:
+            await db.execute(sql, user_id, sect_id)
 
     async def get_highest_contrib_user_except_current(self, sect_id, current_owner_id):
         """
@@ -719,42 +623,39 @@ class XiuxianDateManage:
         :param current_owner_id: 当前宗主的ID
         :return: 贡献最高的人的ID，如果没有则返回None
         """
-        async with self.get_db() as db:
+        async with self.pool.acquire() as db:
             sql = """
             SELECT user_id
             FROM user_xiuxian
-            WHERE sect_id = ? AND sect_position = 1 AND user_id != ?
+            WHERE sect_id = $1 AND sect_position = 1 AND user_id != $2
             ORDER BY sect_contribution DESC
             LIMIT 1
             """
-            async with db.execute(sql, (sect_id, current_owner_id)) as cursor:
-                result = await cursor.fetchone()
-                if result:
-                    return result
-                else:
-                    return None
+            result = await db.fetch(sql, sect_id, current_owner_id)
+            if result:
+                return result[0][0]
+            else:
+                return None
 
     async def get_all_sect_id(self):
         """获取全部宗门id"""
         sql = "SELECT sect_id FROM sects"
-        async with self.get_db() as db:
-            async with db.execute(sql, ) as cursor:
-                result = await cursor.fetchall()
-                if result:
-                    return result
-                else:
-                    return None
+        async with self.pool.acquire() as db:
+            result = await db.fetch(sql, )
+            if result:
+                return [result_per[0] for result_per in result]
+            else:
+                return None
 
     async def get_all_user_id(self):
         """获取全部用户id"""
         sql = "SELECT user_id FROM user_xiuxian"
-        async with self.get_db() as db:
-            async with db.execute(sql, ) as cursor:
-                result = await cursor.fetchall()
-                if result:
-                    return [row[0] for row in result]
-                else:
-                    return None
+        async with self.pool.acquire() as db:
+            result = await db.fetch(sql, )
+            if result:
+                return [row[0] for row in result]
+            else:
+                return None
 
     async def in_closing(self, user_id, the_type):
         """
@@ -774,31 +675,28 @@ class XiuxianDateManage:
             now_time = datetime.now()
         elif the_type == -1:
             now_time = datetime.now()
-        sql = "UPDATE user_cd SET type=?,create_time=? WHERE user_id=?"
-        async with self.get_db() as db:
-            await db.execute(sql, (the_type, now_time, user_id))
-            await db.commit()
+        now_time = str(now_time)
+        sql = "UPDATE user_cd SET type=$1,create_time=$2 WHERE user_id=$3"
+        async with self.pool.acquire() as db:
+            await db.execute(sql, the_type, now_time, user_id)
 
     async def update_exp(self, user_id, exp):
         """增加修为"""
-        sql = "UPDATE user_xiuxian SET exp=exp+? WHERE user_id=?"
-        async with self.get_db() as db:
-            await db.execute(sql, (str(exp), user_id))
-            await db.commit()
+        sql = "UPDATE user_xiuxian SET exp=exp+$1 WHERE user_id=$2"
+        async with self.pool.acquire() as db:
+            await db.execute(sql, exp, user_id)
 
     async def update_j_exp(self, user_id, exp):
         """减少修为"""
-        sql = "UPDATE user_xiuxian SET exp=exp-? WHERE user_id=?"
-        async with self.get_db() as db:
-            await db.execute(sql, (str(exp), user_id))
-            await db.commit()
+        sql = "UPDATE user_xiuxian SET exp=exp-$1 WHERE user_id=$2"
+        async with self.pool.acquire() as db:
+            await db.execute(sql, exp, user_id)
 
     async def del_exp_decimal(self, user_id, exp):
         """去浮点"""
-        sql = "UPDATE user_xiuxian SET exp=? WHERE user_id=?"
-        async with self.get_db() as db:
-            await db.execute(sql, (str(int(exp)), user_id))
-            await db.commit()
+        sql = "UPDATE user_xiuxian SET exp=$1 WHERE user_id=$2"
+        async with self.pool.acquire() as db:
+            await db.execute(sql, exp, user_id)
 
     async def realm_top(self, world_id):
         """境界排行榜前50"""
@@ -815,10 +713,10 @@ class XiuxianDateManage:
 
         sql += """ELSE level END) ASC LIMIT 60"""
 
-        async with self.get_db() as db:
-            async with db.execute(sql, ) as cursor:
-                result = await cursor.fetchall()
-                return result
+        async with self.pool.acquire() as db:
+            result = await db.fetch(sql, )
+            result_all = [zips(**result_per) for result_per in result]
+            return result_all
 
     async def random_name(self):
         """
@@ -846,26 +744,26 @@ class XiuxianDateManage:
         return await self.no_same_name(temp)
 
     async def no_same_name(self, name):
-        sql = f"SELECT * FROM user_xiuxian WHERE user_name "
-        async with self.get_db() as db:
-            async with db.execute(sql, ) as cursor:
-                result = await cursor.fetchall()
-                if name not in result:
-                    return name
-                else:
-                    name += "_"
-                    return await self.no_same_name(name)
+        sql = f"SELECT * FROM user_xiuxian WHERE user_name is NOT NULL"
+        async with self.pool.acquire() as db:
+            result = await db.fetch(sql)
+            result_all = [result_per[0] for result_per in result]
+            if name not in result_all:
+                return name
+            else:
+                name += "_"
+                return await self.no_same_name(name)
 
     async def stone_top(self, world_id):
         """这也是灵石排行榜"""
         place_max = world_id * 12 + 13
         place_min = world_id * 12
-        sql = (f"SELECT user_name,level,stone FROM user_xiuxian WHERE user_name is NOT NULL "
+        sql = (f"SELECT user_name,level,stone FROM user_xiuxian WHERE user_name is NOT NULL"
                f"and place_id > {place_min} and place_id < {place_max} ORDER BY stone DESC LIMIT 60")
-        async with self.get_db() as db:
-            async with db.execute(sql, ) as cursor:
-                result = await cursor.fetchall()
-                return result
+        async with self.pool.acquire() as db:
+            result = await db.fetch(sql, )
+            result_all = [zips(**result_per) for result_per in result]
+            return result_all
 
     async def power_top(self, world_id):
         """战力排行榜"""
@@ -873,10 +771,10 @@ class XiuxianDateManage:
         place_min = world_id * 12
         sql = (f"SELECT user_name,level,power FROM user_xiuxian WHERE user_name is NOT NULL "
                f"and place_id > {place_min} and place_id < {place_max} ORDER BY power DESC LIMIT 60")
-        async with self.get_db() as db:
-            async with db.execute(sql, ) as cursor:
-                result = await cursor.fetchall()
-                return result
+        async with self.pool.acquire() as db:
+            result = await db.fetch(sql, )
+            result_all = [zips(**result_per) for result_per in result]
+            return result_all
 
     async def scale_top(self):
         """
@@ -884,10 +782,10 @@ class XiuxianDateManage:
         :return:
         """
         sql = f"SELECT sect_id, sect_name, sect_scale FROM sects WHERE sect_owner is NOT NULL ORDER BY sect_scale DESC"
-        async with self.get_db() as db:
-            async with db.execute(sql, ) as cursor:
-                result = await cursor.fetchall()
-                return result
+        async with self.pool.acquire() as db:
+            result = await db.fetch(sql, )
+            result_all = [zips(**result_per) for result_per in result]
+            return result_all
 
     async def scale_elixir_top(self):
         """
@@ -898,10 +796,10 @@ class XiuxianDateManage:
                f"FROM sects WHERE sect_owner is NOT NULL "
                f"ORDER BY elixir_room_level DESC, sect_scale DESC "
                f"LIMIT 60")
-        async with self.get_db() as db:
-            async with db.execute(sql, ) as cursor:
-                result = await cursor.fetchall()
-                return result
+        async with self.pool.acquire() as db:
+            result = await db.fetch(sql, )
+            result_all = [zips(**result_per) for result_per in result]
+            return result_all
 
     async def get_all_sects(self):
         """
@@ -909,30 +807,24 @@ class XiuxianDateManage:
         :return: 宗门信息字典列表
         """
         sql = f"SELECT * FROM sects WHERE sect_owner is NOT NULL"
-        async with self.get_db() as db:
-            async with db.execute(sql) as cursor:
-                result = await cursor.fetchall()
-                results = []
-                columns = cursor.description
-                columns = [column[0] for column in columns]
-                for row in result:
-                    sect_dict = dict(zip(columns, row))
-                    results.append(sect_dict)
-                return results
+        async with self.pool.acquire() as db:
+            result = await db.fetch(sql)
+            result_all = [zips(**result_per) for result_per in result]
+            return result_all
 
     async def get_all_sects_with_member_count(self):
         """
         获取所有宗门及其各个宗门成员数
         """
-        async with self.get_db() as db:
-            async with db.execute("""
+        async with self.pool.acquire() as db:
+            result = await db.fetch("""
                 SELECT s.sect_id, s.sect_name, s.sect_scale, (SELECT user_name FROM user_xiuxian WHERE user_id = s.sect_owner) as user_name, COUNT(ux.user_id) as member_count
                 FROM sects s
                 LEFT JOIN user_xiuxian ux ON s.sect_id = ux.sect_id
                 GROUP BY s.sect_id
-            """) as cursor:
-                results = await cursor.fetchall()
-                return results
+            """)
+            result_all = [zips(**result_per) for result_per in result]
+            return result_all
 
     async def update_user_is_beg(self, user_id, is_beg):
         """
@@ -941,59 +833,50 @@ class XiuxianDateManage:
         :param user_id: 用户ID
         :param is_beg: 'YYYY-MM-DD HH:MM:SS'
         """
-        async with self.get_db() as db:
-            sql = "UPDATE user_xiuxian SET is_beg=? WHERE user_id=?"
-            await db.execute(sql, (is_beg, user_id))
-            await db.commit()
+        async with self.pool.acquire() as db:
+            sql = "UPDATE user_xiuxian SET is_beg=$1 WHERE user_id=$2"
+            await db.execute(sql, is_beg, user_id)
 
     async def get_top1_user(self):
         """
         获取修为第一的用户
         """
-        async with self.get_db() as db:
+        async with self.pool.acquire() as db:
             sql = f"select * from user_xiuxian ORDER BY exp DESC LIMIT 1"
-            async with db.execute(sql) as cursor:
-                result = await cursor.fetchone()
-                if result:
-                    columns = cursor.description
-                    columns = [column[0] for column in columns]
-                    top1_dict = dict(zip(columns, result))
-                    return top1_dict
-                else:
-                    return None
+            result = await db.fetch(sql)
+            return zips(**result[0]) if result else None
 
     async def donate_update(self, sect_id, stone_num):
         """宗门捐献更新建设度及可用灵石"""
-        sql = f"UPDATE sects SET sect_used_stone=sect_used_stone+?,sect_scale=sect_scale+? WHERE sect_id=?"
-        async with self.get_db() as db:
-            await db.execute(sql, (str(stone_num), str(stone_num * 1), sect_id))
-            await db.commit()
+        sql = f"UPDATE sects SET sect_used_stone=sect_used_stone+$1,sect_scale=sect_scale+$2 WHERE sect_id=$3"
+        async with self.pool.acquire() as db:
+            await db.execute(sql, stone_num, stone_num * 1, sect_id)
 
     async def update_sect_used_stone(self, sect_id, sect_used_stone, key):
         """更新宗门灵石储备  1为增加,2为减少"""
-        async with self.get_db() as db:
+        async with self.pool.acquire() as db:
 
             if key == 1:
-                sql = f"UPDATE sects SET sect_used_stone=sect_used_stone+? WHERE sect_id=?"
-                await db.execute(sql, (str(sect_used_stone), sect_id))
-                await db.commit()
+                sql = f"UPDATE sects SET sect_used_stone=sect_used_stone+$1 WHERE sect_id=$2"
+                await db.execute(sql, sect_used_stone, sect_id)
+                
             elif key == 2:
-                sql = f"UPDATE sects SET sect_used_stone=sect_used_stone-? WHERE sect_id=?"
-                await db.execute(sql, (str(sect_used_stone), sect_id))
-                await db.commit()
+                sql = f"UPDATE sects SET sect_used_stone=sect_used_stone-$1 WHERE sect_id=$2"
+                await db.execute(sql, sect_used_stone, sect_id)
+                
 
     async def update_sect_materials(self, sect_id, sect_materials, key):
         """更新资材  1为增加,2为减少"""
-        async with self.get_db() as db:
+        async with self.pool.acquire() as db:
 
             if key == 1:
-                sql = f"UPDATE sects SET sect_materials=sect_materials+? WHERE sect_id=?"
-                await db.execute(sql, (sect_materials, sect_id))
-                await db.commit()
+                sql = f"UPDATE sects SET sect_materials=sect_materials+$1 WHERE sect_id=$2"
+                await db.execute(sql, sect_materials, sect_id)
+                
             elif key == 2:
-                sql = f"UPDATE sects SET sect_materials=sect_materials-? WHERE sect_id=?"
-                await db.execute(sql, (sect_materials, sect_id))
-                await db.commit()
+                sql = f"UPDATE sects SET sect_materials=sect_materials-$1 WHERE sect_id=$2"
+                await db.execute(sql, sect_materials, sect_id)
+                
 
     async def get_all_sects_id_scale(self):
         """
@@ -1004,28 +887,22 @@ class XiuxianDateManage:
         :result[2] = 丹房等级 elixir_room_level 
         """
         sql = f"SELECT sect_id, sect_scale, elixir_room_level FROM sects WHERE sect_owner is NOT NULL ORDER BY sect_scale DESC"
-        async with self.get_db() as db:
-            async with db.execute(sql, ) as cursor:
-                result = await cursor.fetchall()
-                return result
+        async with self.pool.acquire() as db:
+            result = await db.fetch(sql, )
+            result_all = [zips(**result_per) for result_per in result]
+            return result_all
 
     async def get_all_users_by_sect_id(self, sect_id):
         """
         获取宗门所有成员信息
         :return: 成员列表
         """
-        sql = f"SELECT * FROM user_xiuxian WHERE sect_id = ?"
-        async with self.get_db() as db:
-            async with db.execute(sql, (sect_id,)) as cursor:
-                result = await cursor.fetchall()
-                results = []
-                for user in result:
-                    columns = cursor.description
-                    columns = [column[0] for column in columns]
-                    user_dict = dict(zip(columns, user))
-                    results.append(user_dict)
-                results = sorted(results, key=operator.itemgetter('sect_contribution'), reverse=True)
-                return results
+        sql = f"SELECT * FROM user_xiuxian WHERE sect_id = $1"
+        async with self.pool.acquire() as db:
+            result = await db.fetch(sql, sect_id)
+            result_all = [zips(**result_per) for result_per in result]
+            results = sorted(result_all, key=operator.itemgetter('sect_contribution'), reverse=True)
+            return results
 
     async def do_work(self, user_id, the_type, sc_time=None):
         """
@@ -1038,100 +915,80 @@ class XiuxianDateManage:
         now_time = None
         if the_type == 1:
             now_time = datetime.now()
+            now_time = str(now_time)
         elif the_type == 0:
             now_time = 0
         elif the_type == 2:
             now_time = datetime.now()
+            now_time = str(now_time)
         elif the_type == 3:
             now_time = datetime.now()
+            now_time = str(now_time)
         elif the_type == -1:
             now_time = datetime.now()
-        sql = f"UPDATE user_cd SET type=?,create_time=?,scheduled_time=? WHERE user_id=?"
-        async with self.get_db() as db:
-            await db.execute(sql, (the_type, now_time, sc_time, user_id))
-            await db.commit()
+            now_time = str(now_time)
+        sql = f"UPDATE user_cd SET type=$1,create_time=$2,scheduled_time=$3 WHERE user_id=$4"
+        async with self.pool.acquire() as db:
+            await db.execute(sql, the_type, now_time, sc_time, user_id)
 
     async def update_levelrate(self, user_id, rate):
         """更新突破成功率"""
-        sql = f"UPDATE user_xiuxian SET level_up_rate=? WHERE user_id=?"
-        async with self.get_db() as db:
-            await db.execute(sql, (rate, user_id))
-            await db.commit()
+        sql = f"UPDATE user_xiuxian SET level_up_rate=$1 WHERE user_id=$2"
+        async with self.pool.acquire() as db:
+            await db.execute(sql, rate, user_id)
 
     async def update_user_attribute(self, user_id, hp, mp, atk):
         """更新用户HP,MP,ATK信息"""
-        sql = f"UPDATE user_xiuxian SET hp=?,mp=?,atk=? WHERE user_id=?"
-        async with self.get_db() as db:
-            await db.execute(sql, (str(hp), str(mp), str(atk), user_id))
-            await db.commit()
+        sql = f"UPDATE user_xiuxian SET hp=$1,mp=$2,atk=$3 WHERE user_id=$4"
+        async with self.pool.acquire() as db:
+            await db.execute(sql, hp, mp, atk, user_id)
 
     async def update_user_hp_mp(self, user_id, hp, mp):
         """更新用户HP,MP信息"""
-        sql = f"UPDATE user_xiuxian SET hp=?,mp=? WHERE user_id=?"
-        async with self.get_db() as db:
-            await db.execute(sql, (str(hp), str(mp), user_id))
-            await db.commit()
+        sql = f"UPDATE user_xiuxian SET hp=$1,mp=$2 WHERE user_id=$3"
+        async with self.pool.acquire() as db:
+            await db.execute(sql, hp, mp, user_id)
 
     async def update_user_sect_contribution(self, user_id, sect_contribution):
         """更新用户宗门贡献度"""
-        sql = f"UPDATE user_xiuxian SET sect_contribution=? WHERE user_id=?"
-        async with self.get_db() as db:
-            await db.execute(sql, (sect_contribution, user_id))
-            await db.commit()
+        sql = f"UPDATE user_xiuxian SET sect_contribution=$1 WHERE user_id=$2"
+        async with self.pool.acquire() as db:
+            await db.execute(sql, sect_contribution, user_id)
 
     async def update_user_hp(self, user_id):
         """重置用户hp,mp信息"""
-        sql = f"UPDATE user_xiuxian SET hp=exp/2,mp=exp,atk=exp/10 WHERE user_id=?"
-        async with self.get_db() as db:
-            await db.execute(sql, (user_id,))
-            await db.commit()
+        sql = f"UPDATE user_xiuxian SET hp=exp/2,mp=exp,atk=exp/10 WHERE user_id=$1"
+        async with self.pool.acquire() as db:
+            await db.execute(sql, user_id)
 
     async def restate(self, user_id=None):
         """重置所有用户状态或重置对应人状态，老掉牙代码，不建议使用"""
         if user_id is None:
             sql = f"UPDATE user_xiuxian SET hp=exp/2,mp=exp,atk=exp/10"
-            async with self.get_db() as db:
+            async with self.pool.acquire() as db:
                 await db.execute(sql, )
-                await db.commit()
+
         else:
-            sql = f"UPDATE user_xiuxian SET hp=exp/2,mp=exp,atk=exp/10 WHERE user_id=?"
-            async with self.get_db() as db:
-                await db.execute(sql, (user_id,))
-                await db.commit()
+            sql = f"UPDATE user_xiuxian SET hp=exp/2,mp=exp,atk=exp/10 WHERE user_id=$1"
+            async with self.pool.acquire() as db:
+                await db.execute(sql, user_id)
+                
 
     async def get_back_msg(self, user_id):
         """获取用户背包信息"""
-        sql = f"SELECT * FROM back WHERE user_id=? and goods_num >= 1"
-        async with self.get_db() as db:
-            async with db.execute(sql, (user_id,)) as cursor:
-                result = await cursor.fetchall()
-                if not result:
-                    return None
-
-                columns = cursor.description
-                columns = [column[0] for column in columns]
-                results = []
-                for row in result:
-                    back_dict = dict(zip(columns, row))
-                    results.append(back_dict)
-                return results
+        sql = f"SELECT * FROM back WHERE user_id=$1 and goods_num >= 1"
+        async with self.pool.acquire() as db:
+            result = await db.fetch(sql, user_id)
+            result_all = [zips(**result_per) for result_per in result]
+            return result_all
 
     async def get_back_msg_all(self, user_id):
         """获取用户背包信息"""
-        sql = f"SELECT * FROM back WHERE user_id=?"
-        async with self.get_db() as db:
-            async with db.execute(sql, (user_id,)) as cursor:
-                result = await cursor.fetchall()
-                if not result:
-                    return None
-
-                columns = cursor.description
-                columns = [column[0] for column in columns]
-                results = []
-                for row in result:
-                    back_dict = dict(zip(columns, row))
-                    results.append(back_dict)
-                return results
+        sql = f"SELECT * FROM back WHERE user_id=$1"
+        async with self.pool.acquire() as db:
+            result = await db.fetch(sql, user_id)
+            result_all = [zips(**result_per) for result_per in result]
+            return result_all
 
     async def get_back_goal_type_msg(self, user_id, goods_type):
         """
@@ -1140,20 +997,11 @@ class XiuxianDateManage:
         :param goods_type: type = str 目标物品类型
         :return: type = list | None
         """
-        sql = f"SELECT * FROM back WHERE user_id=? and goods_num >= 1 and goods_type = ?"
-        async with self.get_db() as db:
-            async with db.execute(sql, (user_id, goods_type)) as cursor:
-                result = await cursor.fetchall()
-                if not result:
-                    return None
-
-                columns = cursor.description
-                columns = [column[0] for column in columns]
-                results = []
-                for row in result:
-                    back_dict = dict(zip(columns, row))
-                    results.append(back_dict)
-                return results
+        sql = f"SELECT * FROM back WHERE user_id=$1 and goods_num >= 1 and goods_type = $2"
+        async with self.pool.acquire() as db:
+            result = await db.fetch(sql, user_id, goods_type)
+            result_all = [zips(**result_per) for result_per in result]
+            return result_all
 
     async def goods_num(self, user_id, goods_id):
         """
@@ -1162,210 +1010,171 @@ class XiuxianDateManage:
         :param goods_id: 物品id
         :return: 物品数量
         """
-        sql = "SELECT num FROM back WHERE user_id=? and goods_id=?"
-        async with self.get_db() as db:
-            async with db.execute(sql, (user_id, goods_id)) as cursor:
-                result = await cursor.fetchone()
-                if result:
-                    return result[0]
-                else:
-                    return 0
+        sql = "SELECT num FROM back WHERE user_id=$1 and goods_id=$2"
+        async with self.pool.acquire() as db:
+            result = await db.fetch(sql, user_id, goods_id)
+            return zips(**result[0]) if result else None
 
     async def get_all_user_exp(self, level):
         """查询所有对应大境界玩家的修为"""
         sql = f"SELECT exp FROM user_xiuxian  WHERE level like '{level}%'"
-        async with self.get_db() as db:
-            async with db.execute(sql, ) as cursor:
-                result = await cursor.fetchall()
-                return result
+        async with self.pool.acquire() as db:
+            result = await db.fetch(sql, )
+            result_all = [result_per[0] for result_per in result]
+            return result_all
 
     async def update_user_atkpractice(self, user_id, atkpractice):
         """更新用户攻击修炼等级"""
-        sql = f"UPDATE user_xiuxian SET atkpractice={atkpractice} WHERE user_id=?"
-        async with self.get_db() as db:
-            await db.execute(sql, (user_id,))
-            await db.commit()
+        sql = f"UPDATE user_xiuxian SET atkpractice={atkpractice} WHERE user_id=$1"
+        async with self.pool.acquire() as db:
+            await db.execute(sql, user_id)
 
     async def update_user_sect_task(self, user_id, sect_task):
         """更新用户宗门任务次数"""
-        sql = f"UPDATE user_xiuxian SET sect_task=sect_task+? WHERE user_id=?"
-        async with self.get_db() as db:
-            await db.execute(sql, (sect_task, user_id))
-            await db.commit()
+        sql = f"UPDATE user_xiuxian SET sect_task=sect_task+$1 WHERE user_id=$2"
+        async with self.pool.acquire() as db:
+            await db.execute(sql, sect_task, user_id)
 
     async def sect_task_reset(self):
         """重置宗门任务次数"""
         sql = f"UPDATE user_xiuxian SET sect_task=0"
-        async with self.get_db() as db:
+        async with self.pool.acquire() as db:
             await db.execute(sql, )
-            await db.commit()
 
     async def update_sect_scale_and_used_stone(self, sect_id, sect_used_stone, sect_scale):
         """更新宗门灵石、建设度"""
-        sql = f"UPDATE sects SET sect_used_stone=?,sect_scale=? WHERE sect_id=?"
-        async with self.get_db() as db:
-            await db.execute(sql, (str(sect_used_stone), str(sect_scale), sect_id))
-            await db.commit()
+        sql = f"UPDATE sects SET sect_used_stone=$1,sect_scale=$2 WHERE sect_id=$3"
+        async with self.pool.acquire() as db:
+            await db.execute(sql, sect_used_stone, sect_scale, sect_id)
 
     async def update_sect_elixir_room_level(self, sect_id, level):
         """更新宗门丹房等级"""
-        sql = f"UPDATE sects SET elixir_room_level=? WHERE sect_id=?"
-        async with self.get_db() as db:
-            await db.execute(sql, (level, sect_id))
-            await db.commit()
+        sql = f"UPDATE sects SET elixir_room_level=$1 WHERE sect_id=$2"
+        async with self.pool.acquire() as db:
+            await db.execute(sql, level, sect_id)
 
     async def update_user_sect_elixir_get_num(self, user_id):
         """更新用户每日领取丹药领取次数"""
-        sql = f"UPDATE user_xiuxian SET sect_elixir_get=1 WHERE user_id=?"
-        async with self.get_db() as db:
-            await db.execute(sql, (user_id,))
-            await db.commit()
+        sql = f"UPDATE user_xiuxian SET sect_elixir_get=1 WHERE user_id=$1"
+        async with self.pool.acquire() as db:
+            await db.execute(sql, user_id)
 
     async def sect_elixir_get_num_reset(self):
         """重置宗门丹药领取次数"""
         sql = f"UPDATE user_xiuxian SET sect_elixir_get=0"
-        async with self.get_db() as db:
+        async with self.pool.acquire() as db:
             await db.execute(sql, )
-            await db.commit()
 
     async def update_sect_mainbuff(self, sect_id, mainbuffid):
         """更新宗门当前的主修功法"""
-        sql = f"UPDATE sects SET mainbuff=? WHERE sect_id=?"
-        async with self.get_db() as db:
-            await db.execute(sql, (mainbuffid, sect_id))
-            await db.commit()
+        sql = f"UPDATE sects SET mainbuff=$1 WHERE sect_id=$2"
+        async with self.pool.acquire() as db:
+            await db.execute(sql, mainbuffid, sect_id)
 
     async def update_sect_secbuff(self, sect_id, secbuffid):
         """更新宗门当前的神通"""
-        sql = f"UPDATE sects SET secbuff=? WHERE sect_id=?"
-        async with self.get_db() as db:
-            await db.execute(sql, (secbuffid, sect_id))
-            await db.commit()
+        sql = f"UPDATE sects SET secbuff=$1 WHERE sect_id=$2"
+        async with self.pool.acquire() as db:
+            await db.execute(sql, secbuffid, sect_id)
 
     async def initialize_user_buff_info(self, user_id):
         """初始化用户buff信息"""
-        sql = f"INSERT INTO BuffInfo (user_id,main_buff,sec_buff,faqi_buff,fabao_weapon) VALUES (?,0,0,0,0)"
-        async with self.get_db() as db:
-            await db.execute(sql, (user_id,))
-            await db.commit()
+        sql = f"INSERT INTO buff_info (user_id,main_buff,sec_buff,faqi_buff,fabao_weapon) VALUES ($1,0,0,0,0)"
+        async with self.pool.acquire() as db:
+            await db.execute(sql, user_id)
 
     async def get_user_buff_info(self, user_id):
         """获取用户buff信息"""
-        sql = f"select * from BuffInfo WHERE user_id =?"
-        async with self.get_db() as db:
-            async with db.execute(sql, (user_id,)) as cursor:
-                result = await cursor.fetchone()
-                if result:
-                    columns = cursor.description
-                    columns = [column[0] for column in columns]
-                    buff_dict = dict(zip(columns, result))
-                    return buff_dict
-                else:
-                    return None
+        sql = f"select * from buff_info WHERE user_id =$1"
+        async with self.pool.acquire() as db:
+            result = await db.fetch(sql, user_id)
+            return zips(**result[0]) if result else None
 
     async def updata_user_main_buff(self, user_id, buff_id):
         """更新用户主功法信息"""
-        sql = f"UPDATE BuffInfo SET main_buff = ? WHERE user_id = ?"
-        async with self.get_db() as db:
-            await db.execute(sql, (buff_id, user_id,))
-            await db.commit()
+        sql = f"UPDATE buff_info SET main_buff = $1 WHERE user_id = $2"
+        async with self.pool.acquire() as db:
+            await db.execute(sql, buff_id, user_id)
 
     async def updata_user_sub_buff(self, user_id, buff_id):  # 辅修功法3
         """更新用户辅修功法信息"""
-        sql = f"UPDATE BuffInfo SET sub_buff = ? WHERE user_id = ?"
-        async with self.get_db() as db:
-            await db.execute(sql, (buff_id, user_id,))
-            await db.commit()
+        sql = f"UPDATE buff_info SET sub_buff = $1 WHERE user_id = $2"
+        async with self.pool.acquire() as db:
+            await db.execute(sql, buff_id, user_id)
 
     async def updata_user_sec_buff(self, user_id, buff_id):
         """更新用户副功法信息"""
-        sql = f"UPDATE BuffInfo SET sec_buff = ? WHERE user_id = ?"
-        async with self.get_db() as db:
-            await db.execute(sql, (buff_id, user_id,))
-            await db.commit()
+        sql = f"UPDATE buff_info SET sec_buff = $1 WHERE user_id = $2"
+        async with self.pool.acquire() as db:
+            await db.execute(sql, buff_id, user_id)
 
     async def updata_user_faqi_buff(self, user_id, buff_id):
         """更新用户法器信息"""
-        sql = f"UPDATE BuffInfo SET faqi_buff = ? WHERE user_id = ?"
-        async with self.get_db() as db:
-            await db.execute(sql, (buff_id, user_id,))
-            await db.commit()
+        sql = f"UPDATE buff_info SET faqi_buff = $1 WHERE user_id = $2"
+        async with self.pool.acquire() as db:
+            await db.execute(sql, buff_id, user_id)
 
     async def updata_user_fabao_weapon(self, user_id, buff_id):
         """更新用户法宝信息"""
-        sql = f"UPDATE BuffInfo SET fabao_weapon = ? WHERE user_id = ?"
-        async with self.get_db() as db:
-            await db.execute(sql, (buff_id, user_id,))
-            await db.commit()
+        sql = f"UPDATE buff_info SET fabao_weapon = $1 WHERE user_id = $2"
+        async with self.pool.acquire() as db:
+            await db.execute(sql, buff_id, user_id)
 
     async def updata_user_armor_buff(self, user_id, buff_id):
         """更新用户防具信息"""
-        sql = f"UPDATE BuffInfo SET armor_buff = ? WHERE user_id = ?"
-        async with self.get_db() as db:
-            await db.execute(sql, (buff_id, user_id,))
-            await db.commit()
+        sql = f"UPDATE buff_info SET armor_buff = $1 WHERE user_id = $2"
+        async with self.pool.acquire() as db:
+            await db.execute(sql, buff_id, user_id)
 
     async def updata_user_atk_buff(self, user_id, buff):
         """更新用户永久攻击buff信息"""
-        sql = f"UPDATE BuffInfo SET atk_buff=atk_buff+? WHERE user_id = ?"
-        async with self.get_db() as db:
-            await db.execute(sql, (buff, user_id,))
-            await db.commit()
+        sql = f"UPDATE buff_info SET atk_buff=atk_buff+$1 WHERE user_id = $2"
+        async with self.pool.acquire() as db:
+            await db.execute(sql, buff, user_id)
 
     async def updata_user_blessed_spot(self, user_id, blessed_spot):
         """更新用户洞天福地等级"""
-        sql = f"UPDATE BuffInfo SET blessed_spot=? WHERE user_id = ?"
-        async with self.get_db() as db:
-            await db.execute(sql, (blessed_spot, user_id,))
-            await db.commit()
+        sql = f"UPDATE buff_info SET blessed_spot=$1 WHERE user_id = $2"
+        async with self.pool.acquire() as db:
+            await db.execute(sql, blessed_spot, user_id)
 
     async def update_user_blessed_spot_flag(self, user_id):
         """更新用户洞天福地是否开启"""
-        sql = f"UPDATE user_xiuxian SET blessed_spot_flag=1 WHERE user_id=?"
-        async with self.get_db() as db:
-            await db.execute(sql, (user_id,))
-            await db.commit()
+        sql = f"UPDATE user_xiuxian SET blessed_spot_flag=1 WHERE user_id=$1"
+        async with self.pool.acquire() as db:
+            await db.execute(sql, user_id)
 
     async def update_user_blessed_spot_name(self, user_id, blessed_spot_name):
         """更新用户洞天福地的名字"""
-        sql = f"UPDATE user_xiuxian SET blessed_spot_name=? WHERE user_id=?"
-        async with self.get_db() as db:
-            await db.execute(sql, (blessed_spot_name, user_id,))
-            await db.commit()
+        sql = f"UPDATE user_xiuxian SET blessed_spot_name=$1 WHERE user_id=$2"
+        async with self.pool.acquire() as db:
+            await db.execute(sql, blessed_spot_name, user_id)
 
     async def day_num_reset(self):
         """重置丹药每日使用次数"""
         sql = f"UPDATE back SET day_num=0 WHERE goods_type='丹药'"
-        async with self.get_db() as db:
+        async with self.pool.acquire() as db:
             await db.execute(sql, )
-            await db.commit()
 
     async def reset_work_num(self):
         """重置用户悬赏令刷新次数"""
         sql = f"UPDATE user_xiuxian SET work_num=0 "
-        async with self.get_db() as db:
+        async with self.pool.acquire() as db:
             await db.execute(sql)
-            await db.commit()
 
     async def get_work_num(self, user_id):  # todo 回滚主动更新
         """获取用户悬赏令刷新次数
            拥有被动效果，检测隔日自动重置悬赏令刷新 次数
         """
-        sql = f"SELECT work_num FROM user_xiuxian WHERE user_id=?"
-        async with self.get_db() as db:
-            async with db.execute(sql, (user_id,)) as cursor:
-                result = await cursor.fetchone()
-                if result:
-                    work_num = int(result[0])
-                else:
-                    work_num = 0
-                return work_num
+        sql = f"SELECT work_num FROM user_xiuxian WHERE user_id=$1"
+        async with self.pool.acquire() as db:
+            result = await db.fetch(sql, user_id)
+            return zips(**result[0]) if result else None
 
     async def update_work_num(self, user_id, work_num):
-        sql = f"UPDATE user_xiuxian SET work_num=? WHERE user_id=?"
-        async with self.get_db() as db:
-            await db.execute(sql, (work_num, user_id,))
-            await db.commit()
+        sql = f"UPDATE user_xiuxian SET work_num=$1 WHERE user_id=$2"
+        async with self.pool.acquire() as db:
+            await db.execute(sql, work_num, user_id)
 
     async def send_back(self, user_id, goods_id, goods_name, goods_type, goods_num, bind_flag=0):
         """
@@ -1379,8 +1188,9 @@ class XiuxianDateManage:
         :return: None
         """
         now_time = datetime.now()
+        now_time = str(now_time)
         # 检查物品是否存在，存在则update
-        async with self.get_db() as db:
+        async with self.pool.acquire() as db:
             back = await self.get_item_by_good_id_and_user_id(user_id, goods_id)
             if back:
                 # 判断是否存在，存在则update
@@ -1389,9 +1199,9 @@ class XiuxianDateManage:
                 else:
                     bind_num = back['bind_num']
                 goods_nums = back['goods_num'] + goods_num
-                sql = f"UPDATE back set goods_num=?,update_time=?,bind_num={bind_num} WHERE user_id=? and goods_id=?"
-                await db.execute(sql, (goods_nums, now_time, user_id, goods_id))
-                await db.commit()
+                sql = f"UPDATE back set goods_num=$1,update_time=$2,bind_num={bind_num} WHERE user_id=$3 and goods_id=$4"
+                await db.execute(sql, goods_nums, now_time, user_id, goods_id)
+                
             else:
                 # 判断是否存在，不存在则INSERT
                 if bind_flag == 1:
@@ -1400,31 +1210,23 @@ class XiuxianDateManage:
                     bind_num = 0
                 sql = f"""
                         INSERT INTO back (user_id, goods_id, goods_name, goods_type, goods_num, create_time, update_time, bind_num)
-                VALUES (?,?,?,?,?,?,?,?)"""
-                await db.execute(sql,
-                                 (user_id, goods_id, goods_name, goods_type, goods_num, now_time, now_time, bind_num))
-                await db.commit()
+                VALUES ($1,$2,$3,$4,$5,$6,$7,$8)"""
+                await db.execute(sql, user_id, goods_id, goods_name, goods_type, goods_num, now_time, now_time,
+                                 bind_num)
+                
 
     async def get_item_by_good_id_and_user_id(self, user_id, goods_id):
         """根据物品id、用户id获取物品信息"""
-        sql = f"select * from back WHERE user_id=? and goods_id=?"
-        async with self.get_db() as db:
-            async with db.execute(sql, (user_id, goods_id)) as cursor:
-                result = await cursor.fetchone()
-                if not result:
-                    return None
-
-                columns = cursor.description
-                columns = [column[0] for column in columns]
-                item_dict = dict(zip(columns, result))
-                return item_dict
+        sql = f"select * from back WHERE user_id=$1 and goods_id=$2"
+        async with self.pool.acquire() as db:
+            result = await db.fetch(sql, user_id, goods_id)
+            return zips(**result[0]) if result else None
 
     async def update_back_equipment(self, sql_str):
         """更新背包,传入sql"""
         logger.opt(colors=True).info(f"<green>执行的sql:{sql_str}</green>")
-        async with self.get_db() as db:
+        async with self.pool.acquire() as db:
             await db.execute(sql_str)
-            await db.commit()
 
     async def update_back_j(self, user_id, goods_id, num=1, use_key=0):
         """
@@ -1448,56 +1250,49 @@ class XiuxianDateManage:
             bind_num = back['bind_num']
         bind_num = min(bind_num, goods_num)
         now_time = datetime.now()
+        now_time = str(now_time)
         sql_str = (f"UPDATE back set update_time='{now_time}',action_time='{now_time}',goods_num={goods_num},"
                    f"day_num={day_num},all_num={all_num},bind_num={bind_num} "
                    f"WHERE user_id={user_id} and goods_id={goods_id}")
-        async with self.get_db() as db:
+        async with self.pool.acquire() as db:
             await db.execute(sql_str)
-            await db.commit()
 
     async def del_back_item(self, user_id, goods_id):
         """
         删除物品
         """
         sql_str = f"DELETE FROM back WHERE user_id={user_id} and goods_id={goods_id}"
-        async with self.get_db() as db:
+        async with self.pool.acquire() as db:
             await db.execute(sql_str)
-            await db.commit()
 
     async def bind_item(self, user_id, goods_id):
         """
         绑定物品
         """
         sql_str = f"UPDATE back set bind_num=goods_num WHERE user_id={user_id} and goods_id={goods_id}"
-        async with self.get_db() as db:
+        async with self.pool.acquire() as db:
             await db.execute(sql_str)
-            await db.commit()
 
     async def break_bind_item(self, user_id, goods_id):
         """
         解绑物品
         """
         sql_str = f"UPDATE back set bind_num=0 WHERE user_id={user_id} and goods_id={goods_id}"
-        async with self.get_db() as db:
+        async with self.pool.acquire() as db:
             await db.execute(sql_str)
-            await db.commit()
-
-
-@DRIVER.on_shutdown
-async def close_db():
-    XiuxianDateManage().close()
 
 
 sql_message = XiuxianDateManage()  # sql类
 
 
-async def final_user_data(user_data, columns):
+async def final_user_data(**user_dict):
     """
     传入用户当前信息、buff信息,返回最终信息
     糟糕的函数
     """
-    user_dict = dict(zip((col[0] for col in columns), user_data))
-
+    for key, value in user_dict.items():
+        if isinstance(value, decimal.Decimal):
+            user_dict[key] = int(value)
     # 通过字段名称获取相应的值
     impart_data = await xiuxian_impart.get_user_info_with_id(user_dict['user_id'])
     if impart_data:
@@ -1505,6 +1300,9 @@ async def final_user_data(user_data, columns):
     else:
         await xiuxian_impart._create_user(user_dict['user_id'])
         impart_data = await xiuxian_impart.get_user_info_with_id(user_dict['user_id'])
+    for key, value in impart_data.items():
+        if isinstance(value, decimal.Decimal):
+            impart_data[key] = int(value)
     impart_hp_per = impart_data['impart_hp_per'] if impart_data is not None else 0
     impart_mp_per = impart_data['impart_mp_per'] if impart_data is not None else 0
     impart_atk_per = impart_data['impart_atk_per'] if impart_data is not None else 0
@@ -1563,297 +1361,240 @@ class XiuxianImpartBuff:
         return cls._instance[impart_number]
 
     def __init__(self):
-        if not self._has_init.get(impart_number):
-            self._has_init[impart_number] = True
-            self.database_path = DATABASE_IMPARTBUFF
-            if not self.database_path.exists():
-                self.database_path.mkdir(parents=True)
-                self.database_path /= "xiuxian_impart.db"
-                # self._create_file()
-            else:
-                self.database_path /= "xiuxian_impart.db"
-            logger.opt(colors=True).info(f"<green>xiuxian_impart数据库已连接!</green>")
-
-    async def get_db(self):
-        db_instance = getattr(xu_threading_data, 'db_instance', None)
-        if db_instance is None:
-            xu_threading_data.db_instance = await aiosqlite.connect(self.database_path, check_same_thread=False)
-        return xu_threading_data.db_instance
-
-    async def close(self):
-        self.get_db().close()
-        logger.opt(colors=True).info(f"<green>xiuxian_impart数据库关闭!</green>")
+        self.pool = None
 
     async def check_data(self):
         """检查数据完整性"""
-        c = await self.get_db()
+        async with self.pool.acquire() as db:
 
-        for i in config_impart.sql_table:
-            if i == "xiuxian_impart":
+            for i in config_impart.sql_table:
+                if i == "xiuxian_impart":
+                    try:
+                        await db.execute(f"select count(1) from {i}")
+                    except asyncpg.exceptions.UndefinedTableError:
+                        await db.execute(f"""CREATE TABLE "xiuxian_impart" (
+        "id" bigserial,
+        "user_id" numeric DEFAULT 0,
+        "impart_hp_per" numeric DEFAULT 0,
+        "impart_atk_per" numeric DEFAULT 0,
+        "impart_mp_per" numeric DEFAULT 0,
+        "impart_exp_up" numeric DEFAULT 0,
+        "boss_atk" numeric DEFAULT 0,
+        "impart_know_per" numeric DEFAULT 0,
+        "impart_burst_per" numeric DEFAULT 0,
+        "impart_mix_per" numeric DEFAULT 0,
+        "impart_reap_per" numeric DEFAULT 0,
+        "impart_two_exp" numeric DEFAULT 0,
+        "stone_num" numeric DEFAULT 0,
+        "pray_stone_num" numeric DEFAULT 0,
+        "exp_day" numeric DEFAULT 0,
+        "wish" numeric DEFAULT 0
+        );""")
+
+            for s in config_impart.sql_table_impart_buff:
                 try:
-                    await c.execute(f"select count(1) from {i}")
-                except aiosqlite.OperationalError:
-                    await c.execute(f"""CREATE TABLE "xiuxian_impart" (
-    "id" integer NOT NULL PRIMARY KEY AUTOINCREMENT,
-    "user_id" integer DEFAULT 0,
-    "impart_hp_per" integer DEFAULT 0,
-    "impart_atk_per" integer DEFAULT 0,
-    "impart_mp_per" integer DEFAULT 0,
-    "impart_exp_up" integer DEFAULT 0,
-    "boss_atk" integer DEFAULT 0,
-    "impart_know_per" integer DEFAULT 0,
-    "impart_burst_per" integer DEFAULT 0,
-    "impart_mix_per" integer DEFAULT 0,
-    "impart_reap_per" integer DEFAULT 0,
-    "impart_two_exp" integer DEFAULT 0,
-    "stone_num" integer DEFAULT 0,
-    "pray_stone_num" integer DEFAULT 0,
-    "exp_day" integer DEFAULT 0,
-    "wish" integer DEFAULT 0
-    );""")
+                    await db.execute(f"select {s} from xiuxian_impart")
+                except asyncpg.exceptions.UndefinedColumnError:
+                    sql = f"ALTER TABLE xiuxian_impart ADD COLUMN {s} numeric DEFAULT 0;"
+                    logger.opt(colors=True).info(f"<green>{sql}</green>")
+                    logger.opt(colors=True).info(f"<green>xiuxian_impart数据库核对成功!</green>")
+                    await db.execute(sql)
 
-        for s in config_impart.sql_table_impart_buff:
-            try:
-                await c.execute(f"select {s} from xiuxian_impart")
-            except aiosqlite.OperationalError:
-                sql = f"ALTER TABLE xiuxian_impart ADD COLUMN {s} integer DEFAULT 0;"
-                logger.opt(colors=True).info(f"<green>{sql}</green>")
-                logger.opt(colors=True).info(f"<green>xiuxian_impart数据库核对成功!</green>")
-                await c.execute(sql)
-
-        await c.commit()
-
-    @classmethod
-    async def close_dbs(cls):
-        await XiuxianImpartBuff().close()
 
     async def create_user(self, user_id):
         """校验用户是否存在"""
-        async with self.get_db() as db:
-            sql = f"select * from xiuxian_impart WHERE user_id=?"
-            async with db.execute(sql, (user_id,)) as cursor:
-                result = await cursor.fetchone()
-                if not result:
-                    return False
-                else:
-                    return True
+        async with self.pool.acquire() as db:
+            sql = f"select * from xiuxian_impart WHERE user_id=$1"
+            result = await db.fetch(sql, user_id)
+            return result[0][0] if result else None
 
-    async def _create_user(self, user_id: str | int) -> None:
+    async def _create_user(self, user_id: int) -> None:
         """在数据库中创建用户并初始化"""
         if await self.create_user(user_id):
             pass
         else:
-            async with self.get_db() as db:
+            async with self.pool.acquire() as db:
                 sql = (f"INSERT INTO xiuxian_impart ("
                        f"user_id, impart_hp_per, impart_atk_per, impart_mp_per, impart_exp_up , boss_atk, impart_know_per,"
                        f"impart_burst_per, impart_mix_per, impart_reap_per, impart_two_exp, stone_num, exp_day, wish) "
-                       f"VALUES(?, 0, 0, 0, 0 ,0, 0, 0, 0, 0 ,0 ,0 ,0, 0)")
-                await db.execute(sql, (user_id,))
-                await db.commit()
+                       f"VALUES($1, 0, 0, 0, 0 ,0, 0, 0, 0, 0 ,0 ,0 ,0, 0)")
+                await db.execute(sql, user_id)
+                
 
     async def get_user_info_with_id(self, user_id):
         """根据USER_ID获取用户impart_buff信息"""
-        async with self.get_db() as db:
-            sql = f"select * from xiuxian_impart WHERE user_id=?"
-            async with db.execute(sql, (user_id,)) as cursor:
-                result = await cursor.fetchone()
-                if result:
-                    columns = cursor.description
-                    columns = [column[0] for column in columns]
-                    user_dict = dict(zip(columns, result))
-                    return user_dict
-                else:
-                    return None
+        async with self.pool.acquire() as db:
+            sql = f"select * from xiuxian_impart WHERE user_id=$1"
+            result = await db.fetch(sql, user_id)
+            return zips(**result[0]) if result else None
 
     async def update_impart_hp_per(self, impart_num, user_id):
         """更新impart_hp_per"""
-        async with self.get_db() as db:
-            sql = f"UPDATE xiuxian_impart SET impart_hp_per=? WHERE user_id=?"
-            await db.execute(sql, (impart_num, user_id))
-            await db.commit()
+        async with self.pool.acquire() as db:
+            sql = f"UPDATE xiuxian_impart SET impart_hp_per=$1 WHERE user_id=$2"
+            await db.execute(sql, impart_num, user_id)
             return True
 
     async def add_impart_hp_per(self, impart_num, user_id):
         """add impart_hp_per"""
-        async with self.get_db() as db:
-            sql = f"UPDATE xiuxian_impart SET impart_hp_per=impart_hp_per+? WHERE user_id=?"
-            await db.execute(sql, (impart_num, user_id))
-            await db.commit()
+        async with self.pool.acquire() as db:
+            sql = f"UPDATE xiuxian_impart SET impart_hp_per=impart_hp_per+$1 WHERE user_id=$2"
+            await db.execute(sql, impart_num, user_id)
             return True
 
     async def update_impart_atk_per(self, impart_num, user_id):
         """更新impart_atk_per"""
-        async with self.get_db() as db:
-            sql = f"UPDATE xiuxian_impart SET impart_atk_per=? WHERE user_id=?"
-            await db.execute(sql, (impart_num, user_id))
-            await db.commit()
+        async with self.pool.acquire() as db:
+            sql = f"UPDATE xiuxian_impart SET impart_atk_per=$1 WHERE user_id=$2"
+            await db.execute(sql, impart_num, user_id)
             return True
 
     async def add_impart_atk_per(self, impart_num, user_id):
         """add  impart_atk_per"""
-        async with self.get_db() as db:
-            sql = f"UPDATE xiuxian_impart SET impart_atk_per=impart_atk_per+? WHERE user_id=?"
-            await db.execute(sql, (impart_num, user_id))
-            await db.commit()
+        async with self.pool.acquire() as db:
+            sql = f"UPDATE xiuxian_impart SET impart_atk_per=impart_atk_per+$1 WHERE user_id=$2"
+            await db.execute(sql, impart_num, user_id)
             return True
 
     async def update_impart_mp_per(self, impart_num, user_id):
         """impart_mp_per"""
-        async with self.get_db() as db:
-            sql = f"UPDATE xiuxian_impart SET impart_mp_per=? WHERE user_id=?"
-            await db.execute(sql, (impart_num, user_id))
-            await db.commit()
+        async with self.pool.acquire() as db:
+            sql = f"UPDATE xiuxian_impart SET impart_mp_per=$1 WHERE user_id=$2"
+            await db.execute(sql, impart_num, user_id)
             return True
 
     async def add_impart_mp_per(self, impart_num, user_id):
         """add impart_mp_per"""
-        async with self.get_db() as db:
-            sql = f"UPDATE xiuxian_impart SET impart_mp_per=impart_mp_per+? WHERE user_id=?"
-            await db.execute(sql, (impart_num, user_id))
-            await db.commit()
+        async with self.pool.acquire() as db:
+            sql = f"UPDATE xiuxian_impart SET impart_mp_per=impart_mp_per+$1 WHERE user_id=$2"
+            await db.execute(sql, impart_num, user_id)
             return True
 
     async def update_impart_exp_up(self, impart_num, user_id):
         """impart_exp_up"""
-        async with self.get_db() as db:
-            sql = f"UPDATE xiuxian_impart SET impart_exp_up=? WHERE user_id=?"
-            await db.execute(sql, (impart_num, user_id))
-            await db.commit()
+        async with self.pool.acquire() as db:
+            sql = f"UPDATE xiuxian_impart SET impart_exp_up=$1 WHERE user_id=$2"
+            await db.execute(sql, impart_num, user_id)
             return True
 
     async def add_impart_exp_up(self, impart_num, user_id):
         """add impart_exp_up"""
-        async with self.get_db() as db:
-            sql = f"UPDATE xiuxian_impart SET impart_exp_up=impart_exp_up+? WHERE user_id=?"
-            await db.execute(sql, (impart_num, user_id))
-            await db.commit()
+        async with self.pool.acquire() as db:
+            sql = f"UPDATE xiuxian_impart SET impart_exp_up=impart_exp_up+$1 WHERE user_id=$2"
+            await db.execute(sql, impart_num, user_id)
             return True
 
     async def update_boss_atk(self, impart_num, user_id):
         """boss_atk"""
-        async with self.get_db() as db:
-            sql = f"UPDATE xiuxian_impart SET boss_atk=? WHERE user_id=?"
-            await db.execute(sql, (impart_num, user_id))
-            await db.commit()
+        async with self.pool.acquire() as db:
+            sql = f"UPDATE xiuxian_impart SET boss_atk=$1 WHERE user_id=$2"
+            await db.execute(sql, impart_num, user_id)
             return True
 
     async def add_boss_atk(self, impart_num, user_id):
         """add boss_atk"""
-        async with self.get_db() as db:
-            sql = f"UPDATE xiuxian_impart SET boss_atk=boss_atk+? WHERE user_id=?"
-            await db.execute(sql, (impart_num, user_id))
-            await db.commit()
+        async with self.pool.acquire() as db:
+            sql = f"UPDATE xiuxian_impart SET boss_atk=boss_atk+$1 WHERE user_id=$2"
+            await db.execute(sql, impart_num, user_id)
             return True
 
     async def update_impart_know_per(self, impart_num, user_id):
         """impart_know_per"""
-        async with self.get_db() as db:
-            sql = f"UPDATE xiuxian_impart SET impart_know_per=? WHERE user_id=?"
-            await db.execute(sql, (impart_num, user_id))
-            await db.commit()
+        async with self.pool.acquire() as db:
+            sql = f"UPDATE xiuxian_impart SET impart_know_per=$1 WHERE user_id=$2"
+            await db.execute(sql, impart_num, user_id)
             return True
 
     async def add_impart_know_per(self, impart_num, user_id):
         """add impart_know_per"""
-        async with self.get_db() as db:
-            sql = f"UPDATE xiuxian_impart SET impart_know_per=impart_know_per+? WHERE user_id=?"
-            await db.execute(sql, (impart_num, user_id))
-            await db.commit()
+        async with self.pool.acquire() as db:
+            sql = f"UPDATE xiuxian_impart SET impart_know_per=impart_know_per+$1 WHERE user_id=$2"
+            await db.execute(sql, impart_num, user_id)
             return True
 
     async def update_impart_burst_per(self, impart_num, user_id):
         """impart_burst_per"""
-        async with self.get_db() as db:
-            sql = f"UPDATE xiuxian_impart SET impart_burst_per=? WHERE user_id=?"
-            await db.execute(sql, (impart_num, user_id))
-            await db.commit()
+        async with self.pool.acquire() as db:
+            sql = f"UPDATE xiuxian_impart SET impart_burst_per=$1 WHERE user_id=$2"
+            await db.execute(sql, impart_num, user_id)
             return True
 
     async def add_impart_burst_per(self, impart_num, user_id):
         """add impart_burst_per"""
-        async with self.get_db() as db:
-            sql = f"UPDATE xiuxian_impart SET impart_burst_per=impart_burst_per+? WHERE user_id=?"
-            await db.execute(sql, (impart_num, user_id))
-            await db.commit()
+        async with self.pool.acquire() as db:
+            sql = f"UPDATE xiuxian_impart SET impart_burst_per=impart_burst_per+$1 WHERE user_id=$2"
+            await db.execute(sql, impart_num, user_id)
             return True
 
     async def update_impart_mix_per(self, impart_num, user_id):
         """impart_mix_per"""
-        async with self.get_db() as db:
-            sql = f"UPDATE xiuxian_impart SET impart_mix_per=? WHERE user_id=?"
-            await db.execute(sql, (impart_num, user_id))
-            await db.commit()
+        async with self.pool.acquire() as db:
+            sql = f"UPDATE xiuxian_impart SET impart_mix_per=$1 WHERE user_id=$2"
+            await db.execute(sql, impart_num, user_id)
             return True
 
     async def add_impart_mix_per(self, impart_num, user_id):
         """add impart_mix_per"""
-        async with self.get_db() as db:
-            sql = f"UPDATE xiuxian_impart SET impart_mix_per=impart_mix_per+? WHERE user_id=?"
-            await db.execute(sql, (impart_num, user_id))
-            await db.commit()
+        async with self.pool.acquire() as db:
+            sql = f"UPDATE xiuxian_impart SET impart_mix_per=impart_mix_per+$1 WHERE user_id=$2"
+            await db.execute(sql, impart_num, user_id)
             return True
 
     async def update_impart_reap_per(self, impart_num, user_id):
         """impart_reap_per"""
-        async with self.get_db() as db:
-            sql = f"UPDATE xiuxian_impart SET impart_reap_per=? WHERE user_id=?"
-            await db.execute(sql, (impart_num, user_id))
-            await db.commit()
+        async with self.pool.acquire() as db:
+            sql = f"UPDATE xiuxian_impart SET impart_reap_per=$1 WHERE user_id=$2"
+            await db.execute(sql, impart_num, user_id)
             return True
 
     async def add_impart_reap_per(self, impart_num, user_id):
         """add impart_reap_per"""
-        async with self.get_db() as db:
-            sql = f"UPDATE xiuxian_impart SET impart_reap_per=impart_reap_per+? WHERE user_id=?"
-            await db.execute(sql, (impart_num, user_id))
-            await db.commit()
+        async with self.pool.acquire() as db:
+            sql = f"UPDATE xiuxian_impart SET impart_reap_per=impart_reap_per+$1 WHERE user_id=$2"
+            await db.execute(sql, impart_num, user_id)
             return True
 
     async def update_impart_two_exp(self, impart_num, user_id):
         """更新双修"""
-        async with self.get_db() as db:
-            sql = f"UPDATE xiuxian_impart SET impart_two_exp=? WHERE user_id=?"
-            await db.execute(sql, (impart_num, user_id))
-            await db.commit()
+        async with self.pool.acquire() as db:
+            sql = f"UPDATE xiuxian_impart SET impart_two_exp=$1 WHERE user_id=$2"
+            await db.execute(sql, impart_num, user_id)
             return True
 
     async def add_impart_two_exp(self, impart_num, user_id):
         """add impart_two_exp"""
-        async with self.get_db() as db:
-            sql = f"UPDATE xiuxian_impart SET impart_two_exp=impart_two_exp+? WHERE user_id=?"
-            await db.execute(sql, (impart_num, user_id))
-            await db.commit()
+        async with self.pool.acquire() as db:
+            sql = f"UPDATE xiuxian_impart SET impart_two_exp=impart_two_exp+$1 WHERE user_id=$2"
+            await db.execute(sql, impart_num, user_id)
             return True
 
     async def update_impart_wish(self, impart_num, user_id):
         """更新抽卡次数"""
-        async with self.get_db() as db:
-            sql = f"UPDATE xiuxian_impart SET wish=? WHERE user_id=?"
-            await db.execute(sql, (impart_num, user_id))
-            await db.commit()
+        async with self.pool.acquire() as db:
+            sql = f"UPDATE xiuxian_impart SET wish=$1 WHERE user_id=$2"
+            await db.execute(sql, impart_num, user_id)
             return True
 
     async def add_impart_wish(self, impart_num, user_id):
         """增加抽卡次数"""
-        async with self.get_db() as db:
-            sql = f"UPDATE xiuxian_impart SET wish=wish+? WHERE user_id=?"
-            await db.execute(sql, (impart_num, user_id))
-            await db.commit()
+        async with self.pool.acquire() as db:
+            sql = f"UPDATE xiuxian_impart SET wish=wish+$1 WHERE user_id=$2"
+            await db.execute(sql, impart_num, user_id)
             return True
 
     async def update_stone_num(self, impart_num, user_id, type_):
         """更新结晶数量"""
         if type_ == 1:
-            async with self.get_db() as db:
-                sql = f"UPDATE xiuxian_impart SET stone_num=stone_num+? WHERE user_id=?"
-                await db.execute(sql, (impart_num, user_id))
-                await db.commit()
+            async with self.pool.acquire() as db:
+                sql = f"UPDATE xiuxian_impart SET stone_num=stone_num+$1 WHERE user_id=$2"
+                await db.execute(sql, impart_num, user_id)
+                
                 return True
         if type_ == 2:
-            async with self.get_db() as db:
-                sql = f"UPDATE xiuxian_impart SET stone_num=stone_num-? WHERE user_id=?"
-                await db.execute(sql, (impart_num, user_id))
-                await db.commit()
+            async with self.pool.acquire() as db:
+                sql = f"UPDATE xiuxian_impart SET stone_num=stone_num-$1 WHERE user_id=$2"
+                await db.execute(sql, impart_num, user_id)
+                
                 return True
 
     async def update_pray_stone_num(self, impart_num, user_id, type_):
@@ -1862,39 +1603,36 @@ class XiuxianImpartBuff:
         1加 2减
         """
         if type_ == 1:
-            async with self.get_db() as db:
-                sql = f"UPDATE xiuxian_impart SET pray_stone_num=pray_stone_num+? WHERE user_id=?"
-                await db.execute(sql, (impart_num, user_id))
-                await db.commit()
+            async with self.pool.acquire() as db:
+                sql = f"UPDATE xiuxian_impart SET pray_stone_num=pray_stone_num+$1 WHERE user_id=$2"
+                await db.execute(sql, impart_num, user_id)
+                
                 return True
         if type_ == 2:
-            async with self.get_db() as db:
-                sql = f"UPDATE xiuxian_impart SET pray_stone_num=pray_stone_num-? WHERE user_id=?"
-                await db.execute(sql, (impart_num, user_id))
-                await db.commit()
+            async with self.pool.acquire() as db:
+                sql = f"UPDATE xiuxian_impart SET pray_stone_num=pray_stone_num-$1 WHERE user_id=$2"
+                await db.execute(sql, impart_num, user_id)
+                
                 return True
 
     async def update_impart_stone_all(self, impart_stone):
         """所有用户增加结晶"""
-        async with self.get_db() as db:
-            sql = "UPDATE xiuxian_impart SET stone_num=stone_num+?"
-            await db.execute(sql, (impart_stone,))
-            await db.commit()
+        async with self.pool.acquire() as db:
+            sql = "UPDATE xiuxian_impart SET stone_num=stone_num+$1"
+            await db.execute(sql, impart_stone)
 
     async def add_impart_exp_day(self, impart_num, user_id):
         """add  impart_exp_day"""
-        async with self.get_db() as db:
-            sql = "UPDATE xiuxian_impart SET exp_day=exp_day+? WHERE user_id=?"
-            await db.execute(sql, (impart_num, user_id))
-            await db.commit()
+        async with self.pool.acquire() as db:
+            sql = "UPDATE xiuxian_impart SET exp_day=exp_day+$1 WHERE user_id=$2"
+            await db.execute(sql, impart_num, user_id)
             return True
 
     async def use_impart_exp_day(self, impart_num, user_id):
         """use  impart_exp_day"""
-        async with self.get_db() as db:
-            sql = "UPDATE xiuxian_impart SET exp_day=exp_day-? WHERE user_id=?"
-            await db.execute(sql, (impart_num, user_id))
-            await db.commit()
+        async with self.pool.acquire() as db:
+            sql = "UPDATE xiuxian_impart SET exp_day=exp_day-$1 WHERE user_id=$2"
+            await db.execute(sql, impart_num, user_id)
             return True
 
 
@@ -1922,13 +1660,16 @@ xiuxian_impart = XiuxianImpartBuff()
 
 @DRIVER.on_startup
 async def check_db():
+    sql_message.pool = database.pool
+    logger.opt(colors=True).info(f"<green>xiuxian数据库已连接!</green>")
+    xiuxian_impart.pool = database.pool
+    logger.opt(colors=True).info(f"<green>xiuxian_impart数据库已连接!</green>")
+    logger.opt(colors=True).info(f"<green>检查xiuxian数据库完整性中</green>")
     await sql_message.check_data()
+    logger.opt(colors=True).info(f"<green>检查xiuxian数据库完整性成功</green>")
+    logger.opt(colors=True).info(f"<green>检查xiuxian_impart数据库完整性中</green>")
     await xiuxian_impart.check_data()
-
-
-@DRIVER.on_shutdown
-async def close_db():
-    await xiuxian_impart.close()
+    logger.opt(colors=True).info(f"<green>检查xiuxian_impart数据库完整性成功</green>")
 
 
 class UserBuffDate:
