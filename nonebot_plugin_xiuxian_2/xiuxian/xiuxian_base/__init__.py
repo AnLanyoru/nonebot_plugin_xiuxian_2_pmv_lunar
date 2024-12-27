@@ -666,8 +666,8 @@ async def give_stone_(bot: Bot, event: GroupMessageEvent, args: Message = Comman
                         await sql_message.update_ls(user_id, give_stone_num, 2)  # 减少用户灵石
                         await sql_message.update_ls(give_qq, num, 1)  # 增加用户灵石
                         msg = f"\r{user_name}道友与好友在同一位置，当面赠送：\r" + send_msg + msg
-                        limit_handle.update_user_log_data(user_id, send_msg)
-                        limit_handle.update_user_log_data(give_qq, send_msg)
+                        await limit_handle.update_user_log_data(user_id, send_msg)
+                        await limit_handle.update_user_log_data(give_qq, send_msg)
                     await bot.send(event=event, message=msg)
                     await give_stone.finish()
 
@@ -679,8 +679,8 @@ async def give_stone_(bot: Bot, event: GroupMessageEvent, args: Message = Comman
                     await sql_message.update_ls(give_qq, num, 1)  # 增加用户灵石
                     msg = (f"\r{user_name}道友与好友不在一地，通过远程邮寄赠送：\r" + send_msg + msg +
                            f"\r收取远程邮寄手续费{(number_to(give_stone_num2))}|{int(give_stone_num2)}枚！")
-                    limit_handle.update_user_log_data(user_id, send_msg)
-                    limit_handle.update_user_log_data(give_qq, send_msg)
+                    await limit_handle.update_user_log_data(user_id, send_msg)
+                    await limit_handle.update_user_log_data(give_qq, send_msg)
                 await bot.send(event=event, message=msg)
                 await give_stone.finish()
             else:

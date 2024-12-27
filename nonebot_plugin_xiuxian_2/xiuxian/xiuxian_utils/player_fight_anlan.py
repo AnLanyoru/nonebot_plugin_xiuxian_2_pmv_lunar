@@ -16,7 +16,7 @@ async def final_user_data(user_data, columns):
     if impart_data:
         pass
     else:
-        await xiuxian_impart._create_user(user_dict['user_id'])
+        await xiuxian_impart.impart_create_user(user_dict['user_id'])
     impart_data = await xiuxian_impart.get_user_info_with_id(user_dict['user_id'])
     impart_hp_per = impart_data['impart_hp_per'] if impart_data is not None else 0
     impart_mp_per = impart_data['impart_mp_per'] if impart_data is not None else 0

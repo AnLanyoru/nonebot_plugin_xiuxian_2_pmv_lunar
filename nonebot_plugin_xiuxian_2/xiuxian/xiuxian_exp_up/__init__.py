@@ -262,7 +262,7 @@ async def power_break_up_(bot: Bot, event: GroupMessageEvent):
     user_id = user_info['user_id']
     is_type, msg = await check_user_type(user_id, 0)
     if is_type:
-        power = limit_handle.get_user_world_power_data(user_id)
+        power = await limit_handle.get_user_world_power_data(user_id)
         if power == 0:
             msg = "道友体内没有天地精华！！！"
             await bot.send(event=event, message=msg)
@@ -289,7 +289,7 @@ async def power_break_up_(bot: Bot, event: GroupMessageEvent):
         leveluprate = int(user_info['level_up_rate'])  # 用户失败次数加成
         await sql_message.update_levelrate(user_id, leveluprate + 1 * rate_up)
         msg = f"道友成功将体内天地精华吸收，突破概率提升了{int(rate_up)}%, 修为提升了{number_to(exp)}|{exp}点！！"
-        limit_handle.update_user_world_power_data(user_id, 0)
+        await limit_handle.update_user_world_power_data(user_id, 0)
     else:
         pass
     await bot.send(event=event, message=msg)
@@ -303,7 +303,7 @@ async def power_break_up_help_(bot: Bot, event: GroupMessageEvent):
     _, user_info, _ = await check_user(event)
 
     user_id = user_info['user_id']
-    power = limit_handle.get_user_world_power_data(user_id)
+    power = await limit_handle.get_user_world_power_data(user_id)
     msg = simple_md(f"道友体内拥有天地精华：{power}\r天地精华由使用天地奇物获得\r可以发送 ", "吸收天地精华",
                     "吸收天地精华", "将体内天地精华吸收！！\r增加少许修为与突破概率"
                                     f"\r天地精华还是练就顶级神通的必备能量！！\r请尽快使用天地精华，否则天地精华将会归于天地之间！！！")

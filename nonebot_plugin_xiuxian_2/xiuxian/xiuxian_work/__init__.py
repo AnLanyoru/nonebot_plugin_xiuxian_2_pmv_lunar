@@ -379,7 +379,7 @@ async def do_work_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = R
                 msg += f"，额外获得奖励：{item_msg}!"
             else:
                 msg += "!"
-            limit_handle.update_user_log_data(user_id, msg)
+            await limit_handle.update_user_log_data(user_id, msg)
             msg = simple_md(msg + "\r继续", "接取悬赏令", "悬赏令刷新", "。")
             await bot.send(event=event, message=msg)
             await do_work.finish()
@@ -393,11 +393,11 @@ async def do_work_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = R
                     msg += f"，额外获得奖励：{item_msg}!"
                 else:
                     msg += "!"
-                limit_handle.update_user_log_data(user_id, msg)
+                await limit_handle.update_user_log_data(user_id, msg)
 
             else:  # 失败
                 msg += "!"
-                limit_handle.update_user_log_data(user_id, msg)
+                await limit_handle.update_user_log_data(user_id, msg)
             msg = simple_md(msg + "\r继续", "接取悬赏令", "悬赏令刷新", "。")
             await bot.send(event=event, message=msg)
             await do_work.finish()

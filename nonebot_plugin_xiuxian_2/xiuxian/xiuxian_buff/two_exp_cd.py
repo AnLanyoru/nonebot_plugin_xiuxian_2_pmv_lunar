@@ -1,9 +1,10 @@
-from ..xiuxian_limit.limit_database import limit_handle, limit_data
+from ..xiuxian_limit.limit_database import limit_data
 
 
-class TWO_EXP_CD(object):
+class TwoExpCd(object):
 
-    def find_user(self, user_id):
+    @staticmethod
+    async def find_user(user_id):
         """
         匹配词条
         :param user_id:
@@ -12,20 +13,12 @@ class TWO_EXP_CD(object):
         two_exp_num = limit_dict['two_exp_up']
         return two_exp_num
 
-    def add_user(self, user_id) -> bool:
-        """
-        加入数据
-        :param user_id: qq号
-        :return: True or False
-        """
-        limit_handle.update_user_limit(user_id, 5, 1)
-        return True
-
-    def re_data(self):
+    @staticmethod
+    async def re_data():
         """
         重置数据
         """
         await limit_data.redata_limit_by_key('two_exp_up')
 
 
-two_exp_cd = TWO_EXP_CD()
+two_exp_cd = TwoExpCd()

@@ -28,7 +28,7 @@ impart_pk_exp = on_command("虚神界闭关", aliases={"进入虚神界修炼"},
 # 每日0点重置用虚神界次数
 @impart_re.scheduled_job("cron", hour=0, minute=0)
 async def impart_re_():
-    impart_pk.re_data()
+    await impart_pk.re_data()
     logger.opt(colors=True).info(f"<green>已重置虚神界次数</green>")
 
 
@@ -47,7 +47,7 @@ async def impart_pk_now_all_(bot: Bot, event: GroupMessageEvent):
     _, user_info, _ = await check_user(event)
 
     user_id = user_info['user_id']
-    pk_num = impart_pk.get_impart_pk_num(user_id)
+    pk_num = await impart_pk.get_impart_pk_num(user_id)
     if pk_num:
         msg = f"道友今日已经完成虚神界行动了，明天再来吧！"
         await bot.send(event=event, message=msg)
@@ -71,13 +71,13 @@ async def impart_pray_(bot: Bot, event: GroupMessageEvent):
     _, user_info, _ = await check_user(event)
 
     user_id = user_info['user_id']
-    pk_num = impart_pk.get_impart_pk_num(user_id)
+    pk_num = await impart_pk.get_impart_pk_num(user_id)
     if pk_num:
         msg = f"道友今日已经在虚神界行动过了，明天再来吧！"
         await bot.send(event=event, message=msg)
         await impart_pray.finish()
     await impart_check(user_id)
-    impart_pk.update_impart_pk_num(user_id)
+    await impart_pk.update_impart_pk_num(user_id)
     await xiuxian_impart.update_pray_stone_num(1, user_id, 1)
     tag = random.choice(["福签，运势亨通", "平签，多喜乐，常安宁", "祸签，福祸相依"])
     combined_msg = f"\r进入虚神界进行祈愿，求得一{tag}，获得祈愿结晶一颗"
@@ -92,13 +92,13 @@ async def impart_pk_now_(bot: Bot, event: GroupMessageEvent):
     _, user_info, _ = await check_user(event)
 
     user_id = user_info['user_id']
-    pk_num = impart_pk.get_impart_pk_num(user_id)
+    pk_num = await impart_pk.get_impart_pk_num(user_id)
     if pk_num:
         msg = f"道友今日已经在虚神界行动过了，明天再来吧！"
         await bot.send(event=event, message=msg)
         await impart_pk_now.finish()
     await impart_check(user_id)
-    impart_pk.update_impart_pk_num(user_id)
+    await impart_pk.update_impart_pk_num(user_id)
     stones = 8
     await xiuxian_impart.update_stone_num(stones, user_id, 1)
     combined_msg = f"\r进入虚神界与{NICKNAME}对决，将{NICKNAME}击败，获得思恋结晶{stones}颗"

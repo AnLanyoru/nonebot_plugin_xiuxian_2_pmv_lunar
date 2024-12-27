@@ -1,19 +1,19 @@
 import pickle
 import re
-import sqlite3
-
 from datetime import datetime
-from typing import Any
+import asyncpg
+from asyncpg import Record
 from nonebot import logger
 
 from .. import DRIVER
 from ..xiuxian_database.database_connect import database
+from ..xiuxian_utils.clean_utils import zips
 from ..xiuxian_utils.item_json import items
 
 xiuxian_num = "578043031"  # 这里其实是修仙1作者的QQ号
 
 
-async def get_num_from_str(msg) -> list:
+def get_num_from_str(msg) -> list:
     """
     从消息字符串中获取数字列表
     :param msg: 从纯字符串中获取的获取的消息字符串
@@ -29,67 +29,59 @@ class LimitData:
         self.pool = None
         self.blob_data = ["offset_get", "active_get", "state"]
         self.sql_limit = ["user_id", "stone_exp_up", "send_stone", "receive_stone",
-                              "impart_pk", "two_exp_up", "rift_protect",
-                              "offset_get", "active_get", "last_time", "state"]
+                          "impart_pk", "two_exp_up", "rift_protect",
+                          "offset_get", "active_get", "last_time", "state"]
 
     async def check_data(self):
         """检查数据完整性"""
         async with self.pool.acquire() as db:
             try:
-                db.execute(f"select count(1) from user_limit")
-            except sqlite3.OperationalError:
-                db.execute("""CREATE TABLE "user_limit" (
-          "user_id" INTEGER NOT NULL,
-          "stone_exp_up" INTEGER DEFAULT 0,
-          "send_stone" INTEGER DEFAULT 0,
-          "receive_stone" INTEGER DEFAULT 0,
+                await db.execute(f"select count(1) from user_limit")
+            except asyncpg.exceptions.UndefinedTableError:
+                await db.execute("""CREATE TABLE "user_limit" (
+          "user_id" numeric NOT NULL,
+          "stone_exp_up" bigint DEFAULT 0,
+          "send_stone" bigint DEFAULT 0,
+          "receive_stone" bigint DEFAULT 0,
           "impart_pk" integer DEFAULT 0,
           "two_exp_up" integer DEFAULT 0,
           "rift_protect" integer DEFAULT 0,
-          "offset_get" BLOB,
-          "active_get" BLOB,
+          "offset_get" bytea,
+          "active_get" bytea,
           "last_time" TEXT,
-          "state" BLOB
+          "state" bytea
           );""")
             try:
-                db.execute(f"select rift_protect from user_limit")
-            except sqlite3.OperationalError:
+                await db.execute(f"select rift_protect from user_limit")
+            except asyncpg.exceptions.UndefinedColumnError:
                 sql = f"ALTER TABLE user_limit ADD COLUMN rift_protect integer DEFAULT 0;"
-                db.execute(sql)
+                await db.execute(sql)
             try:
-                db.execute(f"select count(1) from active")
-            except sqlite3.OperationalError:
-                db.execute("""CREATE TABLE "active" (
-          "active_id" INTEGER NOT NULL,
+                await db.execute(f"select count(1) from active")
+            except asyncpg.exceptions.UndefinedTableError:
+                await db.execute("""CREATE TABLE "active" (
+          "active_id" bigint NOT NULL,
           "active_name" TEXT,
           "active_desc" TEXT,
-          "state" BLOB,
+          "state" bytea,
           "start_time" TEXT,
           "last_time" TEXT,
-          "daily_update" INTEGER DEFAULT 0
+          "daily_update" boolean DEFAULT false
           );""")
             try:
-                db.execute(f"select count(1) from offset")
-            except sqlite3.OperationalError:
-                db.execute("""CREATE TABLE "offset" (
-          "offset_id" INTEGER NOT NULL,
+                await db.execute(f"select count(1) from offset_list")
+            except asyncpg.exceptions.UndefinedTableError:
+                await db.execute("""CREATE TABLE "offset_list" (
+          "offset_id" bigint NOT NULL,
           "offset_name" TEXT,
           "offset_desc" TEXT,
-          "offset_items" BLOB,
-          "state" BLOB,
+          "offset_items" bytea,
+          "state" bytea,
           "start_time" TEXT,
           "last_time" TEXT,
-          "daily_update" INTEGER DEFAULT 0
-          );""")  # 不检查完整性
-            # 下面是数据库修补字段
-            # 活动&补偿起始时间数据更新
-            new_col_table = ["offset", "active"]
-            for table in new_col_table:
-                try:
-                    db.execute(f"select start_time from {table}")
-                except sqlite3.OperationalError:
-                    sql = f"ALTER TABLE {table} ADD COLUMN start_time TEXT;"
-                    db.execute(sql)
+          "daily_update" boolean DEFAULT false
+          );""")
+
     # 上面是数据库校验，别动
 
     async def get_limit_by_user_id(self, user_id) -> tuple[dict[str, int | dict | str], bool]:
@@ -100,25 +92,24 @@ class LimitData:
         """
         date = datetime.now().date()
         now_time = date.today()
-        sql = f"select * from user_limit WHERE user_id=?"
+        now_time = str(now_time)
+        sql = f"select * from user_limit WHERE user_id=$1"
         async with self.pool.acquire() as db:
-            db.execute(sql, (user_id,))
-            result = db.fetchone()
+            result = await db.fetch(sql, user_id)
             if not result:
                 # 如果没有，则初始化
                 limit_dict = {}
                 for key in self.sql_limit:
                     limit_dict[key] = 0
                 limit_dict['user_id'] = user_id
-                limit_dict['last_time'] = str(now_time)
+                limit_dict['last_time'] = now_time
 
                 for key in self.blob_data:
                     limit_dict[key] = {}
                 return limit_dict, False
 
             # 如果有，返回限制字典
-            columns = [column[0] for column in db.description]
-            limit_dict = dict(zip(columns, result))
+            limit_dict = zips(**result[0])
             for blob_key in self.blob_data:  # 结构化数据读取
                 if limit_dict.get(blob_key):
                     limit_dict[blob_key] = pickle.loads(limit_dict[blob_key])
@@ -128,19 +119,15 @@ class LimitData:
     async def get_active_idmap(self):
         sql = f"SELECT active_name, active_id FROM active"
         async with self.pool.acquire() as db:
-            db.execute(sql)
-            result = db.fetchall()
-            if result:
-                result = dict(result)
+            result: list[Record] = await db.fetch(sql)
+            result: dict[str, int] = {result_per[0]: result_per[1] for result_per in result}
             return result
 
     async def get_offset_idmap(self) -> dict[str, int]:
-        sql = f"SELECT offset_name, offset_id FROM offset"
+        sql = f"SELECT offset_name, offset_id FROM offset_list"
         async with self.pool.acquire() as db:
-            db.execute(sql)
-            result = db.fetchall()
-            if result:
-                result = dict(result)
+            result: list[Record] = await db.fetch(sql)
+            result: dict[str, int] = {result_per[0]: result_per[1] for result_per in result}
             return result
 
     async def get_active_by_id(self, active_id):
@@ -149,16 +136,11 @@ class LimitData:
         :param active_id: 活动id
         :return:
         """
-        sql = f"select * from active WHERE active_id=?"
+        sql = f"select * from active WHERE active_id=$1"
         async with self.pool.acquire() as db:
-            db.execute(sql, (active_id,))
-            result = db.fetchone()
-            if not result:
-                return None
+            result = await db.fetch(sql, active_id)
             # 如果有，返回活动字典
-            columns = [column[0] for column in db.description]
-            active = dict(zip(columns, result))
-            return active
+            return zips(**result[0]) if result else None
 
     async def get_offset_by_id(self, offset_id):
         """
@@ -166,45 +148,44 @@ class LimitData:
         :param offset_id: 活动id
         :return:
         """
-        sql = f"select * from offset WHERE offset_id=?"
+        sql = f"select * from offset_list WHERE offset_id=$1"
         async with self.pool.acquire() as db:
-            db.execute(sql, (offset_id,))
-            result = db.fetchone()
-            if not result:
-                return None
+            result = await db.fetch(sql, offset_id)
             # 如果有，返回补偿字典
-            columns = [column[0] for column in db.description]
-            offset = dict(zip(columns, result))
+            offset = zips(**result[0]) if result else None
             if offset.get('offset_items'):
                 offset['offset_items'] = pickle.loads(offset['offset_items'])
             return offset
 
     async def active_make(self, active_id: int, active_name: str, active_desc: str,
-                    last_time: str, daily_update: int, state=''):
+                          last_time: str, daily_update: int, state=''):
 
         date = datetime.now().date()
         start_time = str(date.today())  # 标记创建日期
         async with self.pool.acquire() as db:
             sql = f"""INSERT INTO active (active_id, active_name, active_desc, start_time, last_time, daily_update, state)
-                    VALUES (?,?,?,?,?,?,?)"""
-            db.execute(sql, (active_id, active_name, active_desc, start_time, last_time, daily_update, state))
+                    VALUES ($1,$2,$3,$4,$5,$6,$7)"""
+            await db.execute(sql, active_id, active_name, active_desc, start_time, last_time, daily_update, state)
 
     async def offset_make(self, offset_id: int, offset_name: str, offset_desc: str, offset_items: dict,
-                    last_time: str, daily_update: int, state=''):
+                          last_time: str, daily_update: int, state=''):
         date = datetime.now().date()
         start_time = str(date.today())  # 标记创建日期
         offset_items = pickle.dumps(offset_items)  # 结构化数据
         async with self.pool.acquire() as db:
-            sql = f"""INSERT INTO offset (offset_id, offset_name, offset_desc, offset_items, start_time, last_time, daily_update, state)
-                    VALUES (?,?,?,?,?,?,?,?)"""
-            db.execute(sql,
-                       (offset_id, offset_name, offset_desc, offset_items, start_time, last_time, daily_update, state))
+            sql = f"""INSERT INTO offset_list (offset_id, offset_name, offset_desc, offset_items, start_time, last_time, daily_update, state)
+                    VALUES ($1,$2,$3,$4,$5,$6,$7,$8)"""
+            await db.execute(
+                sql,
+                offset_id, offset_name, offset_desc,
+                offset_items, start_time, last_time,
+                daily_update, state)
 
     async def offset_del(self, offset_id: int):
         async with self.pool.acquire() as db:
-            sql = f"""DELETE FROM offset
+            sql = f"""DELETE FROM offset_list
                     WHERE offset_id={offset_id};"""
-            db.execute(sql)
+            await db.execute(sql)
 
     async def update_limit_data(
             self,
@@ -217,32 +198,34 @@ class LimitData:
             rift_protect,
             offset_get,
             active_get,
-            state):
+            state, **kwargs):
         """
         更新用户限制
         """
         date = datetime.now().date()
         now_time = date.today()
+        now_time = str(now_time)
         async with self.pool.acquire() as db:
             offset_get = pickle.dumps(offset_get)  # 结构化数据
             active_get = pickle.dumps(active_get)
             state = pickle.dumps(state)
-            table, is_pass = self.get_limit_by_user_id(user_id)
+            table, is_pass = await self.get_limit_by_user_id(user_id)
             if is_pass:
                 # 判断是否存在，存在则update
                 sql = (f"UPDATE user_limit set "
-                       f"stone_exp_up=?,send_stone=?,receive_stone=?,impart_pk=?,two_exp_up=?,"
-                       f"offset_get =?,active_get=?,last_time=?,state=? "
-                       f"WHERE user_id=?")
-                db.execute(sql, (stone_exp_up, send_stone, receive_stone, impart_pk, two_exp_up,
-                                 offset_get, active_get, now_time, state, user_id))
+                       f"stone_exp_up=$1,send_stone=$2,receive_stone=$3,impart_pk=$4,two_exp_up=$5,"
+                       f"offset_get =$6,active_get=$7,last_time=$8,state=$9 "
+                       f"WHERE user_id=$10")
+                await db.execute(sql, stone_exp_up, send_stone, receive_stone, impart_pk, two_exp_up,
+                                 offset_get, active_get, now_time, state, user_id)
             else:
                 # 判断是否存在，不存在则INSERT
                 sql = (f"INSERT INTO user_limit "
                        f"(user_id, stone_exp_up, send_stone, receive_stone, impart_pk, two_exp_up, rift_protect, "
-                       f"offset_get, active_get, last_time, state) VALUES (?,?,?,?,?,?,?,?,?,?,?)")
-                db.execute(sql, (user_id, stone_exp_up, send_stone, receive_stone, impart_pk, two_exp_up, rift_protect,
-                                 offset_get, active_get, now_time, state))
+                       f"offset_get, active_get, last_time, state) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)")
+                await db.execute(sql, user_id, stone_exp_up, send_stone, receive_stone,
+                                 impart_pk, two_exp_up, rift_protect,
+                                 offset_get, active_get, now_time, state)
 
     async def update_limit_data_with_key(
             self,
@@ -257,7 +240,7 @@ class LimitData:
             rift_protect,
             offset_get,
             active_get,
-            state):
+            state, **kwargs):
         """
         定向值更新用户限制 update_key: 欲定向更新的列值
         :return: result
@@ -265,34 +248,36 @@ class LimitData:
         blob_data = self.blob_data
         date = datetime.now().date()
         now_time = date.today()
+        now_time = str(now_time)
         async with self.pool.acquire() as db:
             if update_key in blob_data:  # 结构化数据
                 goal = pickle.dumps(goal)
-            table, is_pass = self.get_limit_by_user_id(user_id)
+            table, is_pass = await self.get_limit_by_user_id(user_id)
             if is_pass:
                 # 判断是否存在，存在则update
-                sql = f"UPDATE user_limit set {update_key}=? WHERE user_id=?"
-                db.execute(sql, (goal, user_id))
+                sql = f"UPDATE user_limit set {update_key}=$1 WHERE user_id=$2"
+                await db.execute(sql, goal, user_id)
             else:
                 # 判断是否存在，不存在则INSERT
                 offset_get = pickle.dumps(offset_get)  # 结构化数据
                 active_get = pickle.dumps(active_get)
                 state = pickle.dumps(state)
                 sql = f"""INSERT INTO user_limit (user_id, stone_exp_up, send_stone, receive_stone, impart_pk, two_exp_up, 
-                rift_protect, offset_get, active_get, last_time, state)VALUES (?,?,?,?,?,?,?,?,?,?,?)"""
-                db.execute(sql, (user_id, stone_exp_up, send_stone, receive_stone, impart_pk, two_exp_up, rift_protect,
-                                 offset_get, active_get, now_time, state))
+                rift_protect, offset_get, active_get, last_time, state)VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)"""
+                await db.execute(sql,
+                                 user_id, stone_exp_up, send_stone, receive_stone, impart_pk, two_exp_up, rift_protect,
+                                 offset_get, active_get, now_time, state)
 
     async def redata_limit_by_key(self, reset_key):
-        date = datetime.now().date()
+        datetime.now().date()
         async with self.pool.acquire() as db:
-            sql = f"UPDATE user_limit set {reset_key}=? "
+            sql = f"UPDATE user_limit set {reset_key}=$1 "
             default_value = 0
             if reset_key in self.blob_data:  # 结构化数据
                 default_value = {}
                 default_value = pickle.dumps(default_value)
 
-            db.execute(sql, (default_value,))
+            await db.execute(sql, default_value)
 
 
 limit_data = LimitData()
@@ -330,7 +315,8 @@ class LimitHandle:
         else:
             return None
 
-    async def change_offset_info_to_msg(self, offset_info):
+    @staticmethod
+    async def change_offset_info_to_msg(offset_info):
         """
         格式化补偿数据为友好视图
         :param offset_info:
@@ -342,7 +328,7 @@ class LimitHandle:
             desc = offset_info.get("offset_desc")
             offset_items = offset_info.get("offset_items")
             last_time = offset_info.get("last_time")
-            state = offset_info.get("state")  # 思恋结晶，灵石等补偿数据存放，开发中
+            offset_info.get("state")
             daily_update = offset_info.get("daily_update")
             msg = f"补偿ID：{offset_id}\r补偿名称：{name}\r补偿介绍：{desc}\r"
             if offset_items:
@@ -363,7 +349,7 @@ class LimitHandle:
         :return:
         """
         offset_info = await self._database.get_offset_by_id(offset_id)
-        offset_msg = self.change_offset_info_to_msg(offset_info)
+        offset_msg = await self.change_offset_info_to_msg(offset_info)
         return offset_msg
 
     async def get_all_user_offset_msg(self, user_id) -> list:
@@ -376,8 +362,8 @@ class LimitHandle:
         offset_list = []
         for offset_name in idmap:
             offset_id = idmap[offset_name]
-            is_get_offset = self.check_user_offset(user_id, offset_id)
-            offset_msg = self.get_offset_msg(offset_id)
+            is_get_offset = await self.check_user_offset(user_id, offset_id)
+            offset_msg = await self.get_offset_msg(offset_id)
             if is_get_offset:
                 offset_msg += "可领取\r"
             else:
@@ -413,6 +399,7 @@ class LimitHandle:
         """
         date = datetime.now().date()
         now_time = date.today()
+        now_time = str(now_time)
 
         limit_dict = {}
         for key in self.sql_limit:
@@ -533,11 +520,13 @@ class LimitHandle:
                 return True  # 返回检查成功
         return False  # 流程均检查失败 返回检查失败
 
-    async def update_user_log_data(self, user_id: int, msg_body: str) -> bool:
+    async def _update_user_log_data_by_keys(self, user_id, msg_body: str, log_name: str) -> bool:
         """
+        通用文本日志接口
         写入用户日志信息
         :param user_id: 用户ID
         :param msg_body: 需要写入的信息
+        :param log_name: 日志名称
         :return: bool
         """
         now_date = datetime.now()
@@ -546,7 +535,7 @@ class LimitHandle:
         limit_dict, is_pass = await self._database.get_limit_by_user_id(user_id)
         state_dict: dict = limit_dict[object_key]
 
-        logs: list = state_dict.get('log') if isinstance(state_dict, dict) else []
+        logs: list = state_dict.get(log_name) if isinstance(state_dict, dict) else []
 
         log_data: str = "时间：" + str(now_date) + "\r" + msg_body
         if isinstance(logs, list):
@@ -556,19 +545,39 @@ class LimitHandle:
         else:
             logs = [log_data]
         if isinstance(state_dict, dict):
-            state_dict['log'] = logs
+            state_dict[log_name] = logs
         else:
-            state_dict = {'log': logs}
+            state_dict = {log_name: logs}
         limit_dict[object_key] = state_dict
         await self._database.update_limit_data_with_key(object_key, limit_dict[object_key], **limit_dict)
         return True
 
-    async def get_user_log_data(self, user_id: int) -> list | None:
+    async def _get_user_log_data_by_keys(self, user_id: int, log_name: str) -> list | int | None:
+        """
+        通用日志调取接口，低安全性
+        """
         object_key = 'state'  # 可变参数，记得修改方法
         limit_dict, is_pass = await self._database.get_limit_by_user_id(user_id)
         state_dict = limit_dict[object_key]
-        logs = state_dict.get('log')
+        state_dict = state_dict if isinstance(state_dict, dict) else {}
+        logs = state_dict.get(log_name)
         return logs if logs else None
+
+    async def update_user_log_data(self, user_id: int, msg_body: str) -> bool:
+        """
+        写入用户日志信息
+        :param user_id: 用户ID
+        :param msg_body: 需要写入的信息
+        :return: bool
+        """
+        log_name = 'log'
+        await self._update_user_log_data_by_keys(user_id, msg_body, log_name)
+        return True
+
+    async def get_user_log_data(self, user_id: int) -> list | None:
+        log_name: str = 'log'
+        logs = await self._get_user_log_data_by_keys(user_id, log_name)
+        return logs
 
     async def update_user_shop_log_data(self, user_id, msg_body: str) -> bool:
         """
@@ -577,42 +586,14 @@ class LimitHandle:
         :param msg_body: 需要写入的信息
         :return: bool
         """
-        now_date = datetime.now()
-        now_date = now_date.replace(microsecond=0)
-        object_key = 'state'  # 可变参数，记得修改方法
-        limit_dict, is_pass = await self._database.get_limit_by_user_id(user_id)
-        state_dict = limit_dict[object_key]
-        try:
-            logs = state_dict.get('shop_log')
-        except:
-            logs = None
-        log_data = "时间：" + str(now_date) + "\r" + msg_body
-        if logs:
-            logs.append(log_data)
-            if len(logs) > 10:
-                logs = logs[1:]
-        else:
-            logs = [log_data]
-        try:
-            state_dict['shop_log'] = logs
-        except TypeError:
-            state_dict = {'shop_log': logs}
-        limit_dict[object_key] = state_dict
-        await self._database.update_limit_data_with_key(object_key, limit_dict[object_key], **limit_dict)
+        log_name: str = 'shop_log'
+        await self._update_user_log_data_by_keys(user_id, msg_body, log_name)
         return True
 
     async def get_user_shop_log_data(self, user_id):
-        object_key = 'state'  # 可变参数，记得修改方法
-        limit_dict, is_pass = await self._database.get_limit_by_user_id(user_id)
-        state_dict = limit_dict[object_key]
-        try:
-            logs = state_dict.get('shop_log')
-        except:
-            logs = None
-        if logs:
-            return logs
-        else:
-            return None
+        log_name: str = 'shop_log'
+        logs = await self._get_user_log_data_by_keys(user_id, log_name)
+        return logs
 
     async def update_user_donate_log_data(self, user_id, msg_body: str) -> bool:
         """
@@ -626,11 +607,7 @@ class LimitHandle:
         object_key = 'state'  # 可变参数，记得修改方法
         limit_dict, is_pass = await self._database.get_limit_by_user_id(user_id)
         state_dict = limit_dict[object_key]
-        try:
-            logs = state_dict.get('week_donate_log')
-        except:
-            logs = None
-        logs = logs if logs else 0
+        logs = state_dict.get('week_donate_log') if isinstance(state_dict, dict) else 0
         log_data = get_num_from_str(msg_body)
         log_data = int(log_data[-1]) if log_data else 0
         logs += log_data
@@ -643,17 +620,9 @@ class LimitHandle:
         return True
 
     async def get_user_donate_log_data(self, user_id):
-        object_key = 'state'  # 可变参数，记得修改方法
-        limit_dict, is_pass = await self._database.get_limit_by_user_id(user_id)
-        state_dict = limit_dict[object_key]
-        try:
-            logs = state_dict.get('week_donate_log')
-        except:
-            logs = None
-        if logs:
-            return int(logs)
-        else:
-            return 0
+        log_name: str = 'week_donate_log'
+        logs = await self._get_user_log_data_by_keys(user_id, log_name)
+        return int(logs) if logs else 0
 
     async def update_user_world_power_data(self, user_id, world_power) -> bool:
         """
@@ -675,35 +644,14 @@ class LimitHandle:
         return True
 
     async def get_user_world_power_data(self, user_id):
-        object_key = 'state'  # 可变参数，记得修改方法
-        limit_dict, is_pass = await self._database.get_limit_by_user_id(user_id)
-        state_dict = limit_dict[object_key]
-        try:
-            logs = state_dict.get('world_power')
-        except:
-            logs = None
-        if logs:
-            return int(logs)
-        else:
-            return 0
+        log_name: str = 'world_power'
+        logs = await self._get_user_log_data_by_keys(user_id, log_name)
+        return int(logs) if logs else 0
 
     async def get_user_rift_protect(self, user_id):
         limit_dict, is_pass = await self._database.get_limit_by_user_id(user_id)
         rift_protect = limit_dict['rift_protect']
         return rift_protect
-
-    async def get_back_fix_data(self, user_id):
-        object_key = 'state'  # 可变参数，记得修改方法
-        limit_dict, is_pass = await self._database.get_limit_by_user_id(user_id)
-        state_dict = limit_dict[object_key]
-        try:
-            logs = state_dict.get('back_fix')
-        except:
-            logs = None
-        if logs:
-            return int(logs)
-        else:
-            return 0
 
 
 limit_handle = LimitHandle()

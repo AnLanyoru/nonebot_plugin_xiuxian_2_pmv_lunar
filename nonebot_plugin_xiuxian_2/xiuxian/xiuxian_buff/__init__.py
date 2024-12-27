@@ -69,9 +69,9 @@ daily_work = on_fullmatch("日常中心", priority=9, permission=GROUP, block=Tr
 # 每日0点重置用户双修次数
 @two_exp_cd_up.scheduled_job("cron", hour=0, minute=0)
 async def two_exp_cd_up_():
-    two_exp_cd.re_data()
-    reset_send_stone()
-    reset_stone_exp_up()
+    await two_exp_cd.re_data()
+    await reset_send_stone()
+    await reset_stone_exp_up()
     logger.opt(colors=True).info(f"<green>日常限制已刷新！</green>")
 
 
@@ -381,8 +381,8 @@ async def two_exp_(bot: Bot, event: GroupMessageEvent, args: Message = CommandAr
                     await sql_message.update_levelrate(user_2_id, user_2['level_up_rate'] + 2)
                     msg += f"离开时双方互相留法宝为对方护道,双方各增加突破概率2%。"
                 await sql_message.update_power2(user_2_id)
-                limit_handle.update_user_log_data(user_1_id, msg)
-                limit_handle.update_user_log_data(user_2_id, msg)
+                await limit_handle.update_user_log_data(user_1_id, msg)
+                await limit_handle.update_user_log_data(user_2_id, msg)
                 msg = main_md(
                     "信息", msg,
                     '继续双修', f"双修{user_2['user_name']}",
@@ -777,7 +777,7 @@ async def my_exp_num_(bot: Bot, event: GroupMessageEvent):
     _, user_info, _ = await check_user(event)
 
     user_id = user_info['user_id']
-    two_exp_num = two_exp_cd.find_user(user_id)
+    two_exp_num = await two_exp_cd.find_user(user_id)
     impart_data = await xiuxian_impart.get_user_info_with_id(user_id)
     impart_two_exp = impart_data['impart_two_exp'] if impart_data is not None else 0
 
@@ -797,7 +797,7 @@ async def daily_work_(bot: Bot, event: GroupMessageEvent):
     _, user_info, _ = await check_user(event)
 
     user_id = user_info['user_id']
-    two_exp_num = two_exp_cd.find_user(user_id)
+    two_exp_num = await two_exp_cd.find_user(user_id)
     impart_data = await xiuxian_impart.get_user_info_with_id(user_id)
     impart_two_exp = impart_data['impart_two_exp'] if impart_data is not None else 0
 

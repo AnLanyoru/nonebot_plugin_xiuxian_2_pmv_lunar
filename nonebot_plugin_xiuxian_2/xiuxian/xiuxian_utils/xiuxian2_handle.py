@@ -1272,7 +1272,7 @@ async def final_user_data(**user_dict):
     if impart_data:
         pass
     else:
-        await xiuxian_impart._create_user(user_dict['user_id'])
+        await xiuxian_impart.impart_create_user(user_dict['user_id'])
         impart_data = await xiuxian_impart.get_user_info_with_id(user_dict['user_id'])
     for key, value in impart_data.items():
         if isinstance(value, decimal.Decimal):
@@ -1366,18 +1366,16 @@ class XiuxianImpartBuff:
                     logger.opt(colors=True).info(f"<green>xiuxian_impart数据库核对成功!</green>")
                     await db.execute(sql)
 
-    async def create_user(self, user_id):
+    async def check_user(self, user_id):
         """校验用户是否存在"""
         async with self.pool.acquire() as db:
             sql = f"select * from xiuxian_impart WHERE user_id=$1"
             result = await db.fetch(sql, user_id)
             return result[0][0] if result else None
 
-    async def _create_user(self, user_id: int) -> None:
+    async def impart_create_user(self, user_id: int) -> None:
         """在数据库中创建用户并初始化"""
-        if await self.create_user(user_id):
-            pass
-        else:
+        if not await self.check_user(user_id):
             async with self.pool.acquire() as db:
                 sql = (f"INSERT INTO xiuxian_impart ("
                        f"user_id, impart_hp_per, impart_atk_per, impart_mp_per, impart_exp_up , boss_atk, impart_know_per,"

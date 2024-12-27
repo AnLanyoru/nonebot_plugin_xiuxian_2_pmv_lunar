@@ -270,9 +270,9 @@ async def time_set_now_(bot: Bot, event: GroupMessageEvent):
 
     await sql_message.sign_remake()
     await sql_message.day_num_reset()
-    two_exp_cd.re_data()
+    await two_exp_cd.re_data()
     await sql_message.beg_remake()
-    impart_pk.re_data()
+    await impart_pk.re_data()
     await sql_message.sect_task_reset()
     await sql_message.sect_elixir_get_num_reset()
     msg = f"逆转时空，让一切重置次数！！！"

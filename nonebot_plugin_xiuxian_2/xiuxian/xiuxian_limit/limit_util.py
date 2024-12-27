@@ -2,13 +2,6 @@ from .limit_database import limit_data
 from .. import XiuConfig
 from ..xiuxian_utils.xiuxian2_handle import UserBuffDate, xiuxian_impart
 
-
-# 替换模块
-
-
-# 施工中
-
-
 class LimitCheck:
     def __init__(self):
         self.two_exp_limit = XiuConfig().two_exp_limit
@@ -42,7 +35,6 @@ class LimitCheck:
         await limit_data.update_limit_data_with_key(user_limit_2, 'two_exp_up')
         msg = "pass"
         return True, msg
-        pass
 
 
 limit_check = LimitCheck()

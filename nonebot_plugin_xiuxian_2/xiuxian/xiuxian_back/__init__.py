@@ -244,8 +244,8 @@ async def buy_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg())
                 await sql_message.update_ls(shop_user_id, give_stone, 1)
             shop_data[place_id] = reset_dict_num(shop_data[place_id])
             save_shop(shop_data)
-            limit_handle.update_user_shop_log_data(user_id, msg)
-            limit_handle.update_user_shop_log_data(shop_user_id, msg)
+            await limit_handle.update_user_shop_log_data(user_id, msg)
+            await limit_handle.update_user_shop_log_data(shop_user_id, msg)
             await bot.send(event=event, message=msg)
             await buy.finish()
 
@@ -683,12 +683,12 @@ async def use_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg())
                 msg = f"道友已学会该神通：{skill_info['name']}，请勿重复学习！"
             else:  # 学习sql
 
-                power = limit_handle.get_user_world_power_data(user_id)
+                power = await limit_handle.get_user_world_power_data(user_id)
                 if int(skill_info['rank']) > 120:
                     if power >= 2048:
                         power -= 2048
                         use_power = f"\r消耗天地精华2048点，余剩{power}点！！"
-                        limit_handle.update_user_world_power_data(user_id, power)
+                        await limit_handle.update_user_world_power_data(user_id, power)
                         await sql_message.update_back_j(user_id, goods_id, use_key=2)
                         await sql_message.updata_user_sec_buff(user_id, goods_id)
                         msg = f"恭喜道友学会神通：{skill_info['name']}！" + use_power
@@ -792,10 +792,10 @@ async def use_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg())
             await bot.send(event=event, message=msg)
             await use.finish()
         goods_info = items.get_data_by_item_id(goods_id)
-        power = limit_handle.get_user_world_power_data(user_id)
+        power = await limit_handle.get_user_world_power_data(user_id)
         msg = f"道友使用天地奇物{goods_info['name']}{num}个，将{goods_info['buff'] * num}点天地精华纳入丹田。\r请尽快利用！！否则天地精华将会消散于天地间！！"
         power += goods_info['buff'] * num
-        limit_handle.update_user_world_power_data(user_id, power)
+        await limit_handle.update_user_world_power_data(user_id, power)
         await sql_message.update_back_j(user_id, goods_id, num, 2)
         await bot.send(event=event, message=msg)
         await use.finish()

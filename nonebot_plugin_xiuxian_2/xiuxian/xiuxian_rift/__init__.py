@@ -170,20 +170,20 @@ async def complete_rift_(bot: Bot, event: GroupMessageEvent):
     title = f"道友进入秘境：{world_rift[world_id].name}，探索需要花费体力240点！！，余剩体力{user_info['user_stamina']}/2400！"
     await sql_message.do_work(user_id, 0)
     rift_rank = world_rift[world_id].rank  # 秘境等级
-    rift_protect = limit_handle.get_user_rift_protect(user_id)
+    rift_protect = await limit_handle.get_user_rift_protect(user_id)
     rift_type = get_story_type()  # 无事、宝物、战斗
     if rift_protect:
         if rift_type != "战斗":
             if rift_protect == 1:
                 rift_type = "战斗"
             else:
-                limit_handle.update_user_limit(user_id, 8, 1, 1)
+                await limit_handle.update_user_limit(user_id, 8, 1, 1)
     if rift_type == "无事":
         msg = random.choice(NONEMSG)
     elif rift_type == "战斗":
         result, msg = await get_boss_battle_info(user_info, rift_rank, bot.self_id)
         if rift_protect:
-            limit_handle.update_user_limit(user_id, 8, 9)
+            await limit_handle.update_user_limit(user_id, 8, 9)
         msg = msg + msg_handler(result)
     elif rift_type == "宝物":
         msg = await get_treasure_info(user_info, rift_rank)
@@ -195,7 +195,7 @@ async def complete_rift_(bot: Bot, event: GroupMessageEvent):
             msg = "道友踏入秘境一番探索，正要进入一处险境寻宝，怀中一物却轰然碎裂，一道念头自心中升起：不可进入！出秘境后方才得知，方才欲探之地有不少修士折损了修为。"
         else:
             msg = await get_dxsj_info("掉血事件", user_info)
-    limit_handle.update_user_log_data(user_id, msg)
+    await limit_handle.update_user_log_data(user_id, msg)
     msg = main_md(title, msg,
                   "秘境帮助", "秘境帮助",
                   "余剩体力", "体力",
@@ -217,21 +217,21 @@ async def rift_protect_handle_(bot: Bot, event: GroupMessageEvent, args: Message
     arg_strs = get_strs_from_str(args_str)
     handle_type = arg_strs[0] if arg_strs else 0
 
-    rift_protect = limit_handle.get_user_rift_protect(user_id)
+    rift_protect = await limit_handle.get_user_rift_protect(user_id)
     msg = "请输入正确的指令！！开启|关闭！！"
     if handle_type == "开启":
         if rift_protect:
             msg = "道友已开启秘境战斗事件保底，请勿重复开启！！！"
         else:
             msg = "成功开启秘境战斗事件保底！！！可以使用【查看秘境战斗事件保底】来查看距离保底探索次数！！"
-            limit_handle.update_user_limit(user_id, 8, 10)
+            await limit_handle.update_user_limit(user_id, 8, 10)
     if handle_type == "关闭":
         if rift_protect:
             if rift_protect > 10:
                 msg = f"当前无法关闭秘境保底！！！请在距离秘境保底10次以内时关闭！！！当前距离保底余剩{rift_protect}次"
             else:
                 msg = "成功关闭秘境战斗事件保底！！！"
-                limit_handle.update_user_limit(user_id, 8, rift_protect, 1)
+                await limit_handle.update_user_limit(user_id, 8, rift_protect, 1)
         else:
             msg = "道友未开启秘境战斗事件保底！！！"
     await bot.send(event=event, message=msg)
@@ -246,7 +246,7 @@ async def rift_protect_msg_(bot: Bot, event: GroupMessageEvent):
 
     user_id = user_info['user_id']
 
-    rift_protect = limit_handle.get_user_rift_protect(user_id)
+    rift_protect = await limit_handle.get_user_rift_protect(user_id)
     if rift_protect:
         msg = f"当前距离保底余剩{rift_protect}次"
     else:
