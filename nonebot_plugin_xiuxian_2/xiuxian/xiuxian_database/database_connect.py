@@ -1,5 +1,6 @@
 import asyncpg
 from .database_config import database_config  # 这是上面的config()代码块，已经保存在config.py文件中
+from .database_util import data_move, tower_db
 from .. import DRIVER
 
 params = database_config()
@@ -27,7 +28,7 @@ class DataBase:
     async def get_version(self):
         async with self.pool.acquire() as db:
             cursor = await db.fetch('SELECT version()')
-            db_version = cursor[0]
+            db_version = cursor[0][0]
             print(f"登录数据库成功，数据库版本：{db_version}")
 
     async def update(self, table: str, where: dict, create_column: bool = 0, **kwargs):
@@ -52,7 +53,7 @@ class DataBase:
                         await db.execute(f"select {column} from {table}")
                     except asyncpg.exceptions.UndefinedColumnError:
                         sql = f"ALTER TABLE {table} ADD COLUMN {column} {column_type};"
-                await db.execute(sql)
+                        await db.execute(sql)
             sql = f"UPDATE {table} set {update_column} WHERE {where_column}"
             await db.execute(sql, *kwargs.values(), *where.values())
 
@@ -74,9 +75,10 @@ class DataBase:
                         await db.execute(f"select {column} from {table}")
                     except asyncpg.exceptions.UndefinedColumnError:
                         sql = f"ALTER TABLE {table} ADD COLUMN {column} {column_type};"
-                await db.execute(sql)
+                        await db.execute(sql)
             sql = f"""INSERT INTO {table} ({insert_column}) VALUES ({value_format})"""
             await db.execute(sql, *kwargs.values())
+            return sql
 
 
 database = DataBase()
@@ -87,3 +89,4 @@ async def connect_db():
     global database
     await database.connect_pool_make()
     await database.get_version()
+    await data_move(database, "world_tower", tower_db)
