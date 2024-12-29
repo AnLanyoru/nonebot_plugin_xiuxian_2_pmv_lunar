@@ -7,6 +7,8 @@ from pathlib import Path
 from nonebot.log import logger
 
 from .point_shop import shop_1, shop_2, point_give_1, point_give_2
+from .. import DRIVER
+from ..xiuxian_database.database_connect import database
 from ..xiuxian_place import place
 from ..xiuxian_utils.clean_utils import number_to_msg
 from ..xiuxian_utils.item_json import items
@@ -39,6 +41,7 @@ class WorldTowerData:
     def __init__(self):
         fj_tower = Tower("灵虚古境", 3, shop_1, point_give_1)
         lj_tower = Tower("紫霄神渊", 19, shop_2, point_give_2)
+        self.pool = None
         self.tower_data = {0: fj_tower, 1: lj_tower}
         self.sql_user_table_name = "user_tower_info"
         self.sql_tower_info_table_name = "world_tower"
@@ -58,13 +61,12 @@ class WorldTowerData:
                 self.conn = sqlite3.connect(self.database_path, check_same_thread=False)
                 self.lock = threading.Lock()
             logger.opt(colors=True).info(f"<green>额外玩法数据库已连接！</green>")
-            self._check_data()
 
     def close(self):
         self.conn.close()
         logger.opt(colors=True).info(f"<green>额外玩法数据库关闭！</green>")
 
-    def _check_data(self):
+    def check_data(self):
         """检查数据完整性"""
         c = self.conn.cursor()
         try:
@@ -91,15 +93,6 @@ class WorldTowerData:
       "weekly_point" INTEGER DEFAULT 0,
       "fight_log" BLOB
       );""")
-
-        for i in self.sql_col:  # 自动补全
-            try:
-                c.execute(f"select {i} from {self.sql_user_table_name}")
-            except sqlite3.OperationalError:
-                logger.opt(colors=True).info(f"<yellow>{self.sql_user_table_name}，开始创建\r</yellow>")
-                sql = f"ALTER TABLE {self.sql_user_table_name} ADD COLUMN {i} INTEGER DEFAULT 0;"
-                logger.opt(colors=True).info(f"<green>{sql}</green>")
-                c.execute(sql)
 
         self.conn.commit()
 
@@ -258,6 +251,9 @@ class WorldTowerData:
 
 
 class TowerHandle(WorldTowerData):
+    def __init__(self):
+        super().__init__()
+
     def create_enemy(self):
         place_id = None
         floor = None
@@ -425,5 +421,11 @@ class TowerHandle(WorldTowerData):
 
 tower_handle = TowerHandle()
 
-if __name__ == '__main__':
-    tower_handle.create_enemy()
+
+@DRIVER.on_startup
+async def check_limit_db():
+    tower_handle.pool = database.pool
+    logger.opt(colors=True).info(f"<green>xiuxian_limit数据库已连接!</green>")
+    logger.opt(colors=True).info(f"<green>检查xiuxian_limit数据库完整性中</green>")
+    await tower_handle.check_data()
+    logger.opt(colors=True).info(f"<green>检查xiuxian_limit数据库完整性成功</green>")

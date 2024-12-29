@@ -1,10 +1,10 @@
 import asyncpg
 from .database_config import database_config  # 这是上面的config()代码块，已经保存在config.py文件中
-from .database_util import data_move, tower_db
+from .database_util import limit_db, tower_db, store_db, main_db, impart_db, all_table_data_move
 from .. import DRIVER
 
 params = database_config()
-date_type_set = {str: "TEXT", int: "numeric", bytes: "bytea"}
+date_type_set = {str: "TEXT", int: "numeric", float: "numeric", bytes: "bytea", None: "TEXT"}
 db_dict = {}
 
 
@@ -14,7 +14,8 @@ async def create_pool():
         user=params['user'],
         password=params['password'],
         host=params['host'],
-        port=params['post'])
+        port=params['post'],
+        max_inactive_connection_lifetime=6000)
     return pool
 
 
@@ -59,7 +60,7 @@ class DataBase:
 
     async def insert(self, table: str, create_column: bool = 0, **kwargs):
         """
-        简单逻辑数据更新接口
+        简单逻辑数据插入接口
         """
         column_count = len(kwargs) + 1
 
@@ -68,17 +69,35 @@ class DataBase:
         value_format = ",".join([f"${count}" for count in range(1, column_count)])
 
         async with self.pool.acquire() as db:
+            column_types = []
             if create_column:
                 for column, value in kwargs.items():
+                    column_types.append(type(value))
                     column_type = date_type_set.get(type(value))
                     try:
                         await db.execute(f"select {column} from {table}")
                     except asyncpg.exceptions.UndefinedColumnError:
                         sql = f"ALTER TABLE {table} ADD COLUMN {column} {column_type};"
-                        await db.execute(sql)
-            sql = f"""INSERT INTO {table} ({insert_column}) VALUES ({value_format})"""
-            await db.execute(sql, *kwargs.values())
-            return sql
+                        try:
+                            await db.execute(sql)
+                        except (asyncpg.exceptions.DataError, asyncpg.exceptions.PostgresSyntaxError) as e:
+                            print(f"表{table}数据转移失败")
+                            print(f"出错sql语句：{sql}")
+                            print(f"出错数据：{value}")
+                            print("错误信息：", e)
+                            return "error", None
+            # 数据插入
+            try:
+                sql = f"""INSERT INTO {table} ({insert_column}) VALUES ({value_format})"""
+                await db.execute(sql, *kwargs.values())
+                return sql, column_types
+            except (asyncpg.exceptions.DataError, asyncpg.exceptions.PostgresSyntaxError) as e:
+                print(f"表{table}数据转移失败")
+                print(f"出错sql语句：{sql}")
+                print(f"出错数据:")
+                print(kwargs.values())
+                print("错误信息：", e)
+                return "error", None
 
 
 database = DataBase()
@@ -89,4 +108,8 @@ async def connect_db():
     global database
     await database.connect_pool_make()
     await database.get_version()
-    await data_move(database, "world_tower", tower_db)
+    # await all_table_data_move(database, limit_db)
+    # await all_table_data_move(database, tower_db)
+    # await all_table_data_move(database, store_db)
+    await all_table_data_move(database, main_db, values_type_check=True)
+    # await all_table_data_move(database, impart_db)

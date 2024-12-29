@@ -1,5 +1,6 @@
 import random
 import re
+import time
 
 from nonebot import on_command, on_fullmatch, require
 from nonebot.adapters.onebot.v11 import (
@@ -83,6 +84,7 @@ sect_elixir_room_make = on_command("宗门丹房建设", aliases={"建设宗门�
 sect_elixir_get = on_command("宗门丹药领取", aliases={"领取宗门丹药领取"}, priority=5, permission=GROUP, block=True)
 sect_rename = on_fullmatch("宗门改名", priority=5, permission=GROUP, block=True)
 gm_sect_rename = on_fullmatch("超管宗门改名", priority=12, permission=SUPERUSER, block=True)
+gm_sect_materials = on_fullmatch("发放宗门资材", priority=12, permission=SUPERUSER, block=True)
 
 
 @weekly_work.scheduled_job("cron", day_of_week='mon', hour=4)
@@ -96,11 +98,28 @@ async def weekly_work_():
 async def materialsupdate_():
     all_sects = await sql_message.get_all_sects_id_scale()
     for s in all_sects:
-        await sql_message.update_sect_materials(sect_id=s[0], sect_materials=s[1] * config["发放宗门资材"]["倍率"],
+        await sql_message.update_sect_materials(sect_id=s['sect_id'],
+                                                sect_materials=s['sect_materials'] * config["发放宗门资材"]["倍率"],
                                                 key=1)
 
     logger.opt(colors=True).info(f"<green>已更新所有宗门的资材</green>")
 
+
+@gm_sect_rename.handle(parameterless=[Cooldown(stamina_cost=0, at_sender=False)])
+async def gm_sect_rename_(bot: Bot, event: GroupMessageEvent):
+    msg = f"开始发放宗门资材"
+    await bot.send(event, msg)
+    start_time = time.time()
+    all_sects = await sql_message.get_all_sects_id_scale()
+    for s in all_sects:
+        await sql_message.update_sect_materials(sect_id=s['sect_id'],
+                                                sect_materials=s['sect_materials'] * config["发放宗门资材"]["倍率"],
+                                                key=1)
+    end_time = time.time()
+    use_time = (end_time - start_time) * 1000
+    msg = f"已更新所有宗门的资材, 耗时: {use_time} ms"
+    await bot.send(event, msg)
+    await gm_sect_rename.finish()
 
 @gm_sect_rename.handle(parameterless=[Cooldown(stamina_cost=0, at_sender=False)])
 async def gm_sect_rename_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
