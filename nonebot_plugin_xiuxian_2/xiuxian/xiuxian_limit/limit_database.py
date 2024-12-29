@@ -602,7 +602,7 @@ class LimitHandle:
         object_key = 'state'  # 可变参数，记得修改方法
         limit_dict, is_pass = await self._database.get_limit_by_user_id(user_id)
         state_dict = limit_dict[object_key]
-        logs = state_dict.get('week_donate_log') if isinstance(state_dict, dict) else 0
+        logs = state_dict.get('week_donate_log', 0) if isinstance(state_dict, dict) else 0
         log_data = get_num_from_str(msg_body)
         log_data = int(log_data[-1]) if log_data else 0
         logs += log_data

@@ -97,17 +97,17 @@ async def all_table_data_move(database, sqlite_db_path, values_type_check: bool 
             return 401
         async with database.pool.acquire() as pg_conn:
             data = []
+            print('数据预处理开始')
             for row in result[1:]:
                 if values_type_check:
                     try:
-                        print('数据预处理开始')
                         row = [value_type(value if value else 0) for value, value_type in zip(row, column_types)]
-                        print('数据预处理成功')
                     except (ValueError, TypeError) as e:
                         print(f"类型严重不兼容：", dict(zip(row, column_types)))
                         print(e)
                         return 401
                 data.append(row)
+            print('数据预处理成功')
             try:
                 await pg_conn.executemany(sql, data)
             except asyncpg.exceptions.DataError as e:

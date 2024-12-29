@@ -279,7 +279,7 @@ class XiuxianDateManage:
             result = await db.fetch(sql, user_id)
             if not result:
                 return f"修仙界没有你的足迹，输入【踏入仙途】加入修仙世界吧！"
-            elif result[0][0] == 0:
+            elif not result[0][0]:
                 ls = random.randint(XiuConfig().sign_in_lingshi_lower_limit,
                                     XiuConfig().sign_in_lingshi_upper_limit)
                 sql2 = f"UPDATE user_xiuxian SET is_sign=1,stone=stone+$1 WHERE user_id=$2"
@@ -1225,11 +1225,13 @@ class XiuxianDateManage:
         bind_num = min(bind_num, goods_num)
         now_time = datetime.now()
         now_time = str(now_time)
-        sql_str = (f"UPDATE back set update_time='{now_time}',action_time='{now_time}',goods_num={goods_num},"
-                   f"day_num={day_num},all_num={all_num},bind_num={bind_num} "
-                   f"WHERE user_id={user_id} and goods_id={goods_id}")
+        sql_str = (f"UPDATE back set update_time=$1,action_time=$2,goods_num=$3,"
+                   f"day_num=$4,all_num=$5,bind_num=$6 "
+                   f"WHERE user_id=$7 and goods_id=$8")
         async with self.pool.acquire() as db:
-            await db.execute(sql_str)
+            print(f"异常sql语句：{sql_str}")
+            await db.execute(sql_str, now_time, now_time, goods_num, day_num, all_num, bind_num,
+                             user_id, goods_id)
 
     async def del_back_item(self, user_id, goods_id):
         """

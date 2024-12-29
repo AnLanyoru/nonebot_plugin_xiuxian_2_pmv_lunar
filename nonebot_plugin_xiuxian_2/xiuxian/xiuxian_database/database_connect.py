@@ -4,7 +4,7 @@ from .database_util import limit_db, tower_db, store_db, main_db, impart_db, all
 from .. import DRIVER
 
 params = database_config()
-date_type_set = {str: "TEXT", int: "numeric", float: "numeric", bytes: "bytea", None: "TEXT"}
+date_type_set = {str: "TEXT", int: "numeric DEFAULT 0", float: "numeric DEFAULT 0", bytes: "bytea", None: "TEXT"}
 db_dict = {}
 
 
