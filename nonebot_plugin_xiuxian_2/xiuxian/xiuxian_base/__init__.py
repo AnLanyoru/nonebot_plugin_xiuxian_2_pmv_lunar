@@ -274,11 +274,12 @@ async def rank_(bot: Bot, event: GroupMessageEvent):
         scened_msg = "\r    丹房"
         elixir_room_level_up_config = sect_config['宗门丹房参数']['elixir_room_level']
         for sect_info, index in zip(lt_rank, range(60)):
-            lt_rank[index] = list(lt_rank[index])
-            if int(sect_info[2]) == 0:
-                lt_rank[index][2] = "暂无" + f"  建设度:{sect_info[3]}"
+            if int(sect_info['elixir_room_level']) == 0:
+                lt_rank[index]['elixir_room_level'] = "暂无" + f"  建设度:{sect_info['sect_scale']}"
             else:
-                lt_rank[index][2] = elixir_room_level_up_config[str(sect_info[2])]['name'] + f" 建设度:{sect_info[3]}"
+                lt_rank[index]['elixir_room_level'] = (elixir_room_level_up_config[
+                                                           str(sect_info['elixir_room_level'])]['name']
+                                                       + f" 建设度:{sect_info['sect_scale']}")
     else:
         lt_rank = {}
     long_rank = len(lt_rank)
@@ -296,6 +297,7 @@ async def rank_(bot: Bot, event: GroupMessageEvent):
         msg = ''
         num = item_num
         for i in lt_rank:
+            i = list(i.values())
             num += 1
             msg += f"第{num}位 {first_msg}{i[0]} {i[1]} {scened_msg}:{number_to_pro(i[2])}\r"
         msg += f"第 {page}/{page_all} 页"

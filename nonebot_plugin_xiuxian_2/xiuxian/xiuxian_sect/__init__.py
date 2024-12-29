@@ -105,21 +105,21 @@ async def materialsupdate_():
     logger.opt(colors=True).info(f"<green>已更新所有宗门的资材</green>")
 
 
-@gm_sect_rename.handle(parameterless=[Cooldown(stamina_cost=0, at_sender=False)])
-async def gm_sect_rename_(bot: Bot, event: GroupMessageEvent):
+@gm_sect_materials.handle(parameterless=[Cooldown(stamina_cost=0, at_sender=False)])
+async def gm_sect_materials_(bot: Bot, event: GroupMessageEvent):
     msg = f"开始发放宗门资材"
     await bot.send(event, msg)
     start_time = time.time()
     all_sects = await sql_message.get_all_sects_id_scale()
     for s in all_sects:
         await sql_message.update_sect_materials(sect_id=s['sect_id'],
-                                                sect_materials=s['sect_materials'] * config["发放宗门资材"]["倍率"],
+                                                sect_materials=s['sect_scale'] * config["发放宗门资材"]["倍率"],
                                                 key=1)
     end_time = time.time()
     use_time = (end_time - start_time) * 1000
     msg = f"已更新所有宗门的资材, 耗时: {use_time} ms"
     await bot.send(event, msg)
-    await gm_sect_rename.finish()
+    await gm_sect_materials.finish()
 
 @gm_sect_rename.handle(parameterless=[Cooldown(stamina_cost=0, at_sender=False)])
 async def gm_sect_rename_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):

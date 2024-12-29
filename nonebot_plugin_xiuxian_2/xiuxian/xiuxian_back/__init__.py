@@ -111,6 +111,8 @@ async def back_help_(bot: Bot, event: GroupMessageEvent):
     user_id = user_info["user_id"]
     user_backs = await sql_message.get_back_msg_all(user_id)  # list(back)
     item_check = {}
+    msg = '开始进行背包修复，请稍等'
+    await bot.send(event=event, message=msg)
     msg = "尝试进行背包修复："
     for item in user_backs:
         item_id = item["goods_id"]

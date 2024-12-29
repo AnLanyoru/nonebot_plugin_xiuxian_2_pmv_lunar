@@ -111,5 +111,5 @@ async def connect_db():
     # await all_table_data_move(database, limit_db)
     # await all_table_data_move(database, tower_db)
     # await all_table_data_move(database, store_db)
-    await all_table_data_move(database, main_db, values_type_check=True)
+    # await all_table_data_move(database, main_db, values_type_check=True)
     # await all_table_data_move(database, impart_db)

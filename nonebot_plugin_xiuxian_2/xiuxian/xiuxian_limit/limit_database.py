@@ -52,11 +52,6 @@ class LimitData:
           "state" bytea
           );""")
             try:
-                await db.execute(f"select rift_protect from user_limit")
-            except asyncpg.exceptions.UndefinedColumnError:
-                sql = f"ALTER TABLE user_limit ADD COLUMN rift_protect integer DEFAULT 0;"
-                await db.execute(sql)
-            try:
                 await db.execute(f"select count(1) from active")
             except asyncpg.exceptions.UndefinedTableError:
                 await db.execute("""CREATE TABLE "active" (

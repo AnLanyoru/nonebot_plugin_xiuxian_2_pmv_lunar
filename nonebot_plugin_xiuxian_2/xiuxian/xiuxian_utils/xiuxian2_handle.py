@@ -125,7 +125,7 @@ class XiuxianDateManage:
 
             for i in XiuConfig().sql_user_xiuxian:
                 try:
-                    await db.execute(f"select {i} from user_xiuxian")
+                    await db.execute(f"select {i} from user_xiuxian limit 1")
                 except asyncpg.exceptions.UndefinedColumnError:
                     logger.opt(colors=True).info("<yellow>sql_user_xiuxian有字段不存在，开始创建\r</yellow>")
                     sql = f"ALTER TABLE user_xiuxian ADD COLUMN {i} numeric DEFAULT 0;"
@@ -134,7 +134,7 @@ class XiuxianDateManage:
 
             for d in XiuConfig().sql_user_cd:
                 try:
-                    await db.execute(f"select {d} from user_cd")
+                    await db.execute(f"select {d} from user_cd limit 1")
                 except asyncpg.exceptions.UndefinedColumnError:
                     logger.opt(colors=True).info("<yellow>sql_user_cd有字段不存在，开始创建</yellow>")
                     sql = f"ALTER TABLE user_cd ADD COLUMN {d} numeric DEFAULT 0;"
@@ -143,7 +143,7 @@ class XiuxianDateManage:
 
             for s in XiuConfig().sql_sects:
                 try:
-                    await db.execute(f"select {s} from sects")
+                    await db.execute(f"select {s} from sects limit 1")
                 except asyncpg.exceptions.UndefinedColumnError:
                     logger.opt(colors=True).info("<yellow>sql_sects有字段不存在，开始创建</yellow>")
                     sql = f"ALTER TABLE sects ADD COLUMN {s} numeric DEFAULT 0;"
@@ -152,7 +152,7 @@ class XiuxianDateManage:
 
             for m in XiuConfig().sql_buff:
                 try:
-                    await db.execute(f"select {m} from buff_info")
+                    await db.execute(f"select {m} from buff_info limit 1")
                 except asyncpg.exceptions.UndefinedColumnError:
                     logger.opt(colors=True).info("<yellow>sql_buff有字段不存在，开始创建</yellow>")
                     sql = f"ALTER TABLE buff_info ADD COLUMN {m} numeric DEFAULT 0;"
@@ -161,7 +161,7 @@ class XiuxianDateManage:
 
             for b in XiuConfig().sql_back:
                 try:
-                    await db.execute(f"select {b} from back")
+                    await db.execute(f"select {b} from back limit 1")
                 except asyncpg.exceptions.UndefinedColumnError:
                     logger.opt(colors=True).info("<yellow>sql_back有字段不存在，开始创建</yellow>")
                     sql = f"ALTER TABLE back ADD COLUMN {b} numeric DEFAULT 0;"
@@ -739,7 +739,7 @@ class XiuxianDateManage:
         """这也是灵石排行榜"""
         place_max = world_id * 12 + 13
         place_min = world_id * 12
-        sql = (f"SELECT user_name,level,stone FROM user_xiuxian WHERE user_name is NOT NULL"
+        sql = (f"SELECT user_name,level,stone FROM user_xiuxian WHERE user_name is NOT NULL "
                f"and place_id > {place_min} and place_id < {place_max} ORDER BY stone DESC LIMIT 60")
         async with self.pool.acquire() as db:
             result = await db.fetch(sql)
@@ -1359,7 +1359,7 @@ class XiuxianImpartBuff:
 
             for s in config_impart.sql_table_impart_buff:
                 try:
-                    await db.execute(f"select {s} from xiuxian_impart")
+                    await db.execute(f"select {s} from xiuxian_impart limit 1")
                 except asyncpg.exceptions.UndefinedColumnError:
                     sql = f"ALTER TABLE xiuxian_impart ADD COLUMN {s} numeric DEFAULT 0;"
                     logger.opt(colors=True).info(f"<green>{sql}</green>")

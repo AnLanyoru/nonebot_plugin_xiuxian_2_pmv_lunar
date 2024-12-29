@@ -66,7 +66,7 @@ class WorldTowerData:
         self.conn.close()
         logger.opt(colors=True).info(f"<green>额外玩法数据库关闭！</green>")
 
-    def check_data(self):
+    async def check_data(self):
         """检查数据完整性"""
         c = self.conn.cursor()
         try:
@@ -425,7 +425,7 @@ tower_handle = TowerHandle()
 @DRIVER.on_startup
 async def check_limit_db():
     tower_handle.pool = database.pool
-    logger.opt(colors=True).info(f"<green>xiuxian_limit数据库已连接!</green>")
-    logger.opt(colors=True).info(f"<green>检查xiuxian_limit数据库完整性中</green>")
+    logger.opt(colors=True).info(f"<green>xiuxian_tower数据库已连接!</green>")
+    logger.opt(colors=True).info(f"<green>检查xiuxian_tower数据库完整性中</green>")
     await tower_handle.check_data()
-    logger.opt(colors=True).info(f"<green>检查xiuxian_limit数据库完整性成功</green>")
+    logger.opt(colors=True).info(f"<green>检查xiuxian_tower数据库完整性成功</green>")
