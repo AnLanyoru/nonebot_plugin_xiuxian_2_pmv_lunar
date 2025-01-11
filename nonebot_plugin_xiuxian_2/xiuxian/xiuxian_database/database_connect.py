@@ -1,4 +1,6 @@
 import asyncpg
+from asyncpg import Pool
+
 from .database_config import database_config  # 这是上面的config()代码块，已经保存在config.py文件中
 from .database_util import limit_db, tower_db, store_db, main_db, impart_db, all_table_data_move
 from .. import DRIVER
@@ -21,7 +23,7 @@ async def create_pool():
 
 class DataBase:
     def __init__(self):
-        self.pool = None
+        self.pool: Pool = None
 
     async def connect_pool_make(self):
         self.pool = await create_pool()
@@ -113,3 +115,8 @@ async def connect_db():
     # await all_table_data_move(database, store_db)
     # await all_table_data_move(database, main_db, values_type_check=True)
     # await all_table_data_move(database, impart_db)
+
+
+@DRIVER.on_shutdown
+async def close_db():
+    await database.pool.close()

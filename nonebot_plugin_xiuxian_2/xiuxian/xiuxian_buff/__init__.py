@@ -10,7 +10,7 @@ from nonebot.adapters.onebot.v11 import (
     GroupMessageEvent
 )
 from nonebot.log import logger
-from nonebot.params import CommandArg
+from nonebot.params import CommandArg, RawCommand
 from nonebot.permission import SUPERUSER
 
 from .limit import check_limit, reset_send_stone, reset_stone_exp_up
@@ -24,7 +24,7 @@ from ..xiuxian_limit.limit_database import limit_handle, limit_data
 from ..xiuxian_limit.limit_util import limit_check
 from ..xiuxian_place import place
 from ..xiuxian_tower import tower_handle
-from ..xiuxian_utils.clean_utils import get_datetime_from_str, date_sub, main_md, msg_handler, simple_md
+from ..xiuxian_utils.clean_utils import get_datetime_from_str, date_sub, main_md, msg_handler, simple_md, get_args_num
 from ..xiuxian_utils.lay_out import Cooldown
 from ..xiuxian_utils.other_set import OtherSet
 from ..xiuxian_utils.player_fight import player_fight
@@ -49,7 +49,7 @@ buffinfo = on_fullmatch("我的功法", priority=1, permission=GROUP, block=True
 out_closing = on_command("出关", aliases={"灵石出关"}, priority=5, permission=GROUP, block=True)
 in_closing = on_fullmatch("闭关", priority=5, permission=GROUP, block=True)
 stone_exp = on_command("灵石修仙", aliases={"灵石修炼", "/灵石修炼"}, priority=1, permission=GROUP, block=True)
-two_exp = on_command("双修", priority=5, permission=GROUP, block=True)
+two_exp = on_command("双修", aliases={"快速双修", "确认快速双修"}, priority=5, permission=GROUP, block=True)
 mind_state = on_command("我的状态", aliases={"/我的状态"}, priority=1, permission=GROUP, block=True)
 select_state = on_command("查看状态", aliases={"查状态"}, priority=1, permission=GROUP, block=True)
 qc = on_command("切磋", priority=6, permission=GROUP, block=True)
@@ -283,7 +283,7 @@ async def qc_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
 
 
 @two_exp.handle(parameterless=[Cooldown(stamina_cost=0, at_sender=False)])
-async def two_exp_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
+async def two_exp_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg(), cmd: str = RawCommand()):
     """双修"""
 
     _, user_1, _ = await check_user(event)
@@ -295,106 +295,127 @@ async def two_exp_(bot: Bot, event: GroupMessageEvent, args: Message = CommandAr
 
     user_2 = await sql_message.get_user_info_with_id(user_2_id)
 
-    if user_1 and user_2:
-        if user_2_id is None:
-            msg = "请输入你道侣的道号,与其一起双修！"
-            await bot.send(event=event, message=msg)
-            await two_exp.finish()
+    num = get_args_num(args=args, no=1, default=1)
 
-        if int(user_1_id) == int(user_2_id):
-            msg = "道友无法与自己双修！"
-            await bot.send(event=event, message=msg)
-            await two_exp.finish()
-        if user_2:
-            exp_1 = user_1['exp']
-            exp_2 = user_2['exp']
-            if exp_2 > exp_1:
-                msg = "修仙大能看了看你，不屑一顾，扬长而去！"
-                await bot.send(event=event, message=msg)
-                await two_exp.finish()
-            else:
-                if await place.is_the_same_place(int(user_1_id), int(user_2_id)) is False:
-                    msg = "道友与你的道侣不在同一位置，请邀约道侣前来双修！！！"
-                    await bot.send(event=event, message=msg)
-                    await two_exp.finish()
-                is_type, msg = await check_user_type(user_2_id, 0)
-                if is_type:
-                    pass
-                else:
-                    msg = "对方正在忙碌中，暂时无法与道友双修！！"
-                    await bot.send(event=event, message=msg)
-                    await two_exp.finish()
-                is_pass, msg = await limit_check.two_exp_limit_check(user_id_1=user_1_id, user_id_2=user_2_id)
-                if not is_pass:
-                    await bot.send(event=event, message=msg)
-                    await two_exp.finish()
-                max_exp_1 = (
-                        int(await OtherSet().set_closing_type(user_1['level'])) * XiuConfig().closing_exp_upper_limit
-                )  # 获取下个境界需要的修为 * 1.5为闭关上限
-                max_exp_2 = (
-                        int(await OtherSet().set_closing_type(user_2['level'])) * XiuConfig().closing_exp_upper_limit
-                )
-                user_get_exp_max_1 = int(max_exp_1) - user_1['exp']
-                user_get_exp_max_2 = int(max_exp_2) - user_2['exp']
-
-                if user_get_exp_max_1 < 0:
-                    user_get_exp_max_1 = 0
-                if user_get_exp_max_2 < 0:
-                    user_get_exp_max_2 = 0
-
-                msg = ""
-                msg += f"{user_1['user_name']}与{user_2['user_name']}情投意合，于某地一起修炼了一晚。"
-                exp = int((exp_1 + exp_2) * 0.0055)
-                max_exp = XiuConfig().two_exp  # 双修上限罪魁祸首
-                # 玩家1修为增加
-                if exp >= max_exp:
-                    if user_1['root_type'] not in ['源宇道根', '道之本源']:
-                        exp_limit_1 = max_exp
-                    else:
-                        exp_limit_1 = max_exp * 10
-                else:
-                    exp_limit_1 = exp
-                if exp_limit_1 >= user_get_exp_max_1:
-                    await sql_message.update_exp(user_1_id, user_get_exp_max_1)
-                    msg += f"{user_1['user_name']}修为到达上限，增加修为{user_get_exp_max_1}。"
-                else:
-                    await sql_message.update_exp(user_1_id, exp_limit_1)
-                    msg += f"{user_1['user_name']}增加修为{exp_limit_1}。"
-                await sql_message.update_power2(user_1_id)
-                # 玩家2修为增加
-                if exp >= max_exp:
-                    if user_2['root_type'] not in ['源宇道根', '道之本源']:
-                        exp_limit_2 = max_exp
-                    else:
-                        exp_limit_2 = max_exp * 10
-                else:
-                    exp_limit_2 = exp
-                if exp_limit_2 >= user_get_exp_max_2:
-                    await sql_message.update_exp(user_2_id, user_get_exp_max_2)
-                    msg += f"{user_2['user_name']}修为到达上限，增加修为{user_get_exp_max_2}。"
-                else:
-                    await sql_message.update_exp(user_2_id, exp_limit_2)
-                    msg += f"{user_2['user_name']}增加修为{exp_limit_2}。"
-                # 双修彩蛋，突破概率增加
-                if random.randint(1, 100) in [13, 14, 52, 10, 66]:
-                    await sql_message.update_levelrate(user_1_id, user_1['level_up_rate'] + 2)
-                    await sql_message.update_levelrate(user_2_id, user_2['level_up_rate'] + 2)
-                    msg += f"离开时双方互相留法宝为对方护道,双方各增加突破概率2%。"
-                await sql_message.update_power2(user_2_id)
-                await limit_handle.update_user_log_data(user_1_id, msg)
-                await limit_handle.update_user_log_data(user_2_id, msg)
-                msg = main_md(
-                    "信息", msg,
-                    '继续双修', f"双修{user_2['user_name']}",
-                    '双修', '双修',
-                    '修炼', '修炼',
-                    '修仙帮助', '修仙帮助')
-                await bot.send(event=event, message=msg)
-                await two_exp.finish()
-    else:
-        msg = "修仙者应一心向道，务要留恋凡人！"
+    if not user_2_id:
+        msg = "请输入你道侣的道号,与其一起双修！"
         await bot.send(event=event, message=msg)
         await two_exp.finish()
+
+    if int(user_1_id) == int(user_2_id):
+        msg = "道友无法与自己双修！"
+        await bot.send(event=event, message=msg)
+        await two_exp.finish()
+
+    exp_1 = user_1['exp']
+    exp_2 = user_2['exp']
+    if exp_2 > exp_1:
+        msg = "修仙大能看了看你，不屑一顾，扬长而去！"
+        await bot.send(event=event, message=msg)
+        await two_exp.finish()
+
+    if await place.is_the_same_place(int(user_1_id), int(user_2_id)) is False:
+        msg = "道友与你的道侣不在同一位置，请邀约道侣前来双修！！！"
+        await bot.send(event=event, message=msg)
+        await two_exp.finish()
+
+    is_type, msg = await check_user_type(user_2_id, 0)
+    if not is_type:
+        msg = "对方正在忙碌中，暂时无法与道友双修！！"
+        await bot.send(event=event, message=msg)
+        await two_exp.finish()
+
+    is_pass, msg = await limit_check.two_exp_limit_check(user_id_1=user_1_id, user_id_2=user_2_id, num=num)
+    if not is_pass:
+        await bot.send(event=event, message=msg)
+        await two_exp.finish()
+
+    # 获取下个境界需要的修为 * 1.5为闭关上限
+    max_exp_1 = (int(await OtherSet().set_closing_type(user_1['level']))
+                 * XiuConfig().closing_exp_upper_limit)
+    max_exp_2 = (int(await OtherSet().set_closing_type(user_2['level']))
+                 * XiuConfig().closing_exp_upper_limit)
+    user_get_exp_max_1 = max(max_exp_1 - user_1['exp'], 0)
+    user_get_exp_max_2 = max(max_exp_2 - user_2['exp'], 0)
+
+    msg = f"{user_1['user_name']}与{user_2['user_name']}情投意合，于某地一起修炼了一晚。"
+    exp = int((exp_1 + exp_2) * 0.0055)
+    max_exp = XiuConfig().two_exp  # 双修上限罪魁祸首
+    # 玩家1修为增加
+    if exp >= max_exp:
+        user_1_get_exp_full = True
+        if user_1['root_type'] not in ['源宇道根', '道之本源']:
+            exp_limit_1 = max_exp
+        else:
+            exp_limit_1 = max_exp * 10
+    else:
+        user_1_get_exp_full = False
+        exp_limit_1 = exp
+    # 玩家2修为增加
+    if exp >= max_exp:
+        user_2_get_exp_full = True
+        if user_2['root_type'] not in ['源宇道根', '道之本源']:
+            exp_limit_2 = max_exp
+        else:
+            exp_limit_2 = max_exp * 10
+    else:
+        user_2_get_exp_full = False
+        exp_limit_2 = exp
+
+    if not user_1_get_exp_full & user_2_get_exp_full:
+        if cmd == "确认快速双修":
+            pass
+        else:
+            msg = "道友与对方有一方无法达到最大双修收益，若要继续，在指令前加上确定"
+            msg = main_md(
+                "提示", msg,
+                '查看日常', "日常中心",
+                '双修', '双修',
+                '修炼', '修炼',
+                '确认快速双修', f"确认快速双修{user_2['user_name']} {num}")
+            await bot.send(event=event, message=msg)
+            await two_exp.finish()
+
+    exp_limit_1 *= num
+    exp_limit_2 *= num
+
+    # 玩家1修为上限
+    if exp_limit_1 >= user_get_exp_max_1:
+        await sql_message.update_exp(user_1_id, user_get_exp_max_1)
+        msg += f"{user_1['user_name']}修为到达上限，增加修为{user_get_exp_max_1}。"
+    else:
+        await sql_message.update_exp(user_1_id, exp_limit_1)
+        msg += f"{user_1['user_name']}增加修为{exp_limit_1}。"
+
+    # 玩家2修为上限
+    if exp_limit_2 >= user_get_exp_max_2:
+        await sql_message.update_exp(user_2_id, user_get_exp_max_2)
+        msg += f"{user_2['user_name']}修为到达上限，增加修为{user_get_exp_max_2}。"
+    else:
+        await sql_message.update_exp(user_2_id, exp_limit_2)
+        msg += f"{user_2['user_name']}增加修为{exp_limit_2}。"
+
+    # 双修彩蛋，突破概率增加
+    break_rate_up = 0
+    for _ in range(num):
+        if random.randint(1, 100) in [13, 14, 52, 10, 66]:
+            break_rate_up += 2
+    if break_rate_up:
+        await sql_message.update_levelrate(user_1_id, user_1['level_up_rate'] + break_rate_up)
+        await sql_message.update_levelrate(user_2_id, user_2['level_up_rate'] + break_rate_up)
+        msg += f"离开时双方互相留法宝为对方护道,双方各增加突破概率{break_rate_up}%。"
+    await sql_message.update_power2(user_1_id)
+    await sql_message.update_power2(user_2_id)
+    await limit_handle.update_user_log_data(user_1_id, msg)
+    await limit_handle.update_user_log_data(user_2_id, msg)
+    msg = main_md(
+        "信息", msg,
+        '查看日常', "日常中心",
+        '双修', '双修',
+        '修炼', '修炼',
+        '继续双修', f"双修{user_2['user_name']} {num}")
+    await bot.send(event=event, message=msg)
+    await two_exp.finish()
 
 
 @stone_exp.handle(parameterless=[Cooldown(at_sender=False)])

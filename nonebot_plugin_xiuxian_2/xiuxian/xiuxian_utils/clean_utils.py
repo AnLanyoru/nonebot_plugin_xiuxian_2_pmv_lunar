@@ -259,11 +259,12 @@ def get_paged_msg(msg_list: list, page: int | Message,
     return msg_list
 
 
-def get_args_num(args: Message | str, no: int = 1) -> int:
+def get_args_num(args: Message | str, no: int = 1, default: int = 0) -> int:
     """
     获取消息指令参数中的数字，自动处理报错
     :param args: 消息指令参数
     :param no: 需要第几个数字
+    :param default: 为空默认返回
     :return: 数字
     """
     args_str = args.extract_plain_text() if isinstance(args, Message) else args
@@ -272,7 +273,7 @@ def get_args_num(args: Message | str, no: int = 1) -> int:
         num = int(num_msg[no - 1])
         return num
     except (IndexError, TypeError):
-        return 0
+        return default
 
 
 def get_num_from_str(msg: str) -> list:

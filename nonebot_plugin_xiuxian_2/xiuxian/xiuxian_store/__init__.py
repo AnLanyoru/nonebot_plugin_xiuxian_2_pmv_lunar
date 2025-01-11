@@ -169,15 +169,15 @@ async def fast_sell_items_(
                 continue
             if want_item_num == sell_item_num:
                 # 卖完了
-                user_store.store_data.del_want_item(want_user_id, item_id)
+                await user_store.store_data.del_want_item(want_user_id, item_id)
             else:
                 await user_store.update_user_want(user_info, sell_item_num, want_user_id, want_item)
         else:  # 无数量限制，检查资金是否充足
-            want_item_funds = user_store.get_user_funds(want_user_id)  # 获取玩家摊位资金
+            want_item_funds = await user_store.get_user_funds(want_user_id)  # 获取玩家摊位资金
             if get_stone > want_item_funds:  # 资金不足
                 funds_pass = False
                 continue
-            user_store.update_user_funds(want_user_id, get_stone, 1)  # 减少资金
+            await user_store.update_user_funds(want_user_id, get_stone, 1)  # 减少资金
         # 检查通过，减少出售者物品，增加买家物品，减少买家资金储备，增加卖家灵石
         await sql_message.update_back_j(user_id, item_id, num=sell_item_num)
         await sql_message.update_ls(user_id, get_stone, 1)
@@ -224,7 +224,7 @@ async def user_want_funds_(
         await bot.send(event, msg)
         await user_want_funds.finish()
     await sql_message.update_ls(user_id, funds_num, 2)  # 减少灵石
-    user_funds = user_store.update_user_funds(user_id, funds_num, 0)  # 增加资金
+    user_funds = await user_store.update_user_funds(user_id, funds_num, 0)  # 增加资金
     msg = f"道友成功在灵宝楼存入{number_to_msg(funds_num)}灵石作为资金。\r当前灵宝楼存有：{number_to_msg(user_funds)}灵石"
     await bot.send(event, msg)
     await user_want_funds.finish()
@@ -257,7 +257,7 @@ async def remove_want_item_(
         msg = f"道友没有此物品的求购！！！"
         await bot.send(event, msg)
         await remove_want_item.finish()
-    user_store.store_data.del_want_item(user_id, item_id)
+    await user_store.store_data.del_want_item(user_id, item_id)
     back_stone = int(want_item_info['need_items_price'] * want_item_info['need_items_num'] * 0.8)
     await sql_message.update_ls(user_id, back_stone, 1)  # 增加灵石
     msg = f"成功取消对{item_name}的求购。\r回退{number_to_msg(back_stone)}灵石"
@@ -283,12 +283,12 @@ async def user_funds_extract_(
     user_id = user_info["user_id"]
     # 提取命令详情
     funds_num = get_args_num(args, 1)
-    user_funds = user_store.get_user_funds(user_id)  # 获取玩家摊位资金
+    user_funds = await user_store.get_user_funds(user_id)  # 获取玩家摊位资金
     if funds_num > user_funds:
         msg = f"道友的灵宝楼内资金不足！！！\r当前灵宝楼内仅存有：{number_to_msg(user_funds)}灵石"
         await bot.send(event, msg)
         await user_funds_extract.finish()
-    user_funds = user_store.update_user_funds(user_id, funds_num, 1)  # 减少资金
+    user_funds = await user_store.update_user_funds(user_id, funds_num, 1)  # 减少资金
     stone_extract = int(funds_num * 0.8)
     stone_handle = funds_num * 0.2
     await sql_message.update_ls(user_id, stone_extract, 1)  # 增加灵石
@@ -364,7 +364,7 @@ async def user_sell_to_(
                 await bot.send(event, msg)
                 await user_sell_to.finish()
         else:  # 没有指定玩家
-            want_item = user_store.check_highest_want_item(user_id, item_id, sell_item_num, 1)  # 获取物品售价最高玩家
+            want_item = await user_store.check_highest_want_item(user_id, item_id, sell_item_num, 1)  # 获取物品售价最高玩家
             if not want_item:
                 msg = f"现在似乎无人需要{sell_item_num}个{item_name}！！！！"
                 await bot.send(event, msg)
@@ -385,16 +385,16 @@ async def user_sell_to_(
                 await user_sell_to.finish()
             if want_item_num == sell_item_num:
                 # 卖完了
-                user_store.store_data.del_want_item(want_user_id, item_id)
+                await user_store.store_data.del_want_item(want_user_id, item_id)
             else:
                 await user_store.update_user_want(user_info, sell_item_num, want_user_id, want_item)
         else:  # 无数量限制，检查资金是否充足
-            want_item_funds = user_store.get_user_funds(want_user_id)  # 获取玩家摊位资金
+            want_item_funds = await user_store.get_user_funds(want_user_id)  # 获取玩家摊位资金
             if get_stone > want_item_funds:  # 资金不足
                 msg = f"{want_user_name}道友的资金储备不足，无法收购如此多的{item_name}！！！！"
                 await bot.send(event, msg)
                 await user_sell_to.finish()
-            user_store.update_user_funds(want_user_id, get_stone, 1)  # 减少资金
+            await user_store.update_user_funds(want_user_id, get_stone, 1)  # 减少资金
         # 检查通过，减少出售者物品，增加买家物品，减少买家资金储备，增加卖家灵石
         await sql_message.update_back_j(user_id, item_id, num=sell_item_num)
         await sql_message.update_ls(user_id, get_stone, 1)
@@ -429,7 +429,7 @@ async def check_my_want_item_(
     page = get_args_num(args_str, 1)
     page = page if page else 1
     # 添加信息头，显示余额
-    user_funds = user_store.get_user_funds(user_id)
+    user_funds = await user_store.get_user_funds(user_id)
     msg_head = f"当前灵宝楼存有{number_to_msg(user_funds)}灵石"
     # 获取总数据
     msg_list, items_map = await user_store.check_user_want_all(user_id)
@@ -464,7 +464,7 @@ async def check_user_want_item_(
     first_arg = a[0] if (a := get_strs_from_str(args_str)) else None
 
     if look_item_id := items.items_map.get(first_arg):  # 输入的首个名称为物品
-        msg_list = [user_store.check_highest_want_item(user_id, look_item_id, sell_item_num=1)]
+        msg_list = [await user_store.check_highest_want_item(user_id, look_item_id, sell_item_num=1)]
     elif look_user_id := await get_id_from_str(args_str):  # 输入的首个名称为玩家
         # 获取总数据
         msg_list, items_map = await user_store.check_user_want_all(look_user_id)

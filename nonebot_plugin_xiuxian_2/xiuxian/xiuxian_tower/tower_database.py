@@ -342,7 +342,7 @@ class TowerHandle(WorldTowerData):
         enemy_info = self.get_tower_floor_info(next_floor, tower.place)
         if not enemy_info:
             text = f"道友已抵达{tower.name}之底！！"
-            return msg,
+            return msg, text
         text = (f"下区域道友将会遭遇\r"
                 f"【{enemy_info.get('name')}】\r"
                 f"气血：{number_to_msg(enemy_info.get('hp'))}\r"
