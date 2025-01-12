@@ -296,7 +296,7 @@ async def two_exp_(bot: Bot, event: GroupMessageEvent, args: Message = CommandAr
     user_2 = await sql_message.get_user_info_with_id(user_2_id)
 
     num = get_args_num(args=args, no=1, default=1)
-
+    num = 1 if num == 0 else num
     if not user_2_id:
         msg = "请输入你道侣的道号,与其一起双修！"
         await bot.send(event=event, message=msg)

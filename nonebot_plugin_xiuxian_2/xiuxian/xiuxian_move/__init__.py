@@ -24,6 +24,7 @@ go_to = on_command("移动", aliases={"前往", "去"}, permission=GROUP, priori
 get_map = on_fullmatch("地图", permission=GROUP, priority=10, block=True)
 complete_move = on_command("行动结算", aliases={"到达"}, permission=GROUP, priority=10, block=True)
 stop_move = on_fullmatch("停止移动", permission=GROUP, priority=10, block=True)
+near_player = on_fullmatch("附近玩家", permission=GROUP, priority=10, block=True)
 
 
 @go_to.handle(parameterless=[Cooldown(at_sender=False)])
@@ -159,3 +160,22 @@ async def get_map_(bot: Bot, event: GroupMessageEvent):
     msg += "——————————\rtips: 发送【前往】+【目的地ID】来进行移动哦"
     await bot.send(event=event, message=msg)
     await get_map.finish()
+
+
+@near_player.handle(parameterless=[Cooldown(at_sender=False)])
+async def near_player_(bot: Bot, event: GroupMessageEvent):
+    """
+    获取附近玩家： 10名
+    """
+
+    _, user_info, _ = await check_user(event)
+
+    user_id = user_info['user_id']
+    place_id = await place.get_now_place_id(user_id)
+    place_name = place.get_place_name(place_id)
+    msg = f"当前道友在ID：{place_id} {place_name}\r附近的道友："
+    nearby_players = await sql_message.get_nearby_player(place_id, user_info["exp"])
+    for player in nearby_players:
+        msg += f"\r{player['user_name']} {player['level']}"
+    await bot.send(event=event, message=msg)
+    await near_player.finish()

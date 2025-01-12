@@ -97,11 +97,8 @@ async def weekly_work_():
 @materialsupdate.scheduled_job("cron", hour=config["发放宗门资材"]["时间"])
 async def materialsupdate_():
     all_sects = await sql_message.get_all_sects_id_scale()
-    for s in all_sects:
-        await sql_message.update_sect_materials(sect_id=s['sect_id'],
-                                                sect_materials=s['sect_materials'] * config["发放宗门资材"]["倍率"],
-                                                key=1)
-
+    all_sects_id = [(sect_per['sect_id'],) for sect_per in all_sects]
+    await sql_message.daily_update_sect_materials(all_sects_id)
     logger.opt(colors=True).info(f"<green>已更新所有宗门的资材</green>")
 
 
@@ -111,15 +108,14 @@ async def gm_sect_materials_(bot: Bot, event: GroupMessageEvent):
     await bot.send(event, msg)
     start_time = time.time()
     all_sects = await sql_message.get_all_sects_id_scale()
-    for s in all_sects:
-        await sql_message.update_sect_materials(sect_id=s['sect_id'],
-                                                sect_materials=s['sect_scale'] * config["发放宗门资材"]["倍率"],
-                                                key=1)
+    all_sects_id = [(sect_per['sect_id'],) for sect_per in all_sects]
+    await sql_message.daily_update_sect_materials(all_sects_id)
     end_time = time.time()
     use_time = (end_time - start_time) * 1000
     msg = f"已更新所有宗门的资材, 耗时: {use_time} ms"
     await bot.send(event, msg)
     await gm_sect_materials.finish()
+
 
 @gm_sect_rename.handle(parameterless=[Cooldown(stamina_cost=0, at_sender=False)])
 async def gm_sect_rename_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
@@ -141,6 +137,7 @@ async def gm_sect_rename_(bot: Bot, event: GroupMessageEvent, args: Message = Co
     await bot.send(event, msg)
     await gm_sect_rename.finish()
 
+
 # 每日0点重置用户宗门任务次数、宗门丹药领取次数
 @resetusertask.scheduled_job("cron", hour=0, minute=0)
 async def resetusertask_():
@@ -148,7 +145,7 @@ async def resetusertask_():
     await sql_message.sect_elixir_get_num_reset()
     all_sects = await sql_message.get_all_sects_id_scale()
     for s in all_sects:
-        sect_info = await sql_message.get_sect_info(s[0])
+        sect_info = await sql_message.get_sect_info(s['sect_id'])
         if int(sect_info['elixir_room_level']) != 0:
             elixir_room_cost = \
                 config['宗门丹房参数']['elixir_room_level'][str(sect_info['elixir_room_level'])]['level_up_cost'][
@@ -1363,7 +1360,7 @@ async def my_sect_(bot: Bot, event: GroupMessageEvent):
     owner_position = int(owner_idx[0]) if len(owner_idx) == 1 else 0
     if sect_id:
         sql_res = await sql_message.scale_top()
-        top_idx_list = [_[0] for _ in sql_res]
+        top_idx_list = [_['sect_id'] for _ in sql_res]
         if int(sect_info['elixir_room_level']) == 0:
             elixir_room_name = "暂无"
         else:

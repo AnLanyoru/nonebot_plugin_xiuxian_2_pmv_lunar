@@ -21,18 +21,20 @@ class LimitCheck:
         main_two_data_2 = await UserBuffDate(user_id_2).get_user_main_buff_data()
         main_two_1 = main_two_data_1['two_buff'] if main_two_data_1 is not None else 0
         main_two_2 = main_two_data_2['two_buff'] if main_two_data_2 is not None else 0
-        if (user_exp_least_1 := (self.two_exp_limit + impart_two_exp_1 + main_two_1) - user_exp_1) > 0:
+        if (user_exp_least_1 := (self.two_exp_limit + impart_two_exp_1 + main_two_1) - user_exp_1) < num:
             msg = f"道友今日余剩双修次数不足！余剩{user_exp_least_1}次！"
             return False, msg
-        if (user_exp_least_2 := (self.two_exp_limit + impart_two_exp_2 + main_two_2) - user_exp_2) > 0:
+        if (user_exp_least_2 := (self.two_exp_limit + impart_two_exp_2 + main_two_2) - user_exp_2) < num:
             msg = f"对方今日余剩双修次数不足！余剩{user_exp_least_2}次！"
             return False, msg
         user_exp_1 += num
         user_exp_2 += num
         user_limit_1['two_exp_up'] = user_exp_1
         user_limit_2['two_exp_up'] = user_exp_2
-        await limit_data.update_limit_data_with_key(user_limit_1, 'two_exp_up')
-        await limit_data.update_limit_data_with_key(user_limit_2, 'two_exp_up')
+        await limit_data.update_limit_data_with_key(**user_limit_1, update_key='two_exp_up',
+                                                    goal=user_limit_1['two_exp_up'])
+        await limit_data.update_limit_data_with_key(**user_limit_2, update_key='two_exp_up',
+                                                    goal=user_limit_2['two_exp_up'])
         msg = "pass"
         return True, msg
 

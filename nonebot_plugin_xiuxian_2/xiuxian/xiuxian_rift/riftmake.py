@@ -12,8 +12,8 @@ from ..xiuxian_utils.xiuxian2_handle import sql_message
 skill_data = skill_rate
 
 NONEMSG = [
-    "道友在秘境中晕头转向，等到清醒时竟然发现已被秘境踢出，毫无所获！",
-    "道友进入秘境发现此地烟雾缭绕，无法前行，只能原路而返空手而归！",
+    "道友在秘境中晕头转向，等到清醒时竟然发现已被秘境踢出，手中忽多一物，竟是太清明心符！！！",
+    "道友进入秘境发现此地烟雾缭绕，无法前行，只能原路返回，归途偶遇一神龛，内里竟藏太清明心符！！！",
 ]
 
 TREASUREMSG = [
@@ -65,8 +65,8 @@ STORY = {
             "type_rate": 20,
         },
         "灵石": {
-            "type_rate": 100,
-            "stone": 500000
+            "type_rate": 20,
+            "stone": 20000000
         }
     },
     "战斗": {
@@ -98,7 +98,7 @@ STORY = {
         },
     },
     "无事": {
-        "type_rate": 50,
+        "type_rate": 5,
     },
     "掉血事件": {
         "type_rate": 3,

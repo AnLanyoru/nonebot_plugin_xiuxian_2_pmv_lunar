@@ -44,7 +44,7 @@ tower_point_get_reset = on_command("结算积分", priority=3, permission=SUPERU
 async def tower_point_give_():
     user_all = tower_handle.get_all_tower_user_id()
     logger.opt(colors=True).info(f"<green>发放塔积分中！</green>")
-    async for user_id in user_all:
+    for user_id in user_all:
         user_tower_info = tower_handle.check_user_tower_info(user_id)
         had_get = user_tower_info.get('weekly_point')
         if not had_get:

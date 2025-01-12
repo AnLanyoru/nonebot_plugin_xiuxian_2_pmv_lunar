@@ -55,6 +55,7 @@ give_stone = on_command("送灵石", priority=5, permission=GROUP, block=True)
 steal_stone = on_command("借灵石", priority=4, permission=GROUP, block=True)
 gm_command = on_command("生成灵石", permission=SUPERUSER, priority=10, block=True)
 gm_command_miss = on_command("思恋结晶", permission=SUPERUSER, priority=10, block=True)
+gm_command_pray = on_command("祈愿结晶", permission=SUPERUSER, priority=10, block=True)
 gmm_command = on_command("灵根更换", permission=SUPERUSER, priority=10, block=True)
 cz = on_command('创造', permission=SUPERUSER, priority=15, block=True)
 cz_ts = on_command('调试创造', permission=SUPERUSER, priority=15, block=True)
@@ -333,19 +334,6 @@ async def level_up_(bot: Bot, event: GroupMessageEvent):
         await sql_message.update_user_hp(user_id)
     user_msg = await sql_message.get_user_info_with_id(user_id)  # 用户信息
     user_level_up_rate = int(user_msg['level_up_rate'])  # 用户失败次数加成
-    level_cd = user_msg['level_up_cd']
-    if level_cd:
-        # 校验是否存在CD
-        time_now = datetime.now()
-        cd = date_sub(time_now, level_cd)  # 获取second
-        if cd < XiuConfig().level_up_cd * 60:
-            # 如果cd小于配置的cd，返回等待时间
-            msg = f"目前无法突破，还需要{XiuConfig().level_up_cd - (cd // 60)}分钟"
-            await bot.send(event=event, message=msg)
-            await level_up.finish()
-    else:
-        pass
-
     level_name = user_msg['level']  # 用户境界
     level_rate = break_rate[level_name]  # 对应境界突破的概率
     user_backs = await sql_message.get_item_by_good_id_and_user_id(user_id, 1999)  # list(back)
@@ -383,18 +371,6 @@ async def level_up_zj_(bot: Bot, event: GroupMessageEvent):
         # 判断用户气血是否为空
         await sql_message.update_user_hp(user_id)
     user_info = await sql_message.get_user_info_with_id(user_id)  # 用户信息
-    level_cd = user_info['level_up_cd']
-    if level_cd:
-        # 校验是否存在CD
-        time_now = datetime.now()
-        cd = date_sub(time_now, level_cd)  # 获取second
-        if cd < XiuConfig().level_up_cd * 60:
-            # 如果cd小于配置的cd，返回等待时间
-            msg = f"目前无法突破，还需要{XiuConfig().level_up_cd - (cd // 60)}分钟"
-            await bot.send(event=event, message=msg)
-            await level_up_zj.finish()
-    else:
-        pass
     level_name = user_info['level']  # 用户境界
     exp = user_info['exp']  # 用户修为
     level_rate = break_rate[level_name]  # 对应境界突破的概率
@@ -522,18 +498,6 @@ async def level_up_dr_(bot: Bot, event: GroupMessageEvent):
         # 判断用户气血是否为空
         await sql_message.update_user_hp(user_id)
     user_info = await sql_message.get_user_info_with_id(user_id)  # 用户信息
-    level_cd = user_info['level_up_cd']
-    if level_cd:
-        # 校验是否存在CD
-        time_now = datetime.now()
-        cd = date_sub(time_now, level_cd)  # 获取second
-        if cd < XiuConfig().level_up_cd * 60:
-            # 如果cd小于配置的cd，返回等待时间
-            msg = f"目前无法突破，还需要{XiuConfig().level_up_cd - (cd // 60)}分钟"
-            await bot.send(event=event, message=msg)
-            await level_up_dr.finish()
-    else:
-        pass
     elixir_name = "渡厄丹"
     level_name = user_info['level']  # 用户境界
     exp = user_info['exp']  # 用户修为
@@ -814,6 +778,36 @@ async def gm_command_miss_(bot: Bot, event: GroupMessageEvent, args: Message = C
         await bot.send(event=event, message=msg)
         await gm_command.finish()
     await gm_command_miss.finish()
+
+
+# GM加祈愿结晶
+@gm_command_pray.handle(parameterless=[Cooldown(at_sender=False)])
+async def gm_command_pray_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
+    # 这里曾经是风控模块，但是已经不再需要了
+    msg_text = args.extract_plain_text()
+    stone_num_match = get_num_from_str(msg_text)  # 提取数字
+    give_qq = await get_id_from_str(msg_text)  # 道号
+    command_target = get_strs_from_str(msg_text)
+    if command_target:
+        command_target = command_target[0]
+    else:
+        command_target = None
+    give_stone_num = int(stone_num_match[0]) if stone_num_match else 0  # 默认为0，如果有提取到数字，则使用提取到的第一个数字
+    if give_qq:
+        give_user = await sql_message.get_user_info_with_id(give_qq)
+        await xiuxian_impart.update_pray_stone_num(give_stone_num, give_qq, 1)
+        msg = f"共赠送{number_to(give_stone_num)}颗祈愿结晶给{give_user['user_name']}道友！"
+        await bot.send(event=event, message=msg)
+        await gm_command_pray.finish()
+    elif command_target == "all":
+        await xiuxian_impart.update_impart_pray_stone_all(give_stone_num)
+        msg = f"赠送所有用户{give_stone_num}祈愿结晶,请注意查收！"
+        await bot.send(event=event, message=msg)
+    else:
+        msg = f"对方未踏入修仙界，不可赠送！"
+        await bot.send(event=event, message=msg)
+        await gm_command.finish()
+    await gm_command_pray.finish()
 
 
 @cz.handle(parameterless=[Cooldown(at_sender=False)])

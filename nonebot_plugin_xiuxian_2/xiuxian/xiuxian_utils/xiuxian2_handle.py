@@ -422,6 +422,14 @@ class XiuxianDateManage:
             result_all = [zips(**result_per) for result_per in result]
             return result_all
 
+    async def get_nearby_player(self, place_id: int, exp: int):
+        """附近玩家，优先获取实力相近的"""
+        sql = f"SELECT user_name,level FROM user_xiuxian WHERE place_id=$1 and exp<$2 ORDER BY exp DESC LIMIT 10"
+        async with self.pool.acquire() as db:
+            result = await db.fetch(sql, place_id, exp)
+            result_all = [zips(**result_per) for result_per in result]
+            return result_all
+
     async def sign_remake(self):
         """重置签到"""
         sql = f"UPDATE user_xiuxian SET is_sign=0"
@@ -856,6 +864,12 @@ class XiuxianDateManage:
             elif key == 2:
                 sql = f"UPDATE sects SET sect_materials=sect_materials-$1 WHERE sect_id=$2"
                 await db.execute(sql, sect_materials, sect_id)
+
+    async def daily_update_sect_materials(self, sect_id: list):
+        """更新资材  1为增加,2为减少"""
+        async with self.pool.acquire() as db:
+            sql = f"UPDATE sects SET sect_materials=sect_materials+sect_scale WHERE sect_id=$1"
+            await db.executemany(sql, sect_id)
 
     async def get_all_sects_id_scale(self):
         """
@@ -1355,6 +1369,7 @@ class XiuxianImpartBuff:
         "impart_two_exp" numeric DEFAULT 0,
         "stone_num" numeric DEFAULT 0,
         "pray_stone_num" numeric DEFAULT 0,
+        "pray_card_num" numeric DEFAULT 0,
         "exp_day" numeric DEFAULT 0,
         "wish" numeric DEFAULT 0
         );""")
@@ -1576,13 +1591,33 @@ class XiuxianImpartBuff:
             async with self.pool.acquire() as db:
                 sql = f"UPDATE xiuxian_impart SET pray_stone_num=pray_stone_num-$1 WHERE user_id=$2"
                 await db.execute(sql, impart_num, user_id)
-
                 return True
+
+    async def update_pray_card_num(self, num, user_id, update_type: int = 0):
+        """
+        更新祈愿结晶数量
+        0加 1减 2设置
+        """
+        if update_type:
+            sql = f"UPDATE xiuxian_impart SET pray_card_num=pray_card_num-$1 WHERE user_id=$2"
+        elif update_type == 1:
+            sql = f"UPDATE xiuxian_impart SET pray_card_num=pray_card_num+$1 WHERE user_id=$2"
+        else:
+            sql = f"UPDATE xiuxian_impart SET pray_card_num=$1 WHERE user_id=$2"
+        async with self.pool.acquire() as db:
+            await db.execute(sql, num, user_id)
+            return True
 
     async def update_impart_stone_all(self, impart_stone):
         """所有用户增加结晶"""
         async with self.pool.acquire() as db:
             sql = "UPDATE xiuxian_impart SET stone_num=stone_num+$1"
+            await db.execute(sql, impart_stone)
+
+    async def update_impart_pray_stone_all(self, impart_stone):
+        """所有用户增加结晶"""
+        async with self.pool.acquire() as db:
+            sql = "UPDATE xiuxian_impart SET pray_stone_num=stone_num+$1"
             await db.execute(sql, impart_stone)
 
     async def add_impart_exp_day(self, impart_num, user_id):

@@ -135,7 +135,7 @@ class LimitData:
         async with self.pool.acquire() as db:
             result = await db.fetch(sql, active_id)
             # 如果有，返回活动字典
-            return zips(**result[0]) if result else None
+            return zips(**result[0]) if result else {}
 
     async def get_offset_by_id(self, offset_id):
         """
@@ -147,7 +147,7 @@ class LimitData:
         async with self.pool.acquire() as db:
             result = await db.fetch(sql, offset_id)
             # 如果有，返回补偿字典
-            offset = zips(**result[0]) if result else None
+            offset = zips(**result[0]) if result else {}
             if offset.get('offset_items'):
                 offset['offset_items'] = pickle.loads(offset['offset_items'])
             return offset
@@ -355,8 +355,7 @@ class LimitHandle:
         """
         idmap = await self._database.get_offset_idmap()
         offset_list = []
-        for offset_name in idmap:
-            offset_id = idmap[offset_name]
+        for offset_name, offset_id in idmap.items():
             is_get_offset = await self.check_user_offset(user_id, offset_id)
             offset_msg = await self.get_offset_msg(offset_id)
             if is_get_offset:

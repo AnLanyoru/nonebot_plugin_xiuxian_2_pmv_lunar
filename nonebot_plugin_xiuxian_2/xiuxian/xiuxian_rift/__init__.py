@@ -21,6 +21,7 @@ from .. import DRIVER
 from ..xiuxian_limit import limit_handle
 from ..xiuxian_place import place
 from ..xiuxian_utils.clean_utils import get_strs_from_str, simple_md, main_md, msg_handler
+from ..xiuxian_utils.item_json import items
 from ..xiuxian_utils.lay_out import Cooldown
 from ..xiuxian_utils.utils import (
     check_user, check_user_type,
@@ -77,7 +78,7 @@ async def set_rift_(place_cls=place):
             place_all_id = [place_id for place_id in place_cls.get_world_place_list(world_id)]
             place_id = random.choice(place_all_id)
             rift.place = place_id
-            rift.rank = config['rift'][rift.name]['rank']
+            rift.rank = max(config['rift'][rift.name]['rank'], 1 + int(world_id))
             rift.count = config['rift'][rift.name]['count']
             rift.time = config['rift'][rift.name]['time']
             world_rift[world_id] = rift
@@ -180,6 +181,8 @@ async def complete_rift_(bot: Bot, event: GroupMessageEvent):
                 await limit_handle.update_user_limit(user_id, 8, 1, 1)
     if rift_type == "无事":
         msg = random.choice(NONEMSG)
+        item_info = items.get_data_by_item_id(660001)
+        await sql_message.send_back(user_id, 660001, item_info["name"], item_info['type'], 1, 1)
     elif rift_type == "战斗":
         result, msg = await get_boss_battle_info(user_info, rift_rank, bot.self_id)
         if rift_protect:
