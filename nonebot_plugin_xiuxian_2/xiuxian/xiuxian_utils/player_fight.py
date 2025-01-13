@@ -1299,7 +1299,6 @@ async def get_turnatk(
         (
                 impart_know_per + sub_crit - boss_buff.boss_jh + random_buff.random_hx) * 100) + armor_crit_buff + main_crit_buff
     # 新会心实现，包含辅修，boss减暴击，随机buff效果，武器&装备暴击，功法暴击
-    print("新会心实现", crit_per)
     is_crit = False
     turnatk = int(round(random.uniform(0.95, 1.05), 2)
                   * (player['攻击'] * (buff + sub_atk + 1) * (1 - boss_buff.boss_jg)) * (1 + zwsh))  # 攻击波动,buff是攻击buff

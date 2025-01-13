@@ -142,11 +142,6 @@ async def do_work_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = R
     user_id = user_info['user_id']
     await sql_message.update_last_check_info_time(user_id)  # 更新查看修仙信息时间
     user_cd_info = await sql_message.get_user_cd(user_id)
-    if not os.path.exists(PLAYERSDATA / str(user_id) / "workinfo.json") and user_cd_info['type'] == 2:
-        await sql_message.do_work(user_id, 0)
-        msg = "悬赏令已更新，已重置道友的状态！"
-        await bot.send(event=event, message=msg)
-        await do_work.finish()
     mode = args[0]  # 刷新、终止、结算、接取
     user_level = user_info['level']
     if int(user_info['exp']) >= int(
@@ -157,7 +152,19 @@ async def do_work_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = R
         await do_work.finish()
     user_type = user_cd_info['type']
     if user_type == 2:
-        mode = "结算"
+        try:
+            time2 = await work_handle(
+                key=1, name=user_cd_info['scheduled_time'], level=user_level, exp=user_info['exp'],
+                user_id=user_info['user_id']
+            )
+            mode = "结算"
+        except KeyError:
+            time2 = None
+        if not os.path.exists(PLAYERSDATA / str(user_id) / "workinfo.json") or not time2:
+            await sql_message.do_work(user_id, 0)
+            msg = "悬赏令等级已更新，已帮助道友终止悬赏令！"
+            await bot.send(event=event, message=msg)
+            await do_work.finish()
     if user_type and user_type != 2:
         msg_map = {1: simple_md("已经在闭关中，请输入", "出关", "出关", "结束后才能获取悬赏令！"),
                    3: "道友在秘境中，请等待结束后才能获取悬赏令！",
@@ -169,22 +176,23 @@ async def do_work_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = R
         if not msg:
             # 赶路检测
             user_cd_info = await sql_message.get_user_cd(user_id)
-            work_time = datetime.strptime(
-                user_cd_info['create_time'], "%Y-%m-%d %H:%M:%S.%f"
-            )
-            pass_time = (datetime.now() - work_time).seconds // 60  # 时长计算
-            move_info = read_move_data(user_id)
-            need_time = move_info["need_time"]
-            place_name = place.get_place_name(move_info["to_id"])
-            if pass_time < need_time:
-                last_time = math.ceil(need_time - pass_time)
-                msg = f"道友现在正在赶往【{place_name}】中！预计还有{last_time}分钟到达目的地！！"
-            else:  # 移动结算逻辑
-                await sql_message.do_work(user_id, 0)
-                place_id = move_info["to_id"]
-                await place.set_now_place_id(user_id, place_id)
-                place_name = place.get_place_name(place_id)
-                msg = f"道友成功抵达 {place_name}！"
+            try:
+                work_time = datetime.strptime(user_cd_info['create_time'], "%Y-%m-%d %H:%M:%S.%f")
+                pass_time = (datetime.now() - work_time).seconds // 60  # 时长计算
+                move_info = read_move_data(user_id)
+                need_time = move_info["need_time"]
+                place_name = place.get_place_name(move_info["to_id"])
+                if pass_time < need_time:
+                    last_time = math.ceil(need_time - pass_time)
+                    msg = f"道友现在正在赶往【{place_name}】中！预计还有{last_time}分钟到达目的地！！"
+                else:  # 移动结算逻辑
+                    await sql_message.do_work(user_id, 0)
+                    place_id = move_info["to_id"]
+                    await place.set_now_place_id(user_id, place_id)
+                    place_name = place.get_place_name(place_id)
+                    msg = f"道友成功抵达 {place_name}！"
+            except TypeError:
+                msg = f"移动状态异常，请联系安兰解决！！"
         await bot.send(event=event, message=msg)
         await do_work.finish()
 
@@ -195,21 +203,9 @@ async def do_work_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = R
                 msg = three_md(
                     "--道友的悬赏令--\r", '1、', '悬赏令接取1', work_msg_f[0],
                     '2、', '悬赏令接取2', work_msg_f[1],
-                    '3、', '悬赏令接取3', work_msg_f[2],
-                )
+                    '3、', '悬赏令接取3', work_msg_f[2], )
             except KeyError:
                 msg = simple_md("没有查到你的悬赏令信息呢，请", "刷新", "悬赏令刷新", "！")
-        elif user_cd_info['type'] == 2:
-            work_time = datetime.strptime(
-                user_cd_info['create_time'], "%Y-%m-%d %H:%M:%S.%f"
-            )
-            exp_time = (datetime.now() - work_time).seconds // 60  # 时长计算
-            time2 = await work_handle(key=1, name=user_cd_info['scheduled_time'], user_id=user_info['user_id'])
-            if exp_time < time2:
-                msg = f"进行中的悬赏令【{user_cd_info['scheduled_time']}】，预计{time2 - exp_time}分钟后可结束"
-            else:
-                msg = simple_md(f"进行中的悬赏令【{user_cd_info['scheduled_time']}】，已结束，请输入",
-                                "悬赏令结算", "悬赏令结算", "来结算任务信息！")
         else:
             msg = simple_md("没有查到你的悬赏令信息呢，请", "刷新", "悬赏令刷新", "！")
         await bot.send(event=event, message=msg)
@@ -228,19 +224,6 @@ async def do_work_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = R
             await do_work.finish()
         except KeyError:
             pass
-        if user_cd_info['type'] == 2:
-            work_time = datetime.strptime(
-                user_cd_info['create_time'], "%Y-%m-%d %H:%M:%S.%f"
-            )
-            exp_time = (datetime.now() - work_time).seconds // 60
-            time2 = await work_handle(key=1, name=user_cd_info['scheduled_time'], user_id=user_info['user_id'])
-            if exp_time < time2:
-                msg = f"进行中的悬赏令【{user_cd_info['scheduled_time']}】，预计{time2 - exp_time}分钟后可结束"
-            else:
-                msg = simple_md(f"进行中的悬赏令【{user_cd_info['scheduled_time']}】，已结束，请输入",
-                                "悬赏令结算", "悬赏令结算", "来结算任务信息！")
-            await bot.send(event=event, message=msg)
-            await do_work.finish()
         user_nums = await sql_message.get_work_num(user_id)
         free_num = count - user_nums - 1
         if free_num < 0:
@@ -288,19 +271,6 @@ async def do_work_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = R
             await do_work.finish()
         except KeyError:
             pass
-        if user_cd_info['type'] == 2:
-            work_time = datetime.strptime(
-                user_cd_info['create_time'], "%Y-%m-%d %H:%M:%S.%f"
-            )
-            exp_time = (datetime.now() - work_time).seconds // 60
-            time2 = await work_handle(key=1, name=user_cd_info['scheduled_time'], user_id=user_info['user_id'])
-            if exp_time < time2:
-                msg = f"进行中的悬赏令【{user_cd_info['scheduled_time']}】，预计{time2 - exp_time}分钟后可结束"
-            else:
-                msg = simple_md(f"进行中的悬赏令【{user_cd_info['scheduled_time']}】，已结束，请输入",
-                                "悬赏令结算", "悬赏令结算", "来结算任务信息！")
-            await bot.send(event=event, message=msg)
-            await do_work.finish()
         back_msg = await sql_message.get_item_by_good_id_and_user_id(user_id=user_id, goods_id=640001)
         goods_num = back_msg['goods_num'] if back_msg else 0
         if goods_num > 0:
@@ -347,10 +317,6 @@ async def do_work_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = R
         user_cd_info = await sql_message.get_user_cd(user_id)
         work_time = get_datetime_from_str(user_cd_info['create_time'])
         exp_time = (datetime.now() - work_time).seconds // 60  # 时长计算
-        time2 = await work_handle(
-            key=1, name=user_cd_info['scheduled_time'], level=user_level, exp=user_info['exp'],
-            user_id=user_info['user_id']
-        )
         time2 = 0
         if exp_time < time2:
             msg = f"进行中的悬赏令【{user_cd_info['scheduled_time']}】，预计{time2 - exp_time}分钟后可结束"

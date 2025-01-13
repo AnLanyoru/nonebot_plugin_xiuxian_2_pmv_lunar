@@ -197,7 +197,6 @@ class Place:
         sql = f"SELECT place_id FROM user_xiuxian WHERE user_id=$1"
         async with self.pool.acquire() as db:
             result = await db.fetch(sql, user_id)
-            print(result)
             if result:
                 if result[0][0]:
                     user_info = {'place_id': result[0][0]}

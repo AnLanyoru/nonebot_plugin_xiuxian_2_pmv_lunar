@@ -1243,7 +1243,6 @@ class XiuxianDateManage:
                    f"day_num=$4,all_num=$5,bind_num=$6 "
                    f"WHERE user_id=$7 and goods_id=$8")
         async with self.pool.acquire() as db:
-            print(f"异常sql语句：{sql_str}")
             await db.execute(sql_str, now_time, now_time, goods_num, day_num, all_num, bind_num,
                              user_id, goods_id)
 

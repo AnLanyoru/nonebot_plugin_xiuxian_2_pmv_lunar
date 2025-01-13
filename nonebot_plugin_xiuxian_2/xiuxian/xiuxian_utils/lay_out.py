@@ -183,7 +183,6 @@ def Cooldown(
             pass
         if lock_time := cmd_lock.get(user_id):
             if time.time() < (lock_time + 60):
-                print(lock_time)
                 too_fast_notice = f"道友的指令还在执行中！！"
                 await bot.send(event=event, message=too_fast_notice)
                 await matcher.finish()

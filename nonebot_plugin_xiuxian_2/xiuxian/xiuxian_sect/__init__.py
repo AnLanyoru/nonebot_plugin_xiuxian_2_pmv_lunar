@@ -320,13 +320,14 @@ async def sect_buff_info_(bot: Bot, event: GroupMessageEvent):
                 {"type": "node", "data": {"name": f"道友{user_info['user_name']}的宗门功法信息", "uin": bot.self_id,
                                           "content": main_msg}})
             for main in mainbufflist:
-                mainbuff, mainbuffmsg = get_main_info_msg(str(main))
-                mainmsg = f"{mainbuff['level']}:{mainbuffmsg}\r"
-                msg += mainmsg
-                list_tp.append(
-                    {"type": "node", "data": {"name": f"道友{user_info['user_name']}的宗门秘籍信息", "uin": bot.self_id,
-                                              "content": mainmsg}})
-
+                if main:
+                    mainbuff, mainbuffmsg = get_main_info_msg(str(main))
+                    mainmsg = f"{mainbuff['level']}:{mainbuffmsg}\r"
+                    msg += mainmsg
+                    list_tp.append(
+                        {"type": "node",
+                         "data": {"name": f"道友{user_info['user_name']}的宗门秘籍信息", "uin": bot.self_id,
+                                  "content": mainmsg}})
         if sect_info['secbuff'] != 0:
             secbufflist = await get_sect_secbuff_id_list(sect_id)
             sec_msg = f"☆------宗门神通------☆\r"

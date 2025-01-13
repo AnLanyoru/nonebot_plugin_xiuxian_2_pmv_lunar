@@ -23,7 +23,6 @@ from ..xiuxian_utils.utils import check_user
 from ..xiuxian_utils.xiuxian2_handle import xiuxian_impart
 
 # 替换模块
-
 cache_help = {}
 img_path = Path(f"{os.getcwd()}/data/xiuxian/卡图")
 
@@ -203,6 +202,17 @@ async def impart_draw_fast_(bot: Bot, event: GroupMessageEvent, args: Message = 
     wish_count = user_impart_data.get('wish')
     msg = f"道友{user_info['user_name']}的传承抽卡"
     await xiuxian_impart.update_stone_num(num, user_id, 2)
+    img_tp = impart_data_json.data_person_list(user_id)
+    hard_card_num = len(img_tp)
+    if hard_card_num == 106:
+        all_time = 180 * num
+        text = f'传承卡片溢出！\r已转化为{all_time}分钟虚神界内闭关时间'
+        await xiuxian_impart.add_impart_exp_day(all_time, user_id)
+        msg = main_md(msg, text,
+                      '传承背包', '传承背包',
+                      '传承帮助', '传承帮助',
+                      '虚神界对决', '虚神界对决',
+                      '继续抽卡', '传承抽卡')
     for i in range(num):
         # 抽 num * 10 次
         if get_rank_plus(wish_count):
@@ -228,8 +238,12 @@ async def impart_draw_fast_(bot: Bot, event: GroupMessageEvent, args: Message = 
     text += f"{all_card}5分钟虚神界闭关时间 X{((num * 10) - card)}"
     await xiuxian_impart.add_impart_exp_day(all_time, user_id)
     await xiuxian_impart.update_impart_wish(wish_count, user_id)
-    msg = main_md(msg, text, '传承背包', '传承背包', '继续抽卡', '传承抽卡', '虚神界对决', '虚神界对决', '传承帮助',
-                  '传承帮助')
+    msg = main_md(
+        msg, text,
+        '传承背包', '传承背包',
+        '继续抽卡', '传承抽卡',
+        '虚神界对决', '虚神界对决',
+        '传承帮助', '传承帮助')
     await re_impart_data(user_id)
     await bot.send(event=event, message=msg)
     await impart_draw_fast.finish()
@@ -255,6 +269,7 @@ async def impart_back_(bot: Bot, event: GroupMessageEvent):
             f"思恋结晶：{impart_data_draw['stone_num']}颗\r"
             f"祈愿结晶：{impart_data_draw['pray_stone_num']}颗\r"
             f"抽卡次数：{impart_data_draw['wish']}/90次\r"
+            f"共鸣进度：{impart_data_draw['pray_card_num']}/20\r"
             f"传承卡图数量：{len(img_tp)}/106\r"
             f"余剩虚神界内闭关时间：{impart_data_draw['exp_day']}分钟\r")
     text = (f"--道友{user_info['user_name']}的传承总属性--\r"
