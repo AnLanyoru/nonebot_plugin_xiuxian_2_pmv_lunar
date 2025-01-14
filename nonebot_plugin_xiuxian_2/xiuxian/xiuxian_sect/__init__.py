@@ -82,9 +82,10 @@ sect_users = on_command("宗门成员查看", aliases={"查看宗门成员"}, pr
 sect_users_donate_check = on_command("宗门周贡检查", aliases={"检查宗门周贡"}, priority=8, permission=GROUP, block=True)
 sect_elixir_room_make = on_command("宗门丹房建设", aliases={"建设宗门丹房"}, priority=5, permission=GROUP, block=True)
 sect_elixir_get = on_command("宗门丹药领取", aliases={"领取宗门丹药领取"}, priority=5, permission=GROUP, block=True)
-sect_rename = on_fullmatch("宗门改名", priority=5, permission=GROUP, block=True)
-gm_sect_rename = on_fullmatch("超管宗门改名", priority=12, permission=SUPERUSER, block=True)
-gm_sect_materials = on_fullmatch("发放宗门资材", priority=12, permission=SUPERUSER, block=True)
+sect_close = on_command("关闭宗门加入", aliases={"开启宗门加入"}, priority=5, permission=GROUP, block=True)
+sect_rename = on_command("宗门改名", priority=5, permission=GROUP, block=True)
+gm_sect_rename = on_command("超管宗门改名", priority=12, permission=SUPERUSER, block=True)
+gm_sect_materials = on_command("发放宗门资材", priority=12, permission=SUPERUSER, block=True)
 
 
 @weekly_work.scheduled_job("cron", day_of_week='mon', hour=4)
@@ -1213,6 +1214,35 @@ async def sect_out_(bot: Bot, event: GroupMessageEvent, args: Message = CommandA
         await sect_out.finish()
 
 
+@sect_close.handle(parameterless=[Cooldown(at_sender=False)])
+async def sect_close_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
+    """关闭宗门"""
+
+    _, user_info, _ = await check_user(event)
+    if not user_info['sect_id']:
+        msg = f"道友还未加入一方宗门。"
+        await bot.send(event=event, message=msg)
+        await sect_close.finish()
+    position_this = [k for k, v in sect_config_data.items() if v.get("title", "") == "宗主"]
+    owner_position = int(position_this[0]) if len(position_this) == 1 else 0
+    sect_id = user_info['sect_id']
+    if user_info['sect_position'] != owner_position:
+        msg = f"道友无权管理宗门人员流动事宜。"
+        await bot.send(event=event, message=msg)
+        await sect_close.finish()
+    else:
+        sect_info = await sql_message.get_sect_info_by_id(int(sect_id))
+        sect_state = sect_info['is_open']
+        if sect_state:
+            await sql_message.set_sect_join_mode(sect_id, False)
+            msg = f"宗门关闭加入成功"
+        else:
+            await sql_message.set_sect_join_mode(sect_id, True)
+            msg = f"宗门开放加入成功"
+        await bot.send(event=event, message=msg)
+        await sect_close.finish()
+
+
 @sect_donate.handle(parameterless=[Cooldown(at_sender=False)])
 async def sect_donate_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """宗门捐献"""
@@ -1319,8 +1349,7 @@ async def join_sect_(bot: Bot, event: GroupMessageEvent, args: Message = Command
             sect_no = sect_no[0]
         else:
             sect_no = None
-        sql_sects = await sql_message.get_all_sect_id()
-        sects_all = [tup[0] for tup in sql_sects]
+        sects_all = await sql_message.get_all_sect_id()
         if sect_no:
             if int(sect_no) not in sects_all:
                 msg = f"申请加入的宗门编号似乎有误，未在宗门名录上发现!"
@@ -1329,6 +1358,10 @@ async def join_sect_(bot: Bot, event: GroupMessageEvent, args: Message = Command
                 userlist = await sql_message.get_all_users_by_sect_id(sect_no)
                 max_sect_num = new_sect['elixir_room_level'] * 16 + 52
                 sect_num = len(userlist)
+                if not new_sect['is_open']:
+                    msg = f"目标宗门未开放加入！！"
+                    await bot.send(event=event, message=msg)
+                    await join_sect.finish()
                 if sect_num < max_sect_num:
                     owner_idx = [k for k, v in sect_config_data.items() if v.get("title", "") == "外门弟子"]
                     owner_position = int(owner_idx[0]) if len(owner_idx) == 1 else 4

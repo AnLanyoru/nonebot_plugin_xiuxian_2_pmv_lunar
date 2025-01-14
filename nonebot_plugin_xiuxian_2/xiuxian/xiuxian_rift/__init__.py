@@ -184,7 +184,7 @@ async def complete_rift_(bot: Bot, event: GroupMessageEvent):
         item_info = items.get_data_by_item_id(660001)
         await sql_message.send_back(user_id, 660001, item_info["name"], item_info['type'], 1, 1)
     elif rift_type == "战斗":
-        result, msg = await get_boss_battle_info(user_info, rift_rank, bot.self_id)
+        result, msg = await get_boss_battle_info(user_info, rift_rank)
         if rift_protect:
             await limit_handle.update_user_limit(user_id, 8, 9)
         msg = msg + msg_handler(result)

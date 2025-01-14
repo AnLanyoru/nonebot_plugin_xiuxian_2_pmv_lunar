@@ -2,8 +2,9 @@ import decimal
 import operator
 
 import asyncpg
+from nonebot.adapters.onebot.v11 import Message
 
-from .clean_utils import number_to, zips
+from .clean_utils import number_to, zips, get_strs_from_str
 from .. import DRIVER
 from ..xiuxian_data.data.境界_data import level_data
 from ..xiuxian_data.data.灵根_data import root_data
@@ -89,6 +90,7 @@ class XiuxianDateManage:
       "sect_scale" numeric NOT NULL,
       "sect_used_stone" numeric,
       "sect_fairyland" numeric
+      "is_open" boolean,
     );""")
                 elif i == "back":
                     try:
@@ -499,6 +501,14 @@ class XiuxianDateManage:
         :param user_nike_name: 用户道号
         :return: 用户id
         """
+        if isinstance(user_nike_name, Message):
+            user_nike_name = user_nike_name.extract_plain_text()
+
+        user_nike_name = get_strs_from_str(user_nike_name)
+        if user_nike_name:
+            user_nike_name = user_nike_name[0]
+        else:
+            return None
         async with self.pool.acquire() as db:
             sql = "SELECT user_id FROM user_xiuxian WHERE user_name =$1"
             result = await db.fetch(sql, user_nike_name)
@@ -1270,6 +1280,14 @@ class XiuxianDateManage:
         async with self.pool.acquire() as db:
             await db.execute(sql_str)
 
+    async def set_sect_join_mode(self, sect_id, mode: bool):
+        """
+        关闭宗门加入
+        """
+        sql_str = f"UPDATE sects set is_open=$1 WHERE sect_id=$2"
+        async with self.pool.acquire() as db:
+            await db.execute(sql_str, mode, sect_id)
+
 
 sql_message = XiuxianDateManage()  # sql类
 
@@ -1594,10 +1612,10 @@ class XiuxianImpartBuff:
 
     async def update_pray_card_num(self, num, user_id, update_type: int = 0):
         """
-        更新祈愿结晶数量
+        更新祈愿共鸣数量
         0加 1减 2设置
         """
-        if update_type:
+        if not update_type:
             sql = f"UPDATE xiuxian_impart SET pray_card_num=pray_card_num-$1 WHERE user_id=$2"
         elif update_type == 1:
             sql = f"UPDATE xiuxian_impart SET pray_card_num=pray_card_num+$1 WHERE user_id=$2"

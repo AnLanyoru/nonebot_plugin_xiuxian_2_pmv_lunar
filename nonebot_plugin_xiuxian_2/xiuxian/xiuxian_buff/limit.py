@@ -106,7 +106,7 @@ class CheckLimit:
         result_send, is_send_pass = await self.check_send_stone_limit(send_user_id, num)
         if is_send_pass and is_receive_pass:
             receive_left = await self.update_receive_stone_limit(receive_user_id, result_receive)
-            send_left = self.update_send_stone_limit(send_user_id, result_send)
+            send_left = await self.update_send_stone_limit(send_user_id, result_send)
             receive_name = receive_user_info["user_name"]
             send_name = send_user_info["user_name"]
             send_msg = f"{send_name}道友成功赠送{receive_name}道友{number_to(num)}|{num}枚灵石"

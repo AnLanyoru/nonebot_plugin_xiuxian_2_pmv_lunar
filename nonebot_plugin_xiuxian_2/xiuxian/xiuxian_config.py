@@ -75,7 +75,7 @@ class XiuConfig:
                                  "place_id"]
         self.sql_user_cd = ["user_id", "type", "create_time", "scheduled_time", "last_check_info_time", "place_id"]
         self.sql_sects = ["sect_id", "sect_name", "sect_owner", "sect_scale", "sect_used_stone", "sect_fairyland",
-                          "sect_materials", "mainbuff", "secbuff", "elixir_room_level"]
+                          "sect_materials", "mainbuff", "secbuff", "elixir_room_level", "is_open"]
         self.sql_buff = ["id", "user_id", "main_buff", "sec_buff", "faqi_buff", "fabao_weapon", "armor_buff",
                          "atk_buff", "sub_buff", "blessed_spot"]
         self.sql_back = ["user_id", "goods_id", "goods_name", "goods_type", "goods_num", "create_time", "update_time",

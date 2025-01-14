@@ -17,8 +17,7 @@ from ..xiuxian_utils.item_json import items
 from ..xiuxian_utils.lay_out import Cooldown, set_cmd_lock
 from ..xiuxian_utils.utils import (
     check_user,
-    send_msg_handler, get_id_from_str, number_to
-)
+    send_msg_handler, get_id_from_str, number_to)
 from ..xiuxian_utils.xiuxian2_handle import sql_message
 
 store_sell_lock = asyncio.Lock()
@@ -169,7 +168,7 @@ async def fast_sell_items_(
                 continue
             if want_item_num == sell_item_num:
                 # 卖完了
-                await user_store.store_data.del_want_item(want_user_id, item_id)
+                await user_store.del_want_item(want_user_id, item_id)
             else:
                 await user_store.update_user_want(user_info, sell_item_num, want_user_id, want_item)
         else:  # 无数量限制，检查资金是否充足
@@ -257,7 +256,7 @@ async def remove_want_item_(
         msg = f"道友没有此物品的求购！！！"
         await bot.send(event, msg)
         await remove_want_item.finish()
-    await user_store.store_data.del_want_item(user_id, item_id)
+    await user_store.del_want_item(user_id, item_id)
     back_stone = int(want_item_info['need_items_price'] * want_item_info['need_items_num'] * 0.8)
     await sql_message.update_ls(user_id, back_stone, 1)  # 增加灵石
     msg = f"成功取消对{item_name}的求购。\r回退{number_to_msg(back_stone)}灵石"
@@ -385,7 +384,7 @@ async def user_sell_to_(
                 await user_sell_to.finish()
             if want_item_num == sell_item_num:
                 # 卖完了
-                await user_store.store_data.del_want_item(want_user_id, item_id)
+                await user_store.del_want_item(want_user_id, item_id)
             else:
                 await user_store.update_user_want(user_info, sell_item_num, want_user_id, want_item)
         else:  # 无数量限制，检查资金是否充足

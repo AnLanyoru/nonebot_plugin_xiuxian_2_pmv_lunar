@@ -73,6 +73,7 @@ check_items = on_command("查看", aliases={"查", "查看物品", "查看效果
                          block=True)
 back_fix = on_fullmatch("背包修复", priority=1, permission=GROUP, block=True)
 test_md = on_command("测试模板", priority=25, permission=SUPERUSER, block=True)
+check_item_json = on_command("物品结构", aliases={"json"}, priority=25, permission=SUPERUSER, block=True)
 
 __back_help__ = f"""
 指令：
@@ -654,10 +655,14 @@ async def use_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg())
     num = int(num_info[0]) if num_info else 1  # 获取第一个数量
     goods_id = items.items_map.get(item_name)
     item_info = await sql_message.get_item_by_good_id_and_user_id(user_id, goods_id)
+    if not item_info:
+        msg = f"请检查该道具是否在背包内！"
+        await bot.send(event=event, message=msg)
+        await use.finish()
     goods_type = item_info['goods_type']
     goods_num = item_info['goods_num']
-    if not (item_info and item_info['goods_num']):
-        msg = f"请检查该道具是否在背包内！"
+    if not item_info['goods_num']:
+        msg = f"请检查该道具是否充足！！"
         await bot.send(event=event, message=msg)
         await use.finish()
     if goods_type == "装备":
@@ -841,6 +846,31 @@ async def check_items_(bot: Bot, event: GroupMessageEvent, args: Message = Comma
 
     await bot.send(event=event, message=msg)
     await check_items.finish()
+
+
+@check_item_json.handle(parameterless=[Cooldown(cd_time=10, at_sender=False)])
+async def check_item_json_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
+    """查看修仙界物品"""
+    args = args.extract_plain_text()
+    items_id = get_num_from_str(args)
+    items_name = get_strs_from_str(args)
+    if items_id:
+        items_id = items_id[0]
+        try:
+            msg = get_item_msg(items_id)
+        except KeyError:
+            msg = "请输入正确的物品id！！！"
+    elif items_name:
+        items_id = items.items_map.get(items_name[0])
+        if items_id:
+            msg = str(items.get_data_by_item_id(items_id))
+        else:
+            msg = f"不存在该物品的信息，请检查名字是否输入正确！"
+    else:
+        msg = "请输入正确的物品id！！！"
+
+    await bot.send(event=event, message=msg)
+    await check_item_json.finish()
 
 
 @master_rename.handle(parameterless=[Cooldown(isolate_level=CooldownIsolateLevel.GROUP, parallel=1)])

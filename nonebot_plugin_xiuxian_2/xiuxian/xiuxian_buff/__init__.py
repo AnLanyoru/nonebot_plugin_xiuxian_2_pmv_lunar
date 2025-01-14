@@ -739,7 +739,6 @@ async def select_state_(bot: Bot, event: GroupMessageEvent, args: Message = Comm
 boss战增益:{int(boss_atk * 100)}%
 会心伤害增益:{int((1.5 + impart_burst_per + weapon_critatk + main_critatk) * 100)}%
 """
-    await sql_message.update_last_check_info_time(user_id)
     await bot.send(event=event, message=msg)
     await select_state.finish()
 

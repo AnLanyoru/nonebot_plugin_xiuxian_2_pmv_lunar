@@ -151,13 +151,16 @@ async def impart_draw_(bot: Bot, event: GroupMessageEvent, args: Message = Comma
         get_car_value = random.randint(hard_card_num, 106)
         card_num = round(want_num * get_car_value / 106, 0)
         get_card += card_num
+        print(pray_count)
         if (pray_count := card_num + pray_count) > 19:
+            print(pray_count)
             reap_img = random.choice(img_list)
             card_status = 'had' if impart_data_json.data_person_add(user_id, reap_img) else 'new'
             card_dict[card_status].append(reap_img)
             pray_count -= 20
             hard_card_num += 1 if card_status == "new" else 0
             card += 1
+    print(pray_count)
     text = f"祈愿{num}次结果如下：\r"
     if had_card := card_dict['had']:
         text += f"获取重复传承卡片{len(had_card)}张如下：\r{'、'.join(set(had_card))}\r"
@@ -213,6 +216,8 @@ async def impart_draw_fast_(bot: Bot, event: GroupMessageEvent, args: Message = 
                       '传承帮助', '传承帮助',
                       '虚神界对决', '虚神界对决',
                       '继续抽卡', '传承抽卡')
+        await bot.send(event=event, message=msg)
+        await impart_draw_fast.finish()
     for i in range(num):
         # 抽 num * 10 次
         if get_rank_plus(wish_count):

@@ -122,6 +122,7 @@ class UserStoreData:
         sql = f"select * from {self.sql_items_table_name} WHERE user_id=$1 and need_items_id=$2"
         async with self.pool.acquire() as conn:
             result = await conn.fetch(sql, user_id, item_id)
+            print(result)
             # 如果有，返回字典
             return zips(**result[0]) if result else None
 
@@ -134,9 +135,7 @@ class UserStoreData:
         """
         sql = f"DELETE FROM {self.sql_items_table_name} WHERE user_id=$1 and need_items_id=$2"
         async with self.pool.acquire() as conn:
-            result = await conn.fetch(sql, user_id, item_id)
-            # 如果有，返回字典
-            return zips(**result[0]) if result else None
+            await conn.execute(sql, user_id, item_id)
 
     async def get_highest_want_item(self, user_id, item_id, sell_item_num):
         """
@@ -194,7 +193,7 @@ class UserStoreData:
         now_time_str = str(now_time)
         # 检查物品是否存在，存在则update
         async with self.pool.acquire() as conn:
-            item = self.get_want_item(user_id, need_items_id)
+            item = await self.get_want_item(user_id, need_items_id)
             if item:
                 # 判断是否存在，存在则update
                 sql = (

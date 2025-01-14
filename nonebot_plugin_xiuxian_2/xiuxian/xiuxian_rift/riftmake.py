@@ -124,7 +124,7 @@ STORY = {
 }
 
 
-async def get_boss_battle_info(user_info, rift_rank, bot_id):
+async def get_boss_battle_info(user_info, rift_rank):
     """获取Boss战事件的内容"""
     boss_data = STORY['战斗']['Boss战斗']["Boss数据"]
     player = await sql_message.get_user_real_info(user_info['user_id'])
@@ -338,7 +338,7 @@ def get_main_info(user_level, rift_rank):
     main_buff_type = get_skill_by_rank(user_level, rift_rank)  # 天地玄黄
     main_buff_id_list = skill_data[main_buff_type]['gf_list']
     init_rate = 60  # 初始概率为60
-    finall_rate = init_rate + rift_rank * 5
+    finall_rate = init_rate + rift_rank * 10
     finall_rate = finall_rate if finall_rate <= 100 else 100
     is_success = False
     main_buff_id = 0
@@ -354,7 +354,7 @@ def get_sec_info(user_level, rift_rank):
     sec_buff_type = get_skill_by_rank(user_level, rift_rank)  # 天地玄黄
     sec_buff_id_list = skill_data[sec_buff_type]['st_list']
     init_rate = 60  # 初始概率为60
-    finall_rate = init_rate + rift_rank * 5
+    finall_rate = init_rate + rift_rank * 10
     finall_rate = finall_rate if finall_rate <= 100 else 100
     is_success = False
     sec_buff_id = 0
@@ -370,7 +370,7 @@ def get_sub_info(user_level, rift_rank):
     sub_buff_type = get_skill_by_rank(user_level, rift_rank)  # 天地玄黄
     sub_buff_id_list = skill_data[sub_buff_type]['fx_list']
     init_rate = 60  # 初始概率为60
-    finall_rate = init_rate + rift_rank * 5
+    finall_rate = init_rate + rift_rank * 10
     finall_rate = finall_rate if finall_rate <= 100 else 100
     is_success = False
     sub_buff_id = 0
