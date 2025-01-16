@@ -61,9 +61,7 @@ async def exp_up_(bot: Bot, event: GroupMessageEvent):
     is_type, msg = await check_user_type(user_id, 0)
     if not is_type:
         is_type, msg = await check_user_type(user_id, 4)
-        if is_type:
-            pass
-        else:
+        if not is_type:
             await bot.send(event=event, message=msg)
             await exp_up.finish()
     await sql_message.in_closing(user_id, user_type)  # 进入修炼状态
@@ -192,7 +190,7 @@ async def all_end_(bot: Bot, event: GroupMessageEvent, state: T_State):
         await all_end.finish()
 
 
-@world_rank_up.handle(parameterless=[Cooldown(cd_time=60, at_sender=False)])
+@world_rank_up.handle(parameterless=[Cooldown(cd_time=10, at_sender=False)])
 async def world_rank_up_(bot: Bot, event: GroupMessageEvent, state: T_State):
     """飞升上界"""
     # 这里曾经是风控模块，但是已经不再需要了
@@ -229,7 +227,7 @@ async def world_rank_up_(bot: Bot, event: GroupMessageEvent, state: T_State):
             await world_rank_up.finish()
 
 
-@world_rank_up.receive(parameterless=[Cooldown(cd_time=60, at_sender=False)])
+@world_rank_up.receive(parameterless=[Cooldown(cd_time=10, at_sender=False)])
 async def world_rank_up_(bot: Bot, event: GroupMessageEvent, state: T_State):
     # 这里曾经是风控模块，但是已经不再需要了
     _, user_info, _ = await check_user(event)

@@ -4,14 +4,7 @@ from random import shuffle
 
 from ..xiuxian_utils.item_json import items
 
-# "-1": "性寒",
-# "0": "性平",
-# "1": "性热",
-# "2": "生息",
-# "3": "养气",
-# "4": "炼气",
-# "5": "聚元",
-# "6": "凝神",
+# 药性定义
 herb_value_def = {
     -1: "性寒",
     0: "性平",
@@ -46,9 +39,51 @@ def get_herb_info(herb_id):
     return herb_info
 
 
+def count_mix_param(user_fire_control=None, user_herb_knowledge=None):
+    # 计算丹炉温度变化
+    if user_fire_control is not None:
+        fire_min_param = (int(user_fire_control / (user_fire_control + 5000) * 5)
+                          + int(user_fire_control / (user_fire_control + 500) * 3)
+                          + int(user_fire_control / (user_fire_control + 100) * 2))
+
+        fire_max_param = (int(user_fire_control / (user_fire_control + 500000) * 15)
+                          + int(user_fire_control / (user_fire_control + 50000) * 15)
+                          + int(user_fire_control / (user_fire_control + 5000) * 10)
+                          + int(user_fire_control / (user_fire_control + 500) * 10))
+
+        base_fire_change = random.randint(10 - fire_min_param, 50 - fire_max_param) * random.choice([1, -1])
+    else:
+        base_fire_change = 0
+
+    # 丹炉药性变化
+    if user_herb_knowledge is not None:
+        power_keep_max_param = (int(user_herb_knowledge / (user_herb_knowledge + 5000) * 20)
+                                + int(user_herb_knowledge / (user_herb_knowledge + 500) * 10)
+                                + int(user_herb_knowledge / (user_herb_knowledge + 100) * 20))
+
+        power_keep_min_param = (int(user_herb_knowledge / (user_herb_knowledge + 500000) * 20)
+                                + int(user_herb_knowledge / (user_herb_knowledge + 50000) * 20)
+                                + int(user_herb_knowledge / (user_herb_knowledge + 5000) * 20)
+                                + int(user_herb_knowledge / (user_herb_knowledge + 500) * 30))
+        herb_power_keep = random.randint(10 + power_keep_min_param, 50 + power_keep_max_param)
+    else:
+        herb_power_keep = 0
+
+    return base_fire_change, herb_power_keep
+
+
+def count_fire_control(user_fire_control):
+    fire_over_improve = (int(user_fire_control / (user_fire_control + 500000) * 50)
+                         + int(user_fire_control / (user_fire_control + 50000) * 50)
+                         + int(user_fire_control / (user_fire_control + 5000) * 30)
+                         + int(user_fire_control / (user_fire_control + 500) * 30))
+    return fire_over_improve
+
+
 class AlchemyFurnace:
-    def __init__(self):
+    def __init__(self, alchemy_furnace_id):
         # 丹炉属性
+        self.alchemy_furnace_id = alchemy_furnace_id
         self.name: str = "无"
         self.fire_sub: int = 0
         self.herb_save: int = 0
@@ -62,8 +97,14 @@ class AlchemyFurnace:
             "聚元": 0,
             "凝神": 0}
 
+        # 初始化丹炉属性
+        alchemy_furnace_info = items.get_data_by_item_id(alchemy_furnace_id)
+        self.name: str = alchemy_furnace_info['name']
+        self.fire_sub: int = alchemy_furnace_info['buff']
+        self.herb_save: int = alchemy_furnace_info['buff']
+
     def get_sum_herb_power(self) -> int:
-        return sum(self.herb_power.keys())
+        return sum(self.herb_power.values())
 
     def get_herb_power_rank(self):
         return sorted(self.herb_power, key=lambda x: self.herb_power[x], reverse=True)
@@ -71,9 +112,9 @@ class AlchemyFurnace:
     def get_main_herb_power(self):
         if self.get_sum_herb_power():
             herb_power_rank = self.get_herb_power_rank()
-            return herb_power_rank[:1]
+            return '、'.join(herb_power_rank[:1])
         else:
-            return ["无"]
+            return "无"
 
     def get_herb_power_msg(self):
         had_herb_power = [f"{herb_power_type}: {self.herb_power[herb_power_type]}"
@@ -96,43 +137,168 @@ class AlchemyFurnace:
 
         return msg
 
-    def input_herb_as_main(self, user_fire_control, user_herb_knowledge, herb_id, herb_num) -> str:
+    def __check_alchemy_furnace_state(self, user_fire_control) -> [str, int]:
+        over_fire = self.fire_value - 500
+        if over_fire < 500:
+            return "丹炉炉温十分平稳", 6
+        over_point = abs(over_fire) / (200
+                                       + self.fire_sub * 20
+                                       + count_fire_control(user_fire_control))
+        if over_point > 1.5:
+            if over_fire > 0:
+                msg = "\r炉温严重超出控制，丹炉发生了爆炸！！"
+                safe_level = 0
+            else:
+                msg = "\r炉温严重过低，丹炉内的药液彻底冷凝了！！"
+                safe_level = 1
+            for herb_type in self.herb_power:
+                self.herb_power[herb_type] *= 0.1 * safe_level
+            return msg, safe_level
+        elif over_point > 1.2:
+            # 20% 超出
+            msg = "\r炉温超出控制，药性发生了严重流失！！"
+            loss_power = over_point - 1
+            if over_fire > 0:
+                loss_power *= 2
+                msg += f'\r药力蒸发流失了{loss_power * 100}%!!'
+            else:
+                msg += f'\r药力凝固流失了{loss_power * 100}%!!'
+            for herb_type in self.herb_power:
+                self.herb_power[herb_type] *= 1 - loss_power
+            safe_level = 2
+            return msg, safe_level
+        elif over_point > 1:
+            # 超出
+            loss_power = (over_point - 1) / 2 + 0.1
+            if over_fire > 0:
+                loss_msg = f'\r药力蒸发流失了{loss_power * 100}%!!'
+                loss_type = "高"
+            else:
+                loss_msg = f'\r药力凝固流失了{loss_power * 100}%!!'
+                loss_type = "低"
+            for herb_type in self.herb_power:
+                self.herb_power[herb_type] *= 1 - loss_power
+            msg = f"\r炉温过{loss_type}，药性发生了严重流失！！" + loss_msg
+            safe_level = 3
+            return msg, safe_level
+
+        elif over_point > 0.5:
+            # 接近超出
+            loss_power = 0.1 * over_point / 1
+            if over_fire > 0:
+                loss_msg = f'\r药力蒸发流失了{loss_power * 100}%!!'
+                loss_type = "高"
+            else:
+                loss_msg = f'\r药力凝固流失了{loss_power * 100}%!!'
+                loss_type = "低"
+            for herb_type in self.herb_power:
+                self.herb_power[herb_type] *= 1 - loss_power
+            msg = f"\r炉温偏{loss_type}，药性发生了流失！！" + loss_msg
+            safe_level = 4
+            return msg, safe_level
+
+        elif over_point > 0.3:
+            if over_fire > 0:
+                loss_type = "高"
+            else:
+                loss_type = "低"
+            msg = f'当前炉温略{loss_type},道友注意控制丹炉温度！！'
+            safe_level = 5
+            return msg, safe_level
+        else:
+            msg = f'当前丹炉平稳运行！'
+            safe_level = 6
+            return msg, safe_level
+
+    def __input_herb_as_main(self, user_fire_control, user_herb_knowledge, herb_id, herb_num) -> str:
         herb_info = get_herb_info(herb_id)
         herb_info_main = herb_info['主药']
-        herb_fire_charge = herb_info_main['冷热'] * herb_num
+        herb_fire_change = herb_info_main['冷热'] * herb_num
         herb_type = herb_info_main['药性']
         add_herb_power = herb_info_main['药力'] * herb_num
 
-        # 丹炉温度变化
-        fire_min_param = (int(user_fire_control / (user_fire_control + 5000) * 20)
-                          + int(user_fire_control / (user_fire_control + 500) * 10)
-                          + int(user_fire_control / (user_fire_control + 100) * 20))
+        # 计算技巧系数
+        base_fire_change, herb_power_keep = count_mix_param(user_fire_control=user_fire_control,
+                                                            user_herb_knowledge=user_herb_knowledge)
 
-        fire_max_param = (int(user_fire_control / (user_fire_control + 500000) * 20)
-                          + int(user_fire_control / (user_fire_control + 50000) * 20)
-                          + int(user_fire_control / (user_fire_control + 5000) * 20)
-                          + int(user_fire_control / (user_fire_control + 500) * 30))
-
-        base_fire_charge = random.randint(50 - fire_min_param, 100 - fire_max_param) + 100
-
-        # 丹炉药性变化
-        power_keep_max_param = (int(user_herb_knowledge / (user_herb_knowledge + 5000) * 20)
-                                + int(user_herb_knowledge / (user_herb_knowledge + 500) * 10)
-                                + int(user_herb_knowledge / (user_herb_knowledge + 100) * 20))
-
-        power_keep_min_param = (int(user_herb_knowledge / (user_herb_knowledge + 500000) * 20)
-                                + int(user_herb_knowledge / (user_herb_knowledge + 50000) * 20)
-                                + int(user_herb_knowledge / (user_herb_knowledge + 5000) * 20)
-                                + int(user_herb_knowledge / (user_herb_knowledge + 500) * 30))
-        herb_power_keep = random.randint(10 + power_keep_min_param, 50 + power_keep_max_param)
         herb_power_keep_present = round(herb_power_keep / 100, 2)
-        herb_fire_charge *= herb_power_keep_present
+        herb_fire_change *= herb_power_keep_present
         add_herb_power *= herb_power_keep_present
         self.herb_power[herb_type] += add_herb_power
-        self.fire_value += base_fire_charge + herb_fire_charge
-        result = '加入'
+        self.fire_value += base_fire_change + herb_fire_change
+        result = f'加入{herb_info["药名"]}{herb_num}珠作为主药 保留{herb_power_keep}%药性'
         return result
 
+    def __input_herb_as_ingredient(self, user_fire_control, user_herb_knowledge, herb_id, herb_num) -> str:
+        herb_info = get_herb_info(herb_id)
+        herb_info_main = herb_info['药引']
+        herb_fire_change = herb_info_main['冷热'] * herb_num
+
+        # 计算技巧系数
+        base_fire_change, herb_power_keep = count_mix_param(user_fire_control=user_fire_control,
+                                                            user_herb_knowledge=user_herb_knowledge)
+
+        self.fire_value += base_fire_change + herb_fire_change
+        result = f'加入{herb_info["药名"]}{herb_num}珠作为药引 保留{herb_power_keep}%药性'
+        return result
+
+    def __input_herb_as_sub(self, user_fire_control, user_herb_knowledge, herb_id, herb_num) -> str:
+        herb_info = get_herb_info(herb_id)
+        herb_info_main = herb_info['辅药']
+        herb_type = herb_info_main['药性']
+        add_herb_power = herb_info_main['药力'] * herb_num
+
+        # 计算技巧系数
+        _, herb_power_keep = count_mix_param(user_fire_control=user_fire_control,
+                                             user_herb_knowledge=user_herb_knowledge)
+
+        herb_power_keep_present = round(herb_power_keep / 100, 2)
+        add_herb_power *= herb_power_keep_present
+        self.herb_power[herb_type] += add_herb_power
+        result = f'加入{herb_info["药名"]}{herb_num}珠作为辅药 保留{herb_power_keep}%药性'
+        return result
+
+    def input_herbs(self, user_fire_control, user_herb_knowledge, input_herb_list: dict):
+
+        # 记录初始炉温
+        start_fire = self.fire_value
+        msg = "开始向炉火中添加药材:"
+
+        # 处理主药
+        if "主药" in input_herb_list:
+            for main_herb in input_herb_list["主药"]:
+                msg += "\r" + self.__input_herb_as_main(
+                    user_fire_control,
+                    user_herb_knowledge,
+                    herb_id=main_herb[0],
+                    herb_num=main_herb[1])
+
+        # 处理药引
+        if "药引" in input_herb_list:
+            for main_herb in input_herb_list["药引"]:
+                msg += "\r" + self.__input_herb_as_ingredient(
+                    user_fire_control,
+                    user_herb_knowledge,
+                    herb_id=main_herb[0],
+                    herb_num=main_herb[1])
+
+        # 处理辅药
+        if "辅药" in input_herb_list:
+            for main_herb in input_herb_list["辅药"]:
+                msg += "\r" + self.__input_herb_as_sub(
+                    user_fire_control,
+                    user_herb_knowledge,
+                    herb_id=main_herb[0],
+                    herb_num=main_herb[1])
+
+        fire_change = self.fire_value - start_fire
+        msg += f"\r炉温{'升高' if fire_change > 0 else '降低'}了 {abs(fire_change)}!"
+        fire_msg, safe_level = self.__check_alchemy_furnace_state(user_fire_control)
+        msg += fire_msg
+        return msg
+
+
+mix_user: [int, AlchemyFurnace] = {}
 
 mix_config = items.get_data_by_item_type(['合成丹药'])
 mix_configs = {}

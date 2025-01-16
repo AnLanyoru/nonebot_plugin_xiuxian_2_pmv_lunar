@@ -21,6 +21,7 @@ from .back_util import (
     get_user_main_back_msg_easy, get_user_back_msg)
 from ..xiuxian_config import XiuConfig, convert_rank
 from ..xiuxian_limit import limit_handle
+from ..xiuxian_mixelixir.mixelixirutil import mix_user, AlchemyFurnace
 from ..xiuxian_place import place
 from ..xiuxian_utils.clean_utils import (
     get_args_num, get_num_from_str,
@@ -30,7 +31,7 @@ from ..xiuxian_utils.item_json import items
 from ..xiuxian_utils.lay_out import Cooldown, CooldownIsolateLevel
 from ..xiuxian_utils.utils import (
     check_user, send_msg_handler,
-    number_to, get_id_from_str
+    number_to, get_id_from_str, check_user_type
 )
 from ..xiuxian_utils.xiuxian2_handle import (
     sql_message, get_weapon_info_msg, get_armor_info_msg,
@@ -665,6 +666,8 @@ async def use_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg())
         msg = f"请检查该道具是否充足！！"
         await bot.send(event=event, message=msg)
         await use.finish()
+
+    # 使用实现
     if goods_type == "装备":
         if item_info['state']:
             msg = "该装备已被装备，请勿重复装备！"
@@ -787,12 +790,10 @@ async def use_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg())
         msg = f"道友打开了{num}个{goods_name},里面居然是{goods_name1}{int(1 * num)}个、{goods_name2}{int(2 * num)}个、{goods_name3}{int(2 * num)}个"
         await bot.send(event=event, message=msg)
         await use.finish()
-
     elif goods_type == "聚灵旗":
         msg = await get_use_jlq_msg(user_id, goods_id)
         await bot.send(event=event, message=msg)
         await use.finish()
-
     elif goods_type == "天地奇物":
         if num > int(goods_num):
             msg = f"道友背包中的{item_name}数量不足，当前仅有{goods_num}个！"
@@ -815,6 +816,24 @@ async def use_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg())
         msg, is_pass = await get_use_tool_msg(user_id, goods_id, num)
         if is_pass:
             await sql_message.update_back_j(user_id, goods_id, num, 2)
+        await bot.send(event=event, message=msg)
+        await use.finish()
+    elif goods_type == "炼丹炉":
+        if num > int(goods_num):
+            msg = f"道友没有{item_name}！"
+            await bot.send(event=event, message=msg)
+            await use.finish()
+
+        # 检查是否空闲
+        is_type, msg = await check_user_type(user_id, 0)
+        if not is_type:
+            await bot.send(event=event, message=msg)
+            await use.finish()
+
+        # 进入炼丹状态
+        await sql_message.in_closing(user_id, 7)
+        mix_user[user_id] = AlchemyFurnace(goods_id)
+        msg = f'道友取出{item_name}, 开始炼丹'
         await bot.send(event=event, message=msg)
         await use.finish()
     else:

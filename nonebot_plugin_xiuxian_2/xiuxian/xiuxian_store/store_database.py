@@ -88,7 +88,7 @@ class UserStoreData:
         """
         # 检查物品是否存在，存在则update
         async with self.pool.acquire() as conn:
-            item = self.get_user_store_info(user_id)
+            item = await self.get_user_store_info(user_id)
             if item:
                 # 判断是否存在，存在则update
                 sql = f"UPDATE {self.sql_info_table_name} set funds=$1 where user_id=$2"

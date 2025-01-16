@@ -90,7 +90,7 @@ class XiuxianDateManage:
       "sect_scale" numeric NOT NULL,
       "sect_used_stone" numeric,
       "sect_fairyland" numeric
-      "is_open" boolean,
+      "is_open" boolean DEFAULT True,
     );""")
                 elif i == "back":
                     try:
@@ -817,10 +817,11 @@ class XiuxianDateManage:
         """
         async with self.pool.acquire() as db:
             result = await db.fetch("""
-                SELECT s.sect_id, s.sect_name, s.sect_scale, (SELECT user_name FROM user_xiuxian WHERE user_id = s.sect_owner) as user_name, COUNT(ux.user_id) as member_count
-                FROM sects s
-                LEFT JOIN user_xiuxian ux ON s.sect_id = ux.sect_id
-                GROUP BY s.sect_id
+                SELECT sects.sect_id, sects.sect_name, sects.sect_scale,
+                (SELECT user_name FROM user_xiuxian WHERE user_xiuxian.user_id = sects.sect_owner) as user_name,
+                (SELECT COUNT(user_name) FROM user_xiuxian WHERE sects.sect_id = user_xiuxian.sect_id) as member_count
+                FROM sects
+                LEFT JOIN user_xiuxian ON sects.sect_id = user_xiuxian.sect_id
             """)
             result_all = [zips(**result_per) for result_per in result]
             return result_all

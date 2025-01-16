@@ -22,7 +22,7 @@ from ..xiuxian_data.data.突破概率_data import break_rate
 from ..xiuxian_limit.limit_database import limit_handle
 from ..xiuxian_place import place
 from ..xiuxian_sect import sect_config
-from ..xiuxian_utils.clean_utils import date_sub, get_num_from_str, get_strs_from_str, main_md, number_to_pro
+from ..xiuxian_utils.clean_utils import get_num_from_str, get_strs_from_str, main_md, number_to_pro
 from ..xiuxian_utils.item_json import items
 from ..xiuxian_utils.lay_out import Cooldown
 from ..xiuxian_utils.other_set import OtherSet

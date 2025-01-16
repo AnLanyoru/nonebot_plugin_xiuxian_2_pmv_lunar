@@ -146,7 +146,7 @@ def number_to_pro(string):
     :param string:
     :return:
     """
-    if isinstance(string, int):
+    if isinstance(string, (int, float)):
         return number_to(string)
     new_string = re.sub(r'\d+', lambda x: number_to(x.group()), string)
     return new_string

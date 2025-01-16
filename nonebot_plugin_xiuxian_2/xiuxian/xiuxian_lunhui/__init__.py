@@ -216,7 +216,7 @@ async def resetting_(bot: Bot, event: GroupMessageEvent):
 
     if user_msg['level'][:-2] == '炼体境':
         exp = user_msg['exp']
-        now_exp = exp
+        now_exp = exp - 100
         await sql_message.updata_level(user_id, '求道者')  # 重置用户境界
         await sql_message.update_levelrate(user_id, 0)  # 重置突破成功率
         await sql_message.update_j_exp(user_id, now_exp)  # 重置用户修为

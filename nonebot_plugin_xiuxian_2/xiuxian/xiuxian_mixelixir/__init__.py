@@ -14,15 +14,15 @@ from nonebot.params import EventPlainText, CommandArg, RawCommand
 from nonebot.permission import SUPERUSER
 
 from .mix_elixir_config import MIXELIXIRCONFIG
-from .mixelixirutil import get_mix_elixir_msg, tiaohe, check_mix, make_dict
+from .mixelixirutil import get_mix_elixir_msg, tiaohe, check_mix, make_dict, mix_user
 from ..xiuxian_back.back_util import get_user_elixir_back_msg, get_user_yaocai_back_msg, get_user_yaocai_back_msg_easy
 from ..xiuxian_config import convert_rank
-from ..xiuxian_utils.clean_utils import get_strs_from_str, get_args_num, get_paged_msg
+from ..xiuxian_utils.clean_utils import get_strs_from_str, get_args_num, get_paged_msg, get_num_from_str
 from ..xiuxian_utils.item_json import items
 from ..xiuxian_utils.lay_out import Cooldown
 from ..xiuxian_utils.utils import (
     check_user, send_msg_handler,
-    CommandObjectID
+    CommandObjectID, check_user_type
 )
 from ..xiuxian_utils.xiuxian2_handle import (
     sql_message, get_player_info, save_player_info,
@@ -31,6 +31,9 @@ from ..xiuxian_utils.xiuxian2_handle import (
 
 cache_help = {}
 
+alchemy_furnace_state = on_command("丹炉状态", priority=5, permission=GROUP, block=True)
+alchemy_furnace_add_herb = on_command("添加药材", priority=5, permission=GROUP, block=True)
+mix_stop = on_command("停止炼丹", priority=5, permission=GROUP, block=True)
 mix_elixir = on_fullmatch("炼丹", priority=17, permission=GROUP, block=True)
 mix_make = on_command("配方", priority=5, permission=GROUP, block=True)
 elixir_help = on_fullmatch("炼丹帮助", priority=7, permission=GROUP, block=True)
@@ -45,8 +48,13 @@ yaocai_get_op = on_command("op灵田收取", aliases={"op灵田结算"}, priorit
 
 __elixir_help__ = f"""
 炼丹帮助信息:
+可用指令：
+1、丹炉状态
+2、使用+丹炉-》开始炼丹
+3、添加药材 主药xxxx 药引xxxx 辅药xxxx
+（xxxx格式：某某药材n个 另外一个药材m个 -》 数量不限（小心炸炉））
 指令：
-1、炼丹:会检测背包内的药材,自动生成配方【一次最多匹配25种药材】
+1、炼丹:会检测背包内的药材,自动生成配方
 2、配方:发送配方领取丹药【配方主药.....】
 3、炼丹帮助:获取本帮助信息
 4、丹药背包:获取背包内丹药以及炼丹炉信息
@@ -64,6 +72,65 @@ __mix_elixir_help__ = f"""
 2、主药和药引控制炼丹时的冷热调和,冷热失和则炼不出丹药
 3、草药的类型控制产出丹药的类型
 """
+
+
+@alchemy_furnace_state.handle(parameterless=[Cooldown(stamina_cost=0, at_sender=False)])
+async def alchemy_furnace_state_(bot: Bot, event: GroupMessageEvent):
+    """丹炉状态"""
+
+    _, user_info, _ = await check_user(event)
+
+    user_id = user_info['user_id']
+    msg = mix_user[user_id].get_state_msg()
+    await bot.send(event=event, message=msg)
+    await alchemy_furnace_state.finish()
+
+
+@mix_stop.handle(parameterless=[Cooldown(stamina_cost=0, at_sender=False)])
+async def mix_stop_(bot: Bot, event: GroupMessageEvent):
+    """结束炼丹"""
+    user_type = 0  # 状态为空闲
+
+    _, user_info, _ = await check_user(event)
+
+    user_id = user_info['user_id']
+    is_type, msg = await check_user_type(user_id, 7)
+    if is_type:
+        await sql_message.in_closing(user_id, user_type)  # 退出修炼状态
+        msg = "道友收起丹炉，停止了炼丹。"
+        # todo 收尾工作
+    else:
+        msg = "道友现在没在炼丹呢！！"
+    await bot.send(event=event, message=msg)
+    await mix_stop.finish()
+
+
+@alchemy_furnace_add_herb.handle(parameterless=[Cooldown(stamina_cost=0, at_sender=False)])
+async def alchemy_furnace_add_herb_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
+    """丹炉加药"""
+
+    _, user_info, _ = await check_user(event)
+    user_id = user_info['user_id']
+    args = args.extract_plain_text()
+    msg_info = get_strs_from_str(args)
+    num_info = get_num_from_str(args)
+    item_name = msg_info[0] if msg_info else ''  # 获取第一个名称
+    num = int(num_info[0]) if num_info else 1  # 获取第一个数量
+    herb_use_as = item_name[:2]
+    if herb_use_as in ['主药', '药引', '辅药']:
+        herb_id = items.items_map.get(item_name[2:])
+    else:
+        msg = '输入格式有误，暂时只能输入 添加药材用作什么xx药n个，例如添加药材主药恒心草1'
+        await bot.send(event=event, message=msg)
+        await alchemy_furnace_add_herb.finish()
+    if not herb_id:
+        msg = '未知的药材名'
+        await bot.send(event=event, message=msg)
+        await alchemy_furnace_add_herb.finish()
+    temp_dict = {herb_use_as: [(herb_id, num)]}
+    msg = mix_user[user_id].input_herbs(1, 1, temp_dict)
+    await bot.send(event=event, message=msg)
+    await alchemy_furnace_add_herb.finish()
 
 
 @yaocai_get_op.handle(parameterless=[Cooldown(stamina_cost=0, at_sender=False)])
