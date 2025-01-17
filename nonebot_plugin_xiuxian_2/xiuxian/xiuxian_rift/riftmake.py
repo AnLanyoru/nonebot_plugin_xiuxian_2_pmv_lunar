@@ -172,7 +172,7 @@ async def get_dxsj_info(rift_type, user_info):
     cost_type = get_dict_type_rate(STORY[rift_type]['cost'])
     value = random.choice(STORY[rift_type]['cost'][cost_type]['value'])
     if cost_type == "exp":
-        exp = int(user_info['exp'] * value)
+        exp = min(int(user_info['exp'] * value), 50000000000)
         await sql_message.update_j_exp(user_info['user_id'], exp)
 
         nowhp = max(user_info['hp'] - (exp / 2), 1)

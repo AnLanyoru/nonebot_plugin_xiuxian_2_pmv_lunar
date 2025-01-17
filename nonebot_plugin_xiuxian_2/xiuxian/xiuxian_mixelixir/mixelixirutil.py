@@ -1,8 +1,6 @@
 import random
-from collections import Counter
-from random import shuffle
-
 from ..xiuxian_utils.item_json import items
+from .read_all_mix_elixir_json import all_mix_elixir_table
 
 # 药性定义
 herb_value_def = {
@@ -14,13 +12,6 @@ herb_value_def = {
     4: "炼气",
     5: "聚元",
     6: "凝神"}
-
-
-async def tiaohe(zhuyao_info, zhuyao_num, yaoyin_info, yaoyin_num):
-    _zhuyao = zhuyao_info['主药']['h_a_c']['type'] * zhuyao_info['主药']['h_a_c']['power'] * zhuyao_num
-    _yaoyin = yaoyin_info['药引']['h_a_c']['type'] * yaoyin_info['药引']['h_a_c']['power'] * yaoyin_num
-
-    return await absolute(_zhuyao + _yaoyin) > yonhudenji
 
 
 def get_herb_info(herb_id):
@@ -73,10 +64,10 @@ def count_mix_param(user_fire_control=None, user_herb_knowledge=None):
 
 
 def count_fire_control(user_fire_control):
-    fire_over_improve = (int(user_fire_control / (user_fire_control + 500000) * 50)
-                         + int(user_fire_control / (user_fire_control + 50000) * 50)
-                         + int(user_fire_control / (user_fire_control + 5000) * 30)
-                         + int(user_fire_control / (user_fire_control + 500) * 30))
+    fire_over_improve = (int(user_fire_control / (user_fire_control + 500000) * 30)
+                         + int(user_fire_control / (user_fire_control + 50000) * 30)
+                         + int(user_fire_control / (user_fire_control + 5000) * 15)
+                         + int(user_fire_control / (user_fire_control + 500) * 15))
     return fire_over_improve
 
 
@@ -87,6 +78,7 @@ class AlchemyFurnace:
         self.name: str = "无"
         self.fire_sub: int = 0
         self.herb_save: int = 0
+        self.make_elixir_improve: int = 0
 
         # 丹炉状态
         self.fire_value: float = 0
@@ -102,6 +94,7 @@ class AlchemyFurnace:
         self.name: str = alchemy_furnace_info['name']
         self.fire_sub: int = alchemy_furnace_info['buff']
         self.herb_save: int = alchemy_furnace_info['buff']
+        self.make_elixir_improve: int = alchemy_furnace_info['buff']
 
     def get_sum_herb_power(self) -> int:
         return sum(self.herb_power.values())
@@ -112,14 +105,14 @@ class AlchemyFurnace:
     def get_main_herb_power(self):
         if self.get_sum_herb_power():
             herb_power_rank = self.get_herb_power_rank()
-            return '、'.join(herb_power_rank[:1])
+            return '、'.join(herb_power_rank[:2])
         else:
             return "无"
 
     def get_herb_power_msg(self):
-        had_herb_power = [f"{herb_power_type}: {self.herb_power[herb_power_type]}"
+        had_herb_power = [f"{herb_power_type}: {round(self.herb_power[herb_power_type], 2)}"
                           for herb_power_type in self.get_herb_power_rank()
-                          if self.herb_power[herb_power_type] > 0]
+                          if self.herb_power[herb_power_type]]
         if not had_herb_power:
             return "当前无药力"
         return "\r".join(had_herb_power)
@@ -129,8 +122,8 @@ class AlchemyFurnace:
         msg = (f"丹炉状态：\r"
                f"丹炉名称：{self.name}\r"
                f"丹火：普通火焰\r"
-               f"炉温：{self.fire_value}\r"
-               f"炉内总药力：{self.get_sum_herb_power()}\r"
+               f"炉温：{round(self.fire_value, 2)}\r"
+               f"炉内总药力：{round(self.get_sum_herb_power(), 2)}\r"
                f"炉内主导药力：{self.get_main_herb_power()}\r"
                f"药力详情：\r"
                f"{self.get_herb_power_msg()}")
@@ -139,48 +132,68 @@ class AlchemyFurnace:
 
     def __check_alchemy_furnace_state(self, user_fire_control) -> [str, int]:
         over_fire = self.fire_value - 500
-        if over_fire < 500:
-            return "丹炉炉温十分平稳", 6
+
         over_point = abs(over_fire) / (200
                                        + self.fire_sub * 20
-                                       + count_fire_control(user_fire_control))
+                                       + count_fire_control(user_fire_control) * 2)
+
+        if not self.get_sum_herb_power():
+            if over_point > 1.5:
+                if over_fire > 0:
+                    msg = f"\r炉温({self.fire_value})严重超出控制，丹炉发生了爆炸！！"
+                    safe_level = 0
+                    self.fire_value = random.randint(50, 100)
+                else:
+                    msg = f"\r炉温({self.fire_value})过低！！请提高温度后加入药材！！"
+                    safe_level = 1
+
+            elif over_point > 0.3:
+                msg = f"\r当前炉温({self.fire_value})偏"
+                msg += '高' if over_fire > 0 else '低'
+                msg += ' 不宜加入药材'
+                safe_level = 3
+            else:
+                msg = f"\r当前炉温({self.fire_value})平稳，宜加入药材"
+                safe_level = 6
+            return msg, safe_level
+
         if over_point > 1.5:
             if over_fire > 0:
-                msg = "\r炉温严重超出控制，丹炉发生了爆炸！！"
+                msg = f"\r炉温({self.fire_value})严重超出控制，丹炉发生了爆炸！！"
                 safe_level = 0
+                self.fire_value = random.randint(50, 100)
             else:
-                msg = "\r炉温严重过低，丹炉内的药液彻底冷凝了！！"
+                msg = f"\r炉温({self.fire_value})严重过低，丹炉内的药液彻底冷凝了！！"
                 safe_level = 1
+                self.fire_value = max(self.fire_value, 0)
             for herb_type in self.herb_power:
                 self.herb_power[herb_type] *= 0.1 * safe_level
             return msg, safe_level
         elif over_point > 1.2:
             # 20% 超出
-            msg = "\r炉温超出控制，药性发生了严重流失！！"
+            msg = f"\r炉温({self.fire_value})超出控制，药性发生了严重流失！！"
             loss_power = over_point - 1
             if over_fire > 0:
                 loss_power *= 2
-                msg += f'\r药力蒸发流失了{loss_power * 100}%!!'
+                msg += f"\r药力蒸发流失了{loss_power * 100}%!!"
             else:
-                msg += f'\r药力凝固流失了{loss_power * 100}%!!'
+                msg += f"\r药力凝固流失了{loss_power * 100}%!!"
             for herb_type in self.herb_power:
                 self.herb_power[herb_type] *= 1 - loss_power
             safe_level = 2
-            return msg, safe_level
         elif over_point > 1:
             # 超出
             loss_power = (over_point - 1) / 2 + 0.1
             if over_fire > 0:
-                loss_msg = f'\r药力蒸发流失了{loss_power * 100}%!!'
+                loss_msg = f"\r药力蒸发流失了{loss_power * 100}%!!"
                 loss_type = "高"
             else:
-                loss_msg = f'\r药力凝固流失了{loss_power * 100}%!!'
+                loss_msg = f"\r药力凝固流失了{loss_power * 100}%!!"
                 loss_type = "低"
             for herb_type in self.herb_power:
                 self.herb_power[herb_type] *= 1 - loss_power
-            msg = f"\r炉温过{loss_type}，药性发生了严重流失！！" + loss_msg
+            msg = f"\r炉温({self.fire_value})过{loss_type}，药性发生了严重流失！！" + loss_msg
             safe_level = 3
-            return msg, safe_level
 
         elif over_point > 0.5:
             # 接近超出
@@ -193,22 +206,21 @@ class AlchemyFurnace:
                 loss_type = "低"
             for herb_type in self.herb_power:
                 self.herb_power[herb_type] *= 1 - loss_power
-            msg = f"\r炉温偏{loss_type}，药性发生了流失！！" + loss_msg
+            msg = f"\r炉温({self.fire_value})偏{loss_type}，药性发生了流失！！" + loss_msg
             safe_level = 4
-            return msg, safe_level
 
         elif over_point > 0.3:
             if over_fire > 0:
                 loss_type = "高"
             else:
                 loss_type = "低"
-            msg = f'当前炉温略{loss_type},道友注意控制丹炉温度！！'
+            msg = f'当前炉温({self.fire_value})略{loss_type},道友注意控制丹炉温度！！'
             safe_level = 5
-            return msg, safe_level
+
         else:
-            msg = f'当前丹炉平稳运行！'
+            msg = f'当前丹炉平稳运行！炉温({self.fire_value})'
             safe_level = 6
-            return msg, safe_level
+        return msg, safe_level
 
     def __input_herb_as_main(self, user_fire_control, user_herb_knowledge, herb_id, herb_num) -> str:
         herb_info = get_herb_info(herb_id)
@@ -221,25 +233,47 @@ class AlchemyFurnace:
         base_fire_change, herb_power_keep = count_mix_param(user_fire_control=user_fire_control,
                                                             user_herb_knowledge=user_herb_knowledge)
 
-        herb_power_keep_present = round(herb_power_keep / 100, 2)
+        herb_power_keep_present = herb_power_keep / 100
         herb_fire_change *= herb_power_keep_present
         add_herb_power *= herb_power_keep_present
         self.herb_power[herb_type] += add_herb_power
-        self.fire_value += base_fire_change + herb_fire_change
-        result = f'加入{herb_info["药名"]}{herb_num}珠作为主药 保留{herb_power_keep}%药性'
+        self.fire_value = max(self.fire_value + base_fire_change + herb_fire_change, 0)
+        result = (f"加入{herb_info['药名']}{herb_num}珠作为主药"
+                  f"\r保留{herb_power_keep}%药性({herb_type}:{add_herb_power})")
+        if herb_fire_change:
+            if herb_fire_change > 0:
+                temp_type = '性热'
+                temp_change_type = '升高'
+            else:
+                temp_type = '性寒'
+                temp_change_type = '降低'
+            result += f"炉温因药材{temp_type}, {temp_change_type}了{herb_fire_change}"
         return result
 
     def __input_herb_as_ingredient(self, user_fire_control, user_herb_knowledge, herb_id, herb_num) -> str:
         herb_info = get_herb_info(herb_id)
         herb_info_main = herb_info['药引']
         herb_fire_change = herb_info_main['冷热'] * herb_num
+        if not herb_fire_change:
+            return f"加入{herb_info['药名']}{herb_num}珠作为药引，但无效果"
 
         # 计算技巧系数
         base_fire_change, herb_power_keep = count_mix_param(user_fire_control=user_fire_control,
                                                             user_herb_knowledge=user_herb_knowledge)
 
-        self.fire_value += base_fire_change + herb_fire_change
-        result = f'加入{herb_info["药名"]}{herb_num}珠作为药引 保留{herb_power_keep}%药性'
+        herb_fire_change = herb_info_main['冷热'] * herb_power_keep / 100
+
+        self.fire_value = max(self.fire_value + base_fire_change + herb_fire_change, 0)
+        if herb_fire_change > 0:
+            temp_type = '性热'
+            temp_change_type = '升高'
+        else:
+            temp_type = '性寒'
+            temp_change_type = '降低'
+        result = (f"加入{herb_info['药名']}{herb_num}珠作为药引"
+                  f"\r保留{herb_power_keep}%药性({temp_type}:{herb_fire_change})\r"
+                  f"炉温因药材{temp_type}, {temp_change_type}了{herb_fire_change}")
+
         return result
 
     def __input_herb_as_sub(self, user_fire_control, user_herb_knowledge, herb_id, herb_num) -> str:
@@ -249,13 +283,23 @@ class AlchemyFurnace:
         add_herb_power = herb_info_main['药力'] * herb_num
 
         # 计算技巧系数
-        _, herb_power_keep = count_mix_param(user_fire_control=user_fire_control,
+        base_fire_change, herb_power_keep = count_mix_param(user_fire_control=user_fire_control,
                                              user_herb_knowledge=user_herb_knowledge)
 
         herb_power_keep_present = round(herb_power_keep / 100, 2)
         add_herb_power *= herb_power_keep_present
-        self.herb_power[herb_type] += add_herb_power
-        result = f'加入{herb_info["药名"]}{herb_num}珠作为辅药 保留{herb_power_keep}%药性'
+        self.fire_value = max(self.fire_value + base_fire_change, 0)
+        # 辅药添加后不超过最大值的80%
+        most_herb_type = self.get_herb_power_rank()[0]
+        most_herb_power = self.herb_power[most_herb_type] * 0.8
+        if herb_type == most_herb_power:
+            return f"加入{herb_info['药名']}{herb_num}珠作为辅药\r因为药性没有主药力调和，药性全部流失了"
+        real_add_herb_power = min(add_herb_power, most_herb_power - self.herb_power[herb_type])
+        self.herb_power[herb_type] = real_add_herb_power
+        result = f"加入{herb_info['药名']}{herb_num}珠作为辅药\r保留{herb_power_keep}%药性({herb_type}:{real_add_herb_power})"
+        if real_add_herb_power < add_herb_power:
+            loss_power = 1 - (real_add_herb_power / add_herb_power)
+            result += f"\r由于主药力不足，保留的药性流失了{round(loss_power * 100, 2)}%！！"
         return result
 
     def input_herbs(self, user_fire_control, user_herb_knowledge, input_herb_list: dict):
@@ -297,175 +341,43 @@ class AlchemyFurnace:
         msg += fire_msg
         return msg
 
+    def change_temp(self, user_fire_control, goal_value: int, is_warm_up=True):
+        change_type = '升高' if is_warm_up else '降低'
+        msg = f"尝试{change_type}{goal_value}点炉温：\r"
+        fire_control_param = count_fire_control(user_fire_control)
+        random_param = random.randint(10 + fire_control_param, 190 - fire_control_param) / 100
+        user_fire_change = random_param * goal_value
+
+        random_fire_change = (random.randint(10 + fire_control_param, 190 - fire_control_param) / 2
+                              * random.choice([1, -1]))
+        msg += f"{change_type}炉温过程中，丹炉温度波动{'升高' if random_fire_change > 0 else '降低'}了{abs(random_fire_change)}\r"
+        msg += f"道友成功使丹炉温度{change_type}了{user_fire_change}\r"
+        if not is_warm_up:
+            user_fire_change *= -1
+        sum_fire_change = user_fire_change + random_fire_change
+        msg += f"丹炉总温度{'升高' if sum_fire_change > 0 else '降低'}了{sum_fire_change}\r"
+        self.fire_value = max(sum_fire_change + self.fire_value, 0)
+        msg += self.__check_alchemy_furnace_state(user_fire_control)[0]
+        return msg
+
+    def make_elixir(self):
+        herb_power_rank = self.get_herb_power_rank()
+        make_elixir_info = {}
+        if (herb_power_rank_set := (herb_power_rank[:2]).sort()) not in all_mix_elixir_table:
+            msg = f"当前丹炉主导药力对应丹药开发中！！"
+            return msg, make_elixir_info
+        mix_table = all_mix_elixir_table[herb_power_rank_set]
+        now_sum_power = self.get_sum_herb_power()
+        msg = f"药力不足，还不足以凝聚丹药！！"
+        for elixir_need_power, elixir_id in mix_table.items():
+            if now_sum_power > elixir_need_power:
+                make_elixir_info = items.get_data_by_item_id(elixir_id)
+                make_elixir_info['item_id'] = elixir_id
+                msg = f"成功凝聚丹药{make_elixir_info['name']}"
+                for herb_type in self.herb_power:
+                    self.herb_power[herb_type] = 0
+                break
+        return msg, make_elixir_info
+
 
 mix_user: [int, AlchemyFurnace] = {}
-
-mix_config = items.get_data_by_item_type(['合成丹药'])
-mix_configs = {}
-for k, v in mix_config.items():
-    mix_configs[k] = v['elixir_config']
-
-yonhudenji = 0
-Llandudno_info = {
-    "max_num": 10,
-    "rank": 20
-}
-
-
-async def check_mix(elixir_config):
-    is_mix = False
-    l_id = []
-    # mix_configs = await get_mix_config()
-    for k, v in mix_configs.items():  # 这里是丹药配方
-        type_list = []
-        for ek, ev in elixir_config.items():  # 这是传入的值判断
-            # 传入的丹药config
-            type_list.append(ek)
-        formula_list = []
-        for vk, vv in v.items():  # 这里是每个配方的值
-            formula_list.append(vk)
-        if sorted(type_list) == sorted(formula_list):  # key满足了
-            flag = False
-            for typek in type_list:
-                if elixir_config[typek] >= v[typek]:
-                    flag = True
-                    continue
-                else:
-                    flag = False
-                    break
-            if flag:
-                l_id.append(k)
-
-            continue
-        else:
-            continue
-    id = 0
-    if l_id:
-        is_mix = True
-        id_config = {}
-        for id in l_id:
-            for k, v in mix_configs[id].items():
-                id_config[id] = v
-                break
-        id = sorted(id_config.items(), key=lambda x: x[1], reverse=True)[0][0]  # 选出最优解
-
-    return is_mix, id
-
-
-async def get_mix_elixir_msg(yaocai):
-    mix_elixir_msg = {}
-    num = 0
-    for k, v in yaocai.items():  # 这里是用户所有的药材dict
-        i = 1
-        while i <= v['num'] and i <= 5:  # 尝试第一个药材为主药
-            # _zhuyao = v['主药']['h_a_c']['type'] * v['主药']['h_a_c']['power'] * i
-            for kk, vv in yaocai.items():
-                if kk == k:  # 相同的药材不能同时做药引
-                    continue
-                o = 1
-                while o <= vv['num'] and o <= 5:
-                    # _yaoyin = vv['药引']['h_a_c']['type'] * vv['药引']['h_a_c']['power'] * o
-                    if await tiaohe(v, i, vv, o):  # 调和失败
-                        # if await absolute(_zhuyao + _yaoyin) > yonhudenji:#调和失败
-                        o += 1
-                        continue
-                    else:
-                        elixir_config = {}
-                        zhuyao_type = str(v['主药']['type'])
-                        zhuyao_power = v['主药']['power'] * i
-                        elixir_config[zhuyao_type] = zhuyao_power
-                        for kkk, vvv in yaocai.items():
-                            p = 1
-                            # 尝试加入辅药
-                            while p <= vvv['num'] and p <= 5:
-                                fuyao_type = str(vvv['辅药']['type'])
-                                fuyao_power = vvv['辅药']['power'] * p
-                                elixir_config = {}
-                                zhuyao_type = str(v['主药']['type'])
-                                zhuyao_power = v['主药']['power'] * i
-                                elixir_config[zhuyao_type] = zhuyao_power
-                                elixir_config[fuyao_type] = fuyao_power
-                                # print(elixir_config)         
-                                is_mix, id_ = await check_mix(elixir_config)
-                                if is_mix:  # 有可以合成的
-                                    if i + o + p <= Llandudno_info["max_num"]:
-                                        # 判断背包里药材是否足够(同个药材多种类型)
-                                        if len({v["name"], vv["name"], vvv["name"]}) != 3:
-                                            num_dict = Counter(
-                                                [*[v["name"]] * i, *[vv["name"]] * o, *[vvv["name"]] * p])
-                                            if any(num_dict[yao["name"]] > yao["num"] for yao in [v, vv, vvv]):
-                                                p += 1
-                                                continue
-
-                                        mix_elixir_msg[num] = {}
-                                        mix_elixir_msg[num]['id'] = id_
-                                        mix_elixir_msg[num]['配方'] = elixir_config
-                                        mix_elixir_msg[num][
-                                            '配方简写'] = f"主药{v['name']}{i}药引{vv['name']}{o}辅药{vvv['name']}{p}"
-                                        mix_elixir_msg[num]['主药'] = v['name']
-                                        mix_elixir_msg[num]['主药_num'] = i
-                                        mix_elixir_msg[num]['主药_level'] = v['level']
-                                        mix_elixir_msg[num]['药引'] = vv['name']
-                                        mix_elixir_msg[num]['药引_num'] = o
-                                        mix_elixir_msg[num]['药引_level'] = vv['level']
-                                        mix_elixir_msg[num]['辅药'] = vvv['name']
-                                        mix_elixir_msg[num]['辅药_num'] = p
-                                        mix_elixir_msg[num]['辅药_level'] = vvv['level']
-                                        num += 1
-                                        p += 1
-                                        continue
-                                    else:
-                                        p += 1
-                                        continue
-                                else:
-                                    p += 1
-                                    continue
-                            continue
-                    o += 1
-            i += 1
-    temp_dict = {}
-    temp_id_list = []
-    finall_mix_elixir_msg = {}
-    if mix_elixir_msg == {}:
-        return finall_mix_elixir_msg
-    for k, v in mix_elixir_msg.items():
-        temp_id_list.append(v['id'])
-    temp_id_list = set(temp_id_list)
-    for id_ in temp_id_list:
-        temp_dict[id_] = {}
-        for k, v in mix_elixir_msg.items():
-            if id_ == v['id']:
-                temp_dict[id_][k] = v['主药_num'] + v['药引_num'] + v['辅药_num']
-            else:
-                continue
-        id_ = sorted(temp_dict[id_].items(), key=lambda x: x[1])[0][0]
-        finall_mix_elixir_msg[id_] = {}
-        finall_mix_elixir_msg[id_]['id'] = mix_elixir_msg[id_]['id']
-        finall_mix_elixir_msg[id_]['配方'] = mix_elixir_msg[id_]
-
-    return finall_mix_elixir_msg
-
-
-async def absolute(x):
-    if x >= 0:
-        return x
-    else:
-        return -x
-
-
-async def tiaohe(zhuyao_info, zhuyao_num, yaoyin_info, yaoyin_num):
-    _zhuyao = zhuyao_info['主药']['h_a_c']['type'] * zhuyao_info['主药']['h_a_c']['power'] * zhuyao_num
-    _yaoyin = yaoyin_info['药引']['h_a_c']['type'] * yaoyin_info['药引']['h_a_c']['power'] * yaoyin_num
-
-    return await absolute(_zhuyao + _yaoyin) > yonhudenji
-
-
-async def make_dict(old_dict):
-    old_dict_key = list(old_dict.keys())
-    shuffle(old_dict_key)
-    if len(old_dict_key) >= 25:
-        old_dict_key = old_dict_key[:25]
-    new_dic = {}
-    for key in old_dict_key:
-        new_dic[key] = old_dict.get(key)
-    return new_dic
