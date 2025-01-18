@@ -10,7 +10,7 @@ from nonebot.adapters.onebot.v11 import (
     GroupMessageEvent,
     ActionFailed, Message
 )
-from nonebot.params import EventPlainText, CommandArg, RawCommand
+from nonebot.params import CommandArg, RawCommand
 from nonebot.permission import SUPERUSER
 
 from .mix_elixir_config import MIXELIXIRCONFIG

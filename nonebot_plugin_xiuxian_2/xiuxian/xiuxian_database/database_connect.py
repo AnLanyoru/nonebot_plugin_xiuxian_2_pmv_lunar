@@ -4,6 +4,7 @@ from asyncpg import Pool
 from .database_config import database_config  # 这是上面的config()代码块，已经保存在config.py文件中
 from .database_util import limit_db, tower_db, store_db, main_db, impart_db, all_table_data_move
 from .. import DRIVER
+from ..xiuxian_utils.clean_utils import zips
 
 params = database_config()
 date_type_set = {str: "TEXT", int: "numeric DEFAULT 0", float: "numeric DEFAULT 0", bytes: "bytea", None: "TEXT"}
@@ -33,6 +34,24 @@ class DataBase:
             cursor = await db.fetch('SELECT version()')
             db_version = cursor[0][0]
             print(f"登录数据库成功，数据库版本：{db_version}")
+
+    async def select(self, table: str, where: dict, need_column: list = None):
+        """
+        简单逻辑数据查找接口
+        """
+
+        if need_column is None:
+            need_column = ['*']
+
+        need_column_str = ",".join(need_column)
+
+        where_column = ",".join([f"{column_name}=${count}" for column_name, count
+                                 in zip(where.keys(), range(1, 1 + len(where)))])
+
+        async with self.pool.acquire() as db:
+            sql = f"select {need_column_str} from {table} WHERE {where_column}"
+            result = await db.fatch(sql, *where.values())
+            return zips(**result)
 
     async def update(self, table: str, where: dict, create_column: bool = 0, **kwargs):
         """
@@ -83,7 +102,7 @@ class DataBase:
                         try:
                             await db.execute(sql)
                         except (asyncpg.exceptions.DataError, asyncpg.exceptions.PostgresSyntaxError) as e:
-                            print(f"表{table}数据转移失败")
+                            print(f"表{table}数据插入失败")
                             print(f"出错sql语句：{sql}")
                             print(f"出错数据：{value}")
                             print("错误信息：", e)
@@ -94,7 +113,7 @@ class DataBase:
                 await db.execute(sql, *kwargs.values())
                 return sql, column_types
             except (asyncpg.exceptions.DataError, asyncpg.exceptions.PostgresSyntaxError) as e:
-                print(f"表{table}数据转移失败")
+                print(f"表{table}数据插入失败")
                 print(f"出错sql语句：{sql}")
                 print(f"出错数据:")
                 print(kwargs.values())

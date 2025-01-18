@@ -77,7 +77,7 @@ class XiuxianDateManage:
       "create_time" TEXT,
       "scheduled_time" TEXT,
       "last_check_info_time" TEXT,
-      "place_id" numeric DEFAULT 1
+      "user_active_info" json DEFAULT NULL
     );""")
                 elif i == "sects":
                     try:
@@ -90,7 +90,7 @@ class XiuxianDateManage:
       "sect_scale" numeric NOT NULL,
       "sect_used_stone" numeric,
       "sect_fairyland" numeric
-      "is_open" boolean DEFAULT True,
+      "is_open" boolean DEFAULT True
     );""")
                 elif i == "back":
                     try:
@@ -123,6 +123,26 @@ class XiuxianDateManage:
       "faqi_buff" numeric DEFAULT 0,
       "fabao_weapon" numeric DEFAULT 0,
       "sub_buff" numeric DEFAULT 0
+    );""")
+                elif i == "bank_info":
+                    try:
+                        await db.execute(f"select count(1) from {i}")
+                    except asyncpg.exceptions.UndefinedTableError:
+                        await db.execute("""CREATE TABLE "bank_info" (
+      "user_id" numeric NOT NULL,
+      "save_stone" numeric DEFAULT 0,
+      "save_time" TEXT DEFAULT NULL,
+      "bank_level" smallint DEFAULT 0
+    );""")
+                elif i == "mix_elixir_info":
+                    try:
+                        await db.execute(f"select count(1) from {i}")
+                    except asyncpg.exceptions.UndefinedTableError:
+                        await db.execute("""CREATE TABLE "mix_elixir_info" (
+      "user_id" numeric NOT NULL,
+      "farm_num" numeric DEFAULT 0,
+      "farm_harvest_time" text DEFAULT NULL,
+      "last_alchemy_furnace_data" json DEFAULT NULL
     );""")
 
             for i in XiuConfig().sql_user_xiuxian:

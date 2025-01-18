@@ -140,7 +140,7 @@ async def get_boss_battle_info(user_info, rift_rank):
         "总血量": int(base_exp * random.choice(boss_data["hp"])),
         "攻击": int(base_exp * random.choice(boss_data["atk"])),
         "真元": base_exp * boss_data["mp"],
-        "jj": "逆虚境",
+        "jj": f"{convert_rank()[0][65][:3]}",
         'stone': 1
     }
 

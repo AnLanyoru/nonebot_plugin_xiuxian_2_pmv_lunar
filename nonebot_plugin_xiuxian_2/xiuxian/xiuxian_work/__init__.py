@@ -49,7 +49,7 @@ __work_help__ = f"""
 指令：
 1、悬赏令:获取对应实力的悬赏令
 2、悬赏令刷新:刷新当前悬赏令,每日{count}次
-实力支持：求道者~羽化境
+实力支持：{convert_rank()[1][0][:3]}~{convert_rank()[1][76][:3]}
 3、悬赏令终止:终止当前悬赏令任务
 4、悬赏令结算:结算悬赏奖励
 5、悬赏令接取+编号：接取对应的悬赏令
@@ -66,7 +66,7 @@ async def last_work_(bot: Bot, event: GroupMessageEvent):
     user_rank = convert_rank(user_level)[0]
     is_type, msg = await check_user_type(user_id, 2)  # 需要在悬赏令中的用户
     if (is_type and user_rank >= 11) or (
-            is_type and user_info['exp'] >= await sql_message.get_level_power("羽化境后期")) or (
+            is_type and user_info['exp'] >= await sql_message.get_level_power(f"{convert_rank()[0][76]}")) or (
             is_type and int(user_info['exp']) >= int(await OtherSet().set_closing_type(user_level))
             * XiuConfig().closing_exp_upper_limit
     ):

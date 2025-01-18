@@ -3,7 +3,7 @@ from pathlib import Path
 DATABASE = Path() / "data" / "xiuxian"
 
 
-def convert_rank(rank_name):
+def convert_rank(rank_name: str = '求道者'):
     """
     获取境界等级，替代原来的USERRANK
     convert_rank('求道者')[0] 返回求道者的境界等级
@@ -63,7 +63,7 @@ def convert_rank(rank_name):
 
 class XiuConfig:
     def __init__(self):
-        self.sql_table = ["user_xiuxian", "user_cd", "sects", "back", "buff_info"]
+        self.sql_table = ["user_xiuxian", "user_cd", "sects", "back", "buff_info", "bank_info", "mix_elixir_info"]
         self.sql_user_xiuxian = ["id", "user_id", "user_name", "stone", "root",
                                  "root_type", "level", "power",
                                  "create_time", "is_sign", "is_beg", "is_ban",  # 玩家状态相关
