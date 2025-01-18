@@ -23,7 +23,7 @@ from ..xiuxian_utils.lay_out import Cooldown
 from ..xiuxian_utils.other_set import OtherSet
 from ..xiuxian_utils.utils import check_user, check_user_type
 from ..xiuxian_utils.xiuxian2_handle import sql_message
-from ..xiuxian_utils.xiuxian_opertion import do_is_work
+from .workmake import WorkMsg
 
 # 定时任务
 reset_refresh_num = require("nonebot_plugin_apscheduler").scheduler
@@ -248,7 +248,7 @@ async def do_work_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = R
             work_msg_f.append(get_work_msg(i))
         count_msg = f"(悬赏令每日次数：{count}, 今日余剩刷新次数：{free_num}次)"
         await sql_message.update_work_num(user_id, user_nums + 1)
-        work[user_id] = do_is_work(user_id)
+        work[user_id] = WorkMsg(user_id)
         work[user_id].msg = work_msg_f
         work[user_id].world = work_list
         msg = three_md(
@@ -288,7 +288,7 @@ async def do_work_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = R
             work_list.append([i[0], i[3]])
             work_msg_f.append(get_work_msg(i))
         count_msg = f"\r(道友消耗悬赏衙牌一枚，成功刷新悬赏令，余剩衙牌{goods_num - 1}枚)"
-        work[user_id] = do_is_work(user_id)
+        work[user_id] = WorkMsg(user_id)
         work[user_id].msg = work_msg_f
         work[user_id].world = work_list
         msg = three_md(

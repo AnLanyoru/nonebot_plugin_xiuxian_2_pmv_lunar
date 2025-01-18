@@ -9,6 +9,14 @@ from ..xiuxian_utils.item_json import items as item_s
 from ..xiuxian_utils.other_set import OtherSet
 
 
+class WorkMsg:
+    def __init__(self, user_id):
+        self.user = user_id
+        self.time = 0
+        self.msg = 0
+        self.world = []
+
+
 def workmake(work_level, exp, user_level):
     if work_level == '求道者':
         work_level = '求道者'

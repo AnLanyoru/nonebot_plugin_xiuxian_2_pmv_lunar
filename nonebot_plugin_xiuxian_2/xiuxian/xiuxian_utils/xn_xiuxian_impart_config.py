@@ -3,7 +3,7 @@ from pathlib import Path
 DATABASE = Path() / "data" / "xiuxian"
 
 
-class IMPART_BUFF_CONFIG:
+class ImpartBuffConfig:
     def __init__(self):
         self.sql_table = ["xiuxian_impart"]
         # 数据库字段
@@ -16,4 +16,4 @@ class IMPART_BUFF_CONFIG:
                                       "pray_stone_num", "pray_card_num"]
 
 
-config_impart = IMPART_BUFF_CONFIG()
+config_impart = ImpartBuffConfig()
