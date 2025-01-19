@@ -50,8 +50,8 @@ class DataBase:
 
         async with self.pool.acquire() as db:
             sql = f"select {need_column_str} from {table} WHERE {where_column}"
-            result = await db.fatch(sql, *where.values())
-            return zips(**result)
+            result = await db.fetch(sql, *where.values())
+            return zips(**result[0]) if result else None
 
     async def update(self, table: str, where: dict, create_column: bool = 0, **kwargs):
         """

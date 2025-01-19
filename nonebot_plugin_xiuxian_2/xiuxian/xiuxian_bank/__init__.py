@@ -138,11 +138,11 @@ async def bank_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = Rege
             await bot.send(event=event, message=msg)
             await bank.finish()
 
-        if user_level == str(len(BANK_CONFIG)):
+        if user_level == len(BANK_CONFIG):
             msg = f"道友已经是本灵庄最大的会员啦！"
             await bot.send(event=event, message=msg)
             await bank.finish()
-        stone_cost = BANK_CONFIG[f"{int(user_level)}"]['level_up']
+        stone_cost = BANK_CONFIG[user_level]['level_up']
         if int(user_info['stone']) < stone_cost:
             msg = (f"道友所拥有的灵石为{number_to(user_info['stone'])}|{user_info['stone']}枚，"
                    f"当前升级会员等级需求灵石{number_to(stone_cost)}|{stone_cost}枚金额不足，请重新输入！")
@@ -150,12 +150,12 @@ async def bank_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = Rege
             await bank.finish()
 
         await sql_message.update_ls(user_id, stone_cost, 2)
-        bank_info['bank_level'] = f"{int(user_level) + 1}"
+        bank_info['bank_level'] += 1
         await save_user_bank_info(user_id, bank_info)
         msg = (f"道友成功升级灵庄会员等级，消耗灵石{number_to(stone_cost)}|{stone_cost}枚，"
-               f"当前为：{BANK_CONFIG[str(int(user_level) + 1)]['level']}，"
-               f"灵庄可存有灵石上限{number_to(BANK_CONFIG[str(int(user_level) + 1)]['save_max'])}"
-               f"|{BANK_CONFIG[str(int(user_level) + 1)]['save_max']}枚")
+               f"当前为：{BANK_CONFIG[user_level + 1]['level']}，"
+               f"灵庄可存有灵石上限{number_to(BANK_CONFIG[user_level + 1]['save_max'])}"
+               f"|{BANK_CONFIG[user_level + 1]['save_max']}枚")
 
         await bot.send(event=event, message=msg)
         await bank.finish()

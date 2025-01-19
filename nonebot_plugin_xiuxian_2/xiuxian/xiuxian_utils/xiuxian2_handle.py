@@ -1182,7 +1182,7 @@ class XiuxianDateManage:
         async with self.pool.acquire() as db:
             await db.execute(sql)
 
-    async def get_work_num(self, user_id):  # todo 回滚主动更新
+    async def get_work_num(self, user_id):
         """获取用户悬赏令刷新次数
            拥有被动效果，检测隔日自动重置悬赏令刷新 次数
         """
@@ -1233,6 +1233,40 @@ class XiuxianDateManage:
                 VALUES ($1,$2,$3,$4,$5,$6,$7,$8)"""
                 await db.execute(sql, user_id, goods_id, goods_name, goods_type, goods_num, now_time, now_time,
                                  bind_num)
+
+    async def send_item(self, user_id: int, send_items: dict, is_bind: bool = False):
+        now_time = datetime.now()
+        now_time = str(now_time)
+        user_back_items = await self.get_back_msg_all(user_id)
+        had_item_ids = [item['goods_id'] for item in user_back_items]
+        update_items_id = [item_id for item_id in send_items.keys()
+                           if item_id in had_item_ids]
+        insert_items_id = [item_id for item_id in send_items.keys()
+                           if item_id in update_items_id]
+        async with self.pool.acquire() as db:
+            if update_items_id:
+                sql = (f"UPDATE back set goods_num=goods_num+$1,update_time=$2,bind_num=bind_num+$3 "
+                       f"WHERE user_id=$4 and goods_id=$5")
+                update_data = []
+                for item_id in update_items_id:
+                    item_num = send_items[item_id]
+                    update_data.append((item_num, now_time, item_num * is_bind, user_id, item_id))
+                await db.executemany(sql, update_data)
+            if insert_items_id:
+                sql = (f"INSERT INTO back "
+                       f"(user_id, goods_id, goods_name, goods_type, goods_num, create_time, update_time, bind_num) "
+                       f"VALUES ($1,$2,$3,$4,$5,$6,$7,$8)")
+                update_data = []
+                for item_id in update_items_id:
+                    item_info = items.get_data_by_item_id(item_id)
+                    item_num = send_items[item_id]
+                    update_data.append(
+                        (user_id, item_id, item_info['name'], item_info['type'], item_num,
+                         now_time, now_time, item_num * is_bind)
+                    )
+                await db.executemany(sql, update_data)
+
+
 
     async def get_item_by_good_id_and_user_id(self, user_id, goods_id):
         """根据物品id、用户id获取物品信息"""

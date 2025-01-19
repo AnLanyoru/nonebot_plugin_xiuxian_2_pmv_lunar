@@ -272,22 +272,22 @@ async def sect_elixir_get_(bot: Bot, event: GroupMessageEvent):
                     await sect_elixir_get.finish()
                 i = 1
                 while i <= give_num:
-                    id = random.choice(give_elixir_id_list)
-                    if int(id) == 1999:  # 不给渡厄丹了
+                    elixir_id = int(random.choice(give_elixir_id_list))
+                    if elixir_id == 1999:  # 不给渡厄丹
                         continue
                     else:
                         try:
-                            give_dict[id] += 1
+                            give_dict[elixir_id] += 1
                             i += 1
                         except:
-                            give_dict[id] = 1
+                            give_dict[elixir_id] = 1
                             i += 1
                 msg = f"道友成功领取到丹药:渡厄丹 1 枚!\r"
                 await sql_message.send_back(user_info['user_id'], 1999, "渡厄丹", "丹药", 1, 1)  # 送1个渡厄丹
                 for k, v in give_dict.items():
                     goods_info = items.get_data_by_item_id(k)
                     msg += f"道友成功领取到丹药：{goods_info['name']} {v} 枚!\r"
-                    await sql_message.send_back(user_info['user_id'], k, goods_info['name'], '丹药', v, bind_flag=1)
+                await sql_message.send_item(user_id, give_dict)
                 await sql_message.update_user_sect_elixir_get_num(user_info['user_id'])
                 await bot.send(event=event, message=msg)
                 await sect_elixir_get.finish()

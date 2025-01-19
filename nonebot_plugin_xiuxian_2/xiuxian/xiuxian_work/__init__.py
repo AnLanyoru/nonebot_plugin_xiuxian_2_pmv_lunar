@@ -66,7 +66,7 @@ async def last_work_(bot: Bot, event: GroupMessageEvent):
     user_rank = convert_rank(user_level)[0]
     is_type, msg = await check_user_type(user_id, 2)  # 需要在悬赏令中的用户
     if (is_type and user_rank >= 11) or (
-            is_type and user_info['exp'] >= await sql_message.get_level_power(f"{convert_rank()[0][76]}")) or (
+            is_type and user_info['exp'] >= await sql_message.get_level_power(f"{convert_rank()[1][76]}")) or (
             is_type and int(user_info['exp']) >= int(await OtherSet().set_closing_type(user_level))
             * XiuConfig().closing_exp_upper_limit
     ):

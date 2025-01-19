@@ -216,7 +216,7 @@ async def yaocai_get_op_(bot: Bot, event: GroupMessageEvent):
     else:
         give_dict = {}
         while num := num - 1:
-            item_id = random.choice(yaocai_id_list)
+            item_id = int(random.choice(yaocai_id_list))
             try:
                 give_dict[item_id] += 1
             except LookupError:
@@ -224,7 +224,7 @@ async def yaocai_get_op_(bot: Bot, event: GroupMessageEvent):
         for k, v in give_dict.items():
             goods_info = items.get_data_by_item_id(k)
             msg += f"{goods_info['name']} {v} 个！\r"
-            await sql_message.send_back(user_id, k, goods_info['name'], '药材', v)
+        await sql_message.send_item(user_id, give_dict)
     end_time = time.time()
     use_time = (end_time - start_time) * 1000
     msg += f'耗时：{use_time}'
@@ -335,7 +335,7 @@ async def yaocai_get_(bot: Bot, event: GroupMessageEvent):
                 i = 1
                 give_dict = {}
                 while i <= num:
-                    id = random.choice(yaocai_id_list)
+                    id = int(random.choice(yaocai_id_list))
                     try:
                         give_dict[id] += 1
                         i += 1
@@ -345,7 +345,7 @@ async def yaocai_get_(bot: Bot, event: GroupMessageEvent):
                 for k, v in give_dict.items():
                     goods_info = items.get_data_by_item_id(k)
                     msg += f"{goods_info['name']} {v} 个！\r"
-                    await sql_message.send_back(user_info['user_id'], k, goods_info['name'], '药材', v)
+                await sql_message.send_item(user_id, give_dict)
             mix_elixir_info['收取时间'] = nowtime
             save_player_info(user_id, mix_elixir_info, "mix_elixir_info")
             await bot.send(event=event, message=msg)
