@@ -17,7 +17,7 @@ async def create_pool():
         user=params['user'],
         password=params['password'],
         host=params['host'],
-        port=params['post'],
+        port=params['port'],
         max_inactive_connection_lifetime=6000)
     return pool
 
@@ -129,6 +129,7 @@ async def connect_db():
     global database
     await database.connect_pool_make()
     await database.get_version()
+    # sqlite数据迁移道具
     # await all_table_data_move(database, limit_db)
     # await all_table_data_move(database, tower_db)
     # await all_table_data_move(database, store_db)

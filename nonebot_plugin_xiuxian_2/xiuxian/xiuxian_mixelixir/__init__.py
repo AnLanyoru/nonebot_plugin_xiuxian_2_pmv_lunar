@@ -15,7 +15,7 @@ from nonebot.permission import SUPERUSER
 
 from .mix_elixir_config import MIXELIXIRCONFIG
 from .mix_elixir_database import create_user_mix_elixir_info, get_user_mix_elixir_info
-from .mixelixirutil import AlchemyFurnace, get_user_alchemy_furnace
+from .mixelixirutil import AlchemyFurnace, get_user_alchemy_furnace, move_mix_user
 from ..xiuxian_back.back_util import get_user_elixir_back_msg, get_user_yaocai_back_msg, get_user_yaocai_back_msg_easy
 from ..xiuxian_config import convert_rank
 from ..xiuxian_database.database_connect import database
@@ -55,10 +55,11 @@ __elixir_help__ = f"""
 可用指令：
 1、丹炉状态
 2、使用+丹炉 -》开始炼丹
-3、添加药材 主药xxxx 药引xxxx 辅药xxxx
+3、添加药材 主药 xxxx 药引 xxxx 辅药 xxxx
 （xxxx格式：某某药材n个 另外一个药材m个 -》 数量不限（小心炸炉））
 4、丹炉（升|降）温 温度
 5、凝结丹药|成丹
+6、停止炼丹
 """
 
 __mix_elixir_help__ = f"""
@@ -190,7 +191,7 @@ async def mix_stop_(bot: Bot, event: GroupMessageEvent):
     if is_type:
         await sql_message.in_closing(user_id, user_type)  # 退出修炼状态
         msg = "道友收起丹炉，停止了炼丹。"
-        # todo 收尾工作
+        move_mix_user(user_id)
     else:
         msg = "道友现在没在炼丹呢！！"
     await bot.send(event=event, message=msg)
@@ -209,6 +210,13 @@ async def alchemy_furnace_add_herb_(bot: Bot, event: GroupMessageEvent, args: Me
         await bot.send(event=event, message=msg)
         await alchemy_furnace_add_herb.finish()
     args = args.extract_plain_text()
+    # 解析配方参数
+    pattern = r"主药([\s\S]+)药引([\s\S]+)辅药([\s\S]+)"
+    matched = re.search(pattern, args)
+    matched = matched.groups()
+    print(matched)
+    msg = "获取到" + "|".join(matched)
+    await bot.send(event=event, message=msg)
     msg_info = get_strs_from_str(args)
     num_info = get_num_from_str(args)
     item_name = msg_info[0] if msg_info else ''  # 获取第一个名称

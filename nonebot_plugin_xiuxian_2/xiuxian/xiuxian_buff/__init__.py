@@ -851,7 +851,7 @@ async def daily_work_(bot: Bot, event: GroupMessageEvent):
                 farm = f"{round(next_get_time, 2)}小时后成熟"
         else:
             farm = '未知生长状态'
-    user_tower_info = tower_handle.check_user_tower_info(user_id)
+    user_tower_info = await tower_handle.check_user_tower_info(user_id)
     if user_tower_info:
         had_get = user_tower_info.get('weekly_point')
         if had_get:

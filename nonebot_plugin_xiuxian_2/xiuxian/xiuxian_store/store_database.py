@@ -37,18 +37,18 @@ class UserStoreData:
                 await conn.execute(f"select count(1) from {self.sql_info_table_name}")
             except asyncpg.exceptions.UndefinedTableError:
                 await conn.execute(f"""CREATE TABLE "{self.sql_info_table_name}" (
-          "user_id" INTEGER NOT NULL,
-          "funds" INTEGER DEFAULT 0
+          "user_id" bigint NOT NULL,
+          "funds" bigint DEFAULT 0
           );""")
             try:
                 await conn.execute(f"select count(1) from {self.sql_items_table_name}")
             except asyncpg.exceptions.UndefinedTableError:
                 await conn.execute(f"""CREATE TABLE "{self.sql_items_table_name}" (
-          "user_id" INTEGER NOT NULL,
-          "need_items_id" INTEGER NOT NULL,
-          "need_items_price" INTEGER DEFAULT 0,
-          "need_items_num" INTEGER DEFAULT 0,
-          "need_world" INTEGER DEFAULT 0,
+          "user_id" bigint NOT NULL,
+          "need_items_id" bigint NOT NULL,
+          "need_items_price" bigint DEFAULT 0,
+          "need_items_num" bigint DEFAULT 0,
+          "need_world" bigint DEFAULT 0,
           "create_time" TEXT,
           "update_time" TEXT,
           "sell_user" bytea
@@ -59,7 +59,7 @@ class UserStoreData:
                     await conn.execute(f"select {i} from {self.sql_items_table_name}")
                 except asyncpg.exceptions.UndefinedColumnError:
                     logger.opt(colors=True).info(f"<yellow>{self.sql_items_table_name}，开始创建\r</yellow>")
-                    sql = f"ALTER TABLE {self.sql_items_table_name} ADD COLUMN {i} INTEGER DEFAULT 0;"
+                    sql = f"ALTER TABLE {self.sql_items_table_name} ADD COLUMN {i} bigint DEFAULT 0;"
                     logger.opt(colors=True).info(f"<green>{sql}</green>")
                     await conn.execute(sql)
 

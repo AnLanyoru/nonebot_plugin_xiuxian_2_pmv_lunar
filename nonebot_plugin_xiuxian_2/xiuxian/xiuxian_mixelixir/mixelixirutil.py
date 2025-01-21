@@ -23,9 +23,10 @@ all_mix_elixir = {item_id: items_info
 
 all_mix_elixir_table = {}
 for mix_elixir_id, mix_elixir_info in all_mix_elixir.items():
-    elixir_mix_type = [herb_value_def[int(here_type)]
+    elixir_mix_type_list = [herb_value_def[int(here_type)]
                        for here_type in mix_elixir_info['elixir_config'].keys()]
-    elixir_mix_type.sort()
+    elixir_mix_type_list.sort()
+    elixir_mix_type = "".join(elixir_mix_type_list)
     need_power = sum(mix_elixir_info['elixir_config'].values())
     if elixir_mix_type in all_mix_elixir_table:
         all_mix_elixir_table[elixir_mix_type][need_power] = mix_elixir_id
@@ -420,13 +421,13 @@ class AlchemyFurnace:
         return msg
 
     def make_elixir(self):
-        herb_power_rank_set = self.get_herb_power_rank()[:2]
-        herb_power_rank_set.sort()
+        herb_power_rank = self.get_herb_power_rank()[:2]
+        herb_power_rank.sort()
+        herb_power_rank_set = "".join(herb_power_rank)
         make_elixir_info = {}
         if herb_power_rank_set not in all_mix_elixir_table:
             msg = f"当前丹炉主导药力对应丹药开发中！！"
             return msg, make_elixir_info
-        print(herb_power_rank_set)
         mix_table = all_mix_elixir_table[herb_power_rank_set]
         now_sum_power = self.get_sum_herb_power()
         msg = f"药力不足，还不足以凝聚丹药！！"
@@ -459,3 +460,7 @@ async def get_user_alchemy_furnace(user_id: int) -> AlchemyFurnace:
         mix_user_temp[user_id].reload_data(elixir_data)
         user_alchemy_furnace: AlchemyFurnace = mix_user_temp[user_id]
     return user_alchemy_furnace
+
+
+def move_mix_user(user_id: int) -> None:
+    del mix_user_temp[user_id]
