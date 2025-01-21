@@ -50,30 +50,30 @@ class XiuxianDateManage:
                     except asyncpg.exceptions.UndefinedTableError:
                         await db.execute("""CREATE TABLE "user_xiuxian" (
           "id" bigserial,
-          "user_id" numeric NOT NULL,
-          "sect_id" numeric DEFAULT NULL,
-          "sect_position" numeric DEFAULT NULL,
+          "user_id" bigint NOT NULL,
+          "sect_id" bigint DEFAULT NULL,
+          "sect_position" smallint DEFAULT NULL,
           "stone" numeric DEFAULT 0,
           "root" TEXT,
           "root_type" TEXT,
           "level" TEXT,
           "power" numeric DEFAULT 0,
           "create_time" TEXT,
-          "is_sign" numeric DEFAULT 0,
-          "is_beg" numeric DEFAULT 0,
-          "is_ban" numeric DEFAULT 0,
+          "is_sign" smallint DEFAULT 0,
+          "is_beg" smallint DEFAULT 0,
+          "is_ban" smallint DEFAULT 0,
           "exp" numeric DEFAULT 0,
           "user_name" TEXT DEFAULT NULL,
           "level_up_cd" text,
-          "level_up_rate" numeric DEFAULT 0
+          "level_up_rate" smallint DEFAULT 0
         );""")
                 elif i == "user_cd":
                     try:
                         await db.execute(f"select count(1) from {i}")
                     except asyncpg.exceptions.UndefinedTableError:
                         await db.execute("""CREATE TABLE "user_cd" (
-      "user_id" numeric NOT NULL,
-      "type" numeric DEFAULT 0,
+      "user_id" bigint NOT NULL,
+      "type" smallint DEFAULT 0,
       "create_time" TEXT,
       "scheduled_time" TEXT,
       "last_check_info_time" TEXT,
@@ -86,7 +86,7 @@ class XiuxianDateManage:
                         await db.execute("""CREATE TABLE "sects" (
       "sect_id" bigserial,
       "sect_name" TEXT NOT NULL,
-      "sect_owner" numeric,
+      "sect_owner" bigint,
       "sect_scale" numeric NOT NULL,
       "sect_used_stone" numeric,
       "sect_fairyland" numeric
@@ -97,18 +97,18 @@ class XiuxianDateManage:
                         await db.execute(f"select count(1) from {i}")
                     except asyncpg.exceptions.UndefinedTableError:
                         await db.execute("""CREATE TABLE "back" (
-      "user_id" numeric NOT NULL,
-      "goods_id" numeric NOT NULL,
+      "user_id" bigint NOT NULL,
+      "goods_id" bigint NOT NULL,
       "goods_name" TEXT,
       "goods_type" TEXT,
       "goods_num" numeric,
       "create_time" TEXT,
       "update_time" TEXT,
       "remake" TEXT,
-      "day_num" numeric DEFAULT 0,
-      "all_num" numeric DEFAULT 0,
+      "day_num" bigint DEFAULT 0,
+      "all_num" bigint DEFAULT 0,
       "action_time" TEXT,
-      "state" numeric DEFAULT 0
+      "state" smallint DEFAULT 0
     );""")
 
                 elif i == "buff_info":
@@ -117,7 +117,7 @@ class XiuxianDateManage:
                     except asyncpg.exceptions.UndefinedTableError:
                         await db.execute("""CREATE TABLE "buff_info" (
       "id" bigserial,
-      "user_id" numeric NOT NULL,
+      "user_id" bigint NOT NULL,
       "main_buff" numeric DEFAULT 0,
       "sec_buff" numeric DEFAULT 0,
       "faqi_buff" numeric DEFAULT 0,
@@ -129,8 +129,8 @@ class XiuxianDateManage:
                         await db.execute(f"select count(1) from {i}")
                     except asyncpg.exceptions.UndefinedTableError:
                         await db.execute("""CREATE TABLE "bank_info" (
-      "user_id" numeric NOT NULL,
-      "save_stone" numeric DEFAULT 0,
+      "user_id" bigint NOT NULL,
+      "save_stone" bigint DEFAULT 0,
       "save_time" TEXT DEFAULT NULL,
       "bank_level" smallint DEFAULT 0
     );""")
@@ -139,10 +139,13 @@ class XiuxianDateManage:
                         await db.execute(f"select count(1) from {i}")
                     except asyncpg.exceptions.UndefinedTableError:
                         await db.execute("""CREATE TABLE "mix_elixir_info" (
-      "user_id" numeric NOT NULL,
-      "farm_num" numeric DEFAULT 0,
+      "user_id" bigint NOT NULL,
+      "farm_num" smallint DEFAULT 0,
       "farm_harvest_time" text DEFAULT NULL,
-      "last_alchemy_furnace_data" json DEFAULT NULL
+      "last_alchemy_furnace_data" json DEFAULT NULL,
+      "user_fire_control" bigint DEFAULT 0,
+      "user_herb_knowledge" bigint DEFAULT 0,
+      "mix_elixir_data" json DEFAULT NULL
     );""")
 
             for i in XiuConfig().sql_user_xiuxian:
@@ -523,18 +526,14 @@ class XiuxianDateManage:
         """
         if isinstance(user_nike_name, Message):
             user_nike_name = user_nike_name.extract_plain_text()
-
         user_nike_name = get_strs_from_str(user_nike_name)
-        if user_nike_name:
-            user_nike_name = user_nike_name[0]
-        else:
+        if not user_nike_name:
             return None
+        user_nike_name = user_nike_name[0]
         async with self.pool.acquire() as db:
             sql = "SELECT user_id FROM user_xiuxian WHERE user_name =$1"
             result = await db.fetch(sql, user_nike_name)
-            if not result:
-                return None
-            return result[0][0]
+            return result[0][0] if result else None
 
     async def get_user_cd(self, user_id):
         """
@@ -1250,8 +1249,8 @@ class XiuxianDateManage:
                 update_data = []
                 for item_id in update_items_id:
                     item_num = send_items[item_id]
-                    update_data.append((item_num, now_time, item_num * is_bind, user_id, item_id))
-                await db.executemany(sql, update_data)
+                    update_data = (item_num, now_time, item_num * is_bind, user_id, item_id)
+                    await db.execute(sql, *update_data)
             if insert_items_id:
                 sql = (f"INSERT INTO back "
                        f"(user_id, goods_id, goods_name, goods_type, goods_num, create_time, update_time, bind_num) "

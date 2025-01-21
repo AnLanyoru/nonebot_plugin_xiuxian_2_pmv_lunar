@@ -45,7 +45,7 @@ class UserStoreData:
             except asyncpg.exceptions.UndefinedTableError:
                 await conn.execute(f"""CREATE TABLE "{self.sql_items_table_name}" (
           "user_id" INTEGER NOT NULL,
-          "need_items_id" TEXT NOT NULL,
+          "need_items_id" INTEGER NOT NULL,
           "need_items_price" INTEGER DEFAULT 0,
           "need_items_num" INTEGER DEFAULT 0,
           "need_world" INTEGER DEFAULT 0,

@@ -14,9 +14,11 @@ from nonebot.params import CommandArg, RawCommand
 from nonebot.permission import SUPERUSER
 
 from .mix_elixir_config import MIXELIXIRCONFIG
-from .mixelixirutil import mix_user, AlchemyFurnace
+from .mix_elixir_database import create_user_mix_elixir_info, get_user_mix_elixir_info
+from .mixelixirutil import AlchemyFurnace, get_user_alchemy_furnace
 from ..xiuxian_back.back_util import get_user_elixir_back_msg, get_user_yaocai_back_msg, get_user_yaocai_back_msg_easy
 from ..xiuxian_config import convert_rank
+from ..xiuxian_database.database_connect import database
 from ..xiuxian_utils.clean_utils import get_strs_from_str, get_args_num, get_paged_msg, get_num_from_str
 from ..xiuxian_utils.item_json import items
 from ..xiuxian_utils.lay_out import Cooldown
@@ -68,7 +70,7 @@ __mix_elixir_help__ = f"""
 
 @make_elixir.handle(parameterless=[Cooldown(stamina_cost=0, at_sender=False)])
 async def make_elixir_(bot: Bot, event: GroupMessageEvent):
-    """丹炉状态"""
+    """凝结丹药"""
 
     _, user_info, _ = await check_user(event)
 
@@ -78,7 +80,10 @@ async def make_elixir_(bot: Bot, event: GroupMessageEvent):
         msg = "道友现在没在炼丹呢！！"
         await bot.send(event=event, message=msg)
         await make_elixir.finish()
-    user_alchemy_furnace: AlchemyFurnace = mix_user[user_id]
+
+    # 获取用户炼丹数据
+    user_mix_elixir_info = await get_user_mix_elixir_info(user_id)
+    user_alchemy_furnace: AlchemyFurnace = await get_user_alchemy_furnace(user_id)
     msg, mix_elixir_info = user_alchemy_furnace.make_elixir()
     if not mix_elixir_info:
         await bot.send(event=event, message=msg)
@@ -98,6 +103,21 @@ async def make_elixir_(bot: Bot, event: GroupMessageEvent):
                                 goods_type=mix_elixir_info['item_type'],
                                 goods_num=num)
     msg += f"{num}颗"
+    user_skill_improve_data = {
+        'user_fire_control': mix_elixir_info['give_fire_control_exp']
+                             + user_mix_elixir_info['user_fire_control'],
+        'user_herb_knowledge': mix_elixir_info['give_herb_knowledge_exp']
+                               + user_mix_elixir_info['user_herb_knowledge']}
+    await database.update(table='mix_elixir_info',
+                          where={'user_id': user_id},
+                          **user_skill_improve_data)
+    msg += (f"\r控火经验增加：{mix_elixir_info['give_fire_control_exp']}"
+            f"（当前{mix_elixir_info['give_fire_control_exp'] + user_mix_elixir_info['user_fire_control']}）"
+            f"\r药理知识增加：{mix_elixir_info['give_herb_knowledge_exp']}"
+            f"（当前{mix_elixir_info['give_herb_knowledge_exp'] + user_mix_elixir_info['user_herb_knowledge']}）")
+
+    # 保存丹炉数据
+    await user_alchemy_furnace.save_data(user_id)
     await bot.send(event=event, message=msg)
     await make_elixir.finish()
 
@@ -110,19 +130,32 @@ async def alchemy_furnace_fire_control_(
     _, user_info, _ = await check_user(event)
 
     user_id = user_info['user_id']
+
+    # 检查是否在炼丹中
     is_type, _ = await check_user_type(user_id, 7)
     if not is_type:
         msg = "道友现在没在炼丹呢！！"
         await bot.send(event=event, message=msg)
         await alchemy_furnace_fire_control.finish()
+
+    # 获取目标温度
     goal_fire_change = get_args_num(args, 1)
     if goal_fire_change < 10:
         msg = "目标温度变化至少为10！！"
         await bot.send(event=event, message=msg)
         await alchemy_furnace_fire_control.finish()
-    user_alchemy_furnace: AlchemyFurnace = mix_user[user_id]
+
+    # 获取用户炼丹数据
+    user_mix_elixir_info = await get_user_mix_elixir_info(user_id)
+    user_alchemy_furnace: AlchemyFurnace = await get_user_alchemy_furnace(user_id)
     is_warm_up = False if cmd == "丹炉降温" else True
-    msg = user_alchemy_furnace.change_temp(1000, goal_fire_change, is_warm_up=is_warm_up)
+    msg = user_alchemy_furnace.change_temp(
+        user_mix_elixir_info['user_fire_control'],
+        goal_fire_change,
+        is_warm_up=is_warm_up)
+
+    # 保存丹炉数据
+    await user_alchemy_furnace.save_data(user_id)
     await bot.send(event=event, message=msg)
     await alchemy_furnace_fire_control.finish()
 
@@ -139,7 +172,7 @@ async def alchemy_furnace_state_(bot: Bot, event: GroupMessageEvent):
         msg = "道友现在没在炼丹呢！！"
         await bot.send(event=event, message=msg)
         await alchemy_furnace_state.finish()
-    user_alchemy_furnace: AlchemyFurnace = mix_user[user_id]
+    user_alchemy_furnace: AlchemyFurnace = await get_user_alchemy_furnace(user_id)
     msg = user_alchemy_furnace.get_state_msg()
     await bot.send(event=event, message=msg)
     await alchemy_furnace_state.finish()
@@ -192,8 +225,17 @@ async def alchemy_furnace_add_herb_(bot: Bot, event: GroupMessageEvent, args: Me
         await bot.send(event=event, message=msg)
         await alchemy_furnace_add_herb.finish()
     temp_dict = {herb_use_as: [(herb_id, num)]}
-    user_alchemy_furnace: AlchemyFurnace = mix_user[user_id]
-    msg = user_alchemy_furnace.input_herbs(1, 1, temp_dict)
+
+    # 获取用户炼丹数据
+    user_mix_elixir_info = await get_user_mix_elixir_info(user_id)
+    user_alchemy_furnace: AlchemyFurnace = await get_user_alchemy_furnace(user_id)
+    msg = user_alchemy_furnace.input_herbs(
+        user_mix_elixir_info['user_fire_control'],
+        user_mix_elixir_info['user_herb_knowledge'],
+        temp_dict)
+
+    # 保存丹炉数据
+    await user_alchemy_furnace.save_data(user_id)
     await bot.send(event=event, message=msg)
     await alchemy_furnace_add_herb.finish()
 
@@ -367,13 +409,16 @@ async def my_mix_elixir_info_(bot: Bot, event: GroupMessageEvent):
 
     user_id = user_info['user_id']
     mix_elixir_info = get_player_info(user_id, 'mix_elixir_info')
-    l_msg = [f"☆------道友的炼丹信息------☆"]
+
+    # 获取用户炼丹数据
+    user_mix_elixir_info = await get_user_mix_elixir_info(user_id)
+    l_msg = [f"☆----道友的炼丹信息----☆"]
     msg = f"药材收取等级：{mix_elixir_info['收取等级']}\r"
-    msg += f"丹药控火等级：{mix_elixir_info['丹药控火']}\r"
-    msg += f"丹药耐药性等级：{mix_elixir_info['丹药耐药性']}\r"
+    msg += f"丹药控火经验：{user_mix_elixir_info['user_fire_control']}\r"
+    msg += f"药理知识：{user_mix_elixir_info['user_herb_knowledge']}\r"
     msg += f"炼丹经验：{mix_elixir_info['炼丹经验']}\r"
     l_msg.append(msg)
-    if mix_elixir_info['炼丹记录'] != {}:
+    if mix_elixir_info['炼丹记录']:
         l_msg.append(f"☆------道友的炼丹记录------☆")
         i = 1
         for k, v in mix_elixir_info['炼丹记录'].items():

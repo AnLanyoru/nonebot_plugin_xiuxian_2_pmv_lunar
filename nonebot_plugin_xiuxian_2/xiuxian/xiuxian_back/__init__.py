@@ -21,7 +21,7 @@ from .back_util import (
     get_user_main_back_msg_easy, get_user_back_msg)
 from ..xiuxian_config import XiuConfig, convert_rank
 from ..xiuxian_limit import limit_handle
-from ..xiuxian_mixelixir.mixelixirutil import mix_user, AlchemyFurnace
+from ..xiuxian_mixelixir.mixelixirutil import mix_user_temp, AlchemyFurnace
 from ..xiuxian_place import place
 from ..xiuxian_utils.clean_utils import (
     get_args_num, get_num_from_str,
@@ -832,8 +832,11 @@ async def use_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg())
 
         # 进入炼丹状态
         await sql_message.in_closing(user_id, 7)
-        mix_user[user_id] = AlchemyFurnace(goods_id)
+        mix_user_temp[user_id] = AlchemyFurnace(goods_id)
         msg = f'道友取出{item_name}, 开始炼丹'
+
+        # 保存丹炉数据
+        await mix_user_temp[user_id].save_data(user_id)
         await bot.send(event=event, message=msg)
         await use.finish()
     else:

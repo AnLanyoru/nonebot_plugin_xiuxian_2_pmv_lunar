@@ -19,7 +19,9 @@ type_fix = {"user_cd":
             "sects":
                 {"sect_fairyland": str},
             "back":
-                {"remake": str}}
+                {"remake": str},
+            "user_store":
+                {'need_items_id': int}}
 
 
 async def all_table_data_move(database, sqlite_db_path, values_type_check: bool = False):
