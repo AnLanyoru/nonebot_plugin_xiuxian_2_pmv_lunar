@@ -44,9 +44,9 @@ class WorldTowerData:
         """检查数据完整性"""
         async with self.pool.acquire() as conn:
             try:
-                conn.execute(f"select count(1) from {self.sql_tower_info_table_name}")
+                await conn.execute(f"select count(1) from {self.sql_tower_info_table_name}")
             except asyncpg.exceptions.UndefinedTableError:
-                conn.execute(f"""CREATE TABLE "{self.sql_tower_info_table_name}" (
+                await conn.execute(f"""CREATE TABLE "{self.sql_tower_info_table_name}" (
                     "floor" bigint NOT NULL,
                     "place_id" bigint DEFAULT 0,
                     "name" TEXT,
@@ -56,9 +56,9 @@ class WorldTowerData:
                     "defence" bigint DEFAULT 0
                     );""")
             try:
-                conn.execute(f"select count(1) from {self.sql_user_table_name}")
+                await conn.execute(f"select count(1) from {self.sql_user_table_name}")
             except asyncpg.exceptions.UndefinedTableError:
-                conn.execute(f"""CREATE TABLE "{self.sql_user_table_name}" (
+                await conn.execute(f"""CREATE TABLE "{self.sql_user_table_name}" (
                     "user_id" bigint NOT NULL,
                     "now_floor" bigint DEFAULT 0,
                     "best_floor" bigint DEFAULT 0,
@@ -77,7 +77,7 @@ class WorldTowerData:
         """
         sql = f"SELECT * FROM {self.sql_tower_info_table_name} WHERE floor=$1 and place_id=$2"
         async with self.pool.acquire() as conn:
-            result = conn.fetch(sql, floor, place_id)
+            result = await conn.fetch(sql, floor, place_id)
             return zips(**result[0]) if result else None
 
     async def tower_floor_make(
@@ -88,7 +88,8 @@ class WorldTowerData:
             hp: int,
             mp: int,
             atk: int,
-            defence: float):
+            defence: float,
+            **kwargs):
         """
         插入塔楼层信息至数据库，数据处理不要放这里
         """
@@ -100,14 +101,14 @@ class WorldTowerData:
                 sql = (f"UPDATE {self.sql_tower_info_table_name} "
                        f"set name=$1, hp=$2, mp=$3, atk=$4, defence=$5 "
                        f"where floor=$6 and place_id=$7")
-                conn.execute(sql, name, hp, mp, atk, defence, floor, place_id)
+                await conn.execute(sql, name, hp, mp, atk, defence, floor, place_id)
                 is_new = False
             else:
                 # 判断是否存在，不存在则INSERT
                 sql = (f"INSERT INTO {self.sql_tower_info_table_name} "
                        f"(floor, place_id, name, hp, mp, atk, defence) "
                        f"VALUES ($1,$2,$3,$4,$5,$6,$7)")
-                conn.execute(sql, floor, place_id, name, hp, mp, atk, defence)
+                await conn.execute(sql, floor, place_id, name, hp, mp, atk, defence)
                 is_new = True
             return is_new
 
@@ -119,7 +120,7 @@ class WorldTowerData:
         """
         sql = f"select * from {self.sql_user_table_name} WHERE user_id=$1"
         async with self.pool.acquire() as conn:
-            result = conn.fetch(sql, user_id)
+            result = await conn.fetch(sql, user_id)
             return zips(**result[0]) if result else None
 
     async def user_tower_info_make(
@@ -130,7 +131,8 @@ class WorldTowerData:
             tower_point: int,
             tower_place: int,
             weekly_point: int,
-            fight_log: bytes):
+            fight_log: bytes,
+            **kwargs):
         """
 
         :param user_id:
@@ -156,7 +158,7 @@ class WorldTowerData:
                     f"weekly_point=$5, "
                     f"fight_log=$6 where "
                     f"user_id=$7")
-                conn.execute(
+                await conn.execute(
                     sql,
                     now_floor,
                     best_floor,
@@ -170,7 +172,7 @@ class WorldTowerData:
                 # 判断是否存在，不存在则INSERT
                 sql = f"""INSERT INTO {self.sql_user_table_name} (user_id, now_floor, best_floor, 
                 tower_point, tower_place, weekly_point, fight_log) VALUES ($1,$2,$3,$4,$5,$6,$7)"""
-                conn.execute(
+                await conn.execute(
                     sql,
                     user_id,
                     now_floor,
@@ -188,13 +190,13 @@ class WorldTowerData:
                 f"UPDATE {self.sql_user_table_name} set "
                 f"weekly_point=0 where "
                 f"user_id is not NULL")
-            conn.execute(sql)
+            await conn.execute(sql)
 
     async def get_all_tower_user_id(self):
         """获取全部用户id"""
         sql = f"SELECT user_id FROM {self.sql_user_table_name}"
         async with self.pool.acquire() as conn:
-            result = conn.execute(sql)
+            result = await conn.fetch(sql)
             return [result_per[0] for result_per in result] if result else None
 
     async def update_user_tower_point(self, user_id, change_value, update_key: int = 0):
@@ -211,7 +213,7 @@ class WorldTowerData:
                 f"UPDATE {self.sql_user_table_name} set "
                 f"tower_point=tower_point{change}$1 where "
                 f"user_id=$2")
-            conn.execute(
+            await conn.execute(
                 sql,
                 change_value,
                 user_id)

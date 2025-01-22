@@ -51,8 +51,7 @@ class XiuxianDateManage:
                         await db.execute("""CREATE TABLE "user_xiuxian" (
           "id" bigserial,
           "user_id" bigint NOT NULL,
-          "sect_id" bigint DEFAULT NULL,
-          "sect_position" smallint DEFAULT NULL,
+          "user_name" TEXT DEFAULT NULL,
           "stone" numeric DEFAULT 0,
           "root" TEXT,
           "root_type" TEXT,
@@ -63,9 +62,22 @@ class XiuxianDateManage:
           "is_beg" smallint DEFAULT 0,
           "is_ban" smallint DEFAULT 0,
           "exp" numeric DEFAULT 0,
-          "user_name" TEXT DEFAULT NULL,
+          "work_num" bigint DEFAULT 0,
           "level_up_cd" text,
-          "level_up_rate" smallint DEFAULT 0
+          "level_up_rate" bigint DEFAULT 0,
+          "sect_id" bigint DEFAULT NULL,
+          "sect_position" smallint DEFAULT NULL,
+          "hp" numeric DEFAULT 0,
+          "mp" numeric DEFAULT 0,
+          "atk" numeric DEFAULT 0,
+          "atkpractice" bigint DEFAULT 0,
+          "sect_task" bigint DEFAULT 0,
+          "sect_contribution" bigint DEFAULT 0,
+          "sect_elixir_get" smallint DEFAULT 0,
+          "blessed_spot_flag" smallint DEFAULT 0,
+          "blessed_spot_name" text,
+          "user_stamina" bigint DEFAULT 0,
+          "place_id" bigint DEFAULT 1
         );""")
                 elif i == "user_cd":
                     try:
@@ -89,7 +101,11 @@ class XiuxianDateManage:
       "sect_owner" bigint,
       "sect_scale" numeric NOT NULL,
       "sect_used_stone" numeric,
-      "sect_fairyland" numeric
+      "sect_fairyland" numeric,
+      "sect_materials" numeric,
+      "mainbuff" TEXT,
+      "secbuff" TEXT,
+      "elixir_room_level" bigint,
       "is_open" boolean DEFAULT True
     );""")
                 elif i == "back":
@@ -102,6 +118,7 @@ class XiuxianDateManage:
       "goods_name" TEXT,
       "goods_type" TEXT,
       "goods_num" numeric,
+      "bind_num" numeric,
       "create_time" TEXT,
       "update_time" TEXT,
       "remake" TEXT,
@@ -110,6 +127,8 @@ class XiuxianDateManage:
       "action_time" TEXT,
       "state" smallint DEFAULT 0
     );""")
+                        # 为高耗时搜索建立索引
+                        await db.execute("CREATE INDEX ON back (user_id);")
 
                 elif i == "buff_info":
                     try:
@@ -1241,7 +1260,7 @@ class XiuxianDateManage:
         update_items_id = [item_id for item_id in send_items.keys()
                            if item_id in had_item_ids]
         insert_items_id = [item_id for item_id in send_items.keys()
-                           if item_id in update_items_id]
+                           if item_id not in update_items_id]
         async with self.pool.acquire() as db:
             if update_items_id:
                 sql = (f"UPDATE back set goods_num=goods_num+$1,update_time=$2,bind_num=bind_num+$3 "
@@ -1249,21 +1268,21 @@ class XiuxianDateManage:
                 update_data = []
                 for item_id in update_items_id:
                     item_num = send_items[item_id]
-                    update_data = (item_num, now_time, item_num * is_bind, user_id, item_id)
-                    await db.execute(sql, *update_data)
+                    update_data.append((item_num, now_time, item_num * is_bind, user_id, item_id))
+                await db.executemany(sql, update_data)
             if insert_items_id:
                 sql = (f"INSERT INTO back "
                        f"(user_id, goods_id, goods_name, goods_type, goods_num, create_time, update_time, bind_num) "
                        f"VALUES ($1,$2,$3,$4,$5,$6,$7,$8)")
-                update_data = []
-                for item_id in update_items_id:
+                insert_data = []
+                for item_id in insert_items_id:
                     item_info = items.get_data_by_item_id(item_id)
                     item_num = send_items[item_id]
-                    update_data.append(
+                    insert_data.append(
                         (user_id, item_id, item_info['name'], item_info['type'], item_num,
                          now_time, now_time, item_num * is_bind)
                     )
-                await db.executemany(sql, update_data)
+                await db.executemany(sql, insert_data)
 
 
 

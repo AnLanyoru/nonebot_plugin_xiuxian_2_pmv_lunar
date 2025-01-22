@@ -15,7 +15,7 @@ from nonebot.permission import SUPERUSER
 
 from .mix_elixir_config import MIXELIXIRCONFIG
 from .mix_elixir_database import create_user_mix_elixir_info, get_user_mix_elixir_info
-from .mixelixirutil import AlchemyFurnace, get_user_alchemy_furnace, move_mix_user
+from .mixelixirutil import AlchemyFurnace, get_user_alchemy_furnace, remove_mix_user
 from ..xiuxian_back.back_util import get_user_elixir_back_msg, get_user_yaocai_back_msg, get_user_yaocai_back_msg_easy
 from ..xiuxian_config import convert_rank
 from ..xiuxian_database.database_connect import database
@@ -191,7 +191,7 @@ async def mix_stop_(bot: Bot, event: GroupMessageEvent):
     if is_type:
         await sql_message.in_closing(user_id, user_type)  # 退出修炼状态
         msg = "道友收起丹炉，停止了炼丹。"
-        move_mix_user(user_id)
+        remove_mix_user(user_id)
     else:
         msg = "道友现在没在炼丹呢！！"
     await bot.send(event=event, message=msg)
@@ -258,7 +258,7 @@ async def yaocai_get_op_(bot: Bot, event: GroupMessageEvent):
     user_id = user_info['user_id']
     yaocai_id_list = items.get_random_id_list_by_rank_and_item_type(convert_rank(user_info['level'])[0],
                                                                     ['药材'])
-    num = 100
+    num = 10000
     msg = '道友成功收获药材：\r'
     if not yaocai_id_list:
         await sql_message.send_back(user_id, 3001, '恒心草', '药材', num)  # 没有合适的，保底

@@ -1,3 +1,4 @@
+import json
 import random
 import re
 import time
@@ -427,70 +428,72 @@ async def sect_mainbuff_get_(bot: Bot, event: GroupMessageEvent):
     _, user_info, _ = await check_user(event)
 
     sect_id = user_info['sect_id']
-    if sect_id:
-        sect_position = user_info['sect_position']
-        owner_idx = [k for k, v in sect_config_data.items() if v.get("title", "") == "宗主"]
-        owner_position = int(owner_idx[0]) if len(owner_idx) == 1 else 0
-        if sect_position == owner_position:
-            mainbuffconfig = config['宗门主功法参数']
-            sect_info = await sql_message.get_sect_info(sect_id)
-            mainbuffgear, mainbufftype = get_sectbufftxt(sect_info['sect_scale'], mainbuffconfig)
-            stonecost = mainbuffgear * mainbuffconfig['获取消耗的灵石']
-            materialscost = mainbuffgear * mainbuffconfig['获取消耗的资材']
-            total_stone_cost = stonecost
-            total_materials_cost = materialscost
 
-            if sect_info['sect_used_stone'] >= total_stone_cost and sect_info['sect_materials'] >= total_materials_cost:
-                success_count = 0
-                fail_count = 0
-                repeat_count = 0
-                mainbuffidlist = await get_sect_mainbuff_id_list(sect_id)
-                results = []
-
-                for i in range(10):
-                    if random.randint(0, 100) <= mainbuffconfig['获取到功法的概率']:
-                        mainbuffid = random.choice(skill_rate_set[mainbufftype]['gf_list'])
-                        if mainbuffid in mainbuffidlist:
-                            mainbuff, mainbuffmsg = get_main_info_msg(mainbuffid)
-                            repeat_count += 1
-                            results.append(f"第{i + 1}次获取到重复功法：{mainbuff['name']}")
-                        else:
-                            mainbuffidlist.append(mainbuffid)
-                            mainbuff, mainbuffmsg = get_main_info_msg(mainbuffid)
-                            success_count += 1
-                            results.append(f"第{i + 1}次获取到{mainbufftype}功法：{mainbuff['name']}\r")
-                    else:
-                        fail_count += 1
-
-                await sql_message.update_sect_materials(sect_id, total_materials_cost, 2)
-                await sql_message.update_sect_scale_and_used_stone(sect_id,
-                                                                   sect_info['sect_used_stone'] - total_stone_cost,
-                                                                   sect_info['sect_scale'])
-                sql = set_sect_list(mainbuffidlist)
-                await sql_message.update_sect_mainbuff(sect_id, sql)
-
-                msg = f"共消耗{total_stone_cost}宗门灵石，{total_materials_cost}宗门资材。\r"
-                msg += f"失败{fail_count}次，获取重复功法{repeat_count}次"
-                if success_count > 0:
-                    msg += f"，搜寻到新功法{success_count}次。\r"
-                else:
-                    msg += f"，未搜寻到新功法！\r"
-                msg += f"\r".join(results)
-
-                await bot.send(event=event, message=msg)
-                await sect_mainbuff_get.finish()
-            else:
-                msg = f"需要消耗{total_stone_cost}宗门灵石，{total_materials_cost}宗门资材，不满足条件！"
-                await bot.send(event=event, message=msg)
-                await sect_mainbuff_get.finish()
-        else:
-            msg = f"道友不是宗主，无法使用该命令！"
-            await bot.send(event=event, message=msg)
-            await sect_mainbuff_get.finish()
-    else:
+    # 判断是否加入宗门
+    if not sect_id:
         msg = f"道友尚未加入宗门！"
         await bot.send(event=event, message=msg)
         await sect_mainbuff_get.finish()
+
+    sect_position = user_info['sect_position']
+    owner_idx = [k for k, v in sect_config_data.items() if v.get("title", "") == "宗主"]
+    owner_position = int(owner_idx[0]) if len(owner_idx) == 1 else 0
+    # 判断是否为宗主
+    if sect_position != owner_position:
+        msg = f"道友不是宗主，无法使用该命令！"
+        await bot.send(event=event, message=msg)
+        await sect_mainbuff_get.finish()
+    mainbuffconfig = config['宗门主功法参数']
+    sect_info = await sql_message.get_sect_info(sect_id)
+    mainbuffgear, mainbufftype = get_sectbufftxt(sect_info['sect_scale'], mainbuffconfig)
+    stonecost = mainbuffgear * mainbuffconfig['获取消耗的灵石']
+    materialscost = mainbuffgear * mainbuffconfig['获取消耗的资材']
+    total_stone_cost = stonecost
+    total_materials_cost = materialscost
+
+    if sect_info['sect_used_stone'] < total_stone_cost and sect_info['sect_materials'] >= total_materials_cost:
+        msg = f"需要消耗{total_stone_cost}宗门灵石，{total_materials_cost}宗门资材，不满足条件！"
+        await bot.send(event=event, message=msg)
+        await sect_mainbuff_get.finish()
+    success_count = 0
+    fail_count = 0
+    repeat_count = 0
+    mainbuffidlist = await get_sect_mainbuff_id_list(sect_id)
+    results = []
+
+    for i in range(10):
+        if random.randint(0, 100) <= mainbuffconfig['获取到功法的概率']:
+            mainbuffid = random.choice(skill_rate_set[mainbufftype]['gf_list'])
+            if mainbuffid in mainbuffidlist:
+                mainbuff, mainbuffmsg = get_main_info_msg(mainbuffid)
+                repeat_count += 1
+                results.append(f"第{i + 1}次获取到重复功法：{mainbuff['name']}")
+            else:
+                mainbuffidlist.append(mainbuffid)
+                mainbuff, mainbuffmsg = get_main_info_msg(mainbuffid)
+                success_count += 1
+                results.append(f"第{i + 1}次获取到{mainbufftype}功法：{mainbuff['name']}\r")
+        else:
+            fail_count += 1
+
+    await sql_message.update_sect_materials(sect_id, total_materials_cost, 2)
+    await sql_message.update_sect_scale_and_used_stone(sect_id,
+                                                       sect_info['sect_used_stone'] - total_stone_cost,
+                                                       sect_info['sect_scale'])
+    sql = set_sect_list(mainbuffidlist)
+    await sql_message.update_sect_mainbuff(sect_id, sql)
+
+    msg = f"共消耗{total_stone_cost}宗门灵石，{total_materials_cost}宗门资材。\r"
+    msg += f"失败{fail_count}次，获取重复功法{repeat_count}次"
+    if success_count > 0:
+        msg += f"，搜寻到新功法{success_count}次。\r"
+    else:
+        msg += f"，未搜寻到新功法！\r"
+    msg += f"\r".join(results)
+
+    await bot.send(event=event, message=msg)
+    await sect_mainbuff_get.finish()
+
 
 
 @sect_secbuff_get.handle(parameterless=[Cooldown(stamina_cost=0, at_sender=False)])
@@ -1447,14 +1450,20 @@ def isUserTask(user_id):
 async def get_sect_mainbuff_id_list(sect_id):
     """获取宗门功法id列表"""
     sect_info = await sql_message.get_sect_info(sect_id)
-    mainbufflist = str(sect_info['mainbuff'])[1:-1].split(',')
+    main_buff_data = sect_info['mainbuff']
+    if not main_buff_data or main_buff_data == '0':
+        return []
+    mainbufflist = json.loads(main_buff_data)
     return mainbufflist
 
 
 async def get_sect_secbuff_id_list(sect_id):
     """获取宗门神通id列表"""
     sect_info = await sql_message.get_sect_info(sect_id)
-    secbufflist = str(sect_info['secbuff'])[1:-1].split(',')
+    sec_buff_buff_data = sect_info['secbuff']
+    if not sec_buff_buff_data or sec_buff_buff_data == '0':
+        return []
+    secbufflist = json.loads(sec_buff_buff_data)
     return secbufflist
 
 

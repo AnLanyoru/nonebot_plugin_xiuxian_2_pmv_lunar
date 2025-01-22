@@ -185,7 +185,6 @@ async def fast_sell_items_(
         await sql_message.send_back(want_user_id, item_id, item_name, item_type, sell_item_num, 0)
         sell_msg.append(f"【{item_name}】{sell_item_num}个 获取了{get_stone}灵石")
         set_cmd_lock(user_id, int(time.time()))
-        await asyncio.sleep(0.5)
     if sell_msg:
         msg += f"\r成功向{want_user_name}道友出售了：\r" + '\r'.join(sell_msg) + f'\r总计: {number_to(price_sum)}灵石'
     elif not want_pass:

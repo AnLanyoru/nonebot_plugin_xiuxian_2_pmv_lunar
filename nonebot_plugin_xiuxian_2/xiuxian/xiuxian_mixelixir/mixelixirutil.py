@@ -462,5 +462,6 @@ async def get_user_alchemy_furnace(user_id: int) -> AlchemyFurnace:
     return user_alchemy_furnace
 
 
-def move_mix_user(user_id: int) -> None:
-    del mix_user_temp[user_id]
+def remove_mix_user(user_id: int) -> None:
+    if user_id in mix_user_temp:
+        del mix_user_temp[user_id]

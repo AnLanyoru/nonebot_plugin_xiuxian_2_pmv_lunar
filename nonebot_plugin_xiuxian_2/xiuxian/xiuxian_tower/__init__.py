@@ -54,7 +54,7 @@ async def tower_point_give_():
         user_tower_info['weekly_point'] = 0
         place_id = user_tower_info.get('tower_place')
         world_id = place.get_world_id(place_id)
-        tower = await tower_handle.tower_data.get(world_id)
+        tower = tower_handle.tower_data.get(world_id)
         point_get = tower.point_give.get(had_get, 0)
         await tower_handle.update_user_tower_info(user_tower_info)
         await tower_handle.update_user_tower_point(user_id, point_get)
@@ -83,7 +83,7 @@ async def tower_point_get_reset_(
         user_tower_info['weekly_point'] = 0
         place_id = user_tower_info.get('tower_place')
         world_id = place.get_world_id(place_id)
-        tower = await tower_handle.tower_data.get(world_id)
+        tower = tower_handle.tower_data.get(world_id)
         point_get = tower.point_give.get(had_get, 0)
         await tower_handle.update_user_tower_info(user_tower_info)
         await tower_handle.update_user_tower_point(user_id, point_get)
@@ -126,7 +126,7 @@ async def tower_shop_buy_(
         await tower_shop_buy.finish()
     place_id = user_tower_info.get('tower_place')
     world_id = place.get_world_id(place_id)
-    tower = await tower_handle.tower_data.get(world_id)
+    tower = tower_handle.tower_data.get(world_id)
     goods_info = tower.shop
     goods = goods_info.get(goods_id, 0)
     if not goods:
@@ -185,7 +185,7 @@ async def tower_point_get_(bot: Bot, event: GroupMessageEvent):
     best_floor = had_get
     place_id = user_tower_info.get('tower_place')
     world_id = place.get_world_id(place_id)
-    tower = await tower_handle.tower_data.get(world_id)
+    tower = tower_handle.tower_data.get(world_id)
     point_get = tower.point_give.get(had_get, 0)
     msg = f"道友的挑战积分信息"
     text = f"！本周最深抵达第{best_floor}区域，将可获取{point_get}积分！！"
@@ -278,7 +278,7 @@ async def tower_fight_(bot: Bot, event: GroupMessageEvent):
     next_floor = floor + 1
     tower_floor_info = await tower_handle.get_tower_floor_info(next_floor, place_id)
     if not tower_floor_info:
-        msg = f"道友已抵达【{await tower_handle.tower_data[world_id].name}】之底！！！"
+        msg = f"道友已抵达【{tower_handle.tower_data[world_id].name}】之底！！！"
         await bot.send(event=event, message=msg)
         await tower_fight.finish()
     result, victor = await get_tower_battle_info(user_info, tower_floor_info, bot.self_id)
@@ -286,7 +286,7 @@ async def tower_fight_(bot: Bot, event: GroupMessageEvent):
         user_tower_info['now_floor'] += 1
         await tower_handle.update_user_tower_info(user_tower_info)
         msg = (f"道友成功战胜 {tower_floor_info['name']} "
-               f"到达【{await tower_handle.tower_data[world_id].name}】第{user_tower_info['now_floor']}区域！！！")
+               f"到达【{tower_handle.tower_data[world_id].name}】第{user_tower_info['now_floor']}区域！！！")
     else:  # 输了
         final_floor = user_tower_info['now_floor']
         best_floor = max(final_floor, user_tower_info['best_floor'])
@@ -297,7 +297,7 @@ async def tower_fight_(bot: Bot, event: GroupMessageEvent):
         user_tower_info['best_floor'] = best_floor
         await tower_handle.update_user_tower_info(user_tower_info)
         await sql_message.do_work(user_id, 0)
-        msg = (f"道友不敌 {tower_floor_info['name']} 退出位面挑战【{await tower_handle.tower_data[world_id].name}】！\r"
+        msg = (f"道友不敌 {tower_floor_info['name']} 退出位面挑战【{tower_handle.tower_data[world_id].name}】！\r"
                f"本次抵达第{final_floor}区域，本周最深抵达第{week_best}区域，历史最深抵达第{best_floor}区域，已记录！！")
     text = msg_handler(result)
     msg = main_md(
@@ -332,12 +332,12 @@ async def tower_start_(bot: Bot, event: GroupMessageEvent):
     world_id = place.get_world_id(place_id)
     world_name = place.get_world_name(place_id)
     try:
-        await tower_handle.tower_data[world_id]
+        tower_handle.tower_data[world_id]
     except KeyError:
         msg = f'道友所在位面【{world_name}】尚未有位面挑战，敬请期待!'
         await bot.send(event=event, message=msg)
         await tower_start.finish()
-    if place_id == (tower_place := await tower_handle.tower_data[world_id].place):
+    if place_id == (tower_place := tower_handle.tower_data[world_id].place):
         user_tower_info = await tower_handle.check_user_tower_info(user_id)
         old_tower_place = user_tower_info['tower_place']
         if not operator.eq(old_tower_place, tower_place):
@@ -346,7 +346,7 @@ async def tower_start_(bot: Bot, event: GroupMessageEvent):
             user_tower_info['best_floor'] = 0
             user_tower_info['weekly_point'] = 0 if user_tower_info['weekly_point'] != -1 else -1
         user_tower_info['now_floor'] = int(operator.floordiv(user_tower_info['best_floor'], 1.2))
-        msg = f"道友进入位面挑战【{await tower_handle.tower_data[world_id].name}】！"
+        msg = f"道友进入位面挑战【{tower_handle.tower_data[world_id].name}】！"
         text = "使用 查看挑战 来查看当前挑战信息！"
         await sql_message.do_work(user_id, 6)
         await tower_handle.update_user_tower_info(user_tower_info)
@@ -359,10 +359,10 @@ async def tower_start_(bot: Bot, event: GroupMessageEvent):
         await bot.send(event=event, message=msg)
         await tower_start.finish()
     else:
-        far, start_place, to_place = place.get_distance(place_id, await tower_handle.tower_data[world_id].place)
+        far, start_place, to_place = place.get_distance(place_id, tower_handle.tower_data[world_id].place)
         msg = f"\r道友所在位置没有位面挑战!!\r"
         text = (
-            f"当前位面【{world_name}】的位面挑战【{await tower_handle.tower_data[world_id].name}】在距你{far:.1f}万里的：【{to_place}】\r"
+            f"当前位面【{world_name}】的位面挑战【{tower_handle.tower_data[world_id].name}】在距你{far:.1f}万里的：【{to_place}】\r"
             f"可以发送【前往 {to_place}】来前去位面挑战所在位置挑战！")
         msg = main_md(
             msg, text,
@@ -434,7 +434,7 @@ async def tower_end_(bot: Bot, event: GroupMessageEvent):
         user_tower_info['best_floor'] = best_floor
         await tower_handle.update_user_tower_info(user_tower_info)
         await sql_message.do_work(user_id, 0)
-        msg = f"道友成功退出位面挑战【{await tower_handle.tower_data[world_id].name}】"
+        msg = f"道友成功退出位面挑战【{tower_handle.tower_data[world_id].name}】"
         text = f"！本次抵达第{best_floor}区域\r本周最深抵达第{week_best}区域\r历史最深抵达第{best_floor}区域，已记录！！"
         msg = main_md(
             msg, text,
