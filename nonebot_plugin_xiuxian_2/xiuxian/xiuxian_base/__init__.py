@@ -859,9 +859,7 @@ async def cz_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
         else:
             msg = f"对方未踏入修仙界，不可赠送！"
     elif send_name == "all":
-        all_users = await sql_message.get_all_user_id()
-        for user_id in all_users:
-            await sql_message.send_back(user_id, int(goods_id), goods_name, goods_type, goods_num, 1)  # 给每个用户发送物品
+        await sql_message.send_all_user_item(int(goods_id), goods_num, 1)  # 给每个用户发送物品
         msg = f"赠送所有用户{goods_name}{goods_num}个,请注意查收！"
     else:
         msg = "请输入正确指令！例如：创造 物品 道号 数量 (道号为all赠送所有用户)"
@@ -918,9 +916,7 @@ async def cz_ts_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg(
         else:
             msg = f"对方未踏入修仙界，不可赠送！"
     elif send_name == "all":
-        all_users = await sql_message.get_all_user_id()
-        for user_id in all_users:
-            await sql_message.send_back(user_id, int(goods_id), goods_name, goods_type, goods_num, 0)  # 给每个用户发送物品
+        await sql_message.send_all_user_item(int(goods_id), goods_num, 0)  # 给每个用户发送物品
         msg = f"赠送所有用户{goods_name}{goods_num}个,请注意查收！"
     else:
         msg = "请输入正确指令！例如：创造 物品 道号 数量 (道号为all赠送所有用户)"

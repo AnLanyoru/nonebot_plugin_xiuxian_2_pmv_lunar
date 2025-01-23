@@ -1307,6 +1307,44 @@ class XiuxianDateManage:
                     )
                 await db.executemany(sql, insert_data)
 
+    async def get_all_owner_user_id(self, item_id):
+        """获取全部拥有某物品的用户id"""
+        sql = "SELECT user_id FROM back where goods_id=$1"
+        async with self.pool.acquire() as db:
+            result = await db.fetch(sql, item_id)
+            if result:
+                return [row[0] for row in result]
+            else:
+                return []
+
+    async def send_all_user_item(self, send_item: int, send_num: int, is_bind: bool = False):
+        now_time = datetime.now()
+        now_time = str(now_time)
+        all_user_id = await self.get_all_user_id()
+        update_user_id = await self.get_all_owner_user_id(send_item)
+        insert_user_id = [user_id for user_id in all_user_id
+                          if user_id not in update_user_id]
+
+        async with self.pool.acquire() as db:
+            if update_user_id:
+                sql = (f"UPDATE back set goods_num=goods_num+$1,update_time=$2,bind_num=bind_num+$3 "
+                       f"WHERE user_id=$4 and goods_id=$5")
+                update_data = []
+                for user_id in update_user_id:
+                    update_data.append((send_num, now_time, send_num * is_bind, user_id, send_item))
+                await db.executemany(sql, update_data)
+            if insert_user_id:
+                sql = (f"INSERT INTO back "
+                       f"(user_id, goods_id, goods_name, goods_type, goods_num, create_time, update_time, bind_num) "
+                       f"VALUES ($1,$2,$3,$4,$5,$6,$7,$8)")
+                insert_data = []
+                for user_id in insert_user_id:
+                    item_info = items.get_data_by_item_id(send_item)
+                    insert_data.append(
+                        (user_id, send_item, item_info['name'], item_info['type'], send_num,
+                         now_time, now_time, send_num * is_bind))
+                await db.executemany(sql, insert_data)
+
 
 
     async def get_item_by_good_id_and_user_id(self, user_id, goods_id):
