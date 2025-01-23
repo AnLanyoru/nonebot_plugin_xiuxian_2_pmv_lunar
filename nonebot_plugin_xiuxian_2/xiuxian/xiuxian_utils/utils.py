@@ -23,6 +23,7 @@ from wcwidth import wcwidth
 from .clean_utils import simple_md
 from .other_set import OtherSet
 from .xiuxian2_handle import sql_message, PLAYERSDATA
+from ..database_utils.move_database import read_move_data
 from ..xiuxian_config import XiuConfig
 from ..xiuxian_data.data.灵根_data import root_data
 from ..xiuxian_place import place
@@ -43,14 +44,6 @@ class MyEncoder(json.JSONEncoder):
             return float(obj)
         else:
             return super(MyEncoder, self).default(obj)
-
-
-def read_move_data(user_id):
-    user_id = str(user_id)
-    FILEPATH = PLAYERSDATA / user_id / "moveinfo.json"
-    with open(FILEPATH, "r", encoding="UTF-8") as f:
-        data = f.read()
-    return json.loads(data)
 
 
 async def check_user_type(user_id, need_type):
@@ -89,7 +82,7 @@ async def check_user_type(user_id, need_type):
                 user_cd_message['create_time'], "%Y-%m-%d %H:%M:%S.%f"
             )
             pass_time = (datetime.datetime.now() - work_time).seconds // 60  # 时长计算
-            move_info = read_move_data(user_id)
+            move_info = await read_move_data(user_id)
             need_time = move_info["need_time"]
             place_name = place.get_place_name(move_info["to_id"])
             if pass_time < need_time:
@@ -114,7 +107,7 @@ async def check_user(event: GroupMessageEvent):
       * `user_info: 用户
       * `msg: 消息体
     """
-    user_id = event.get_user_id()
+    user_id = int(event.get_user_id())
     user_info = await sql_message.get_user_info_with_id(user_id)
 
     return True, user_info, ''

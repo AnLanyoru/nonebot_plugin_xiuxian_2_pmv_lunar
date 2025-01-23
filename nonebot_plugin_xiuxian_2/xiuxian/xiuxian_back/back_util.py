@@ -5,12 +5,12 @@ from datetime import datetime
 from pathlib import Path
 
 from ..xiuxian_config import convert_rank, XiuConfig
+from ..xiuxian_database.database_connect import database
 from ..xiuxian_place import place
 from ..xiuxian_utils.item_json import items
 from ..xiuxian_utils.xiuxian2_handle import (
     sql_message, UserBuffDate,
     get_weapon_info_msg, get_armor_info_msg,
-    get_player_info, save_player_info,
     get_sec_msg, get_main_info_msg, get_sub_info_msg
 )
 
@@ -566,7 +566,7 @@ def get_item_msg(goods_id):
         msg = get_weapon_info_msg(goods_id, item_info)
 
     elif item_info['item_type'] == "药材":
-        msg = get_yaocai_info_msg(goods_id, item_info)
+        msg = get_yaocai_info_msg(item_info)
 
     elif item_info['item_type'] == "聚灵旗":
         msg = f"名字：{item_info['name']}\r"
@@ -623,7 +623,7 @@ def get_item_msg_rank(goods_id):
     return int(msg)
 
 
-def get_yaocai_info_msg(goods_id, item_info):
+def get_yaocai_info_msg(item_info):
     msg = f"名字：{item_info['name']}\r"
     msg += f"品级：{item_info['level']}\r"
     msg += get_yaocai_info(item_info)
@@ -781,9 +781,11 @@ async def get_use_jlq_msg(user_id, goods_id):
         if int(user_buff_data['blessed_spot']) >= item_info['修炼速度']:
             msg = f"该聚灵旗的等级不能满足道友的福地了，使用了也没效果"
         else:
-            mix_elixir_info = get_player_info(user_id, "mix_elixir_info")
-            mix_elixir_info['药材速度'] = item_info['药材速度']
-            save_player_info(user_id, mix_elixir_info, 'mix_elixir_info')
+            farm_grow_speed = item_info['药材速度']
+            update_data = {'farm_grow_speed': farm_grow_speed}
+            database.update(table='mix_elixir_info',
+                            where={"user_id": user_id},
+                            **update_data)
             await sql_message.update_back_j(user_id, goods_id)
             await sql_message.updata_user_blessed_spot(user_id, item_info['修炼速度'])
             msg = f"道友洞天福地的聚灵旗已经替换为：{item_info['name']}"

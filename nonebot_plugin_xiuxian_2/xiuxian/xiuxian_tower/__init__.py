@@ -58,7 +58,6 @@ async def tower_point_give_():
         point_get = tower.point_give.get(had_get, 0)
         await tower_handle.update_user_tower_info(user_tower_info)
         await tower_handle.update_user_tower_point(user_id, point_get)
-        await asyncio.sleep(0.2)
     logger.opt(colors=True).info(f"<green>发放塔积分完毕！！！</green>")
 
 
@@ -88,7 +87,6 @@ async def tower_point_get_reset_(
         await tower_handle.update_user_tower_info(user_tower_info)
         await tower_handle.update_user_tower_point(user_id, point_get)
         print("用户：", user_id, "积分：", point_get)
-        await asyncio.sleep(0.2)
     logger.opt(colors=True).info(f"<green>发放塔积分完毕！！！</green>")
     msg = '发放塔积分完毕！！'
     await bot.send(event=event, message=msg)
@@ -111,7 +109,7 @@ async def tower_shop_buy_(
     if (day_now == 6) and (hour_now == 20):
         msg = f'结算挑战积分中，请稍后再试'
         await bot.send(event=event, message=msg)
-        await tower_start.finish()
+        await tower_shop_buy.finish()
     """挑战积分兑换"""
     _, user_info, _ = await check_user(event)
     user_id = user_info['user_id']
@@ -137,7 +135,7 @@ async def tower_shop_buy_(
     point = user_tower_info.get('tower_point')
     item_id = goods.get('item', 0)
     if item_id:
-        item = items.items.get(str(item_id), {})
+        item = items.get_data_by_item_id(item_id)
         item_name = item['name']
     else:  # 兼容性处理
         item = {}
@@ -171,7 +169,7 @@ async def tower_point_get_(bot: Bot, event: GroupMessageEvent):
     if (day_now == 6) and (hour_now == 20):
         msg = f'结算挑战积分中，请稍后再试'
         await bot.send(event=event, message=msg)
-        await tower_start.finish()
+        await tower_point_get.finish()
 
     _, user_info, _ = await check_user(event)
     user_id = user_info['user_id']
@@ -234,7 +232,7 @@ async def tower_shop_(
     if (day_now == 6) and (hour_now == 20):
         msg = f'结算挑战积分中，请稍后再试'
         await bot.send(event=event, message=msg)
-        await tower_start.finish()
+        await tower_shop_buy.finish()
     _, user_info, _ = await check_user(event)
     user_id = user_info['user_id']
     shop_msg, msg = await tower_handle.get_tower_shop_info(user_id)
@@ -262,7 +260,7 @@ async def tower_fight_(bot: Bot, event: GroupMessageEvent):
     if (day_now == 6) and (hour_now == 20):
         msg = f'结算挑战积分中，请稍后再试'
         await bot.send(event=event, message=msg)
-        await tower_start.finish()
+        await tower_shop_buy.finish()
 
     _, user_info, _ = await check_user(event)
 

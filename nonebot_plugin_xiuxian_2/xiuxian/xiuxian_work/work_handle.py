@@ -1,6 +1,6 @@
 import json
 import random
-from .reward_data_source import savef, readf
+from .work_database import save_work_info, read_work_info
 from .workmake import workmake
 from ..xiuxian_utils.item_json import items
 from ..xiuxian_utils.xiuxian2_handle import sql_message
@@ -18,16 +18,16 @@ async def work_handle(key, work_list=None, name=None, level="求道者", exp=Non
                 item_info = items.get_data_by_item_id(v[3])
                 item_msg = f"可能额外获得:🎁{item_info['level']}:{item_info['name']}!"
             get_work_list.append([k, v[0], v[1], v[2], item_msg])
-        savef(user_id, json.dumps(data, ensure_ascii=False))
+        await save_work_info(user_id, data)
         return get_work_list
 
     if key == 1:  # 返回对应的悬赏令信息
-        data = readf(user_id)
+        data = await read_work_info(user_id)
         return data[name][2]
 
     elif key == 2:  # 如果是结算，则获取结果
 
-        data = readf(user_id)
+        data = await read_work_info(user_id)
 
         bigsuc = False
         if data[work_list][0] >= 100:

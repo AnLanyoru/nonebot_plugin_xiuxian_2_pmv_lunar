@@ -122,7 +122,6 @@ class UserStoreData:
         sql = f"select * from {self.sql_items_table_name} WHERE user_id=$1 and need_items_id=$2"
         async with self.pool.acquire() as conn:
             result = await conn.fetch(sql, user_id, item_id)
-            print(result)
             # 如果有，返回字典
             return zips(**result[0]) if result else None
 
@@ -324,7 +323,7 @@ class UserStoreHandle(UserStoreData):
         num = 1
         for want_item in result:
             need_item_id = want_item['need_items_id']
-            need_item_name = items.items[need_item_id]['name']
+            need_item_name = items.get_data_by_item_id(need_item_id)['name']
             need_items_price = want_item['need_items_price']
             need_items_num = want_item['need_items_num']
             need_items_num = need_items_num if need_items_num else "不限"
@@ -366,7 +365,7 @@ class UserStoreHandle(UserStoreData):
         msg = f"{user_name}道友的求购："
 
         need_item_id = want_item['need_items_id']
-        need_item_name = items.items[need_item_id]['name']
+        need_item_name = items.get_data_by_item_id(need_item_id)['name']
         need_items_price = want_item['need_items_price']
         need_items_num = want_item['need_items_num']
         need_items_num = need_items_num if need_items_num else "不限"
@@ -400,7 +399,7 @@ class UserStoreHandle(UserStoreData):
             return want_item
 
         need_item_id = want_item['need_items_id']
-        need_item_name = items.items[need_item_id]['name']
+        need_item_name = items.get_data_by_item_id(need_item_id)['name']
         need_items_price = want_item['need_items_price']
         need_items_num = want_item['need_items_num']
         need_items_num = need_items_num if need_items_num else "不限"

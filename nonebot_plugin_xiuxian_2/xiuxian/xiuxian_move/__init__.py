@@ -10,7 +10,7 @@ from nonebot.adapters.onebot.v11 import (
 )
 from nonebot.params import CommandArg
 
-from .jsondata_move import save_move_data, Move, read_move_data
+from ..database_utils.move_database import save_move_data, read_move_data
 from ..xiuxian_config import convert_rank
 from ..xiuxian_place import place
 from ..xiuxian_utils.clean_utils import get_num_from_str, get_strs_from_str
@@ -21,7 +21,7 @@ from ..xiuxian_utils.utils import (
 from ..xiuxian_utils.xiuxian2_handle import sql_message
 
 go_to = on_command("移动", aliases={"前往", "去"}, permission=GROUP, priority=10, block=True)
-get_map = on_fullmatch("地图", permission=GROUP, priority=10, block=True)
+get_map = on_command("地图", aliases={"我的位置", "位置"}, permission=GROUP, priority=10, block=True)
 complete_move = on_command("行动结算", aliases={"到达"}, permission=GROUP, priority=10, block=True)
 stop_move = on_fullmatch("停止移动", permission=GROUP, priority=10, block=True)
 near_player = on_fullmatch("附近玩家", permission=GROUP, priority=10, block=True)
@@ -71,7 +71,7 @@ async def go_to_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg(
             "to_id": place_id,
             "need_time": need_time
         }
-        save_move_data(user_id, move_data)
+        await save_move_data(user_id, move_data)
         await sql_message.do_work(user_id, -1, need_time)
         need_time = math.ceil(need_time)
         msg = f"道友开始从【{name_1}】移动至【{name_2}】, 距离约：{far:.1f}万里, 预计耗时{need_time}分钟！"
@@ -116,7 +116,7 @@ async def complete_move_(bot: Bot, event: GroupMessageEvent):
             user_cd_message['create_time'], "%Y-%m-%d %H:%M:%S.%f"
         )
         pass_time = (datetime.now() - work_time).seconds // 60  # 时长计算
-        move_info = read_move_data(user_id)
+        move_info = await read_move_data(user_id)
         need_time = move_info["need_time"]
         place_name = place.get_place_name(move_info["to_id"])
         if pass_time < need_time:

@@ -1,5 +1,4 @@
 import math
-import os
 from datetime import datetime
 from typing import Any, Tuple
 
@@ -11,11 +10,11 @@ from nonebot.adapters.onebot.v11 import (
 )
 from nonebot.params import RegexGroup
 
-from .reward_data_source import PLAYERSDATA
+from .work_database import PLAYERSDATA
 from .work_handle import work_handle
+from ..database_utils.move_database import read_move_data
 from ..xiuxian_config import convert_rank, XiuConfig
 from ..xiuxian_limit import limit_handle
-from ..xiuxian_move import read_move_data
 from ..xiuxian_place import place
 from ..xiuxian_utils.clean_utils import get_datetime_from_str, simple_md, number_to, three_md
 from ..xiuxian_utils.item_json import items
@@ -159,8 +158,6 @@ async def do_work_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = R
             )
             mode = "结算"
         except KeyError:
-            time2 = None
-        if not os.path.exists(PLAYERSDATA / str(user_id) / "workinfo.json") or not time2:
             await sql_message.do_work(user_id, 0)
             msg = "悬赏令等级已更新，已帮助道友终止悬赏令！"
             await bot.send(event=event, message=msg)
@@ -179,7 +176,7 @@ async def do_work_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = R
             try:
                 work_time = datetime.strptime(user_cd_info['create_time'], "%Y-%m-%d %H:%M:%S.%f")
                 pass_time = (datetime.now() - work_time).seconds // 60  # 时长计算
-                move_info = read_move_data(user_id)
+                move_info = await read_move_data(user_id)
                 need_time = move_info["need_time"]
                 place_name = place.get_place_name(move_info["to_id"])
                 if pass_time < need_time:

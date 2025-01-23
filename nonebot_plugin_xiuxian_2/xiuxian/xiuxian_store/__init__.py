@@ -489,7 +489,7 @@ async def user_want_item_(bot: Bot, event: GroupMessageEvent, args: Message = Co
         msg = "物品不存在！！"
         await bot.send(event=event, message=msg)
         await user_want_item.finish()
-    item_info = items.items.get(item_id)
+    item_info = items.get_data_by_item_id(item_id)
     item_rank = int(item_info["rank"])
     max_price_mul = max(3 * (item_rank - 90), 10)
     max_price = 1000000 + abs(item_rank - 55) * 100000 * max_price_mul

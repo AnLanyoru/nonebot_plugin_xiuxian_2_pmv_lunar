@@ -18,10 +18,12 @@ from .two_exp_cd import two_exp_cd
 from ..xiuxian_config import XiuConfig
 from ..xiuxian_data.data.境界_data import level_data
 from ..xiuxian_data.data.突破概率_data import break_rate
+from ..xiuxian_database.database_connect import database
 from ..xiuxian_exp_up.exp_up_def import exp_up_by_time
 from ..xiuxian_impart_pk import impart_pk_check
 from ..xiuxian_limit.limit_database import limit_handle, limit_data
 from ..xiuxian_limit.limit_util import limit_check
+from ..xiuxian_mixelixir.mix_elixir_database import get_user_mix_elixir_info
 from ..xiuxian_place import place
 from ..xiuxian_tower import tower_handle
 from ..xiuxian_utils.clean_utils import get_datetime_from_str, date_sub, main_md, msg_handler, simple_md, get_args_num
@@ -33,8 +35,7 @@ from ..xiuxian_utils.utils import (
     check_user_type, get_id_from_str
 )
 from ..xiuxian_utils.xiuxian2_handle import (
-    sql_message, get_player_info,
-    save_player_info, UserBuffDate, get_main_info_msg,
+    sql_message, UserBuffDate, get_main_info_msg,
     get_user_buff, get_sec_msg, get_sub_info_msg,
     xiuxian_impart
 )
@@ -63,7 +64,7 @@ ling_tian_up = on_fullmatch("灵田开垦", priority=5, permission=GROUP, block=
 del_exp_decimal = on_fullmatch("抑制黑暗动乱", priority=9, permission=GROUP, block=True)
 my_exp_num = on_fullmatch("我的双修次数", priority=9, permission=GROUP, block=True)
 a_test = on_fullmatch("测试保存", priority=9, permission=SUPERUSER, block=True)
-daily_work = on_fullmatch("日常中心", priority=9, permission=GROUP, block=True)
+daily_work = on_command("日常", priority=9, permission=GROUP, block=True)
 
 
 # 每日0点重置用户双修次数
@@ -92,9 +93,12 @@ async def blessed_spot_create_(bot: Bot, event: GroupMessageEvent):
     else:
         await sql_message.update_ls(user_id, BLESSEDSPOTCOST, 2)
         await sql_message.update_user_blessed_spot_flag(user_id)
-        mix_elixir_info = get_player_info(user_id, "mix_elixir_info")
-        mix_elixir_info['收取时间'] = str(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
-        save_player_info(user_id, mix_elixir_info, 'mix_elixir_info')
+        await get_user_mix_elixir_info(user_id)
+        update_mix_elixir_info = {'farm_harvest_time': str(datetime.now().strftime('%Y-%m-%d %H:%M:%S')),
+                                  'farm_num': 1}
+        await database.update(table='mix_elixir_info',
+                              where={'user_id': user_id},
+                              **update_mix_elixir_info)
         msg = f"恭喜道友拥有了自己的洞天福地，请收集聚灵旗来提升洞天福地的等级吧~\r"
         msg += f"默认名称为：{user_info['user_name']}道友的家"
         await sql_message.update_user_blessed_spot_name(user_id, f"{user_info['user_name']}道友的家")
@@ -118,10 +122,10 @@ async def blessed_spot_info_(bot: Bot, event: GroupMessageEvent):
         blessed_spot_name = "尚未命名"
     else:
         blessed_spot_name = user_info['blessed_spot_name']
-    mix_elixir_info = get_player_info(user_id, "mix_elixir_info")
+    mix_elixir_info = await get_user_mix_elixir_info(user_id)
     msg += f"名字：{blessed_spot_name}\r"
     msg += f"修炼速度：增加{int(user_buff_data['blessed_spot']) * 100}%\r"
-    msg += f"灵田数量：{mix_elixir_info['灵田数量']}"
+    msg += f"灵田数量：{mix_elixir_info['farm_num']}"
     await bot.send(event=event, message=msg)
     await blessed_spot_info.finish()
 
@@ -181,8 +185,8 @@ async def ling_tian_up_(bot: Bot, event: GroupMessageEvent):
             "level_up_cost": 4000000000
         }
     }
-    mix_elixir_info = get_player_info(user_id, "mix_elixir_info")
-    now_num = mix_elixir_info['灵田数量']
+    mix_elixir_info = await get_user_mix_elixir_info(user_id)
+    now_num = mix_elixir_info['farm_num']
     if now_num == len(LINGTIANCONFIG) + 1:
         msg = f"道友的灵田已全部开垦完毕，无法继续开垦了！"
     else:
@@ -191,8 +195,10 @@ async def ling_tian_up_(bot: Bot, event: GroupMessageEvent):
             msg = f"本次开垦需要灵石：{cost}，道友的灵石不足！"
         else:
             msg = f"道友成功消耗灵石：{cost}，灵田数量+1,目前数量:{now_num + 1}"
-            mix_elixir_info['灵田数量'] = now_num + 1
-            save_player_info(user_id, mix_elixir_info, 'mix_elixir_info')
+            update_mix_elixir_info = {'farm_num': now_num + 1}
+            await database.update(table='mix_elixir_info',
+                                  where={'user_id': user_id},
+                                  **update_mix_elixir_info)
             await sql_message.update_ls(user_id, cost, 2)
     await bot.send(event=event, message=msg)
     await ling_tian_up.finish()
@@ -831,22 +837,23 @@ async def daily_work_(bot: Bot, event: GroupMessageEvent):
     if int(user_info['blessed_spot_flag']) == 0:
         farm = f"无灵田生长中"
     else:
-        mix_elixir_info = get_player_info(user_id, "mix_elixir_info")
+        mix_elixir_info = await get_user_mix_elixir_info(user_id)
         GETCONFIG = {
             "time_cost": 47,  # 单位小时
             "加速基数": 0.10
         }
-        last_time = mix_elixir_info['收取时间']
+        last_time = mix_elixir_info['farm_harvest_time']
         if last_time != 0:
             nowtime = datetime.now().strftime('%Y-%m-%d %H:%M:%S')  # str
             timedeff = round((datetime.strptime(nowtime, '%Y-%m-%d %H:%M:%S')
                               - datetime.strptime(last_time, '%Y-%m-%d %H:%M:%S')).total_seconds() / 3600, 2)
-            if timedeff >= round(GETCONFIG['time_cost'] * (1 - (GETCONFIG['加速基数'] * mix_elixir_info['药材速度'])),
+            if timedeff >= round(
+                    GETCONFIG['time_cost'] * (1 - (GETCONFIG['加速基数'] * mix_elixir_info['farm_grow_speed'])),
                                  2):
                 farm = "可收取！！"
             else:
                 next_get_time = round(
-                    GETCONFIG['time_cost'] * (1 - (GETCONFIG['加速基数'] * mix_elixir_info['药材速度'])),
+                    GETCONFIG['time_cost'] * (1 - (GETCONFIG['加速基数'] * mix_elixir_info['farm_grow_speed'])),
                     2) - timedeff
                 farm = f"{round(next_get_time, 2)}小时后成熟"
         else:

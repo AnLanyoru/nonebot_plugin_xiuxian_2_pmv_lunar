@@ -117,7 +117,7 @@ async def mix_elixir_help_(bot: Bot, event: GroupMessageEvent):
 @run_xiuxian.handle(parameterless=[Cooldown(check_user=False)])
 async def run_xiuxian_(bot: Bot, event: GroupMessageEvent):
     """加入修仙"""
-    user_id = event.get_user_id()
+    user_id = int(event.get_user_id())
     user_name = await sql_message.random_name()  # 获取随机名称
     root, root_type = linggen_get()  # 获取灵根，灵根类型
     rate = await sql_message.get_root_rate(root_type)  # 灵根倍率
@@ -854,14 +854,14 @@ async def cz_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     if give_qq:
         give_user = await sql_message.get_user_info_with_id(give_qq)
         if give_user:
-            await sql_message.send_back(give_qq, goods_id, goods_name, goods_type, goods_num, 1)
+            await sql_message.send_back(give_qq, int(goods_id), goods_name, goods_type, goods_num, 1)
             msg = f"{give_user['user_name']}道友获得了系统赠送的{goods_num}个{goods_name}！"
         else:
             msg = f"对方未踏入修仙界，不可赠送！"
     elif send_name == "all":
         all_users = await sql_message.get_all_user_id()
         for user_id in all_users:
-            await sql_message.send_back(user_id, goods_id, goods_name, goods_type, goods_num, 1)  # 给每个用户发送物品
+            await sql_message.send_back(user_id, int(goods_id), goods_name, goods_type, goods_num, 1)  # 给每个用户发送物品
         msg = f"赠送所有用户{goods_name}{goods_num}个,请注意查收！"
     else:
         msg = "请输入正确指令！例如：创造 物品 道号 数量 (道号为all赠送所有用户)"
@@ -913,14 +913,14 @@ async def cz_ts_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg(
     if give_qq:
         give_user = await sql_message.get_user_info_with_id(give_qq)
         if give_user:
-            await sql_message.send_back(give_qq, goods_id, goods_name, goods_type, goods_num, 0)
+            await sql_message.send_back(give_qq, int(goods_id), goods_name, goods_type, goods_num, 0)
             msg = f"{give_user['user_name']}道友获得了系统赠送的{goods_num}个{goods_name}！"
         else:
             msg = f"对方未踏入修仙界，不可赠送！"
     elif send_name == "all":
         all_users = await sql_message.get_all_user_id()
         for user_id in all_users:
-            await sql_message.send_back(user_id, goods_id, goods_name, goods_type, goods_num, 0)  # 给每个用户发送物品
+            await sql_message.send_back(user_id, int(goods_id), goods_name, goods_type, goods_num, 0)  # 给每个用户发送物品
         msg = f"赠送所有用户{goods_name}{goods_num}个,请注意查收！"
     else:
         msg = "请输入正确指令！例如：创造 物品 道号 数量 (道号为all赠送所有用户)"

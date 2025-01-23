@@ -20,7 +20,7 @@ from .riftmake import (
 from .. import DRIVER
 from ..xiuxian_limit import limit_handle
 from ..xiuxian_place import place
-from ..xiuxian_utils.clean_utils import get_strs_from_str, simple_md, main_md, msg_handler
+from ..xiuxian_utils.clean_utils import get_strs_from_str, simple_md, main_md, msg_handler, get_num_from_str
 from ..xiuxian_utils.item_json import items
 from ..xiuxian_utils.lay_out import Cooldown
 from ..xiuxian_utils.utils import (
@@ -37,6 +37,7 @@ set_rift = require("nonebot_plugin_apscheduler").scheduler
 
 rift_help = on_command("秘境帮助", priority=6, permission=GROUP, block=True)
 create_rift = on_command("生成秘境", priority=5, permission=SUPERUSER, block=True)
+create_rift_with_args = on_command("创造秘境", priority=5, permission=SUPERUSER, block=True)
 complete_rift = on_command("探索秘境", aliases={"结算秘境"}, priority=7, permission=GROUP, block=True)
 rift_protect_handle = on_command("秘境战斗事件保底", priority=5, permission=GROUP, block=True)
 rift_protect_msg = on_command("查看秘境战斗事件保底", priority=5, permission=GROUP, block=True)
@@ -84,6 +85,53 @@ async def set_rift_(place_cls=place):
             world_rift[world_id] = rift
         old_rift_info.save_rift(world_rift)
         logger.opt(colors=True).info(f"<green>rift数据已保存</green>")
+
+
+@create_rift_with_args.handle(parameterless=[Cooldown(at_sender=False)])
+async def create_rift_with_args_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
+    """
+    生成秘境，格式为 生成秘境 等级 秘境名称 位置（不填则随机）
+    """
+    # 这里曾经是风控模块，但是已经不再需要了
+    global world_rift  # 挖坑，不同位置的秘境
+
+    args_str = args.extract_plain_text()
+    nums = get_num_from_str(args_str)
+    rift_name = get_strs_from_str(args_str)
+    if not rift_name:
+        msg = f"请输入秘境名称！！"
+        await bot.send(event=event, message=msg)
+        await create_rift_with_args.finish()
+    rift_name = rift_name[0]
+    if not nums:
+        msg = f"请输入秘境等级！！"
+        await bot.send(event=event, message=msg)
+        await create_rift_with_args.finish()
+    rift_rank = int(nums[0])
+
+    if place.get_worlds():
+        world_rift = {}
+        for world_id in place.get_worlds():
+            if world_id == len(place.get_worlds()) - 1:
+                continue
+            rift = Rift()
+            rift.name = rift_name
+            place_all_id = [place_id for place_id in place.get_world_place_list(world_id)]
+            place_id = random.choice(place_all_id)
+            rift.place = place_id
+            rift.rank = rift_rank
+            rift.count = 100
+            rift.time = 100
+            world_rift[world_id] = rift
+            world_name = place.get_world_name(place_id)
+            place_name = place.get_place_name(place_id)
+            msg = (f"秘境：【{rift.name}】已在【{world_name}】的【{place_name}】开启！\r"
+                   f"请诸位身在{world_name}的道友前往{place_name}(ID:{place_id})发送 探索秘境 来加入吧！")
+            await bot.send(event=event, message=msg)
+        old_rift_info.save_rift(world_rift)
+        msg = f"rift数据已保存"
+        await bot.send(event=event, message=msg)
+    await create_rift_with_args.finish()
 
 
 @rift_help.handle(parameterless=[Cooldown(at_sender=False)])

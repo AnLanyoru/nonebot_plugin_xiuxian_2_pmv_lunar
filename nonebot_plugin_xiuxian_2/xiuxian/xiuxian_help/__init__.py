@@ -54,6 +54,7 @@ async def db_ping_(bot: Bot, event: GroupMessageEvent):
     """运行时数据热重载"""
     start_time = time()
     await database.get_version()
+    print(event.dict())
     end_time = time()
     ping_ms = end_time - start_time
     ping_ms = float(ping_ms)

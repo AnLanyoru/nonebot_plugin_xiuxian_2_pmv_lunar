@@ -1,7 +1,7 @@
 import math
 import random
 import json
-from . import get_user_mix_elixir_info
+from .mix_elixir_database import get_user_mix_elixir_info
 from ..xiuxian_database.database_connect import database
 from ..xiuxian_utils.item_json import items
 
@@ -29,9 +29,9 @@ for mix_elixir_id, mix_elixir_info in all_mix_elixir.items():
     elixir_mix_type = "".join(elixir_mix_type_list)
     need_power = sum(mix_elixir_info['elixir_config'].values())
     if elixir_mix_type in all_mix_elixir_table:
-        all_mix_elixir_table[elixir_mix_type][need_power] = mix_elixir_id
+        all_mix_elixir_table[elixir_mix_type][need_power] = int(mix_elixir_id)
     else:
-        all_mix_elixir_table[elixir_mix_type] = {need_power: mix_elixir_id}
+        all_mix_elixir_table[elixir_mix_type] = {need_power: int(mix_elixir_id)}
 for mix_elixir_table in all_mix_elixir_table:
     all_mix_elixir_table[mix_elixir_table] = dict(sorted(all_mix_elixir_table[mix_elixir_table].items(),
                                                          key=lambda x: x[0], reverse=True))

@@ -1,6 +1,6 @@
 from .. import DRIVER
 from ..xiuxian_database.database_connect import database
-from ..xiuxian_database.database_util import move_bank_json_data
+from ..xiuxian_database.database_util import move_bank_json_data, move_mix_elixir_json_data
 
 from datetime import datetime
 from typing import Any, Tuple
@@ -43,13 +43,6 @@ __bank_help__ = f"""
 ——tips——
 官方群914556251
 """.strip()
-
-
-# 数据转移工具
-# @DRIVER.on_startup
-# async def move_bank_data():
-#     all_user_id = await sql_message.get_all_user_id()
-#     await move_bank_json_data(database, all_user_id)
 
 
 @bank.handle(parameterless=[Cooldown(at_sender=False)])
@@ -212,5 +205,4 @@ async def create_user_bank_info(user_id):
             'bank_level': 1, }
     await database.insert(table='bank_info', **data)
     del data['user_id']
-    print(data)
     return data

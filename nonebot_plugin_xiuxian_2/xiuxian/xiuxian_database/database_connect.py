@@ -2,7 +2,6 @@ import asyncpg
 from asyncpg import Pool
 
 from .database_config import database_config  # 这是上面的config()代码块，已经保存在config.py文件中
-from .database_util import limit_db, tower_db, store_db, main_db, impart_db, all_table_data_move
 from .. import DRIVER
 from ..xiuxian_utils.clean_utils import zips
 
@@ -35,6 +34,17 @@ class DataBase:
             db_version = cursor[0][0]
             print(f"登录数据库成功，数据库版本：{db_version}")
 
+    async def sql_execute(self, sql: str, data=None):
+        if not data:
+            async with self.pool.acquire() as db:
+                await db.execute(sql)
+            return True
+        else:
+            async with self.pool.acquire() as db:
+                await db.execute(sql, *data)
+            return True
+
+
     async def select(self, table: str, where: dict, need_column: list = None):
         """
         简单逻辑数据查找接口
@@ -44,14 +54,20 @@ class DataBase:
             need_column = ['*']
 
         need_column_str = ",".join(need_column)
+        if where:
+            where_column = ",".join([f"{column_name}=${count}" for column_name, count
+                                     in zip(where.keys(), range(1, 1 + len(where)))])
 
-        where_column = ",".join([f"{column_name}=${count}" for column_name, count
-                                 in zip(where.keys(), range(1, 1 + len(where)))])
+            async with self.pool.acquire() as db:
+                sql = f"select {need_column_str} from {table} WHERE {where_column}"
+                result = await db.fetch(sql, *where.values())
+                return zips(**result[0]) if result else None
+        else:
+            async with self.pool.acquire() as db:
+                sql = f"select {need_column_str} from {table}"
+                result = await db.fetch(sql)
+                return zips(**result[0]) if result else None
 
-        async with self.pool.acquire() as db:
-            sql = f"select {need_column_str} from {table} WHERE {where_column}"
-            result = await db.fetch(sql, *where.values())
-            return zips(**result[0]) if result else None
 
     async def update(self, table: str, where: dict, create_column: bool = 0, **kwargs):
         """
@@ -129,12 +145,6 @@ async def connect_db():
     global database
     await database.connect_pool_make()
     await database.get_version()
-    # sqlite数据迁移道具
-    # await all_table_data_move(database, limit_db)
-    # await all_table_data_move(database, tower_db)
-    # await all_table_data_move(database, store_db)
-    # await all_table_data_move(database, main_db, values_type_check=True)
-    # await all_table_data_move(database, impart_db)
 
 
 @DRIVER.on_shutdown

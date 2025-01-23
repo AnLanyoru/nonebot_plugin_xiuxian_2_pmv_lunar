@@ -89,7 +89,9 @@ class XiuxianDateManage:
       "create_time" TEXT,
       "scheduled_time" TEXT,
       "last_check_info_time" TEXT,
-      "user_active_info" json DEFAULT NULL
+      "user_active_info" json DEFAULT NULL,
+      "move_info" json DEFAULT NULL,
+      "work_info" json DEFAULT NULL
     );""")
                 elif i == "sects":
                     try:
@@ -100,12 +102,12 @@ class XiuxianDateManage:
       "sect_name" TEXT NOT NULL,
       "sect_owner" bigint,
       "sect_scale" numeric NOT NULL,
-      "sect_used_stone" numeric,
-      "sect_fairyland" numeric,
-      "sect_materials" numeric,
+      "sect_used_stone" numeric DEFAULT 0,
+      "sect_fairyland" json,
+      "sect_materials" numeric DEFAULT 0,
       "mainbuff" TEXT,
       "secbuff" TEXT,
-      "elixir_room_level" bigint,
+      "elixir_room_level" bigint DEFAULT 0,
       "is_open" boolean DEFAULT True
     );""")
                 elif i == "back":
@@ -140,8 +142,11 @@ class XiuxianDateManage:
       "main_buff" numeric DEFAULT 0,
       "sec_buff" numeric DEFAULT 0,
       "faqi_buff" numeric DEFAULT 0,
+      "armor_buff" numeric DEFAULT 0,
       "fabao_weapon" numeric DEFAULT 0,
-      "sub_buff" numeric DEFAULT 0
+      "sub_buff" numeric DEFAULT 0,
+      "atk_buff" numeric DEFAULT 0,
+      "blessed_spot" numeric DEFAULT 0
     );""")
                 elif i == "bank_info":
                     try:
@@ -160,6 +165,7 @@ class XiuxianDateManage:
                         await db.execute("""CREATE TABLE "mix_elixir_info" (
       "user_id" bigint NOT NULL,
       "farm_num" smallint DEFAULT 0,
+      "farm_grow_speed" smallint DEFAULT 0,
       "farm_harvest_time" text DEFAULT NULL,
       "last_alchemy_furnace_data" json DEFAULT NULL,
       "user_fire_control" bigint DEFAULT 0,
@@ -694,6 +700,26 @@ class XiuxianDateManage:
             else:
                 return None
 
+    async def get_all_user_moving_id(self):
+        """获取全部移动中用户id"""
+        sql = "SELECT user_id FROM user_cd where type=-1"
+        async with self.pool.acquire() as db:
+            result = await db.fetch(sql)
+            if result:
+                return [row[0] for row in result]
+            else:
+                return None
+
+    async def get_all_user_working_id(self):
+        """获取全部移动中用户id"""
+        sql = "SELECT user_id FROM user_cd where type=2"
+        async with self.pool.acquire() as db:
+            result = await db.fetch(sql)
+            if result:
+                return [row[0] for row in result]
+            else:
+                return None
+
     async def in_closing(self, user_id, the_type):
         """
         更新用户状态
@@ -855,11 +881,10 @@ class XiuxianDateManage:
         """
         async with self.pool.acquire() as db:
             result = await db.fetch("""
-                SELECT sects.sect_id, sects.sect_name, sects.sect_scale,
-                (SELECT user_name FROM user_xiuxian WHERE user_xiuxian.user_id = sects.sect_owner) as user_name,
-                (SELECT COUNT(user_name) FROM user_xiuxian WHERE sects.sect_id = user_xiuxian.sect_id) as member_count
-                FROM sects
-                LEFT JOIN user_xiuxian ON sects.sect_id = user_xiuxian.sect_id
+                SELECT sect_id, sect_name, sect_scale,
+                (SELECT max(user_name) FROM user_xiuxian WHERE user_xiuxian.user_id = sects.sect_owner) as user_name,
+                (SELECT count(user_name) FROM user_xiuxian WHERE sects.sect_id = user_xiuxian.sect_id) as member_count
+                FROM sects order by sect_id
             """)
             result_all = [zips(**result_per) for result_per in result]
             return result_all
@@ -951,7 +976,7 @@ class XiuxianDateManage:
         更新用户操作CD
         :param sc_time: 任务耗时
         :param user_id: 用户对机器人虚拟值
-        :param the_type: 0:无状态  1:闭关中  2:历练中  3:探索秘境中  4:修炼中
+        :param the_type: 0:无状态  1:闭关中  2:悬赏令中  3:探索秘境中  4:修炼中
         :return:
         """
         now_time = None
@@ -1214,7 +1239,8 @@ class XiuxianDateManage:
         async with self.pool.acquire() as db:
             await db.execute(sql, work_num, user_id)
 
-    async def send_back(self, user_id, goods_id, goods_name, goods_type, goods_num, bind_flag=0):
+    async def send_back(self, user_id, goods_id: int, goods_name: str,
+                        goods_type: str, goods_num: int, bind_flag=0):
         """
         插入物品至背包
         :param user_id: 用户qq
@@ -1228,17 +1254,14 @@ class XiuxianDateManage:
         now_time = datetime.now()
         now_time = str(now_time)
         # 检查物品是否存在，存在则update
+        if not isinstance(goods_id, int):
+            goods_id = int(goods_id)
         async with self.pool.acquire() as db:
             back = await self.get_item_by_good_id_and_user_id(user_id, goods_id)
             if back:
-                # 判断是否存在，存在则update
-                if bind_flag == 1:
-                    bind_num = back['bind_num'] + goods_num
-                else:
-                    bind_num = back['bind_num']
-                goods_nums = back['goods_num'] + goods_num
-                sql = f"UPDATE back set goods_num=$1,update_time=$2,bind_num={bind_num} WHERE user_id=$3 and goods_id=$4"
-                await db.execute(sql, goods_nums, now_time, user_id, goods_id)
+                sql = (f"UPDATE back set goods_num=goods_num+$1,update_time=$2,bind_num=bind_num+$3 "
+                       f"WHERE user_id=$4 and goods_id=$5")
+                await db.execute(sql, goods_num, now_time, goods_num * bind_flag, user_id, goods_id)
 
             else:
                 # 判断是否存在，不存在则INSERT
@@ -1249,8 +1272,8 @@ class XiuxianDateManage:
                 sql = f"""
                         INSERT INTO back (user_id, goods_id, goods_name, goods_type, goods_num, create_time, update_time, bind_num)
                 VALUES ($1,$2,$3,$4,$5,$6,$7,$8)"""
-                await db.execute(sql, user_id, goods_id, goods_name, goods_type, goods_num, now_time, now_time,
-                                 bind_num)
+                await db.execute(sql, user_id, goods_id, goods_name, goods_type, goods_num,
+                                 now_time, now_time, bind_num)
 
     async def send_item(self, user_id: int, send_items: dict, is_bind: bool = False):
         now_time = datetime.now()
@@ -1957,53 +1980,3 @@ def get_sec_msg(secbuffdata):
 
     return msg
 
-
-def get_player_info(user_id, info_name):
-    player_info = None
-    if info_name == "mix_elixir_info":  # 灵田信息
-        mix_elixir_info_config_key = ["收取时间", "收取等级", "灵田数量", '药材速度', "丹药控火", "丹药耐药性",
-                                      "炼丹记录", "炼丹经验"]
-        nowtime = datetime.now().strftime('%Y-%m-%d %H:%M:%S')  # str
-        mix_elixir_info_config = {
-            "收取时间": nowtime,
-            "收取等级": 0,
-            "灵田数量": 1,
-            '药材速度': 0,
-            "丹药控火": 0,
-            "丹药耐药性": 0,
-            "炼丹记录": {},
-            "炼丹经验": 0
-        }
-        try:
-            player_info = read_player_info(user_id, info_name)
-            for key in mix_elixir_info_config_key:
-                if key not in list(player_info.keys()):
-                    player_info[key] = mix_elixir_info_config[key]
-            save_player_info(user_id, player_info, info_name)
-        except:
-            player_info = mix_elixir_info_config
-            save_player_info(user_id, player_info, info_name)
-    return player_info
-
-
-def read_player_info(user_id, info_name):
-    user_id = str(user_id)
-    filepath = PLAYERSDATA / user_id / f"{info_name}.json"
-    with open(filepath, "r", encoding="UTF-8") as f:
-        data = f.read()
-    return json.loads(data)
-
-
-def save_player_info(user_id, data, info_name):
-    user_id = str(user_id)
-
-    if not os.path.exists(PLAYERSDATA / user_id):
-        logger.opt(colors=True).info(f"<green>用户目录不存在，创建目录</green>")
-        os.makedirs(PLAYERSDATA / user_id)
-
-    filepath = PLAYERSDATA / user_id / f"{info_name}.json"
-    data = json.dumps(data, ensure_ascii=False, indent=4)
-    save_mode = "w" if os.path.exists(filepath) else "x"
-    with open(filepath, mode=save_mode, encoding="UTF-8") as f:
-        f.write(data)
-        f.close()

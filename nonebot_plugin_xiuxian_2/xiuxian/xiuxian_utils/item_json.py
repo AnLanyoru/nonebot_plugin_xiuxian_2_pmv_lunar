@@ -54,7 +54,7 @@ class Items:
         self.set_item_data(self.get_tools_data(), "道具")
         self.set_item_data(self.get_sw_data(), "神物")
         self.set_item_data(self.get_world_qw_data(), "天地奇物")
-        self.items_map = {self.items[item_id]['name']: item_id for item_id in self.items}
+        self.items_map = {self.items[item_id]['name']: int(item_id) for item_id in self.items}
 
     def get_armor_data(self):
         return self.readf(self.armor_jsonpath)
@@ -101,9 +101,9 @@ class Items:
     def get_data_by_item_id(self, item_id):
         if item_id is None:
             return {}
-        elif item_id == -1:
+        if (str_item_id := str(item_id)) not in self.items:
             return {}
-        return self.items[str(item_id)]
+        return self.items[str_item_id]
 
     def set_item_data(self, dict_data, item_type):
         for k, v in dict_data.items():

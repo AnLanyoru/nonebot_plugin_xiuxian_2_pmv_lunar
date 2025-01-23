@@ -51,9 +51,9 @@ async def beg_help_(bot: Bot, event: GroupMessageEvent):
 @beg_stone.handle(parameterless=[Cooldown(at_sender=False)])
 async def beg_stone_(bot: Bot, event: GroupMessageEvent):
     # 这里曾经是风控模块，但是已经不再需要了
-    user_id = event.get_user_id()
 
     _, user_info, _ = await check_user(event)
+    user_id = user_info['user_id']
 
     user_msg = await sql_message.get_user_info_with_id(user_id)
     user_root = user_msg['root_type']

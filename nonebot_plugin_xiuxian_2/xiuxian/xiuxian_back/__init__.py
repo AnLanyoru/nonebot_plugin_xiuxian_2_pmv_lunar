@@ -231,7 +231,8 @@ async def buy_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg())
             shop_goods_id = shop_data[place_id][str(arg)]['goods_id']
             shop_goods_type = shop_data[place_id][str(arg)]['goods_type']
             await sql_message.update_ls(user_id, goods_price, 2)
-            await sql_message.send_back(user_id, shop_goods_id, shop_goods_name, shop_goods_type, purchase_quantity)
+            await sql_message.send_back(user_id, int(shop_goods_id), shop_goods_name, shop_goods_type,
+                                        purchase_quantity)
             save_shop(shop_data)
 
             if shop_user_id == 0:  # 0为系统
@@ -689,7 +690,7 @@ async def use_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg())
         skill_info = items.get_data_by_item_id(goods_id)
         skill_type = skill_info['item_type']
         if skill_type == "神通":
-            if int(user_buff_info['sec_buff']) == int(goods_id):
+            if int(user_buff_info['sec_buff']) == goods_id:
                 msg = f"道友已学会该神通：{skill_info['name']}，请勿重复学习！"
             else:  # 学习sql
 
@@ -710,14 +711,14 @@ async def use_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg())
                     await sql_message.updata_user_sec_buff(user_id, goods_id)
                     msg = f"恭喜道友学会神通：{skill_info['name']}！"
         elif skill_type == "功法":
-            if int(user_buff_info['main_buff']) == int(goods_id):
+            if int(user_buff_info['main_buff']) == goods_id:
                 msg = f"道友已学会该功法：{skill_info['name']}，请勿重复学习！"
             else:  # 学习sql
                 await sql_message.update_back_j(user_id, goods_id, use_key=2)
                 await sql_message.updata_user_main_buff(user_id, goods_id)
                 msg = f"恭喜道友学会功法：{skill_info['name']}！"
         elif skill_type == "辅修功法":  # 辅修功法1
-            if int(user_buff_info['sub_buff']) == int(goods_id):
+            if int(user_buff_info['sub_buff']) == goods_id:
                 msg = f"道友已学会该辅修功法：{skill_info['name']}，请勿重复学习！"
             else:  # 学习sql
                 await sql_message.update_back_j(user_id, goods_id, use_key=2)
@@ -783,10 +784,10 @@ async def use_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg())
         goods_type2 = goods_info['type_2']
         goods_type3 = goods_info['type_3']
 
-        await sql_message.send_back(user_id, goods_id1, goods_name1, goods_type1, 1 * num, 1)  # 增加用户道具
-        await sql_message.send_back(user_id, goods_id2, goods_name2, goods_type2, 2 * num, 1)
-        await sql_message.send_back(user_id, goods_id3, goods_name3, goods_type3, 2 * num, 1)
-        await sql_message.update_back_j(user_id, goods_id, num, 0)
+        await sql_message.send_back(user_id, int(goods_id1), goods_name1, goods_type1, 1 * num, 1)  # 增加用户道具
+        await sql_message.send_back(user_id, int(goods_id2), goods_name2, goods_type2, 2 * num, 1)
+        await sql_message.send_back(user_id, int(goods_id3), goods_name3, goods_type3, 2 * num, 1)
+        await sql_message.update_back_j(user_id, int(goods_id), num, 0)
         msg = f"道友打开了{num}个{goods_name},里面居然是{goods_name1}{int(1 * num)}个、{goods_name2}{int(2 * num)}个、{goods_name3}{int(2 * num)}个"
         await bot.send(event=event, message=msg)
         await use.finish()
@@ -937,7 +938,8 @@ async def shop_off_all_(bot: Bot, event: GroupMessageEvent, args: Message = Comm
             del shop_data[group_id][str(x)]
             save_shop(shop_data)
         else:
-            await sql_message.send_back(shop_data[group_id][str(x)]['user_id'], shop_data[group_id][str(x)]['goods_id'],
+            await sql_message.send_back(shop_data[group_id][str(x)]['user_id'],
+                                        int(shop_data[group_id][str(x)]['goods_id']),
                                         shop_data[group_id][str(x)]['goods_name'],
                                         shop_data[group_id][str(x)]['goods_type'], shop_data[group_id][str(x)]['stock'])
             msg += f"成功下架{shop_data[group_id][str(x)]['user_name']}的{shop_data[group_id][str(x)]['stock']}个{shop_data[group_id][str(x)]['goods_name']}!\r"

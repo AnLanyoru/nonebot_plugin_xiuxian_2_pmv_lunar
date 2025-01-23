@@ -36,7 +36,7 @@ __warring_help__ = """
 >字面意思，仅炼体境可用
 """.strip()
 
-from ..xiuxian_work.reward_data_source import savef
+from ..xiuxian_work.work_database import save_work_info
 
 cache_help_fk = {}
 
@@ -98,7 +98,7 @@ async def lunhui_(bot: Bot, event: GroupMessageEvent):
         await sql_message.update_j_exp(user_id, now_exp)  # 重置用户修为
         await sql_message.update_user_hp(user_id)  # 重置用户HP，mp，atk状态
         await sql_message.update_user_atkpractice(user_id, 0)  # 重置用户攻修等级
-        savef(user_id, json.dumps({}, ensure_ascii=False))
+        await save_work_info(user_id, {})
         await sql_message.update_root(user_id, 6)  # 更换轮回灵根
         msg = f"数世轮回磨不灭，重回绝颠谁能敌，恭喜大能{user_name}轮回成功！"
         await bot.send(event=event, message=msg)
@@ -148,7 +148,7 @@ async def twolun_(bot: Bot, event: GroupMessageEvent):
         await sql_message.update_j_exp(user_id, now_exp)  # 重置用户修为
         await sql_message.update_user_hp(user_id)  # 重置用户HP，mp，atk状态
         await sql_message.update_user_atkpractice(user_id, 0)  # 重置用户攻修等级
-        savef(user_id, json.dumps({}, ensure_ascii=False))
+        await save_work_info(user_id, {})
         await sql_message.update_root(user_id, 7)  # 更换轮回灵根
         msg = f"求道散尽半仙躯，堪能窥得源宇秘，恭喜大能{user_name}成功感悟源宇之秘！"
         await bot.send(event=event, message=msg)
@@ -195,7 +195,7 @@ async def threelun_(bot: Bot, event: GroupMessageEvent):
         await sql_message.update_j_exp(user_id, now_exp)  # 重置用户修为
         await sql_message.update_user_hp(user_id)  # 重置用户HP，mp，atk状态
         await sql_message.update_user_atkpractice(user_id, 0)  # 重置用户攻修等级
-        savef(user_id, json.dumps({}, ensure_ascii=False))
+        await save_work_info(user_id, {})
         await sql_message.update_root(user_id, 8)  # 更换灵根
         msg = f"帝蕴浸灭求一道，触及本源登顶峰，恭喜大能{user_name}成功感悟道之本源！"
         await bot.send(event=event, message=msg)
@@ -275,6 +275,7 @@ async def time_set_now_(bot: Bot, event: GroupMessageEvent):
     await impart_pk.re_data()
     await sql_message.sect_task_reset()
     await sql_message.sect_elixir_get_num_reset()
+    await sql_message.reset_work_num()
     msg = f"逆转时空，让一切重置次数！！！"
     await bot.send(event=event, message=msg)
     await time_set_now.finish()

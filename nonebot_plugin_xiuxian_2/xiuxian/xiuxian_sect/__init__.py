@@ -739,7 +739,7 @@ async def sect_list_(bot: Bot, event: GroupMessageEvent, args: Message = Command
 
     msg_list = []
     for sect in sect_lists_with_members:
-        sect_id, sect_name, sect_scale, user_name, member_count = sect
+        sect_id, sect_name, sect_scale, user_name, member_count = sect.values()
         msg_list.append(
             f"编号{sect_id}：{sect_name}\r宗主：{user_name}\r宗门建设度：{number_to(sect_scale)}\r成员数：{member_count}")
     if msg_list:
@@ -1344,15 +1344,15 @@ async def join_sect_(bot: Bot, event: GroupMessageEvent, args: Message = Command
     if not user_info['sect_id']:
         sect_no = get_num_from_str(args.extract_plain_text())
         if sect_no:
-            sect_no = sect_no[0]
+            sect_no = int(sect_no[0])
         else:
             sect_no = None
         sects_all = await sql_message.get_all_sect_id()
         if sect_no:
-            if int(sect_no) not in sects_all:
+            if sect_no not in sects_all:
                 msg = f"申请加入的宗门编号似乎有误，未在宗门名录上发现!"
             else:
-                new_sect = await sql_message.get_sect_info_by_id(int(sect_no))
+                new_sect = await sql_message.get_sect_info_by_id(sect_no)
                 userlist = await sql_message.get_all_users_by_sect_id(sect_no)
                 max_sect_num = new_sect['elixir_room_level'] * 16 + 52
                 sect_num = len(userlist)
@@ -1363,7 +1363,7 @@ async def join_sect_(bot: Bot, event: GroupMessageEvent, args: Message = Command
                 if sect_num < max_sect_num:
                     owner_idx = [k for k, v in sect_config_data.items() if v.get("title", "") == "外门弟子"]
                     owner_position = int(owner_idx[0]) if len(owner_idx) == 1 else 4
-                    await sql_message.update_usr_sect(user_id, int(sect_no), owner_position)
+                    await sql_message.update_usr_sect(user_id, sect_no, owner_position)
                     msg = f"欢迎{user_info['user_name']}师弟入我{new_sect['sect_name']}，共参天道。\r宗门当前人数：{sect_num + 1}/{max_sect_num}"
                 else:
                     msg = f"道友欲加入的宗门太过火爆啦，换个宗门吧！！\r{new_sect['sect_name']}当前人数：{sect_num}/{max_sect_num}"
@@ -1393,7 +1393,7 @@ async def my_sect_(bot: Bot, event: GroupMessageEvent):
     if sect_id:
         sql_res = await sql_message.scale_top()
         top_idx_list = [_['sect_id'] for _ in sql_res]
-        if int(sect_info['elixir_room_level']) == 0:
+        if not sect_info['elixir_room_level']:
             elixir_room_name = "暂无"
         else:
             elixir_room_name = elixir_room_level_up_config[str(sect_info['elixir_room_level'])]['name']
