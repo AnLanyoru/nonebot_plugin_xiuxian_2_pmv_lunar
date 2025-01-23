@@ -148,7 +148,7 @@ async def resetusertask_():
     all_sects = await sql_message.get_all_sects_id_scale()
     for s in all_sects:
         sect_info = await sql_message.get_sect_info(s['sect_id'])
-        if int(sect_info['elixir_room_level']) != 0:
+        if sect_info['elixir_room_level']:
             elixir_room_cost = \
                 config['宗门丹房参数']['elixir_room_level'][str(sect_info['elixir_room_level'])]['level_up_cost'][
                     '建设度']
@@ -493,7 +493,6 @@ async def sect_mainbuff_get_(bot: Bot, event: GroupMessageEvent):
 
     await bot.send(event=event, message=msg)
     await sect_mainbuff_get.finish()
-
 
 
 @sect_secbuff_get.handle(parameterless=[Cooldown(stamina_cost=0, at_sender=False)])
