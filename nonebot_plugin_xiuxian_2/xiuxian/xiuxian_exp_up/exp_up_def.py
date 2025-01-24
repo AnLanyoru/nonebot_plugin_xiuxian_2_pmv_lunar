@@ -24,7 +24,7 @@ async def exp_up_by_time(user_info, exp_time) -> tuple[str, int, dict]:
     user_get_exp_max = max_exp - use_exp
 
     # 校验当当前修为超出上限的问题，不可为负数
-    max(user_get_exp_max, 0)
+    user_get_exp_max = max(user_get_exp_max, 0)
 
     level_rate = await sql_message.get_root_rate(user_info['root_type'])  # 灵根倍率
     realm_rate = level_data[level]["spend"]  # 境界倍率

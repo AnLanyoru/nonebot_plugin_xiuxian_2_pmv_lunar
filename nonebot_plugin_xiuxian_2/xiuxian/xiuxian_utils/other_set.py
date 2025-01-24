@@ -160,23 +160,27 @@ class OtherSet(XiuConfig):
     @staticmethod
     async def send_hp_mp(user_id, time_min: int):
         user_info = await sql_message.get_user_real_info(user_id)
-        max_hp = user_info['max_hp']
-        max_mp = user_info['max_mp']
-        hp = max_hp * 0.01 * time_min
-        mp = max_mp * 0.01 * time_min
+        max_hp = user_info['exp'] / 2
+        max_mp = user_info['exp']
+        max_hp_see = user_info['max_hp']
+        max_mp_see = user_info['max_mp']
+        regain_present = 0.01 * time_min
+        regain_hp = max_hp * regain_present
+        regain_mp = max_mp * regain_present
+        regain_hp_see = max_hp_see * regain_present
+        regain_mp_see = max_mp_see * regain_present
         msg = []
         hp_mp = []
 
-        if user_info['hp'] + hp < max_hp:
-            new_hp = user_info['hp'] + hp
-            msg.append(f',回复气血：{number_to(hp)}|{hp}')
+        if (new_hp := user_info['hp'] + regain_hp) < max_hp:
+            msg.append(f',回复气血：{number_to(regain_hp_see)}|{regain_hp_see}')
         else:
             new_hp = max_hp
-            msg.append(f',回复气血：{number_to(hp)}|{hp},气血已回满！')
+            msg.append(f',气血已回满！')
 
-        if user_info['mp'] + mp < max_mp:
-            new_mp = user_info['mp'] + mp
-            msg.append(f',回复真元：{number_to(mp)}|{mp}')
+        if user_info['mp'] + regain_mp < max_mp:
+            new_mp = user_info['mp'] + regain_mp
+            msg.append(f',回复真元：{number_to(regain_mp_see)}|{regain_mp_see}')
         else:
             new_mp = max_mp
             msg.append(',真元已回满！')

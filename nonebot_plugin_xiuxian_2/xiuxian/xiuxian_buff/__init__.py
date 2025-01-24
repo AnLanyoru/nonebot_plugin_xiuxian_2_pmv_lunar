@@ -252,11 +252,11 @@ async def qc_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     if user1 and user2:
         player1 = {'user_id': user1['user_id'],
                    '道号': user1['user_name'],
-                   '气血': user1['hp'],
+                   '气血': user1['fight_hp'],
                    'max_hp': user1['max_hp'],
                    'hp_buff': user1['hp_buff'],
                    '攻击': user1['atk'],
-                   '真元': user1['mp'],
+                   '真元': user1['fight_mp'],
                    'max_mp': user1['max_mp'],
                    'mp_buff': user1['mp_buff'],
                    'level': user1['level'],
@@ -265,11 +265,11 @@ async def qc_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
 
         player2 = {'user_id': user2['user_id'],
                    '道号': user2['user_name'],
-                   '气血': user2['hp'],
+                   '气血': user2['fight_hp'],
                    'max_hp': user2['max_hp'],
                    'hp_buff': user2['hp_buff'],
                    '攻击': user2['atk'],
-                   '真元': user2['mp'],
+                   '真元': user2['fight_mp'],
                    'max_mp': user2['max_mp'],
                    'mp_buff': user2['mp_buff'],
                    'level': user2['level'],
@@ -649,10 +649,10 @@ async def mind_state_(bot: Bot, event: GroupMessageEvent):
     now_place = place.get_place_name(await place.get_now_place_id(user_id))
 
     msg = simple_md(f"道号：{user_info['user_name']}\r"
-                    f"气血:{number_to(user_info['hp'])}/{number_to(user_info['max_hp'])}"
-                    f"({(user_info['hp'] / user_info['max_hp']) * 100:.2f}%)\r"
-                    f"真元:{number_to(user_info['mp'])}/{number_to(user_info['exp'])}"
-                    f"({((user_info['mp'] / user_info['exp']) * 100):.2f}%)\r"
+                    f"气血:{number_to(user_info['fight_hp'])}/{number_to(user_info['max_hp'])}"
+                    f"({(user_info['fight_hp'] / user_info['max_hp']) * 100:.2f}%)\r"
+                    f"真元:{number_to(user_info['fight_mp'])}/{number_to(user_info['exp'])}"
+                    f"({((user_info['fight_mp'] / user_info['exp']) * 100):.2f}%)\r"
                     f"攻击:{number_to(user_info['atk'])}\r"
                     f"突破状态: {exp_meg}\r"
                     f"(概率：{break_rate[user_info['level']] + leveluprate + number}%)\r"
@@ -735,8 +735,8 @@ async def select_state_(bot: Bot, event: GroupMessageEvent, args: Message = Comm
 
     msg = f"""
 道号：{user_msg['user_name']}
-气血:{number_to(user_msg['hp'])}/{number_to(int((user_msg['exp'] / 2) * (1 + main_hp_buff + impart_hp_per) * main_hp_rank))}({(user_msg['hp'] / ((user_msg['exp'] / 2) * (1 + main_hp_buff + impart_hp_per) * main_hp_rank)) * 100:.2f}%)
-真元:{number_to(user_msg['mp'])}/{number_to(user_msg['exp'])}({((user_msg['mp'] / user_msg['exp']) * 100):.2f}%)
+气血:{number_to(user_msg['fight_hp'])}/{number_to(user_msg['max_hp'])}({(user_msg['fight_hp'] / user_msg['max_hp']) * 100:.2f}%)
+真元:{number_to(user_msg['fight_mp'])}/{number_to(user_msg['exp'])}({((user_msg['fight_mp'] / user_msg['exp']) * 100):.2f}%)
 攻击:{number_to(user_msg['atk'])}
 攻击修炼:{user_msg['atkpractice']}级
 修炼效率:{int(((level_rate * realm_rate) * (1 + main_buff_rate_buff)) * 100)}%

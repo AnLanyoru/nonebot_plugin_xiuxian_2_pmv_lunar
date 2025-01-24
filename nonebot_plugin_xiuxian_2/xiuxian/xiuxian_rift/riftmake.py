@@ -129,9 +129,9 @@ async def get_boss_battle_info(user_info, rift_rank):
     boss_data = STORY['战斗']['Boss战斗']["Boss数据"]
     player = await sql_message.get_user_real_info(user_info['user_id'])
     player['道号'] = player['user_name']
-    player['气血'] = player['hp']
+    player['气血'] = player['fight_hp']
     player['攻击'] = player['atk']
-    player['真元'] = player['mp']
+    player['真元'] = player['fight_mp']
 
     base_exp = player['exp']
     boss_info = {

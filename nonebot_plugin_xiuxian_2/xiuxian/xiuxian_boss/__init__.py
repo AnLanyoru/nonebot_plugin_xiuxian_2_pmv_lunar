@@ -184,11 +184,11 @@ async def battle_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg
     user_info = await sql_message.get_user_real_info(user_id)
     player = {'user_id': user_info['user_id'],
               '道号': user_info['user_name'],
-              '气血': user_info['hp'],
+              '气血': user_info['fight_hp'],
               'max_hp': user_info['max_hp'],
               'hp_buff': user_info['hp_buff'],
               '攻击': user_info['atk'],
-              '真元': user_info['mp'],
+              '真元': user_info['fight_mp'],
               'max_mp': user_info['max_mp'],
               'mp_buff': user_info['mp_buff'],
               'level': user_info['level'],

@@ -7,9 +7,9 @@ async def get_tower_battle_info(user_info, tower_floor_info: dict, bot_id):
     """获取Boss战事件的内容"""
     player = await sql_message.get_user_real_info(user_info['user_id'])
     player['道号'] = player['user_name']
-    player['气血'] = player['hp']
+    player['气血'] = player['fight_hp']
     player['攻击'] = player['atk']
-    player['真元'] = player['mp']
+    player['真元'] = player['fight_mp']
 
     boss_info = {
         "name": tower_floor_info["name"],

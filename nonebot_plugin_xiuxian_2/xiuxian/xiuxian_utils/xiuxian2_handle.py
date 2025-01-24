@@ -79,6 +79,7 @@ class XiuxianDateManage:
           "user_stamina" bigint DEFAULT 0,
           "place_id" bigint DEFAULT 1
         );""")
+                        await db.execute("CREATE INDEX ON user_xiuxian (user_id);")
                 elif i == "user_cd":
                     try:
                         await db.execute(f"select count(1) from {i}")
@@ -1482,10 +1483,10 @@ async def final_user_data(**user_dict):
 
     # 改成字段名称来获取相应的值
     user_dict['hp_buff'] = hp_final_buff
-    user_dict['hp'] = int(user_dict['hp'] * hp_final_buff)
+    user_dict['fight_hp'] = int(user_dict['hp'] * hp_final_buff)
     user_dict['max_hp'] = int(user_dict['exp'] * hp_final_buff / 2)
     user_dict['mp_buff'] = mp_final_buff
-    user_dict['mp'] = int(user_dict['mp'] * mp_final_buff)
+    user_dict['fight_mp'] = int(user_dict['mp'] * mp_final_buff)
     user_dict['max_mp'] = int(user_dict['exp'] * mp_final_buff)
 
     user_dict['atk'] = int((user_dict['atk']

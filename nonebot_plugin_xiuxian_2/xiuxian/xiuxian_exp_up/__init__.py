@@ -78,7 +78,7 @@ async def exp_up_(bot: Bot, event: GroupMessageEvent):
     max_exp = (
             int(await OtherSet().set_closing_type(level)) * XiuConfig().closing_exp_upper_limit
     )  # 获取下个境界需要的修为 * 1.5为闭关上限
-    user_get_exp_max = int(max_exp) - use_exp
+    user_get_exp_max = max_exp - use_exp
 
     if user_get_exp_max < 0:
         # 校验当当前修为超出上限的问题，不可为负数
