@@ -74,9 +74,6 @@ async def exp_up_(bot: Bot, event: GroupMessageEvent):
     user_mes = await sql_message.get_user_info_with_id(user_id)  # 获取用户信息
     level = user_mes['level']
     use_exp = user_mes['exp']
-    main_hp_rank = level_data[user_mes['level']]["HP"]
-    hp_speed = 25 * main_hp_rank
-    mp_speed = 50
 
     max_exp = (
             int(await OtherSet().set_closing_type(level)) * XiuConfig().closing_exp_upper_limit
@@ -91,7 +88,6 @@ async def exp_up_(bot: Bot, event: GroupMessageEvent):
     user_buff_data = UserBuffDate(user_id)
     mainbuffdata = await user_buff_data.get_user_main_buff_data()
     mainbuffratebuff = mainbuffdata['ratebuff'] if mainbuffdata is not None else 0  # 功法修炼倍率
-    mainbuffclors = mainbuffdata['clo_rs'] if mainbuffdata is not None else 0  # 功法闭关回复
     place_id = await place.get_now_place_id(user_id)
     world_id = place.get_world_id(place_id)
     world_buff = world_id * 0.3  # 位面灵气加成
@@ -113,8 +109,7 @@ async def exp_up_(bot: Bot, event: GroupMessageEvent):
         await sql_message.update_exp(user_id, user_get_exp_max)
         await sql_message.update_power2(user_id)  # 更新战力
 
-        result_msg, result_hp_mp = await OtherSet().send_hp_mp(user_id, int(exp * hp_speed * (1 + mainbuffclors)),
-                                                               int(exp * mp_speed))
+        result_msg, result_hp_mp = await OtherSet().send_hp_mp(user_id, 1)
         await sql_message.update_user_attribute(user_id, result_hp_mp[0], result_hp_mp[1], int(result_hp_mp[2] / 10))
         msg = simple_md(f"\r{user_mes['user_name']}道友修炼结束，本次修炼触及", "瓶颈", "突破",
                         f"，共增加修为：{number_to(user_get_exp_max)}{result_msg[0]}{result_msg[1]}")
@@ -124,8 +119,7 @@ async def exp_up_(bot: Bot, event: GroupMessageEvent):
         await sql_message.in_closing(user_id, user_type)
         await sql_message.update_exp(user_id, exp)
         await sql_message.update_power2(user_id)  # 更新战力
-        result_msg, result_hp_mp = await OtherSet().send_hp_mp(user_id, int(exp * hp_speed * (1 + mainbuffclors)),
-                                                               int(exp * mp_speed))
+        result_msg, result_hp_mp = await OtherSet().send_hp_mp(user_id, 1)
         await sql_message.update_user_attribute(user_id, result_hp_mp[0], result_hp_mp[1], int(result_hp_mp[2] / 10))
         msg = simple_md(f"\r{user_mes['user_name']}道友", "修炼", "修炼",
                         f"结束，本次修炼增加修为：{number_to(exp)}{result_msg[0]}{result_msg[1]}")

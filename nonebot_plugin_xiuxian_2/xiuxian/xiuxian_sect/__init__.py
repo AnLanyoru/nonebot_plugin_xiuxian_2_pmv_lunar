@@ -463,14 +463,14 @@ async def sect_mainbuff_get_(bot: Bot, event: GroupMessageEvent):
 
     for i in range(10):
         if random.randint(0, 100) <= mainbuffconfig['获取到功法的概率']:
-            mainbuffid = random.choice(skill_rate_set[mainbufftype]['gf_list'])
-            if mainbuffid in mainbuffidlist:
-                mainbuff, mainbuffmsg = get_main_info_msg(mainbuffid)
+            main_buff_id = int(random.choice(skill_rate_set[mainbufftype]['gf_list']))
+            if main_buff_id in mainbuffidlist:
+                mainbuff, mainbuffmsg = get_main_info_msg(main_buff_id)
                 repeat_count += 1
                 results.append(f"第{i + 1}次获取到重复功法：{mainbuff['name']}")
             else:
-                mainbuffidlist.append(mainbuffid)
-                mainbuff, mainbuffmsg = get_main_info_msg(mainbuffid)
+                mainbuffidlist.append(main_buff_id)
+                mainbuff, mainbuffmsg = get_main_info_msg(main_buff_id)
                 success_count += 1
                 results.append(f"第{i + 1}次获取到{mainbufftype}功法：{mainbuff['name']}\r")
         else:
@@ -524,14 +524,14 @@ async def sect_secbuff_get_(bot: Bot, event: GroupMessageEvent):
 
                 for i in range(10):
                     if random.randint(0, 100) <= secbuffconfig['获取到神通的概率']:
-                        secbuffid = random.choice(skill_rate_set[secbufftype]['st_list'])
-                        if secbuffid in secbuffidlist:
-                            secbuff = items.get_data_by_item_id(secbuffid)
+                        sec_buff_id = int(random.choice(skill_rate_set[secbufftype]['st_list']))
+                        if sec_buff_id in secbuffidlist:
+                            secbuff = items.get_data_by_item_id(sec_buff_id)
                             repeat_count += 1
                             results.append(f"第{i + 1}次获取到重复神通：{secbuff['name']}")
                         else:
-                            secbuffidlist.append(secbuffid)
-                            secbuff = items.get_data_by_item_id(secbuffid)
+                            secbuffidlist.append(sec_buff_id)
+                            secbuff = items.get_data_by_item_id(sec_buff_id)
                             success_count += 1
                             results.append(f"第{i + 1}次获取到{secbufftype}神通：{secbuff['name']}\r")
                     else:
@@ -1468,13 +1468,7 @@ async def get_sect_secbuff_id_list(sect_id):
 
 def set_sect_list(bufflist):
     """传入ID列表,返回[ID列表]"""
-    sqllist1 = ''
-    for buff in bufflist:
-        if buff == '':
-            continue
-        sqllist1 += f'{buff},'
-    sqllist = f"[{sqllist1[:-1]}]"
-    return sqllist
+    return json.dumps(bufflist)
 
 
 def get_mainname_list(bufflist):

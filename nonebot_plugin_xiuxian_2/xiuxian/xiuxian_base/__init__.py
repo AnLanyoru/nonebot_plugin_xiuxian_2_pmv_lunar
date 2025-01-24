@@ -213,7 +213,7 @@ async def restart_(bot: Bot, event: GroupMessageEvent, state: T_State):
 @restart.receive()
 async def handle_user_choice(bot: Bot, event: GroupMessageEvent, state: T_State):
     user_choice = event.get_plaintext().strip()
-    user_id = event.get_user_id()  # 从状态中获取用户ID
+    user_id = int(event.get_user_id())  # 从状态中获取用户ID
     linggen_options = state["linggen_options"]
     choice_msg_pass = state["linggen_msg"]
     selected_name, selected_root_type = max(linggen_options,

@@ -267,19 +267,6 @@ async def player_fight(player1: dict, player2: dict, type_in, bot_id):
             play_list.append(msg)
 
         if player2['气血'] <= 0:  # 玩家2气血小于0，结算
-            play_list.append(f"{player1['道号']}胜利")
-            suc = f"{player1['道号']}"
-            if is_sql:
-                #
-                if player1['气血'] <= 0:
-                    player1['气血'] = 1
-                #
-                await sql_message.update_user_hp_mp(
-                    player1['user_id'],
-                    int(player1['气血'] / player1['hp_buff']),
-                    int(player1['真元'] / player1['mp_buff'])
-                )
-                await sql_message.update_user_hp_mp(player2['user_id'], 1, int(player2['真元'] / player2['mp_buff']))
             break
 
         if player1_turn_cost < 0:  # 休息为负数，如果休息，则跳过回合，正常是0
@@ -453,17 +440,6 @@ async def player_fight(player1: dict, player2: dict, type_in, bot_id):
         if player1['气血'] <= 0:  # 玩家1气血小于0，结算
             play_list.append(f"{player2['道号']}胜利")
             suc = f"{player2['道号']}"
-            if is_sql:
-                await sql_message.update_user_hp_mp(player1['user_id'], 1, int(player1['真元'] / player1['mp_buff']))
-                #
-                if player2['气血'] <= 0:
-                    player2['气血'] = 1
-                #
-                await sql_message.update_user_hp_mp(
-                    player2['user_id'],
-                    int(player2['气血'] / player2['hp_buff']),
-                    int(player2['真元'] / player2['mp_buff'])
-                )
             break
 
         # 对方回合结束 处理 辅修功法14
@@ -476,10 +452,6 @@ async def player_fight(player1: dict, player2: dict, type_in, bot_id):
         if player1['气血'] <= 0:  # 玩家2气血小于0，结算
             play_list.append(f"{player2['道号']}胜利")
             suc = f"{player2['道号']}"
-            if is_sql:
-                await sql_message.update_user_hp_mp(player1['user_id'], 1, int(player1['真元'] / player1['mp_buff']))
-                await sql_message.update_user_hp_mp(player2['user_id'], int(player2['气血'] / player2['hp_buff']),
-                                                    int(player2['真元'] / player2['mp_buff']))
             break
 
         if player2_turn_cost < 0:  # 休息为负数，如果休息，则跳过回合，正常是0
@@ -497,6 +469,14 @@ async def player_fight(player1: dict, player2: dict, type_in, bot_id):
     if not suc:
         play_list.append("你们打到天昏地暗被大能制止！！！！")
         suc = None
+
+    if is_sql:
+        await sql_message.update_user_hp_mp(player1['user_id'],
+                                            max(1, int(player1['气血'] / player1['hp_buff'])),
+                                            int(player1['真元'] / player1['mp_buff']))
+        await sql_message.update_user_hp_mp(player2['user_id'],
+                                            max(1, int(player2['气血'] / player2['hp_buff'])),
+                                            int(player2['真元'] / player2['mp_buff']))
     return play_list, suc
 
 
@@ -1116,22 +1096,12 @@ async def boss_fight(player1: dict, boss: dict, type_in=2):
             play_list.append(f"{player1['道号']}胜利")
             suc = "群友赢了"
             get_stone = boss_now_stone * (1 + stone_buff)
-            if is_sql:
-                #
-                if player1['气血'] <= 0:
-                    player1['气血'] = 1
-                #
-                await sql_message.update_user_hp_mp(
-                    player1['user_id'],
-                    int(player1['气血'] / player1['hp_buff']),
-                    int(player1['真元'] / player1['mp_buff'])
-                )
-
             break
 
         if player1_turn_cost < 0:  # 休息为负数，如果休息，则跳过回合，正常是0
             user1_turn_skip = False
             player1_turn_cost += 1
+
 
             # 没有技能的derB
         if boss_turn_skip:
@@ -1187,20 +1157,10 @@ async def boss_fight(player1: dict, boss: dict, type_in=2):
             play_list.append(f"{boss['name']}胜利")
             suc = "Boss赢了"
 
-            # get_stone = int(boss_now_stone * (sh * boss_js / qx))
-            # boss['stone'] = boss_now_stone - get_stone
-
             zx = boss['总血量']
 
             get_stone = int(boss_now_stone * ((qx - boss['气血']) / zx) * (1 + stone_buff))
             boss['stone'] = boss_now_stone - get_stone
-
-            if is_sql:
-                await sql_message.update_user_hp_mp(
-                    player1['user_id'], 1,
-                    int(player1['真元'] / player1['mp_buff'])
-                )
-
             break
 
         if player1['气血'] <= 0 or boss['气血'] <= 0:
@@ -1210,6 +1170,12 @@ async def boss_fight(player1: dict, boss: dict, type_in=2):
     if not suc:
         play_list.append("你们打到天昏地暗被大能制止！！！！")
         suc = "Boss赢了"
+
+    if is_sql:
+        await sql_message.update_user_hp_mp(
+            player1['user_id'],
+            max(1, int(player1['气血'] / player1['hp_buff'])),
+            int(player1['真元'] / player1['mp_buff']))
     return play_list, suc, boss, get_stone
 
 

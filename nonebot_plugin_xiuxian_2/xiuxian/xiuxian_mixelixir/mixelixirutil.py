@@ -313,7 +313,7 @@ class AlchemyFurnace:
         base_fire_change, herb_power_keep = count_mix_param(user_fire_control=user_fire_control,
                                                             user_herb_knowledge=user_herb_knowledge)
 
-        herb_fire_change = herb_info_main['冷热'] * herb_power_keep / 100
+        herb_fire_change = herb_fire_change * herb_power_keep / 100
 
         self.__fire_value = max(self.__fire_value + base_fire_change + herb_fire_change, 0)
         if herb_fire_change > 0:
@@ -348,12 +348,15 @@ class AlchemyFurnace:
         most_herb_power = self.__herb_power[most_herb_type] * 0.95
         if herb_type == most_herb_type:
             return f"加入{herb_info['药名']}{herb_num}珠作为辅药\r因为药性没有主药力调和，药性全部流失了"
-        real_add_herb_power = min(add_herb_power, most_herb_power - self.__herb_power[herb_type])
+        max_add_herb_power = most_herb_power - self.__herb_power[herb_type]
+        real_add_herb_power = min(add_herb_power, max_add_herb_power)
         self.__herb_power[herb_type] += real_add_herb_power
-        result = f"加入{herb_info['药名']}{herb_num}珠作为辅药\r保留{herb_power_keep}%药性({herb_type}:{real_add_herb_power})"
+        result = f"加入{herb_info['药名']}{herb_num}珠作为辅药\r保留{herb_power_keep}%药性({herb_type}:{add_herb_power})"
         if real_add_herb_power < add_herb_power:
-            loss_power = 1 - (real_add_herb_power / add_herb_power)
-            result += f"\r由于主药力不足，保留的药性流失了{round(loss_power * 100, 2)}%！！"
+            final_keep = real_add_herb_power / add_herb_power
+            loss_power = 1 - final_keep
+            result += (f"\r由于主药力不足，保留的药性流失了{round(loss_power * 100, 2)}%！！\r"
+                       f"最终保留{herb_power_keep * final_keep}%药性({herb_type}:{real_add_herb_power})")
         return result
 
     def input_herbs(self, user_fire_control, user_herb_knowledge, input_herb_list: dict):

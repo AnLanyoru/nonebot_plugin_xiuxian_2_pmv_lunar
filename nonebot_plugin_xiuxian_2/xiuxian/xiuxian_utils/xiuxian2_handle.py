@@ -1307,6 +1307,22 @@ class XiuxianDateManage:
                     )
                 await db.executemany(sql, insert_data)
 
+    async def decrease_user_item(self, user_id: int, decrease_items: dict, use_bind: bool = False):
+        now_time = datetime.now()
+        now_time = str(now_time)
+        async with self.pool.acquire() as db:
+            sql = (f"UPDATE back set "
+                   f"goods_num=goods_num-$1,"
+                   f"update_time=$2,"
+                   f"bind_num= case when bind_num-$3 > 0 then bind_num-$3 else 0 end "
+                   f"WHERE user_id=$4 and goods_id=$5")
+            update_data = []
+            for item_id in decrease_items.keys():
+                item_num = decrease_items[item_id]
+                bind_decrease = item_num if use_bind else 0
+                update_data.append((item_num, now_time, bind_decrease, user_id, item_id))
+            await db.executemany(sql, update_data)
+
     async def get_all_owner_user_id(self, item_id):
         """获取全部拥有某物品的用户id"""
         sql = "SELECT user_id FROM back where goods_id=$1"
@@ -1344,8 +1360,6 @@ class XiuxianDateManage:
                         (user_id, send_item, item_info['name'], item_info['type'], send_num,
                          now_time, now_time, send_num * is_bind))
                 await db.executemany(sql, insert_data)
-
-
 
     async def get_item_by_good_id_and_user_id(self, user_id, goods_id):
         """根据物品id、用户id获取物品信息"""
@@ -1436,14 +1450,10 @@ async def final_user_data(**user_dict):
             user_dict[key] = int(value)
     # 通过字段名称获取相应的值
     impart_data = await xiuxian_impart.get_user_info_with_id(user_dict['user_id'])
-    if impart_data:
-        pass
-    else:
+    if not impart_data:
         await xiuxian_impart.impart_create_user(user_dict['user_id'])
         impart_data = await xiuxian_impart.get_user_info_with_id(user_dict['user_id'])
-    for key, value in impart_data.items():
-        if isinstance(value, decimal.Decimal):
-            impart_data[key] = int(value)
+
     impart_hp_per = impart_data['impart_hp_per'] if impart_data is not None else 0
     impart_mp_per = impart_data['impart_mp_per'] if impart_data is not None else 0
     impart_atk_per = impart_data['impart_atk_per'] if impart_data is not None else 0
@@ -1478,13 +1488,13 @@ async def final_user_data(**user_dict):
     user_dict['mp'] = int(user_dict['mp'] * mp_final_buff)
     user_dict['max_mp'] = int(user_dict['exp'] * mp_final_buff)
 
-    user_dict['atk'] = (int((user_dict['atk']
-                             * (user_dict['atkpractice'] * 0.04 + 1)  # 攻击修炼
-                             * (1 + main_atk_buff)  # 功法攻击加成
-                             * (1 + weapon_atk_buff)  # 武器攻击加成
-                             * (1 + armor_atk_buff))  # 防具攻击加成
+    user_dict['atk'] = int((user_dict['atk']
+                            * (user_dict['atkpractice'] * 0.04 + 1)  # 攻击修炼
+                            * (1 + main_atk_buff)  # 功法攻击加成
+                            * (1 + weapon_atk_buff)  # 武器攻击加成
+                            * (1 + armor_atk_buff)  # 防具攻击加成
                             * (1 + impart_atk_per))  # 传承攻击加成
-                        + int(user_buff_data['atk_buff']))  # 攻击丹药加成
+                           + int(user_buff_data['atk_buff']))  # 攻击丹药加成
 
     return user_dict
 
@@ -1522,7 +1532,8 @@ class XiuxianImpartBuff:
         "pray_stone_num" numeric DEFAULT 0,
         "pray_card_num" numeric DEFAULT 0,
         "exp_day" numeric DEFAULT 0,
-        "wish" numeric DEFAULT 0
+        "wish" numeric DEFAULT 0,
+        "cards" json DEFAULT NULL
         );""")
 
             for s in config_impart.sql_table_impart_buff:
@@ -2017,4 +2028,3 @@ def get_sec_msg(secbuffdata):
         msg = f"封印对手{hpmsg}{mpmsg}，持续{secbuffdata['turncost']}回合，释放概率：{secbuffdata['rate']}%，命中成功率{secbuffdata['success']}%"
 
     return msg
-

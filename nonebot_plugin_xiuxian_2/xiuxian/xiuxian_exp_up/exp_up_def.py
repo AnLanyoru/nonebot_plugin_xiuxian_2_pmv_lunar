@@ -12,7 +12,7 @@ async def exp_up_by_time(user_info, exp_time) -> tuple[str, int, dict]:
     """
     根据时间为用户增加修为
     :param user_info: 用户信息，推荐使用依赖注入获取
-    :param exp_time: 修炼时间，秒
+    :param exp_time: 修炼时间，分钟
     :return: 修为是否上限，增加修为量，恢复状态信息
     """
 
@@ -46,27 +46,18 @@ async def exp_up_by_time(user_info, exp_time) -> tuple[str, int, dict]:
     user_buff_data = await UserBuffDate(user_id).buff_info
 
     # 闭关获取的修为倍率
-    exp = (
-            int(
-                XiuConfig().closing_exp
-                * level_rate
-                * realm_rate
-                * (1 + main_buff_rate_buff)
-                * (1 + main_buff_clo_exp)
-                * (1 + impart_exp_up + user_buff_data['blessed_spot'] + world_buff)
-            )
-            * exp_time
-    )
+    exp = (int(
+        XiuConfig().closing_exp
+        * level_rate
+        * realm_rate
+        * (1 + main_buff_rate_buff)
+        * (1 + main_buff_clo_exp)
+        * (1 + impart_exp_up + user_buff_data['blessed_spot'] + world_buff))
+           * exp_time)
 
     await sql_message.update_power2(user_id)  # 更新战力
 
-    # 闭关回复计算
-    main_buff_clo_rs = main_buff_data['clo_rs'] if main_buff_data is not None else 0  # 功法闭关回复
-    main_hp_rank = level_data[user_info['level']]["HP"]
-    hp_speed = 25 * main_hp_rank * (1 + main_buff_clo_rs)
-    mp_speed = 50
-
-    result_msg, result_hp_mp = await OtherSet().send_hp_mp(user_id, int(exp * hp_speed), int(exp * mp_speed))
+    result_msg, result_hp_mp = await OtherSet().send_hp_mp(user_id, exp_time)
     await sql_message.update_user_attribute(user_id, result_hp_mp[0], result_hp_mp[1], int(result_hp_mp[2] / 10))
 
     # 用户获取的修为是否到达上限

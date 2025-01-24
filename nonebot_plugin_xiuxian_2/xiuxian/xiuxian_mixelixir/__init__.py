@@ -30,6 +30,9 @@ from ..xiuxian_utils.xiuxian2_handle import (
 )
 
 cache_help = {}
+# 初始化药材列表
+herb_id_map = {herb_name: herb_id for herb_name, herb_id in items.items_map.items()
+               if items.get_data_by_item_id(herb_id).get('type') == '药材'}
 
 alchemy_furnace_state = on_command("丹炉状态", priority=5, permission=GROUP, block=True)
 alchemy_furnace_fire_control = on_command("丹炉升温", aliases={"丹炉降温"}, priority=5, permission=GROUP, block=True)
@@ -206,29 +209,67 @@ async def alchemy_furnace_add_herb_(bot: Bot, event: GroupMessageEvent, args: Me
         await bot.send(event=event, message=msg)
         await alchemy_furnace_add_herb.finish()
     args = args.extract_plain_text()
+
     # 解析配方参数
-    pattern = r"主药([\s\S]+)药引([\s\S]+)辅药([\s\S]+)"
-    matched = re.search(pattern, args)
-    matched = matched.groups()
-    print(matched)
-    msg = "获取到" + "|".join(matched)
-    await bot.send(event=event, message=msg)
-    msg_info = get_strs_from_str(args)
-    num_info = get_num_from_str(args)
-    item_name = msg_info[0] if msg_info else ''  # 获取第一个名称
-    num = int(num_info[0]) if num_info else 1  # 获取第一个数量
-    herb_use_as = item_name[:2]
-    if herb_use_as in ['主药', '药引', '辅药']:
-        herb_id = items.items_map.get(item_name[2:])
-    else:
-        msg = '输入格式有误，暂时只能输入 添加药材用作什么xx药n个，例如添加药材主药恒心草1'
+    as_main = r'([\s\S]*)主药([\s\S][^主药引辅]*)'
+    as_ing = r'([\s\S]*)药引([\s\S][^主药引辅]*)'
+    as_sub = r'([\s\S]*)辅药([\s\S][^主药引辅]*)'
+
+    matched_main = re.search(as_main, args)
+    matched_ing = re.search(as_ing, args)
+    matched_sub = re.search(as_sub, args)
+
+    if not matched_main and not matched_ing and not matched_sub:
+        msg = '输入格式有误，输入格式为 添加药材主药xxxx药引xxxx辅药xxxx'
         await bot.send(event=event, message=msg)
         await alchemy_furnace_add_herb.finish()
-    if not herb_id:
-        msg = '未知的药材名'
-        await bot.send(event=event, message=msg)
+
+    temp_dict = {}
+    all_herb_as_type = ['主药', '药引', '辅药']
+    for herb_as_type, matched_result in zip(all_herb_as_type, [matched_main, matched_ing, matched_sub]):
+        if matched_result:
+            herb_str = matched_result.group(2)
+            herb_names = get_strs_from_str(herb_str)
+            # 获取所有药材id
+            main_herb_id = [herb_id_map.get(herb_name) for herb_name in herb_names]
+            # 获取所有药材数量
+            add_herb_num = [int(num) for num in get_num_from_str(herb_str)]
+            if None in main_herb_id:
+                msg = f'{herb_as_type}中含有未知的药材'
+                await bot.send(event=event, message=msg)
+                await alchemy_furnace_add_herb.finish()
+            if len(add_herb_num) != len(main_herb_id):
+                msg = f'{herb_as_type}中有药材未指定数量'
+                await bot.send(event=event, message=msg)
+                await alchemy_furnace_add_herb.finish()
+            # 格式化
+            main_herb = list(zip(main_herb_id, add_herb_num, herb_names))
+            temp_dict[herb_as_type] = main_herb
+
+    # 检查用户药材数量是否充足
+    loss_msg = ''
+    user_back = await sql_message.get_back_msg(user_id)
+    user_back_dict = {item_info['goods_id']: item_info for item_info in user_back}
+    decrease_dict = {}
+    for herb_as_type in temp_dict.keys():
+        herbs_input = temp_dict[herb_as_type]
+        for herb_id, herb_num, herb_name in herbs_input:
+            if herb_id in decrease_dict:
+                decrease_dict[herb_id] += herb_num
+            else:
+                decrease_dict[herb_id] = herb_num
+            if (real_num := user_back_dict.get(herb_id, {}).get('goods_num', 0)) < herb_num:
+                loss_msg += f"\r道友欲添加的{herb_as_type}:{herb_name}不足(需要{herb_num},余下{real_num}个)"
+            if herb_id in user_back_dict:
+                user_back_dict[herb_id]['goods_num'] -= herb_num
+
+    if loss_msg:
+        await bot.send(event=event, message=loss_msg)
         await alchemy_furnace_add_herb.finish()
-    temp_dict = {herb_use_as: [(herb_id, num)]}
+
+    # 扣除药材
+    await sql_message.decrease_user_item(user_id, decrease_dict, True)
+    print(temp_dict)
 
     # 获取用户炼丹数据
     user_mix_elixir_info = await get_user_mix_elixir_info(user_id)

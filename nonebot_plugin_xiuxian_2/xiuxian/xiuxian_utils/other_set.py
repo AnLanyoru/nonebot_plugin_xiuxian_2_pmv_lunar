@@ -158,11 +158,12 @@ class OtherSet(XiuConfig):
         return play_list, suc
 
     @staticmethod
-    async def send_hp_mp(user_id, hp, mp):
-        user_info = await sql_message.get_user_info_with_id(user_id)
-        max_hp = int(user_info['exp'] / 2)
-        max_mp = int(user_info['exp'])
-
+    async def send_hp_mp(user_id, time_min: int):
+        user_info = await sql_message.get_user_real_info(user_id)
+        max_hp = user_info['max_hp']
+        max_mp = user_info['max_mp']
+        hp = max_hp * 0.01 * time_min
+        mp = max_mp * 0.01 * time_min
         msg = []
         hp_mp = []
 
