@@ -996,8 +996,9 @@ class XiuxianDateManage:
         async with self.pool.acquire() as db:
             await db.execute(sql, the_type, now_time, str(sc_time), user_id)
 
-    async def update_levelrate(self, user_id, rate):
+    async def update_levelrate(self, user_id, rate: int):
         """更新突破成功率"""
+        rate = min(rate, 100)
         sql = f"UPDATE user_xiuxian SET level_up_rate=$1 WHERE user_id=$2"
         async with self.pool.acquire() as db:
             await db.execute(sql, rate, user_id)
