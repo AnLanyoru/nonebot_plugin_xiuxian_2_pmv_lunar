@@ -229,3 +229,11 @@ async def move_move_data(database, all_user_id):
     for user_id in all_user_id:
         move_data = read_move_data(user_id)
         await save_move_data(database, user_id, move_data)
+
+
+def read_impart_person_data():
+    PATH_PERSON = Path() / "data" / "xiuxian" / "impart"
+    data_path_person = os.path.join(PATH_PERSON, "impart_person.json")
+    with open(data_path_person, 'r', encoding='utf-8') as f:
+        data_person = json.load(f)
+    return data_person

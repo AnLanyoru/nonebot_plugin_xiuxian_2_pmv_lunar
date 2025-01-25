@@ -1,7 +1,7 @@
 import json
 import random
 
-from nonebot import on_command
+from nonebot import on_command, logger
 from nonebot.adapters.onebot.v11 import (
     Bot,
     GROUP,
@@ -14,6 +14,7 @@ from ..xiuxian_buff import two_exp_cd
 from ..xiuxian_config import XiuConfig
 from ..xiuxian_data.data.境界_data import level_data
 from ..xiuxian_impart_pk import impart_pk
+from ..xiuxian_sect import sect_config
 from ..xiuxian_utils.lay_out import Cooldown
 from ..xiuxian_utils.utils import (
     check_user, number_to, check_user_type
@@ -276,6 +277,20 @@ async def time_set_now_(bot: Bot, event: GroupMessageEvent):
     await sql_message.sect_task_reset()
     await sql_message.sect_elixir_get_num_reset()
     await sql_message.reset_work_num()
+    all_sects = await sql_message.get_all_sects_id_scale()
+    for s in all_sects:
+        sect_info = await sql_message.get_sect_info(s['sect_id'])
+        if sect_info['elixir_room_level']:
+            elixir_room_cost = \
+                sect_config['宗门丹房参数']['elixir_room_level'][str(sect_info['elixir_room_level'])]['level_up_cost'][
+                    '建设度']
+            if sect_info['sect_materials'] < elixir_room_cost:
+                logger.opt(colors=True).info(f"<red>宗门：{sect_info['sect_name']}的资材无法维持丹房</red>")
+                continue
+            else:
+                await sql_message.update_sect_materials(sect_id=sect_info['sect_id'], sect_materials=elixir_room_cost,
+                                                        key=2)
+    logger.opt(colors=True).info(f"<green>已重置所有宗门任务次数、宗门丹药领取次数，已扣除丹房维护费</green>")
     msg = f"逆转时空，让一切重置次数！！！"
     await bot.send(event=event, message=msg)
     await time_set_now.finish()

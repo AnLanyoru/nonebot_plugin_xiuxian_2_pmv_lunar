@@ -14,7 +14,6 @@ try:
     import ujson as json
 except ImportError:
     import json
-import os
 import random
 from datetime import datetime
 from pathlib import Path
@@ -1564,12 +1563,67 @@ class XiuxianImpartBuff:
                        f"VALUES($1, 0, 0, 0, 0 ,0, 0, 0, 0, 0 ,0 ,0 ,0, 0)")
                 await db.execute(sql, user_id)
 
+    async def get_user_impart_cards(self, user_id: int) -> list:
+        async with self.pool.acquire() as db:
+            sql = f"select cards from xiuxian_impart WHERE user_id=$1"
+            result = await db.fetch(sql, user_id)
+            return json.loads(result[0][0]) if result else None
+
+    async def update_user_cards(self, user_id: int, cards: list) -> bool:
+        cards_json = json.dumps(cards)
+        async with self.pool.acquire() as db:
+            sql = f"update xiuxian_impart set cards=$1 WHERE user_id=$2"
+            await db.execute(sql, cards_json, user_id)
+            return True
+
     async def get_user_info_with_id(self, user_id):
         """根据USER_ID获取用户impart_buff信息"""
         async with self.pool.acquire() as db:
             sql = f"select * from xiuxian_impart WHERE user_id=$1"
             result = await db.fetch(sql, user_id)
             return zips(**result[0]) if result else None
+
+    async def update_impart_all_buff(
+            self,
+            impart_hp_per,
+            impart_atk_per,
+            impart_mp_per,
+            impart_exp_up,
+            boss_atk,
+            impart_know_per,
+            impart_burst_per,
+            impart_mix_per,
+            impart_reap_per,
+            impart_two_exp,
+            user_id):
+        """更新impart_hp_per"""
+        async with self.pool.acquire() as db:
+            sql = (f"UPDATE xiuxian_impart SET "
+                   f"impart_hp_per=$1,"
+                   f"impart_atk_per=$2,"
+                   f"impart_mp_per=$3,"
+                   f"impart_exp_up=$4,"
+                   f"boss_atk=$5,"
+                   f"impart_know_per=$6,"
+                   f"impart_burst_per=$7,"
+                   f"impart_mix_per=$8,"
+                   f"impart_reap_per=$9,"
+                   f"impart_two_exp=$10 "
+                   f"WHERE user_id=$11")
+            await db.execute(
+                sql,
+                impart_hp_per,
+                impart_atk_per,
+                impart_mp_per,
+                impart_exp_up,
+                boss_atk,
+                impart_know_per,
+                impart_burst_per,
+                impart_mix_per,
+                impart_reap_per,
+                impart_two_exp,
+                user_id)
+            return True
 
     async def update_impart_hp_per(self, impart_num, user_id):
         """更新impart_hp_per"""

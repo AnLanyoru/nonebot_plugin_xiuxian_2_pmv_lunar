@@ -47,8 +47,13 @@ def get_rank_plus(wish_count):
     return False
 
 
+def join_card_check(card_list: list, card_pre_join: str) -> bool:
+    if card_pre_join in card_list:
+        return False
+    card_list.append(card_pre_join)
+    return True
+
 async def impart_check(user_id):
-    impart_data_json.find_user_impart(user_id)
     if await xiuxian_impart.get_user_info_with_id(user_id) is None:
         await xiuxian_impart.impart_create_user(user_id)
         return await xiuxian_impart.get_user_info_with_id(user_id)
@@ -57,7 +62,7 @@ async def impart_check(user_id):
 
 
 async def re_impart_data(user_id):
-    list_tp = impart_data_json.data_person_list(user_id)
+    list_tp = await xiuxian_impart.get_user_impart_cards(user_id)
     if list_tp is None:
         return False
     else:
@@ -95,14 +100,16 @@ async def re_impart_data(user_id):
                 impart_reap_per = impart_reap_per + all_data[x]["vale"]
             else:
                 pass
-        await xiuxian_impart.update_impart_two_exp(impart_two_exp, user_id)
-        await xiuxian_impart.update_impart_exp_up(impart_exp_up, user_id)
-        await xiuxian_impart.update_impart_atk_per(impart_atk_per, user_id)
-        await xiuxian_impart.update_impart_hp_per(impart_hp_per, user_id)
-        await xiuxian_impart.update_impart_mp_per(impart_mp_per, user_id)
-        await xiuxian_impart.update_boss_atk(boss_atk, user_id)
-        await xiuxian_impart.update_impart_know_per(impart_know_per, user_id)
-        await xiuxian_impart.update_impart_burst_per(impart_burst_per, user_id)
-        await xiuxian_impart.update_impart_mix_per(impart_mix_per, user_id)
-        await xiuxian_impart.update_impart_reap_per(impart_reap_per, user_id)
+        await xiuxian_impart.update_impart_all_buff(
+            impart_hp_per,
+            impart_atk_per,
+            impart_mp_per,
+            impart_exp_up,
+            boss_atk,
+            impart_know_per,
+            impart_burst_per,
+            impart_mix_per,
+            impart_reap_per,
+            impart_two_exp,
+            user_id)
         return True
