@@ -738,20 +738,14 @@ async def check_use_elixir(user_id, goods_id, num):
                     await sql_message.update_user_hp(user_id)
                     msg = f"道友成功使用丹药：{goods_name}1颗,状态已全部恢复!"
 
-    elif goods_info['buff_type'] == "atk_buff":  # 永久加攻击buff的丹药
-        if user_info['root'] == "器师":
+    elif goods_info['buff_type'] == "fight_buff":  # 永久加攻击buff的丹药
+        if abs(goods_rank - 55) > user_rank:  # 使用限制
+            msg = f"丹药：{goods_name}的使用境界为{goods_info['境界']}以上，道友不满足使用条件！"
+        else:
             buff = goods_info['buff'] * num
             await sql_message.updata_user_atk_buff(user_id, buff)
             await sql_message.update_back_j(user_id, goods_id, num=num, use_key=1)
             msg = f"道友成功使用丹药：{goods_name}{num}颗，攻击力永久增加{buff}点！"
-        else:
-            if abs(goods_rank - 55) > user_rank:  # 使用限制
-                msg = f"丹药：{goods_name}的使用境界为{goods_info['境界']}以上，道友不满足使用条件！"
-            else:
-                buff = goods_info['buff'] * num
-                await sql_message.updata_user_atk_buff(user_id, buff)
-                await sql_message.update_back_j(user_id, goods_id, num=num, use_key=1)
-                msg = f"道友成功使用丹药：{goods_name}{num}颗，攻击力永久增加{buff}点！"
 
     elif goods_info['buff_type'] == "exp_up":  # 加固定经验值的丹药
         if abs(goods_rank - 55) > user_rank:  # 使用限制

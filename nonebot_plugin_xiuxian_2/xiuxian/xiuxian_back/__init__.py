@@ -46,8 +46,6 @@ AUCTIONOFFERSLEEPTIME = 30  # 每次拍卖增加拍卖剩余的时间（秒）
 auction_offer_time_count = 0  # 计算剩余时间
 auction_offer_all_count = 0  # 控制线程等待时间
 # 定时任务
-set_auction_by_scheduler = require("nonebot_plugin_apscheduler").scheduler
-reset_day_num_scheduler = require("nonebot_plugin_apscheduler").scheduler
 
 goods_re_root = on_command("炼金", priority=6, permission=GROUP, block=True)
 goods_re_root_fast = on_command("快速炼金", aliases={"批量炼金"}, priority=6, permission=GROUP, block=True)
@@ -142,13 +140,6 @@ async def back_help_(bot: Bot, event: GroupMessageEvent):
             item_check[item_id] = 1
     await bot.send(event=event, message=msg)
     await back_fix.finish()
-
-
-# 重置丹药每日使用次数
-@reset_day_num_scheduler.scheduled_job("cron", hour=0, minute=0, )
-async def reset_day_num_scheduler_():
-    await sql_message.day_num_reset()
-    logger.opt(colors=True).info(f"<green>每日丹药使用次数重置成功！</green>")
 
 
 @back_help.handle(parameterless=[Cooldown(at_sender=False)])

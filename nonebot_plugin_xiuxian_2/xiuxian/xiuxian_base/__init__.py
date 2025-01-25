@@ -36,7 +36,6 @@ from ..xiuxian_utils.xiuxian2_handle import (
 )
 
 # 定时任务
-scheduler = require("nonebot_plugin_apscheduler").scheduler
 cache_help = {}
 cache_level_help = {}
 
@@ -96,13 +95,6 @@ __level_help_skill__ = f"""\r
 神器——圣器——仙器
 灵器——玄器——宝器——符器
 """.strip()
-
-
-# 重置每日签到, 每日限额
-@scheduler.scheduled_job("cron", hour=0, minute=0)
-async def xiuxian_sing_():
-    await sql_message.sign_remake()
-    logger.opt(colors=True).info(f"<green>每日修仙签到，每日限制重置成功！</green>")
 
 
 @xiuxian_update_data.handle(parameterless=[Cooldown(at_sender=False)])

@@ -44,8 +44,6 @@ cache_help = {}
 BLESSEDSPOTCOST = 3500000
 two_exp_limit = XiuConfig().two_exp_limit  # 默认双修次数上限，修仙之人一天7次也不奇怪（
 
-two_exp_cd_up = require("nonebot_plugin_apscheduler").scheduler
-
 buffinfo = on_fullmatch("我的功法", priority=1, permission=GROUP, block=True)
 out_closing = on_command("出关", aliases={"灵石出关"}, priority=5, permission=GROUP, block=True)
 in_closing = on_fullmatch("闭关", priority=5, permission=GROUP, block=True)
@@ -65,15 +63,6 @@ del_exp_decimal = on_fullmatch("抑制黑暗动乱", priority=9, permission=GROU
 my_exp_num = on_fullmatch("我的双修次数", priority=9, permission=GROUP, block=True)
 a_test = on_fullmatch("测试保存", priority=9, permission=SUPERUSER, block=True)
 daily_work = on_command("日常", priority=9, permission=GROUP, block=True)
-
-
-# 每日0点重置用户双修次数
-@two_exp_cd_up.scheduled_job("cron", hour=0, minute=0)
-async def two_exp_cd_up_():
-    await two_exp_cd.re_data()
-    await reset_send_stone()
-    await reset_stone_exp_up()
-    logger.opt(colors=True).info(f"<green>日常限制已刷新！</green>")
 
 
 @blessed_spot_create.handle(parameterless=[Cooldown(at_sender=False)])

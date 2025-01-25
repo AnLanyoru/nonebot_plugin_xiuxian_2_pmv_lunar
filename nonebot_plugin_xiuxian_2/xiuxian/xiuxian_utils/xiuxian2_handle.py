@@ -146,7 +146,8 @@ class XiuxianDateManage:
       "fabao_weapon" numeric DEFAULT 0,
       "sub_buff" numeric DEFAULT 0,
       "atk_buff" numeric DEFAULT 0,
-      "blessed_spot" numeric DEFAULT 0
+      "blessed_spot" numeric DEFAULT 0,
+      "elixir_buff" json
     );""")
                 elif i == "bank_info":
                     try:

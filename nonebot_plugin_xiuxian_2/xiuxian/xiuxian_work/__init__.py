@@ -25,15 +25,8 @@ from ..xiuxian_utils.utils import check_user, check_user_type
 from ..xiuxian_utils.xiuxian2_handle import sql_message
 
 # 定时任务
-reset_refresh_num = require("nonebot_plugin_apscheduler").scheduler
 work = {}  # 悬赏令信息记录
 count = 6  # 免费次数
-
-
-@reset_refresh_num.scheduled_job("cron", hour=0, minute=0)
-async def reset_refresh_num_():
-    await sql_message.reset_work_num()
-    logger.opt(colors=True).info(f"<green>用户悬赏令刷新次数重置成功</green>")
 
 
 last_work = on_command("最后的悬赏令", priority=15, block=True)

@@ -38,7 +38,7 @@ tower_point_get = on_command("本周挑战积分", priority=3, permission=GROUP 
 tower_point_get_reset = on_command("结算积分", priority=3, permission=SUPERUSER, block=True)
 
 
-# 重置每日签到, 每日限额
+# 塔积分发放
 @scheduler.scheduled_job("cron", day_of_week='sun', hour=20)
 async def tower_point_give_():
     user_all = await tower_handle.get_all_tower_user_id()

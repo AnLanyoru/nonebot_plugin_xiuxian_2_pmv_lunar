@@ -1,12 +1,11 @@
 import random
 
-from nonebot import on_command, require
+from nonebot import on_command
 from nonebot.adapters.onebot.v11 import (
     Bot,
     GROUP,
     GroupMessageEvent
 )
-from nonebot.log import logger
 
 from .impart_pk import impart_pk
 from .impart_pk_uitls import impart_pk_check
@@ -17,19 +16,11 @@ from ..xiuxian_utils.lay_out import Cooldown
 from ..xiuxian_utils.utils import check_user, check_user_type
 from ..xiuxian_utils.xiuxian2_handle import sql_message, xiuxian_impart
 
-impart_re = require("nonebot_plugin_apscheduler").scheduler
 impart_pk_now_all = on_command("虚神界对决", priority=3, permission=GROUP, block=True)
 impart_pk_now = on_command("确认虚神界对决", priority=3, permission=GROUP, block=True)
 impart_pray = on_command("确认虚神界祈愿", priority=3, permission=GROUP, block=True)
 impart_shop = on_command("虚神界兑换", priority=3, permission=GROUP, block=True)
 impart_pk_exp = on_command("虚神界闭关", aliases={"进入虚神界修炼"}, priority=3, permission=GROUP, block=True)
-
-
-# 每日0点重置用虚神界次数
-@impart_re.scheduled_job("cron", hour=0, minute=0)
-async def impart_re_():
-    await impart_pk.re_data()
-    logger.opt(colors=True).info(f"<green>已重置虚神界次数</green>")
 
 
 @impart_shop.handle(parameterless=[Cooldown(stamina_cost=0, at_sender=False)])

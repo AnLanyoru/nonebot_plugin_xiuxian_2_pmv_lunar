@@ -89,10 +89,10 @@ def count_mix_param(user_fire_control=None, user_herb_knowledge=None):
 
 
 def count_fire_control(user_fire_control):
-    fire_over_improve = (int(user_fire_control / (user_fire_control + 500000) * 30)
-                         + int(user_fire_control / (user_fire_control + 50000) * 30)
-                         + int(user_fire_control / (user_fire_control + 5000) * 15)
-                         + int(user_fire_control / (user_fire_control + 500) * 15))
+    fire_over_improve = (int(user_fire_control / (user_fire_control + 500000) * 10)
+                         + int(user_fire_control / (user_fire_control + 50000) * 10)
+                         + int(user_fire_control / (user_fire_control + 5000) * 30)
+                         + int(user_fire_control / (user_fire_control + 500) * 40))
     return fire_over_improve
 
 

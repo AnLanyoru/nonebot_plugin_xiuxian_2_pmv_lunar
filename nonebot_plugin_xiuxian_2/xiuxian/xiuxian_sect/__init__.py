@@ -3,7 +3,7 @@ import random
 import re
 import time
 
-from nonebot import on_command, on_fullmatch, require
+from nonebot import on_command, on_fullmatch
 from nonebot.adapters.onebot.v11 import (
     Bot,
     GROUP,
@@ -12,7 +12,6 @@ from nonebot.adapters.onebot.v11 import (
     MessageSegment,
     ActionFailed
 )
-from nonebot.log import logger
 from nonebot.params import CommandArg
 from nonebot.permission import SUPERUSER
 
@@ -21,7 +20,7 @@ from ..xiuxian_config import XiuConfig, convert_rank
 from ..xiuxian_data.data.功法概率设置_data import skill_rate_set
 from ..xiuxian_data.data.境界_data import level_data
 from ..xiuxian_data.data.宗门玩法配置_data import sect_config_data
-from ..xiuxian_limit.limit_database import limit_data, limit_handle
+from ..xiuxian_limit.limit_database import limit_handle
 from ..xiuxian_utils.clean_utils import get_num_from_str, get_strs_from_str, simple_md, three_md
 from ..xiuxian_utils.item_json import items
 from ..xiuxian_utils.lay_out import Cooldown
@@ -56,9 +55,6 @@ buffrankkey = {
     "天尊品级": 1000,
 }
 
-weekly_work = require("nonebot_plugin_apscheduler").scheduler
-materialsupdate = require("nonebot_plugin_apscheduler").scheduler
-resetusertask = require("nonebot_plugin_apscheduler").scheduler
 upatkpractice = on_command("升级攻击修炼", priority=5, permission=GROUP, block=True)
 my_sect = on_command("我的宗门", aliases={"宗门信息"}, priority=5, permission=GROUP, block=True)
 create_sect = on_fullmatch("创建宗门", priority=5, permission=GROUP, block=True)
@@ -87,21 +83,6 @@ sect_close = on_command("关闭宗门加入", aliases={"开启宗门加入"}, pr
 sect_rename = on_command("宗门改名", priority=5, permission=GROUP, block=True)
 gm_sect_rename = on_command("超管宗门改名", priority=12, permission=SUPERUSER, block=True)
 gm_sect_materials = on_command("发放宗门资材", priority=12, permission=SUPERUSER, block=True)
-
-
-@weekly_work.scheduled_job("cron", day_of_week='mon', hour=4)
-async def weekly_work_():
-    await limit_data.redata_limit_by_key('state')
-    logger.opt(colors=True).info(f"<green>已更新周常事件</green>")
-
-
-# 定时任务每1小时按照宗门贡献度增加资材
-@materialsupdate.scheduled_job("cron", hour=config["发放宗门资材"]["时间"])
-async def materialsupdate_():
-    all_sects = await sql_message.get_all_sects_id_scale()
-    all_sects_id = [(sect_per['sect_id'],) for sect_per in all_sects]
-    await sql_message.daily_update_sect_materials(all_sects_id)
-    logger.opt(colors=True).info(f"<green>已更新所有宗门的资材</green>")
 
 
 @gm_sect_materials.handle(parameterless=[Cooldown(stamina_cost=0, at_sender=False)])
@@ -138,27 +119,6 @@ async def gm_sect_rename_(bot: Bot, event: GroupMessageEvent, args: Message = Co
     msg = f'ID为:{sect_id}的宗门, 名称已更改为：{update_sect_name}'
     await bot.send(event, msg)
     await gm_sect_rename.finish()
-
-
-# 每日0点重置用户宗门任务次数、宗门丹药领取次数
-@resetusertask.scheduled_job("cron", hour=0, minute=0)
-async def resetusertask_():
-    await sql_message.sect_task_reset()
-    await sql_message.sect_elixir_get_num_reset()
-    all_sects = await sql_message.get_all_sects_id_scale()
-    for s in all_sects:
-        sect_info = await sql_message.get_sect_info(s['sect_id'])
-        if sect_info['elixir_room_level']:
-            elixir_room_cost = \
-                config['宗门丹房参数']['elixir_room_level'][str(sect_info['elixir_room_level'])]['level_up_cost'][
-                    '建设度']
-            if sect_info['sect_materials'] < elixir_room_cost:
-                logger.opt(colors=True).info(f"<red>宗门：{sect_info['sect_name']}的资材无法维持丹房</red>")
-                continue
-            else:
-                await sql_message.update_sect_materials(sect_id=sect_info['sect_id'], sect_materials=elixir_room_cost,
-                                                        key=2)
-    logger.opt(colors=True).info(f"<green>已重置所有宗门任务次数、宗门丹药领取次数，已扣除丹房维护费</green>")
 
 
 @sect_elixir_room_make.handle(parameterless=[Cooldown(stamina_cost=0, at_sender=False)])

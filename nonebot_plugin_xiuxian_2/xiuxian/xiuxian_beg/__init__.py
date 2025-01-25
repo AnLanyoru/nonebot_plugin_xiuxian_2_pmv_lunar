@@ -18,15 +18,7 @@ from ..xiuxian_utils.utils import (
 from ..xiuxian_utils.xiuxian2_handle import sql_message
 
 cache_level_help = {}
-scheduler = require("nonebot_plugin_apscheduler").scheduler
 cache_beg_help = {}
-
-
-# 重置奇缘
-@scheduler.scheduled_job("cron", hour=0, minute=0)
-async def xiuxian_beg_():
-    await sql_message.beg_remake()
-    logger.opt(colors=True).info(f"<green>仙途奇缘重置成功！</green>")
 
 
 __beg_help__ = f"""
