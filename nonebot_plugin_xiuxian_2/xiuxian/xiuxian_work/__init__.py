@@ -12,6 +12,7 @@ from nonebot.params import RegexGroup
 
 from .work_database import PLAYERSDATA
 from .work_handle import work_handle
+from .workmake import WorkMsg
 from ..database_utils.move_database import read_move_data
 from ..xiuxian_config import convert_rank, XiuConfig
 from ..xiuxian_limit import limit_handle
@@ -22,7 +23,6 @@ from ..xiuxian_utils.lay_out import Cooldown
 from ..xiuxian_utils.other_set import OtherSet
 from ..xiuxian_utils.utils import check_user, check_user_type
 from ..xiuxian_utils.xiuxian2_handle import sql_message
-from .workmake import WorkMsg
 
 # 定时任务
 reset_refresh_num = require("nonebot_plugin_apscheduler").scheduler

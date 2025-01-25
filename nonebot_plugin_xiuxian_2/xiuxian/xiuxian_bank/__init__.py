@@ -1,7 +1,3 @@
-from .. import DRIVER
-from ..xiuxian_database.database_connect import database
-from ..xiuxian_database.database_util import move_bank_json_data, move_mix_elixir_json_data
-
 from datetime import datetime
 from typing import Any, Tuple
 
@@ -14,6 +10,7 @@ from nonebot.adapters.onebot.v11 import (
 from nonebot.params import RegexGroup
 
 from .bank_config import CONFIG as BANK_CONFIG
+from ..xiuxian_database.database_connect import database
 from ..xiuxian_utils.lay_out import Cooldown
 from ..xiuxian_utils.utils import check_user, number_to
 from ..xiuxian_utils.xiuxian2_handle import sql_message

@@ -1,8 +1,5 @@
 import json
-import os
 from pathlib import Path
-
-from nonebot.log import logger
 
 from ..xiuxian_database.database_connect import database
 

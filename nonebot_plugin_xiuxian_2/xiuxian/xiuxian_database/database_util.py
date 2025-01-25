@@ -7,7 +7,6 @@ from pathlib import Path
 from types import NoneType
 
 import asyncpg
-from nonebot import logger
 
 tower_db = Path() / "data" / "xiuxian" / "players_database" / "modus.db"
 limit_db = Path() / "data" / "xiuxian" / "players_database" / "limit.db"

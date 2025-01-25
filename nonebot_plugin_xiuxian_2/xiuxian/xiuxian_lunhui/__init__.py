@@ -1,12 +1,10 @@
-import json
 import random
 
 from nonebot import on_command, logger
 from nonebot.adapters.onebot.v11 import (
     Bot,
     GROUP,
-    GroupMessageEvent
-)
+    GroupMessageEvent)
 from nonebot.permission import SUPERUSER
 from nonebot.typing import T_State
 

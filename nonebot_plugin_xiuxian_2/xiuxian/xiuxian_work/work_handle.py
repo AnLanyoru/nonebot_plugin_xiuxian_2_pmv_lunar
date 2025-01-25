@@ -1,5 +1,5 @@
-import json
 import random
+
 from .work_database import save_work_info, read_work_info
 from .workmake import workmake
 from ..xiuxian_utils.item_json import items
