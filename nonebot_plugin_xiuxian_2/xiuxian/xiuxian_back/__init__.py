@@ -1,6 +1,6 @@
 import asyncio
 
-from nonebot import on_command, require, on_fullmatch
+from nonebot import on_command, on_fullmatch
 from nonebot.adapters.onebot.v11 import (
     Bot,
     GROUP,
@@ -10,7 +10,6 @@ from nonebot.adapters.onebot.v11 import (
     GROUP_OWNER,
     ActionFailed
 )
-from nonebot.log import logger
 from nonebot.params import CommandArg, RawCommand
 from nonebot.permission import SUPERUSER
 
@@ -719,7 +718,7 @@ async def use_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg())
             msg = "发生未知错误！"
         await bot.send(event=event, message=msg)
         await use.finish()
-    elif goods_type == "丹药":
+    elif goods_type in ["丹药", "合成丹药"]:
         if num > int(goods_num):
             msg = f"道友背包中的{item_name}数量不足，当前仅有{goods_num}个！"
             await bot.send(event=event, message=msg)

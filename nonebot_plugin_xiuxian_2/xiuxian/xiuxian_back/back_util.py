@@ -4,6 +4,7 @@ import random
 from datetime import datetime
 from pathlib import Path
 
+from ..user_data_handle import UserBuffData
 from ..xiuxian_config import convert_rank, XiuConfig
 from ..xiuxian_database.database_connect import database
 from ..xiuxian_place import place
@@ -16,7 +17,7 @@ from ..xiuxian_utils.xiuxian2_handle import (
 
 # 替换模块
 
-YAOCAIINFOMSG = {
+YAO_CAI_INFO_MSG = {
     "-1": "性寒",
     "0": "性平",
     "1": "性热",
@@ -42,19 +43,23 @@ async def get_use_equipment_sql(user_id, goods_id):
         item_type = "法器"
         in_use_id = user_buff_info['faqi_buff']
         sql_str.append(
-            f"UPDATE back set update_time='{now_time}',action_time='{now_time}',state=1 WHERE user_id={user_id} and goods_id={goods_id}")  # 装备
+            f"UPDATE back set update_time='{now_time}',action_time='{now_time}',state=1 WHERE "
+            f"user_id={user_id} and goods_id={goods_id}")  # 装备
         if in_use_id != 0:
             sql_str.append(
-                f"UPDATE back set update_time='{now_time}',action_time='{now_time}',state=0 WHERE user_id={user_id} and goods_id={in_use_id}")  # 取下原有的
+                f"UPDATE back set update_time='{now_time}',action_time='{now_time}',state=0 "
+                f"WHERE user_id={user_id} and goods_id={in_use_id}")  # 取下原有的
 
     if item_info['item_type'] == "防具":
         item_type = "防具"
         in_use_id = user_buff_info['armor_buff']
         sql_str.append(
-            f"UPDATE back set update_time='{now_time}',action_time='{now_time}',state=1 WHERE user_id={user_id} and goods_id={goods_id}")  # 装备
+            f"UPDATE back set update_time='{now_time}',action_time='{now_time}',state=1 "
+            f"WHERE user_id={user_id} and goods_id={goods_id}")  # 装备
         if in_use_id != 0:
             sql_str.append(
-                f"UPDATE back set update_time='{now_time}',action_time='{now_time}',state=0 WHERE user_id={user_id} and goods_id={in_use_id}")  # 取下原有的
+                f"UPDATE back set update_time='{now_time}',action_time='{now_time}',state=0 "
+                f"WHERE user_id={user_id} and goods_id={in_use_id}")  # 取下原有的
 
     return sql_str, item_type
 
@@ -84,11 +89,13 @@ async def get_no_use_equipment_sql(user_id, goods_id):
     if goods_id == in_use_id or in_use_id != 0:
         # 卸载当前装备
         sql_str.append(
-            f"UPDATE back set update_time='{now_time}',action_time='{now_time}',state=0 WHERE user_id={user_id} and goods_id={goods_id}")
+            f"UPDATE back set update_time='{now_time}',action_time='{now_time}',state=0 "
+            f"WHERE user_id={user_id} and goods_id={goods_id}")
         # 如果还有其他装备需要卸载（对于法器和防具的情况）
         if in_use_id != 0 and goods_id != in_use_id:
             sql_str.append(
-                f"UPDATE back set update_time='{now_time}',action_time='{now_time}',state=0 WHERE user_id={user_id} and goods_id={in_use_id}")
+                f"UPDATE back set update_time='{now_time}',action_time='{now_time}',state=0 "
+                f"WHERE user_id={user_id} and goods_id={in_use_id}")
 
     return sql_str, item_type
 
@@ -451,13 +458,13 @@ def get_yaocai_info(yaocai_info):
     """
     获取药材信息
     """
-    msg = f"主药 {YAOCAIINFOMSG[str(yaocai_info['主药']['h_a_c']['type'])]}"
+    msg = f"主药 {YAO_CAI_INFO_MSG[str(yaocai_info['主药']['h_a_c']['type'])]}"
     msg += f"{yaocai_info['主药']['h_a_c']['power']}"
-    msg += f" {YAOCAIINFOMSG[str(yaocai_info['主药']['type'])]}"
+    msg += f" {YAO_CAI_INFO_MSG[str(yaocai_info['主药']['type'])]}"
     msg += f"{yaocai_info['主药']['power']}\r"
-    msg += f"药引 {YAOCAIINFOMSG[str(yaocai_info['药引']['h_a_c']['type'])]}"
+    msg += f"药引 {YAO_CAI_INFO_MSG[str(yaocai_info['药引']['h_a_c']['type'])]}"
     msg += f"{yaocai_info['药引']['h_a_c']['power']}"
-    msg += f"辅药 {YAOCAIINFOMSG[str(yaocai_info['辅药']['type'])]}"
+    msg += f"辅药 {YAO_CAI_INFO_MSG[str(yaocai_info['辅药']['type'])]}"
     msg += f"{yaocai_info['辅药']['power']}"
 
     return msg
@@ -741,11 +748,14 @@ async def check_use_elixir(user_id, goods_id, num):
     elif goods_info['buff_type'] == "fight_buff":  # 永久加攻击buff的丹药
         if abs(goods_rank - 55) > user_rank:  # 使用限制
             msg = f"丹药：{goods_name}的使用境界为{goods_info['境界']}以上，道友不满足使用条件！"
-        else:
-            buff = goods_info['buff'] * num
-            await sql_message.updata_user_atk_buff(user_id, buff)
-            await sql_message.update_back_j(user_id, goods_id, num=num, use_key=1)
-            msg = f"道友成功使用丹药：{goods_name}{num}颗，攻击力永久增加{buff}点！"
+            return msg
+
+        elixir_buff_info = goods_info['buff']
+        buff_msg, is_pass = await UserBuffData(user_id).add_fight_temp_buff(elixir_buff_info)
+        if not is_pass:
+            return buff_msg
+        await sql_message.update_back_j(user_id, goods_id, num=1, use_key=1)
+        msg = f"道友成功使用丹药：{goods_name}1颗，{buff_msg}"
 
     elif goods_info['buff_type'] == "exp_up":  # 加固定经验值的丹药
         if abs(goods_rank - 55) > user_rank:  # 使用限制

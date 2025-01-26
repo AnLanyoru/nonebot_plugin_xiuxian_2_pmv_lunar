@@ -1073,9 +1073,9 @@ class XiuxianDateManage:
         判断用户物品数量
         :param user_id: 用户qq
         :param goods_id: 物品id
-        :return: 物品数量
+        :return: {'goods_num': int, 'bind_num': int}
         """
-        sql = "SELECT num FROM back WHERE user_id=$1 and goods_id=$2"
+        sql = "SELECT goods_num, bind_num FROM back WHERE user_id=$1 and goods_id=$2"
         async with self.pool.acquire() as db:
             result = await db.fetch(sql, user_id, goods_id)
             return zips(**result[0]) if result else None
@@ -2050,12 +2050,6 @@ async def get_user_buff(user_id):
         return await sql_message.get_user_buff_info(user_id)
     else:
         return buff_info
-
-
-def readf(filepath):
-    with open(filepath, "r", encoding="UTF-8") as f:
-        data = f.read()
-    return json.loads(data)
 
 
 def get_sec_msg(secbuffdata):

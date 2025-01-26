@@ -3,6 +3,7 @@ import random
 from .other_set import OtherSet
 from .utils import number_to
 from .xiuxian2_handle import sql_message, UserBuffDate, xiuxian_impart
+from ..user_data_handle import UserBuffData, temp_buff_def
 from ..xiuxian_config import convert_rank
 
 
@@ -267,6 +268,8 @@ async def player_fight(player1: dict, player2: dict, type_in, bot_id):
             play_list.append(msg)
 
         if player2['气血'] <= 0:  # 玩家2气血小于0，结算
+            play_list.append(f"{player1['道号']}胜利")
+            suc = f"{player1['道号']}"
             break
 
         if player1_turn_cost < 0:  # 休息为负数，如果休息，则跳过回合，正常是0
@@ -542,6 +545,16 @@ async def boss_fight(player1: dict, boss: dict, type_in=2):
     {"user_id": None,"道号": None, "气血": None, "攻击": None, "真元": None, '会心':None, 'exp':None}
     """
     user1_buff_date = UserBuffDate(player1['user_id'])  # 1号的buff信息
+    user1_buff_data = UserBuffData(player1['user_id'])
+
+    play_list = []
+    user1_buff_date_temp = await user1_buff_data.get_fight_temp_buff()
+    if user1_buff_date_temp:
+        for buff_type, buff_value in user1_buff_date_temp.items():
+            buff_act_type = temp_buff_def[buff_type]
+            player1[buff_act_type] *= 1 + buff_value
+            play_list.append(f"{player1['道号']}的{buff_act_type}丹药力生效，{buff_act_type}提升{buff_value * 100}%")
+    await user1_buff_data.update_fight_temp_buff({})
     if user1_buff_date is None:  # 处理为空的情况
         user1_main_buff_data = None
         user1_sub_buff_data = None  # 获取玩家1的辅修功法
@@ -595,8 +608,6 @@ async def boss_fight(player1: dict, boss: dict, type_in=2):
     player1_sub_open = False  # 辅修功法14
     if (user1_sub_buff_date := await user1_buff_date.get_user_sub_buff_data()) is not None:
         player1_sub_open = True
-
-    play_list = []
     suc = None
     is_sql = False
     if type_in == 2:

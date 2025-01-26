@@ -100,7 +100,7 @@ async def make_elixir_(bot: Bot, event: GroupMessageEvent):
     await sql_message.send_back(user_id=user_id,
                                 goods_id=mix_elixir_info['item_id'],
                                 goods_name=mix_elixir_info['name'],
-                                goods_type=mix_elixir_info['item_type'],
+                                goods_type=mix_elixir_info['type'],
                                 goods_num=num)
     msg += f"{num}颗"
     user_skill_improve_data = {

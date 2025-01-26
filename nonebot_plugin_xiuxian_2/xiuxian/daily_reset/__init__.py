@@ -7,19 +7,14 @@ from ..xiuxian_sect import sect_config
 from ..xiuxian_utils.xiuxian2_handle import sql_message
 
 weekly_work = require("nonebot_plugin_apscheduler").scheduler
-materialsupdate = require("nonebot_plugin_apscheduler").scheduler
-resetusertask = require("nonebot_plugin_apscheduler").scheduler
-impart_re = require("nonebot_plugin_apscheduler").scheduler
-reset_refresh_num = require("nonebot_plugin_apscheduler").scheduler
-set_auction_by_scheduler = require("nonebot_plugin_apscheduler").scheduler
-reset_day_num_scheduler = require("nonebot_plugin_apscheduler").scheduler
-scheduler = require("nonebot_plugin_apscheduler").scheduler
-two_exp_cd_up = require("nonebot_plugin_apscheduler").scheduler
+materials_update = require("nonebot_plugin_apscheduler").scheduler
+reset_user_task = require("nonebot_plugin_apscheduler").scheduler
+daily_reset = require("nonebot_plugin_apscheduler").scheduler
 
 
 # 每日0点重置用户宗门任务次数、宗门丹药领取次数
-@resetusertask.scheduled_job("cron", hour=0, minute=30)
-async def resetusertask_():
+@reset_user_task.scheduled_job("cron", hour=0, minute=30)
+async def reset_user_task_():
     all_sects = await sql_message.get_all_sects_id_scale()
     for s in all_sects:
         sect_info = await sql_message.get_sect_info(s['sect_id'])
@@ -36,24 +31,24 @@ async def resetusertask_():
     logger.opt(colors=True).info(f"<green>已重置所有宗门任务次数、宗门丹药领取次数，已扣除丹房维护费</green>")
 
 
-@weekly_work.scheduled_job("cron", day_of_week='mon', hour=4)
-async def weekly_work_():
-    await limit_data.redata_limit_by_key('state')
-    logger.opt(colors=True).info(f"<green>已更新周常事件</green>")
-
-
 # 定时任务每1小时按照宗门贡献度增加资材
-@materialsupdate.scheduled_job("cron", hour=sect_config["发放宗门资材"]["时间"])
-async def materialsupdate_():
+@materials_update.scheduled_job("cron", hour=sect_config["发放宗门资材"]["时间"])
+async def materials_update_():
     all_sects = await sql_message.get_all_sects_id_scale()
     all_sects_id = [(sect_per['sect_id'],) for sect_per in all_sects]
     await sql_message.daily_update_sect_materials(all_sects_id)
     logger.opt(colors=True).info(f"<green>已更新所有宗门的资材</green>")
 
 
+@weekly_work.scheduled_job("cron", day_of_week='mon', hour=4)
+async def weekly_work_():
+    await limit_data.redata_limit_by_key('state')
+    logger.opt(colors=True).info(f"<green>已更新周常事件</green>")
+
+
 # 每日0点重置用虚神界次数
-@impart_re.scheduled_job("cron", hour=0, minute=0)
-async def impart_re_():
+@daily_reset.scheduled_job("cron", hour=0, minute=0)
+async def daily_reset_():
     await impart_pk.re_data()
     logger.opt(colors=True).info(f"<green>已重置虚神界行动次数</green>")
 

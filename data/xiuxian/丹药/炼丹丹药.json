@@ -652,7 +652,7 @@
         }
     },
     "2009": {
-        "name": "摄魂鬼丸",
+        "name": "破力丹",
         "desc": "使用后下次战斗增加5%攻击力",
         "type": "丹药",
         "buff_type": "fight_buff",
@@ -671,7 +671,7 @@
         }
     },
     "2010": {
-        "name": "化煞魔丸",
+        "name": "攻锐丹",
         "desc": "使用后下次战斗增加10%攻击力",
         "type": "丹药",
         "buff_type": "fight_buff",
@@ -690,7 +690,7 @@
         }
     },
     "2011": {
-        "name": "素心真丸",
+        "name": "霸力丹",
         "desc": "使用后下次战斗增加15%攻击力",
         "type": "丹药",
         "buff_type": "fight_buff",
@@ -709,7 +709,7 @@
         }
     },
     "2012": {
-        "name": "灭神古丸",
+        "name": "破敌丹",
         "desc": "使用后下次战斗增加20%攻击力",
         "type": "丹药",
         "buff_type": "fight_buff",
@@ -728,7 +728,7 @@
         }
     },
     "2013": {
-        "name": "静禅魔丸",
+        "name": "龙力丹",
         "desc": "使用后下次战斗增加25%攻击力",
         "type": "丹药",
         "buff_type": "fight_buff",
@@ -747,7 +747,7 @@
         }
     },
     "2014": {
-        "name": "地仙玄丸",
+        "name": "腾龙丹",
         "desc": "使用后下次战斗增加30%攻击力",
         "type": "丹药",
         "buff_type": "fight_buff",
@@ -766,7 +766,7 @@
         }
     },
     "2015": {
-        "name": "消冰宝丸",
+        "name": "怒神丹",
         "desc": "使用后下次战斗增加35%攻击力",
         "type": "丹药",
         "buff_type": "fight_buff",
@@ -785,7 +785,7 @@
         }
     },
     "2016": {
-        "name": "无涯鬼丸",
+        "name": "寂灭丹",
         "desc": "使用后下次战斗增加40%攻击力",
         "type": "丹药",
         "buff_type": "fight_buff",
@@ -804,7 +804,7 @@
         }
     },
     "2017": {
-        "name": "太一仙丸",
+        "name": "星斗聚法丹",
         "desc": "使用后下次战斗增加50%攻击力",
         "type": "丹药",
         "buff_type": "fight_buff",
@@ -819,6 +819,365 @@
         "mix_all": 100,
         "elixir_config": {
             "2": 1536,
+            "6": 1536
+        }
+    },
+    "2019": {
+        "name": "洞玄澈神丹",
+        "desc": "入定前使用，保护因意外停止入定而损失感悟的道韵。",
+        "type": "丹药",
+        "buff_type": "exp_protect",
+        "buff": 1,
+        "all_num": 999999,
+        "rank": 55,
+        "境界": "江湖人",
+        "mix_need_time": 60,
+        "mix_exp": 10,
+        "mix_all": 100,
+        "elixir_config": {
+            "3": 1536,
+            "5": 1536
+        }
+    },
+    "2020": {
+        "name": "血气丹",
+        "desc": "使用后下次战斗增加5%气血",
+        "type": "丹药",
+        "buff_type": "fight_buff",
+        "buff": {
+            "hp": 0.05
+        },
+        "all_num": 999999,
+        "rank": 71,
+        "境界": "凝气境一重",
+        "mix_need_time": 60,
+        "mix_exp": 10,
+        "mix_all": 10,
+        "elixir_config": {
+            "2": 6,
+            "5": 6
+        }
+    },
+    "2021": {
+        "name": "精元丹",
+        "desc": "使用后下次战斗增加10%气血",
+        "type": "丹药",
+        "buff_type": "fight_buff",
+        "buff": {
+            "hp": 0.1
+        },
+        "all_num": 999999,
+        "rank": 80,
+        "境界": "聚元境一重",
+        "mix_need_time": 60,
+        "mix_exp": 10,
+        "mix_all": 100,
+        "elixir_config": {
+            "2": 12,
+            "5": 12
+        }
+    },
+    "2022": {
+        "name": "赤血丹",
+        "desc": "使用后下次战斗增加15%气血",
+        "type": "丹药",
+        "buff_type": "fight_buff",
+        "buff": {
+            "hp": 0.15
+        },
+        "all_num": 999999,
+        "rank": 89,
+        "境界": "归元境一重",
+        "mix_need_time": 60,
+        "mix_exp": 10,
+        "mix_all": 100,
+        "elixir_config": {
+            "2": 24,
+            "5": 24
+        }
+    },
+    "2023": {
+        "name": "血莲丹",
+        "desc": "使用后下次战斗增加20%气血",
+        "type": "丹药",
+        "buff_type": "fight_buff",
+        "buff": {
+            "hp": 0.2
+        },
+        "all_num": 999999,
+        "rank": 98,
+        "境界": "通玄境一重",
+        "mix_need_time": 60,
+        "mix_exp": 10,
+        "mix_all": 100,
+        "elixir_config": {
+            "2": 48,
+            "5": 48
+        }
+    },
+    "2024": {
+        "name": "润泽丹",
+        "desc": "使用后下次战斗增加25%气血",
+        "type": "丹药",
+        "buff_type": "fight_buff",
+        "buff": {
+            "hp": 0.25
+        },
+        "all_num": 999999,
+        "rank": 107,
+        "境界": "踏虚境初期",
+        "mix_need_time": 60,
+        "mix_exp": 10,
+        "mix_all": 100,
+        "elixir_config": {
+            "2": 96,
+            "5": 96
+        }
+    },
+    "2025": {
+        "name": "精元丹",
+        "desc": "使用后下次战斗增加30%气血",
+        "type": "丹药",
+        "buff_type": "fight_buff",
+        "buff": {
+            "hp": 0.3
+        },
+        "all_num": 999999,
+        "rank": 110,
+        "境界": "天人境初期",
+        "mix_need_time": 60,
+        "mix_exp": 10,
+        "mix_all": 100,
+        "elixir_config": {
+            "2": 192,
+            "5": 192
+        }
+    },
+    "2026": {
+        "name": "凝真丹",
+        "desc": "使用后下次战斗增加35%气血",
+        "type": "丹药",
+        "buff_type": "fight_buff",
+        "buff": {
+            "hp": 0.35
+        },
+        "all_num": 999999,
+        "rank": 114,
+        "境界": "悟道境初期",
+        "mix_need_time": 60,
+        "mix_exp": 10,
+        "mix_all": 100,
+        "elixir_config": {
+            "2": 384,
+            "5": 384
+        }
+    },
+    "2027": {
+        "name": "青冥百寿丹",
+        "desc": "使用后下次战斗增加40%气血",
+        "type": "丹药",
+        "buff_type": "fight_buff",
+        "buff": {
+            "hp": 0.4
+        },
+        "all_num": 999999,
+        "rank": 117,
+        "境界": "炼神境初期",
+        "mix_need_time": 60,
+        "mix_exp": 10,
+        "mix_all": 100,
+        "elixir_config": {
+            "2": 768,
+            "5": 768
+        }
+    },
+    "2028": {
+        "name": "阴阳万寿丹",
+        "desc": "使用后下次战斗增加50%气血",
+        "type": "丹药",
+        "buff_type": "fight_buff",
+        "buff": {
+            "hp": 0.5
+        },
+        "all_num": 999999,
+        "rank": 120,
+        "境界": "逆虚境初期",
+        "mix_need_time": 60,
+        "mix_exp": 10,
+        "mix_all": 100,
+        "elixir_config": {
+            "2": 1536,
+            "5": 1536
+        }
+    },
+    "2029": {
+        "name": "增元丹",
+        "desc": "使用后下次战斗增加5%真元",
+        "type": "丹药",
+        "buff_type": "fight_buff",
+        "buff": {
+            "mp": 0.05
+        },
+        "all_num": 999999,
+        "rank": 71,
+        "境界": "凝气境一重",
+        "mix_need_time": 60,
+        "mix_exp": 10,
+        "mix_all": 10,
+        "elixir_config": {
+            "3": 6,
+            "6": 6
+        }
+    },
+    "2030": {
+        "name": "聚元丹",
+        "desc": "使用后下次战斗增加10%真元",
+        "type": "丹药",
+        "buff_type": "fight_buff",
+        "buff": {
+            "mp": 0.1
+        },
+        "all_num": 999999,
+        "rank": 80,
+        "境界": "聚元境一重",
+        "mix_need_time": 60,
+        "mix_exp": 10,
+        "mix_all": 100,
+        "elixir_config": {
+            "3": 12,
+            "6": 12
+        }
+    },
+    "2031": {
+        "name": "蕴神丹",
+        "desc": "使用后下次战斗增加15%真元",
+        "type": "丹药",
+        "buff_type": "fight_buff",
+        "buff": {
+            "mp": 0.15
+        },
+        "all_num": 999999,
+        "rank": 89,
+        "境界": "归元境一重",
+        "mix_need_time": 60,
+        "mix_exp": 10,
+        "mix_all": 100,
+        "elixir_config": {
+            "3": 24,
+            "6": 24
+        }
+    },
+    "2032": {
+        "name": "千魂丹",
+        "desc": "使用后下次战斗增加20%真元",
+        "type": "丹药",
+        "buff_type": "fight_buff",
+        "buff": {
+            "mp": 0.2
+        },
+        "all_num": 999999,
+        "rank": 98,
+        "境界": "通玄境一重",
+        "mix_need_time": 60,
+        "mix_exp": 10,
+        "mix_all": 100,
+        "elixir_config": {
+            "3": 48,
+            "6": 48
+        }
+    },
+    "2033": {
+        "name": "清虚丹",
+        "desc": "使用后下次战斗增加25%真元",
+        "type": "丹药",
+        "buff_type": "fight_buff",
+        "buff": {
+            "mp": 0.25
+        },
+        "all_num": 999999,
+        "rank": 107,
+        "境界": "踏虚境初期",
+        "mix_need_time": 60,
+        "mix_exp": 10,
+        "mix_all": 100,
+        "elixir_config": {
+            "3": 96,
+            "6": 96
+        }
+    },
+    "2034": {
+        "name": "天冥丹",
+        "desc": "使用后下次战斗增加30%真元",
+        "type": "丹药",
+        "buff_type": "fight_buff",
+        "buff": {
+            "mp": 0.3
+        },
+        "all_num": 999999,
+        "rank": 110,
+        "境界": "天人境初期",
+        "mix_need_time": 60,
+        "mix_exp": 10,
+        "mix_all": 100,
+        "elixir_config": {
+            "3": 192,
+            "6": 192
+        }
+    },
+    "2035": {
+        "name": "六合归神丹",
+        "desc": "使用后下次战斗增加35%真元",
+        "type": "丹药",
+        "buff_type": "fight_buff",
+        "buff": {
+            "mp": 0.35
+        },
+        "all_num": 999999,
+        "rank": 114,
+        "境界": "悟道境初期",
+        "mix_need_time": 60,
+        "mix_exp": 10,
+        "mix_all": 100,
+        "elixir_config": {
+            "3": 384,
+            "6": 384
+        }
+    },
+    "2036": {
+        "name": "三花玉露丹",
+        "desc": "使用后下次战斗增加40%真元",
+        "type": "丹药",
+        "buff_type": "fight_buff",
+        "buff": {
+            "mp": 0.4
+        },
+        "all_num": 999999,
+        "rank": 117,
+        "境界": "炼神境初期",
+        "mix_need_time": 60,
+        "mix_exp": 10,
+        "mix_all": 100,
+        "elixir_config": {
+            "3": 768,
+            "6": 768
+        }
+    },
+    "2037": {
+        "name": "七命玄门丹",
+        "desc": "使用后下次战斗增加50%真元",
+        "type": "丹药",
+        "buff_type": "fight_buff",
+        "buff": {
+            "mp": 0.5
+        },
+        "all_num": 999999,
+        "rank": 120,
+        "境界": "逆虚境初期",
+        "mix_need_time": 60,
+        "mix_exp": 10,
+        "mix_all": 100,
+        "elixir_config": {
+            "3": 1536,
             "6": 1536
         }
     }
