@@ -114,35 +114,34 @@ async def fast_sell_items_(
     args = get_strs_from_str(strs)
     want_user_name = args[0]
     args = args[1:]
-    if args:
-        the_same = XiuConfig().elixir_def
-        real_args = [the_same[i] if i in the_same else i for i in args]
-        sell_list = []
-        for goal_level, goal_level_name in zip(real_args, args):
-            back_msg = await sql_message.get_back_msg(user_id)  # 背包sql信息,list(back)
-            for back in back_msg:
-                goods_name = back['goods_name']
-                goods_id = back['goods_id']
-                goods_num = back['goods_num'] - back['bind_num']
-                item_info = items.get_data_by_item_id(goods_id)
-                buff_type = item_info.get('buff_type')
-                item_level = item_info.get('level') if item_info else None
-                item_type = back.get('goods_type')
-                if (item_level == goal_level
-                    or goods_name == goal_level
-                    or buff_type == goal_level
-                    or item_type == goal_level) and goods_num > 0:
-                    sell_list.append(back)
-        msg = f"开始向{want_user_name}道友快速出售以下类型物品：\r" + "|".join(args) + "请等待...."
-        await bot.send(event, msg)
-        msg = '出售结果如下'
-    else:
+    if not args:
         # 无参数
         sell_list = []
         msg = f"请指定你要向{want_user_name}道友出售的物品的类型！！"
         await bot.send(event, msg)
         set_cmd_lock(user_id, 0)
         await fast_sell_items.finish()
+    the_same = XiuConfig().elixir_def
+    real_args = [the_same[i] if i in the_same else i for i in args]
+    sell_list = []
+    for goal_level, goal_level_name in zip(real_args, args):
+        back_msg = await sql_message.get_back_msg(user_id)  # 背包sql信息,list(back)
+        for back in back_msg:
+            goods_name = back['goods_name']
+            goods_id = back['goods_id']
+            goods_num = back['goods_num'] - back['bind_num']
+            item_info = items.get_data_by_item_id(goods_id)
+            buff_type = item_info.get('buff_type')
+            item_level = item_info.get('level') if item_info else None
+            item_type = back.get('goods_type')
+            if (item_level == goal_level
+                or goods_name == goal_level
+                or buff_type == goal_level
+                or item_type == goal_level) and goods_num > 0:
+                sell_list.append(back)
+    msg = f"开始向{want_user_name}道友快速出售以下类型物品：\r" + "|".join(args) + "请等待...."
+    await bot.send(event, msg)
+    msg = '出售结果如下'
     sell_msg = []
     price_sum = 0
     want_pass = False

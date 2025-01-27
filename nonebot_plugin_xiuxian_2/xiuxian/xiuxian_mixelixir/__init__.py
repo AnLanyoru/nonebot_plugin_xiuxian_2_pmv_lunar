@@ -8,7 +8,7 @@ from nonebot.adapters.onebot.v11 import (
     Bot,
     GROUP,
     GroupMessageEvent,
-    ActionFailed, Message
+    Message
 )
 from nonebot.params import CommandArg, RawCommand
 from nonebot.permission import SUPERUSER
@@ -16,7 +16,8 @@ from nonebot.permission import SUPERUSER
 from .mix_elixir_config import MIXELIXIRCONFIG
 from .mix_elixir_database import create_user_mix_elixir_info, get_user_mix_elixir_info
 from .mixelixirutil import AlchemyFurnace, get_user_alchemy_furnace, remove_mix_user
-from ..xiuxian_back.back_util import get_user_elixir_back_msg, get_user_yaocai_back_msg, get_user_yaocai_back_msg_easy
+from ..xiuxian_back.back_util import get_user_yaocai_back_msg, get_user_yaocai_back_msg_easy, \
+    get_user_back_msg
 from ..xiuxian_config import convert_rank
 from ..xiuxian_database.database_connect import database
 from ..xiuxian_utils.clean_utils import get_strs_from_str, get_args_num, get_paged_msg, get_num_from_str
@@ -446,35 +447,12 @@ async def elixir_back_(bot: Bot, event: GroupMessageEvent, args: Message = Comma
     _, user_info, _ = await check_user(event)
 
     user_id = user_info['user_id']
-    msg = await get_user_elixir_back_msg(user_id)
+    msg_list = await get_user_back_msg(user_id, ['炼丹炉', '丹药', '合成丹药'])
 
     args = args.extract_plain_text().strip()
-    page = re.findall(r"\d+", args)  # 背包页数
-
-    page_all = (len(msg) // 12) + 1 if len(msg) % 12 != 0 else len(msg) // 12  # 背包总页数
-
-    if page:
-        pass
-    else:
-        page = ["1"]
-    page = int(page[0])
-    if page_all < page != 1:
-        msg = "道友的丹药背包没有那么广阔！！！"
-        await bot.send(event=event, message=msg)
-        await elixir_back.finish()
-    if len(msg) != 0:
-        # 获取页数物品数量
-        item_num = page * 12 - 12
-        item_num_end = item_num + 12
-        msg = [f"\r{user_info['user_name']}的背包"] + msg[item_num:item_num_end]
-        msg += [f"\r第 {page}/{page_all} 页\r☆————tips————☆\r可以发送丹药背包+页数来查看更多页数的物品哦"]
-    else:
-        msg = ["道友的丹药背包空空如也！"]
-    try:
-        await send_msg_handler(bot, event, '丹药背包', bot.self_id, msg)
-    except ActionFailed:
-        await elixir_back.finish("查看丹药背包失败!", reply_message=True)
-
+    page = get_args_num(args, 1, default=1)  # 背包页数
+    msg_list_per = get_paged_msg(msg_list=msg_list, page=page, per_page_item=20)
+    await send_msg_handler(bot, event, '丹药背包', bot.self_id, msg_list_per)
     await elixir_back.finish()
 
 

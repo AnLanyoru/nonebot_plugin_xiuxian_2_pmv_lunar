@@ -15,7 +15,7 @@ from nonebot.permission import SUPERUSER
 from .tower_database import tower_handle
 from .tower_fight import get_tower_battle_info
 from ..xiuxian_place import place
-from ..xiuxian_utils.clean_utils import msg_handler, main_md, get_num_from_str
+from ..xiuxian_utils.clean_utils import msg_handler, main_md, get_num_from_str, get_args_num
 from ..xiuxian_utils.item_json import items
 from ..xiuxian_utils.lay_out import Cooldown
 from ..xiuxian_utils.utils import check_user, check_user_type
@@ -28,13 +28,15 @@ scheduler = require("nonebot_plugin_apscheduler").scheduler
 tower_rule = on_command("挑战之地规则详情", aliases={"挑战之地规则"}, priority=2, permission=GROUP | PRIVATE,
                         block=True)
 tower_start = on_command("进入挑战之地", aliases={"进入挑战"}, priority=2, permission=GROUP | PRIVATE, block=True)
-tower_end = on_command("离开挑战之地", aliases={"离开挑战"}, priority=2, permission=GROUP | PRIVATE, block=True)
+tower_end = on_command("离开挑战之地", aliases={"离开挑战", "退出挑战", "停止挑战"}, priority=2,
+                       permission=GROUP | PRIVATE, block=True)
 tower_info = on_command("查看挑战", aliases={"查看挑战信息"}, priority=1, permission=GROUP | PRIVATE, block=True)
 tower_fight = on_command("开始挑战", aliases={"挑战开始"}, priority=3, permission=GROUP | PRIVATE, block=True)
 tower_shop = on_command("挑战商店", priority=3, permission=GROUP | PRIVATE, block=True)
 tower_shop_buy = on_command("挑战商店兑换", aliases={"挑战积分兑换", "挑战兑换"}, priority=3,
                             permission=GROUP | PRIVATE, block=True)
 tower_point_get = on_command("本周挑战积分", priority=3, permission=GROUP | PRIVATE, block=True)
+tower_top = on_command("挑战排行", priority=3, permission=GROUP | PRIVATE, block=True)
 tower_point_get_reset = on_command("结算积分", priority=3, permission=SUPERUSER, block=True)
 
 
@@ -58,6 +60,48 @@ async def tower_point_give_():
         await tower_handle.update_user_tower_info(user_tower_info)
         await tower_handle.update_user_tower_point(user_id, point_get)
     logger.opt(colors=True).info(f"<green>发放塔积分完毕！！！</green>")
+
+
+@tower_top.handle(parameterless=[Cooldown(at_sender=False)])
+async def tower_top_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
+    """结算挑战积分"""
+    _, user_info, _ = await check_user(event)
+    user_id = user_info['user_id']
+    user_tower_info = await tower_handle.check_user_tower_info(user_id)
+    if not user_tower_info['tower_place']:
+        msg = '没有道友的挑战信息！！'
+        await bot.send(event=event, message=msg)
+        await tower_top.finish()
+    place_id = user_tower_info.get('tower_place')
+    world_id = place.get_world_id(place_id)
+    tower = tower_handle.tower_data.get(world_id)
+    page = get_args_num(args, 1, default=1)
+    lt_rank = await tower_handle.get_tower_top(place_id)
+    long_rank = len(lt_rank)
+    page_all = (long_rank // 20) + 1 if long_rank % 20 != 0 else long_rank // 20  # 总页数
+    if page_all < page != 1:
+        msg = f"挑战排行榜没有那么广阔！！！"
+        await bot.send(event=event, message=msg)
+        await tower_top.finish()
+    if long_rank != 0:
+        # 获取页数物品数量
+        item_num = page * 20 - 20
+        item_num_end = item_num + 20
+        lt_rank = lt_rank[item_num:item_num_end]
+        top_msg = f"✨【{tower.name}】挑战排行TOP{item_num_end}✨"
+        msg = ''
+        num = item_num
+        for i in lt_rank:
+            i = list(i.values())
+            num += 1
+            msg += f"第{num}位 {i[0]} 最深抵达:第{i[1]}区域\r"
+        msg += f"第 {page}/{page_all} 页"
+        msg = main_md(top_msg, msg, '查看日常', f'日常中心', '灵石排行榜', '灵石排行榜', '宗门排行榜',
+                      '宗门排行榜', '下一页', f'挑战排行{page + 1}')
+    else:
+        msg = f"该排行榜空空如也！"
+    await bot.send(event=event, message=msg)
+    await tower_top.finish()
 
 
 @tower_point_get_reset.handle(
@@ -154,7 +198,7 @@ async def tower_shop_buy_(
         '挑战积分兑换 物品编号 数量', '挑战积分兑换',
         '挑战商店', '挑战商店',
         '积分规则详情', '挑战之地规则详情',
-        '挑战帮助', '挑战帮助')
+        '挑战排行', '挑战排行')
     await bot.send(event=event, message=msg)
     await tower_shop_buy.finish()
 
@@ -185,13 +229,14 @@ async def tower_point_get_(bot: Bot, event: GroupMessageEvent):
     tower = tower_handle.tower_data.get(world_id)
     point_get = tower.point_give.get(had_get, 0)
     msg = f"道友的挑战积分信息"
-    text = f"！本周最深抵达第{best_floor}区域，将可获取{point_get}积分！！"
+    text = (f"！本周最深抵达第{best_floor}区域，将可获取{point_get}积分！！\r"
+            f"tips: 如果道友抵达了挑战最深处，可能需要道友手动退出挑战才能结算积分")
     msg = main_md(
         msg, text,
         '进入挑战', '进入挑战',
         '挑战商店', '挑战商店',
         '积分规则详情', '挑战之地规则详情',
-        '挑战帮助', '挑战帮助')
+        '挑战排行', '挑战排行')
     await bot.send(event=event, message=msg)
     await tower_point_get.finish()
 

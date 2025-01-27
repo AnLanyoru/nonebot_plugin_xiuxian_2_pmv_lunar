@@ -50,10 +50,10 @@ class WorldTowerData:
                     "floor" bigint NOT NULL,
                     "place_id" bigint DEFAULT 0,
                     "name" TEXT,
-                    "hp" bigint DEFAULT 0,
-                    "mp" bigint DEFAULT 0,
-                    "atk" bigint DEFAULT 0,
-                    "defence" bigint DEFAULT 0
+                    "hp" numeric DEFAULT 0,
+                    "mp" numeric DEFAULT 0,
+                    "atk" numeric DEFAULT 0,
+                    "defence" numeric DEFAULT 0
                     );""")
             try:
                 await conn.execute(f"select count(1) from {self.sql_user_table_name}")
@@ -217,6 +217,21 @@ class WorldTowerData:
                 sql,
                 change_value,
                 user_id)
+
+    async def get_tower_top(self, tower_place):
+        """挑战排行"""
+        sql = (f"SELECT "
+               f"(SELECT max(user_name) FROM user_xiuxian WHERE user_xiuxian.user_id = user_tower_info.user_id) "
+               f"as user_name, "
+               f"best_floor "
+               f"FROM user_tower_info "
+               f"WHERE tower_place=$1 "
+               f"ORDER BY best_floor DESC "
+               f"limit 60")
+        async with self.pool.acquire() as db:
+            result = await db.fetch(sql, tower_place)
+            result_all = [zips(**result_per) for result_per in result]
+            return result_all
 
 
 class TowerHandle(WorldTowerData):

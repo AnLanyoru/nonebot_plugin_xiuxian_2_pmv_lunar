@@ -40,11 +40,13 @@ async def all_table_data_move(database, sqlite_db_path, values_type_check: bool 
         sql = f"select * from {table}"
         if table == "BuffInfo":
             table = "buff_info"
+        if table == "offset":
+            table = "offset_list"
         sqlite_cur.execute(sql)
         result = sqlite_cur.fetchall()
         print(f"成功获取到表{table}欲转移数据，数据量", len(result))
         if not result:
-            return None
+            continue
         columns = [column[0] for column in sqlite_cur.description]
         data_dict = dict(zip(columns, result[0]))
         # 类型修补
