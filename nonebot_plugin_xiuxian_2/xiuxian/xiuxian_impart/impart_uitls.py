@@ -49,9 +49,9 @@ def get_rank_plus(wish_count):
 
 def join_card_check(card_list: list, card_pre_join: str) -> bool:
     if card_pre_join in card_list:
-        return False
+        return True
     card_list.append(card_pre_join)
-    return True
+    return False
 
 async def impart_check(user_id):
     if await xiuxian_impart.get_user_info_with_id(user_id) is None:

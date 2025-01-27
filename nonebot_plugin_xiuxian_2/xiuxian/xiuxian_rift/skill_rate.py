@@ -1,7 +1,7 @@
 # 秘境功法概率设置
 skill_rate = {
     "后天品级": {
-        "type_rate": 8000,
+        "type_rate": 5,
         "gf_list": [
             "9001",
             "9002",
@@ -30,7 +30,7 @@ skill_rate = {
         "rank": 55
     },
     "先天品级": {
-        "type_rate": 4000,
+        "type_rate": 5,
         "gf_list": [
             "9103",
             "9104",
@@ -57,7 +57,7 @@ skill_rate = {
         "rank": 70
     },
     "神丹品级": {
-        "type_rate": 2000,
+        "type_rate": 5,
         "gf_list": [
             "9400",
             "9401",
@@ -82,7 +82,7 @@ skill_rate = {
         "rank": 79
     },
     "虚劫品级": {
-        "type_rate": 1000,
+        "type_rate": 5,
         "gf_list": [
             "9503",
             "9504",
@@ -106,7 +106,7 @@ skill_rate = {
         "rank": 88
     },
     "生死品级": {
-        "type_rate": 500,
+        "type_rate": 5,
         "gf_list": [
             "9700",
             "9701",
@@ -129,7 +129,7 @@ skill_rate = {
         "rank": 97
     },
     "神海品级": {
-        "type_rate": 250,
+        "type_rate": 5,
         "gf_list": [
             "9900",
             "9801",
@@ -155,7 +155,7 @@ skill_rate = {
         "rank": 101
     },
     "神劫品级": {
-        "type_rate": 125,
+        "type_rate": 5,
         "gf_list": [
             "9903",
             "9902",
@@ -173,7 +173,7 @@ skill_rate = {
         "rank": 106
     },
     "神极品级": {
-        "type_rate": 60,
+        "type_rate": 5,
         "gf_list": [
             "9913",
             "9914",
@@ -191,7 +191,7 @@ skill_rate = {
         "rank": 113
     },
     "神变品级": {
-        "type_rate": 30,
+        "type_rate": 5,
         "gf_list": [
             "9920",
             "9921",
@@ -219,7 +219,7 @@ skill_rate = {
         "rank": 116
     },
     "界主品级": {
-        "type_rate": 10,
+        "type_rate": 5,
         "gf_list": [
             "9925",
             "9926",
@@ -307,5 +307,24 @@ skill_rate = {
             "22205"
         ],
         "rank": 132
+    },
+    "圣人品级": {
+        "type_rate": 1,
+        "gf_list": [
+            "30705",
+            "30706"
+        ],
+        "st_list": [
+            "30803",
+            "30807",
+            "30808"
+        ],
+        "fx_list": [
+            "22311",
+            "22312",
+            "22313",
+            "22320"
+        ],
+        "rank": 135
     }
 }

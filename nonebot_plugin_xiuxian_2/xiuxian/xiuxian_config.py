@@ -117,7 +117,7 @@ class XiuConfig:
         self.remake = 100000  # 重入仙途的消费
         self.max_stamina = 2400  # 体力上限
         self.stamina_recovery_points = 1  # 体力恢复点数/分钟
-        self.break_world_need = ["天人境圆满", "羽化境后期", "仙帝境后期"]  # 突破位面最低境界要求
+        self.break_world_need = ["天人境圆满", "登仙境后期", "仙帝境后期"]  # 突破位面最低境界要求
         self.lunhui_min_level = "天人境圆满"  # 千世轮回最低境界
         self.twolun_min_level = "羽化境后期"  # 万世轮回最低境界
         self.threelun_min_level = "仙帝境后期"  # 无上轮回最低境界

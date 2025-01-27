@@ -893,7 +893,7 @@ async def master_rename_(bot: Bot, event: GroupMessageEvent, args: Message = Com
     arg = args.extract_plain_text()
     user_id = get_num_from_str(arg)
     user_name = get_strs_from_str(arg)
-    user_id = user_id[0] if user_id else None
+    user_id = int(user_id[0]) if user_id else None
     user_name = user_name[0] if user_name else None
     user_info = await sql_message.get_user_info_with_id(user_id)
     if user_info:

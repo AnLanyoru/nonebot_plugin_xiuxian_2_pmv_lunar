@@ -304,6 +304,8 @@ def get_id_by_rank(dict_data, user_level, rift_rank=0):
     for k, v in dict_data.items():
         if abs(int(v["rank"]) - 55) <= final_rank and (final_rank - abs(int(v["rank"]) - 55)) <= pass_rank:
             l_temp.append(k)
+    if not l_temp:
+        random.choice(list(dict_data.keys()))
     return random.choice(l_temp)
 
 
@@ -387,7 +389,8 @@ def get_skill_by_rank(user_level, rift_rank):
     temp_dict = []
     for k, v in skill_data.items():
         if user_rank + rift_rank >= abs(int(v['rank']) - 55):  # 秘境等级会增幅用户等级
-            temp_dict.append(k)
+            for _ in range(v['type_rate']):
+                temp_dict.append(k)
     return random.choice(temp_dict)
 
 

@@ -10,7 +10,7 @@ from ..xiuxian_utils.xiuxian2_handle import sql_message
 # 数据转移工具
 @DRIVER.on_startup
 async def move_bank_data():
-    move_data = 1
+    move_data = 0
     if move_data:
         print("迁移工具加载。")
         print("迁移开始")

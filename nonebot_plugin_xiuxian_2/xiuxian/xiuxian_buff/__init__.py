@@ -2,14 +2,13 @@ import random
 import re
 from datetime import datetime
 
-from nonebot import on_command, on_fullmatch, require
+from nonebot import on_command, on_fullmatch
 from nonebot.adapters.onebot.v11 import (
     Bot,
     GROUP,
     Message,
     GroupMessageEvent
 )
-from nonebot.log import logger
 from nonebot.params import CommandArg, RawCommand
 from nonebot.permission import SUPERUSER
 
@@ -361,15 +360,14 @@ async def two_exp_(bot: Bot, event: GroupMessageEvent, args: Message = CommandAr
         if cmd == "确认快速双修":
             pass
         else:
-            msg = "道友与对方有一方无法达到最大双修收益，若要继续，在指令前加上确定"
-            msg = main_md(
-                "提示", msg,
+            tip_msg = "道友与对方有一方无法达到最大双修收益，若不想看到本提示，在指令前加上确定"
+            tip_msg = main_md(
+                "提示", tip_msg,
                 '查看日常', "日常中心",
                 '双修', '双修',
                 '修炼', '修炼',
                 '确认快速双修', f"确认快速双修{user_2['user_name']} {num}")
-            await bot.send(event=event, message=msg)
-            await two_exp.finish()
+            await bot.send(event=event, message=tip_msg)
 
     exp_limit_1 *= num
     exp_limit_2 *= num

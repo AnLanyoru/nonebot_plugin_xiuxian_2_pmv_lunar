@@ -42,6 +42,8 @@ async def all_table_data_move(database, sqlite_db_path, values_type_check: bool 
             table = "buff_info"
         if table == "offset":
             table = "offset_list"
+        if table == 'world_tower':
+            continue
         sqlite_cur.execute(sql)
         result = sqlite_cur.fetchall()
         print(f"成功获取到表{table}欲转移数据，数据量", len(result))
