@@ -13,10 +13,12 @@ from nonebot.params import CommandArg
 from nonebot.permission import SUPERUSER
 
 from .. import DRIVER
+from ..xiuxian_config import convert_rank
 from ..xiuxian_database.database_connect import database
-from ..xiuxian_utils.clean_utils import three_md
+from ..xiuxian_utils.clean_utils import three_md, msg_handler, number_to, main_md, zips
 from ..xiuxian_utils.item_json import items
 from ..xiuxian_utils.lay_out import Cooldown
+from ..xiuxian_utils.player_fight import boss_fight
 from ..xiuxian_utils.utils import check_user
 from ..xiuxian_utils.xiuxian2_handle import sql_message, xiuxian_impart
 
@@ -171,6 +173,46 @@ async def update_user_new_year_info(user_id: int, user_new_year_info: dict):
                           **user_new_year_info)
 
 
+async def get_new_year_battle_info(user_id):
+    """获取Boss战事件的内容"""
+    player = await sql_message.get_user_real_info(user_id)
+    player['道号'] = player['user_name']
+    player['气血'] = player['fight_hp']
+    player['攻击'] = player['atk']
+    player['真元'] = player['fight_mp']
+
+    new_year_fight_hp = player * 100
+    boss_info = {
+        "name": "年兽",
+        "气血": new_year_fight_hp,
+        "总血量": new_year_fight_hp,
+        "攻击": 0,
+        "真元": 0,
+        "jj": f"{convert_rank()[1][65][:3]}",
+        'stone': 1,
+        'defence': 0.2
+    }
+
+    result, _, final_boss_info, _ = await boss_fight(player, boss_info)  # 未开启，1不写入，2写入
+
+    return result, final_boss_info
+
+
+async def get_new_year_fight_top(self):
+    """挑战排行"""
+    sql = (f"SELECT "
+           f"(SELECT max(user_name) FROM user_xiuxian WHERE user_xiuxian.user_id = new_year_temp.user_id) "
+           f"as user_name, "
+           f"fight_damage "
+           f"FROM new_year_temp "
+           f"ORDER BY fight_damage DESC "
+           f"limit 100")
+    async with self.pool.acquire() as db:
+        result = await db.fetch(sql)
+        result_all = [zips(**result_per) for result_per in result]
+        return result_all
+
+
 # 活动日常刷新
 @active_daily_reset.scheduled_job("cron", hour=0, minute=10)
 async def active_daily_reset_():
@@ -178,15 +220,49 @@ async def active_daily_reset_():
 
 
 new_year_active_menu = on_command("新春", priority=9, permission=GROUP, block=True)
-new_year_guess_menu = on_command("猜谜活动菜单", priority=9, permission=GROUP, block=True)
+new_year_guess_menu = on_command("猜谜活动", priority=9, permission=GROUP, block=True)
 new_year_guess_get = on_command("获取谜题", priority=9, permission=GROUP, block=True)
 new_year_guess_answer = on_command("答题", priority=9, permission=GROUP, block=True)
 new_year_gift_get = on_command("拆福袋", priority=9, permission=GROUP, block=True)
 new_year_daily_gift_get = on_command("新春祈愿", priority=8, permission=GROUP, block=True)
 new_year_fight_menu = on_command("年兽菜单", priority=9, permission=GROUP, block=True)
 new_year_fight = on_command("驱逐年兽", priority=9, permission=GROUP, block=True)
+new_year_fight_top = on_command("年兽伤害排行", priority=9, permission=GROUP, block=True)
 
 time_set_new_year = on_command('逆转新春', priority=15, permission=SUPERUSER, block=True)
+
+
+@new_year_fight.handle(parameterless=[Cooldown(cd_time=5, at_sender=False)])
+async def new_year_fight_(bot: Bot, event: GroupMessageEvent):
+    """驱逐年兽"""
+
+    _, user_info, _ = await check_user(event)
+    user_id = user_info['user_id']
+    user_new_year_info = await get_user_new_year_info(user_id)
+    user_last_damage = user_new_year_info['fight_damage']
+    user_name = user_info['user_name']
+    if user_new_year_info['fight_num'] > 2:
+        msg = f"道友今天已经为驱逐年兽做出了足够大的奉献啦！！\r去看看别的活动吧"
+        msg = three_md(msg, "猜谜活动", "猜谜活动菜单", "\r - 答题成功将获得福袋奖励！！\r",
+                       "主菜单", "新春菜单", "\r - 查看全部新春活动！！\r",
+                       "拆福袋", "拆福袋", "\r - 打开福袋获取丰厚奖励！！")
+        await bot.send(event=event, message=msg)
+        await new_year_fight.finish()
+
+    msg_list, boss_info = await get_new_year_battle_info(user_id)
+    new_damage = boss_info['总血量'] - boss_info['气血']
+    user_new_year_info['fight_num'] += 1
+    user_new_year_info['fight_damage'] = max(user_new_year_info['fight_damage'], new_damage)
+    text = msg_handler(msg_list)
+    msg = f"{user_name}道友全力施为，对年兽造成{number_to(new_damage)}伤害！！"
+    msg = main_md(
+        msg, text,
+        '主菜单', '新春菜单',
+        '猜谜活动', '猜谜活动菜单',
+        '查看排行', '年兽伤害排行',
+        '再次驱逐', '驱逐年兽')
+    await bot.send(event=event, message=msg)
+    await new_year_fight.finish()
 
 
 @new_year_fight_menu.handle(parameterless=[Cooldown(cd_time=5, at_sender=False)])

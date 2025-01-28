@@ -1185,8 +1185,8 @@ async def boss_fight(player1: dict, boss: dict, type_in=2):
     if is_sql:
         await sql_message.update_user_hp_mp(
             player1['user_id'],
-            max(1, int(player1['气血'] / player1['hp_buff'])),
-            int(player1['真元'] / player1['mp_buff']))
+            max(1, int(min(player1['max_hp'], player1['气血']) / player1['hp_buff'])),
+            int(min(player1['max_mp'], player1['真元']) / player1['mp_buff']))
     return play_list, suc, boss, get_stone
 
 
