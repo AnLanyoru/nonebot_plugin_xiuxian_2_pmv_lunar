@@ -1277,7 +1277,7 @@ class XiuxianDateManage:
                 await db.execute(sql, user_id, goods_id, goods_name, goods_type, goods_num,
                                  now_time, now_time, bind_num)
 
-    async def send_item(self, user_id: int, send_items: dict, is_bind: bool = False):
+    async def send_item(self, user_id: int, send_items: dict[int, int], is_bind: bool = False):
         now_time = datetime.now()
         now_time = str(now_time)
         user_back_items = await self.get_back_msg_all(user_id)

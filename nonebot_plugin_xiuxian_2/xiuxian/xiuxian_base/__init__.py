@@ -2,7 +2,7 @@ import random
 import re
 from datetime import datetime
 
-from nonebot import require, on_command, on_fullmatch
+from nonebot import on_command, on_fullmatch
 from nonebot.adapters.onebot.v11 import (
     Bot,
     GROUP,
@@ -10,7 +10,6 @@ from nonebot.adapters.onebot.v11 import (
     GroupMessageEvent,
     MessageSegment
 )
-from nonebot.log import logger
 from nonebot.params import CommandArg
 from nonebot.permission import SUPERUSER
 from nonebot.typing import T_State
@@ -327,7 +326,7 @@ async def level_up_(bot: Bot, event: GroupMessageEvent):
     user_msg = await sql_message.get_user_info_with_id(user_id)  # 用户信息
     user_level_up_rate = int(user_msg['level_up_rate'])  # 用户失败次数加成
     level_name = user_msg['level']  # 用户境界
-    level_rate = break_rate[level_name]  # 对应境界突破的概率
+    level_rate = break_rate.get(level_name, 1)  # 对应境界突破的概率
     user_backs = await sql_message.get_item_by_good_id_and_user_id(user_id, 1999)  # list(back)
     pause_flag = False
     elixir_name = None
@@ -365,7 +364,7 @@ async def level_up_zj_(bot: Bot, event: GroupMessageEvent):
     user_info = await sql_message.get_user_info_with_id(user_id)  # 用户信息
     level_name = user_info['level']  # 用户境界
     exp = user_info['exp']  # 用户修为
-    level_rate = break_rate[level_name]  # 对应境界突破的概率
+    level_rate = break_rate.get(level_name, 1)  # 对应境界突破的概率
     leveluprate = int(user_info['level_up_rate'])  # 用户失败次数加成
     main_rate_buff = await UserBuffDate(user_id).get_user_main_buff_data()  # 功法突破概率提升，别忘了还有渡厄突破
     main_exp_buff = await UserBuffDate(user_id).get_user_main_buff_data()  # 功法突破扣修为减少
@@ -422,7 +421,7 @@ async def level_up_zj_all_(bot: Bot, event: GroupMessageEvent):
     user_info = await sql_message.get_user_info_with_id(user_id)  # 用户信息
     level_name = user_info['level']  # 用户境界
     exp = user_info['exp']  # 用户修为
-    level_rate = break_rate[level_name]  # 对应境界突破的概率
+    level_rate = break_rate.get(level_name, 1)  # 对应境界突破的概率
     leveluprate = int(user_info['level_up_rate'])  # 用户失败次数加成
     main_rate_buff = await UserBuffDate(user_id).get_user_main_buff_data()  # 功法突破概率提升，别忘了还有渡厄突破
     number = main_rate_buff['number'] if main_rate_buff is not None else 0
@@ -435,7 +434,7 @@ async def level_up_zj_all_(bot: Bot, event: GroupMessageEvent):
         user_info = await sql_message.get_user_info_with_id(user_id)  # 用户信息
         level_name = user_info['level']  # 用户境界
         exp = user_info['exp']  # 用户修为
-        level_rate = break_rate[level_name]  # 对应境界突破的概率
+        level_rate = break_rate.get(level_name, 1)  # 对应境界突破的概率
         leveluprate = int(user_info['level_up_rate'])  # 用户失败次数加成
         main_rate_buff = await UserBuffDate(user_id).get_user_main_buff_data()  # 功法突破概率提升，别忘了还有渡厄突破
         main_exp_buff = await UserBuffDate(user_id).get_user_main_buff_data()  # 功法突破扣修为减少
@@ -493,7 +492,7 @@ async def level_up_dr_(bot: Bot, event: GroupMessageEvent):
     elixir_name = "渡厄丹"
     level_name = user_info['level']  # 用户境界
     exp = user_info['exp']  # 用户修为
-    level_rate = break_rate[level_name]  # 对应境界突破的概率
+    level_rate = break_rate.get(level_name, 1)  # 对应境界突破的概率
     user_level_up_rate = int(user_info['level_up_rate'])  # 用户失败次数加成
     main_rate_buff = await UserBuffDate(user_id).get_user_main_buff_data()  # 功法突破概率提升
     number = main_rate_buff['number'] if main_rate_buff is not None else 0
@@ -562,7 +561,7 @@ async def user_leveluprate_(bot: Bot, event: GroupMessageEvent):
     user_id = user_info['user_id']
     leveluprate = int(user_info['level_up_rate'])  # 用户失败次数加成
     level_name = user_info['level']  # 用户境界
-    level_rate = break_rate[level_name]  # 
+    level_rate = break_rate.get(level_name, 1)  #
     main_rate_buff = await UserBuffDate(user_id).get_user_main_buff_data()  # 功法突破概率提升
     number = main_rate_buff['number'] if main_rate_buff is not None else 0
     msg = f"道友下一次突破成功概率为{level_rate + leveluprate + number}%"
@@ -882,33 +881,23 @@ async def cz_ts_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg(
         goods_num = int(nums[0])
     else:
         goods_num = 1
-    goods_id = -1
-    goods_type = None
-    is_item = False
-    for k, v in items.items.items():
-        if goods_name == v['name']:
-            goods_id = k
-            goods_type = v['type']
-            is_item = True
-            break
-        else:
-            continue
-    if is_item:
-        pass
-    else:
+    item_id: int = items.items_map.get(goods_name)
+    if not item_id:
         msg = f"物品不存在！！！"
         await bot.send(event=event, message=msg)
         await cz_ts.finish()
+    item_info: dict = items.get_data_by_item_id(item_id)
+    goods_type = item_info['type']
     give_qq = await sql_message.get_user_id(send_name)  # 使用道号获取用户id，代替原at
     if give_qq:
         give_user = await sql_message.get_user_info_with_id(give_qq)
         if give_user:
-            await sql_message.send_back(give_qq, int(goods_id), goods_name, goods_type, goods_num, 0)
+            await sql_message.send_back(give_qq, int(item_id), goods_name, goods_type, goods_num, 0)
             msg = f"{give_user['user_name']}道友获得了系统赠送的{goods_num}个{goods_name}！"
         else:
             msg = f"对方未踏入修仙界，不可赠送！"
     elif send_name == "all":
-        await sql_message.send_all_user_item(int(goods_id), goods_num, 0)  # 给每个用户发送物品
+        await sql_message.send_all_user_item(int(item_id), goods_num, 0)  # 给每个用户发送物品
         msg = f"赠送所有用户{goods_name}{goods_num}个,请注意查收！"
     else:
         msg = "请输入正确指令！例如：创造 物品 道号 数量 (道号为all赠送所有用户)"

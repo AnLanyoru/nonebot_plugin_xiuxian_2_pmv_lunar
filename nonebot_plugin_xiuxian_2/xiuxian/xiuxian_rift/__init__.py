@@ -69,22 +69,24 @@ async def read_rift_():
 @set_rift.scheduled_job("cron", hour=8, minute=0)
 async def set_rift_(place_cls=place):
     global world_rift
-    if place_cls.get_worlds():
-        world_rift = {}
-        for world_id in place_cls.get_worlds():
-            if world_id == len(place_cls.get_worlds()) - 1:
-                continue
-            rift = Rift()
-            rift.name = get_rift_type()
-            place_all_id = [place_id for place_id in place_cls.get_world_place_list(world_id)]
-            place_id = random.choice(place_all_id)
-            rift.place = place_id
-            rift.rank = max(config['rift'][rift.name]['rank'], 1 + int(world_id))
-            rift.count = config['rift'][rift.name]['count']
-            rift.time = config['rift'][rift.name]['time']
-            world_rift[world_id] = rift
-        old_rift_info.save_rift(world_rift)
-        logger.opt(colors=True).info(f"<green>rift数据已保存</green>")
+    normal_refresh = 0
+    if normal_refresh:
+        if place_cls.get_worlds():
+            world_rift = {}
+            for world_id in place_cls.get_worlds():
+                if world_id == len(place_cls.get_worlds()) - 1:
+                    continue
+                rift = Rift()
+                rift.name = get_rift_type()
+                place_all_id = [place_id for place_id in place_cls.get_world_place_list(world_id)]
+                place_id = random.choice(place_all_id)
+                rift.place = place_id
+                rift.rank = max(config['rift'][rift.name]['rank'], 1 + int(world_id))
+                rift.count = config['rift'][rift.name]['count']
+                rift.time = config['rift'][rift.name]['time']
+                world_rift[world_id] = rift
+            old_rift_info.save_rift(world_rift)
+            logger.opt(colors=True).info(f"<green>rift数据已保存</green>")
 
 
 @create_rift_with_args.handle(parameterless=[Cooldown(at_sender=False)])

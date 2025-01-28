@@ -42,7 +42,7 @@ class OtherSet(XiuConfig):
         # 境界限制
         limit_level = {
             "合道境后期": 1,
-            "羽化境后期": 2,
+            "登仙境后期": 2,
             "仙帝境后期": 3
         }
         if user_level in limit_level.keys():

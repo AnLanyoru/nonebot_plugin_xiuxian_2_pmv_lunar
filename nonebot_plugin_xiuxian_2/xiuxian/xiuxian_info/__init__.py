@@ -140,7 +140,7 @@ async def xiuxian_message_(bot: Bot, event: GroupMessageEvent, args: Message = C
         "灵石": f"{number_to(user_info['stone'])}",
         "战力": f"{number_to(int(user_info['exp'] * level_rate * realm_rate))}",
         "灵根": f"{user_info['root']}({user_info['root_type']}+{int(level_rate * 100)}%)",
-        "突破状态": f"{exp_meg}概率：{break_rate[user_info['level']] + leveluprate + number}%",
+        "突破状态": f"{exp_meg}概率：{break_rate.get(user_info['level'], 1) + leveluprate + number}%",
         "攻击力": f"{number_to(user_info['atk'])}，攻修等级{user_info['atkpractice']}级",
         "所在宗门": sectmsg,
         "宗门职位": sectzw,
@@ -167,7 +167,7 @@ async def xiuxian_message_(bot: Bot, event: GroupMessageEvent, args: Message = C
                f"战力: {number_to(int(user_info['exp'] * level_rate * realm_rate))}\r"
                f"灵根: {user_info['root']}\r"
                f"({user_info['root_type']}+{int(level_rate * 100)}%)\r"
-               f"突破状态: {exp_meg} (概率：{break_rate[user_info['level']] + leveluprate + number}%)\r"
+               f"突破状态: {exp_meg} (概率：{break_rate.get(user_info['level'], 1) + leveluprate + number}%)\r"
                f"攻击力: {number_to(user_info['atk'])} (攻修等级{user_info['atkpractice']}级)\r"
                f"所在宗门: {sectmsg} (职位: {sectzw})\r"
                f"主修功法: {main_buff_name}\r"

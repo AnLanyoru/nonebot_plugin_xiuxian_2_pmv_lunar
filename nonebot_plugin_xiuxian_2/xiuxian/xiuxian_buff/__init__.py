@@ -642,7 +642,7 @@ async def mind_state_(bot: Bot, event: GroupMessageEvent):
                     f"({((user_info['fight_mp'] / user_info['exp']) * 100):.2f}%)\r"
                     f"攻击:{number_to(user_info['atk'])}\r"
                     f"突破状态: {exp_meg}\r"
-                    f"(概率：{break_rate[user_info['level']] + leveluprate + number}%)\r"
+                    f"(概率：{break_rate.get(user_info['level'], 1) + leveluprate + number}%)\r"
                     f"攻击修炼:{user_info['atkpractice']}级\r"
                     f"(提升攻击力{user_info['atkpractice'] * 4}%)\r"
                     f"修炼效率:{int(((level_rate * realm_rate) * (1 + main_buff_rate_buff)) * 100)}%\r"
@@ -863,7 +863,8 @@ async def daily_work_(bot: Bot, event: GroupMessageEvent):
             f"宗门丹药领取 {user_info['sect_elixir_get']}/1\r"
             f"宗门任务完成 {user_info['sect_task']}/4\r"
             f"灵田当前状态 {farm}\r"
-            f"本周位面挑战{tower_msg}")
+            f"本周位面挑战{tower_msg}\r"
+            f"新春活动进行中：发送 新春 参与！！")
     msg = main_md(msg, text,
                   "双修", "双修",
                   "悬赏令", "悬赏令",
