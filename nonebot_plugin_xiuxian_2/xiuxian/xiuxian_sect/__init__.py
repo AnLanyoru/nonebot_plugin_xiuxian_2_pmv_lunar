@@ -248,7 +248,7 @@ async def sect_elixir_get_(bot: Bot, event: GroupMessageEvent):
                 for k, v in give_dict.items():
                     goods_info = items.get_data_by_item_id(k)
                     msg += f"道友成功领取到丹药：{goods_info['name']} {v} 枚!\r"
-                await sql_message.send_item(user_id, give_dict)
+                await sql_message.send_item(user_id, give_dict, 1)
                 await sql_message.update_user_sect_elixir_get_num(user_info['user_id'])
                 await bot.send(event=event, message=msg)
                 await sect_elixir_get.finish()
