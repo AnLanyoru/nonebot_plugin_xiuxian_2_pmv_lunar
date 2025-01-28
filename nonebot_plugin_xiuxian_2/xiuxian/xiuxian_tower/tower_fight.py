@@ -17,7 +17,7 @@ async def get_tower_battle_info(user_info, tower_floor_info: dict, bot_id):
         "总血量": int(tower_floor_info["hp"]),
         "攻击": int(tower_floor_info["atk"]),
         "真元": int(tower_floor_info["mp"]),
-        "jj": f"{convert_rank()[1][65][:3]}",
+        "jj": f"{convert_rank()[1][72][:3]}",
         'stone': 1,
         'defence': (1 - int(tower_floor_info['defence']) / 100)
     }
