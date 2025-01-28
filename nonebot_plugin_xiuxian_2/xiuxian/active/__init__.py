@@ -10,6 +10,7 @@ from nonebot.adapters.onebot.v11 import (
     GroupMessageEvent
 )
 from nonebot.params import CommandArg
+from nonebot.permission import SUPERUSER
 
 from .. import DRIVER
 from ..xiuxian_database.database_connect import database
@@ -76,7 +77,7 @@ async def send_work(user_id):
 
 async def send_money(user_id):
     """金元宝 3-10个"""
-    num = get_num_new_year()
+    num = random.choice([3, 3, 3, 3, 3, 3, 6, 6, 8, 10])
     item_id = 990001
     item_info = items.get_data_by_item_id(item_id)
     item_name = item_info['name']
@@ -98,6 +99,35 @@ gift_list = {'思恋结晶': send_impart_stone,
              '悬赏衙令': send_work,
              '金元宝': send_money,
              '饺子': send_jiao_zi}
+
+daily_gift_list = {1: {'msg':
+                           '年夜饭一桌，年年有余！\r福包 1个\r',
+                       'items':
+                           {610005: 1, 700001: 1}},
+                   2: {'msg':
+                           '金元宝十个，金银满堂！\r福包 1个\r',
+                       'items':
+                           {990001: 10, 700001: 1}},
+                   3: {'msg':
+                           '汤圆十个，团团圆圆！\r福包 1个\r',
+                       'items':
+                           {25011: 10, 700001: 1}},
+                   4: {'msg':
+                           '饺子十个，平安如意！\r福包 2个\r',
+                       'items':
+                           {25012: 10, 700001: 2}},
+                   5: {'msg':
+                           '复元水五瓶，精力充沛！\r福包 2个\r',
+                       'items':
+                           {610004: 5, 700001: 2}},
+                   6: {'msg':
+                           '悬赏衙令五个，诸事无阻！\r福包 2个\r',
+                       'items':
+                           {640001: 5, 700001: 2}},
+                   7: {'msg':
+                           '福包五个，五福临门！！\r',
+                       'items':
+                           {700001: 5}}}
 
 
 # 创建一个临时活动数据库
@@ -153,6 +183,60 @@ new_year_guess_get = on_command("获取谜题", priority=9, permission=GROUP, bl
 new_year_guess_answer = on_command("答题", priority=9, permission=GROUP, block=True)
 new_year_gift_get = on_command("拆福袋", priority=9, permission=GROUP, block=True)
 new_year_daily_gift_get = on_command("新春祈愿", priority=8, permission=GROUP, block=True)
+new_year_fight = on_command("年兽菜单", priority=9, permission=GROUP, block=True)
+
+time_set_new_year = on_command('逆转新春', priority=15, permission=SUPERUSER, block=True)
+
+
+@time_set_new_year.handle(parameterless=[Cooldown(cd_time=5, at_sender=False)])
+async def time_set_new_year_(bot: Bot, event: GroupMessageEvent):
+    """春节活动重载！！"""
+
+    _, user_info, _ = await check_user(event)
+    await database.sql_execute("update new_year_temp set daily_sign=0, fight_num=0, today_answered=0")
+    msg = f"又是一年好新春！！"
+    await bot.send(event=event, message=msg)
+    await time_set_new_year.finish()
+
+
+@new_year_daily_gift_get.handle(parameterless=[Cooldown(cd_time=5, at_sender=False)])
+async def new_year_daily_gift_get_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
+    """新春签到"""
+
+    _, user_info, _ = await check_user(event)
+    user_id = user_info['user_id']
+    user_name = user_info['user_name']
+    user_new_year_info = await get_user_new_year_info(user_id)
+    is_sign = user_new_year_info['daily_sign']
+    if is_sign:
+        msg = f"道友今天已经签到过啦，快去参与其他新春活动吧！！\r"
+        msg = three_md(msg, "查看福包奖励", "查二零二五新春福包", "\r - 查看所有福包内含奖励！！\r",
+                       "主菜单", "新春菜单", "\r - 查看全部新春活动！！\r",
+                       "拆福袋", "拆福袋", "\r - 打开福袋获取丰厚奖励！！")
+        await bot.send(event=event, message=msg)
+        await new_year_daily_gift_get.finish()
+
+    all_sign_num = user_new_year_info['all_sign_num']
+    if all_sign_num > 6:
+        msg = f"道友已经完成全部签到啦，新春快乐！！新的一年里顺顺利利，开开心心！！\r"
+        msg = three_md(msg, "查看福包奖励", "查二零二五新春福包", "\r - 查看所有福包内含奖励！！\r",
+                       "主菜单", "新春菜单", "\r - 查看全部新春活动！！\r",
+                       "拆福袋", "拆福袋", "\r - 打开福袋获取丰厚奖励！！")
+        await bot.send(event=event, message=msg)
+        await new_year_daily_gift_get.finish()
+    user_new_year_info['all_sign_num'] += 1
+    user_new_year_info['daily_sign'] = 1
+    gift_today = daily_gift_list[user_new_year_info['all_sign_num']]
+    item_send = gift_today['items']
+    item_msg = gift_today['msg']
+    await sql_message.send_item(user_id, item_send, 1)
+    await update_user_new_year_info(user_id, user_new_year_info)
+    msg = f"{user_name}道友新年快乐！！\r今天是道友第{all_sign_num + 1}次新春祈愿\r获取了以下奖励：\r" + item_msg
+    msg = three_md(msg, "查看驱逐年兽排行", "年兽伤害排行", "\r - 查看为驱逐年兽做出巨大贡献的玩家！！\r",
+                   "主菜单", "新春菜单", "\r - 查看全部新春活动！！\r",
+                   f"去拆福袋", "拆福袋", "\r - 打开福袋获取丰厚奖励！！")
+    await bot.send(event=event, message=msg)
+    await new_year_daily_gift_get.finish()
 
 
 @new_year_gift_get.handle(parameterless=[Cooldown(cd_time=5, at_sender=False)])
@@ -227,7 +311,7 @@ async def new_year_guess_answer_(bot: Bot, event: GroupMessageEvent, args: Messa
     await update_user_new_year_info(user_id, user_new_year_info)
     await sql_message.send_item(user_id, {700001: 1}, is_bind=1)
     msg = (f"恭喜{user_name}道友成功答对谜题！！\r"
-           f"获得了：福袋 - 1个\r"
+           f"获得了：福袋 1个\r"
            f" - 快去拆福袋看看里面有什么好东西吧！！\r")
     msg = three_md(msg, "继续答题", "获取题目", "\r - 答题成功将获得福袋奖励！！\r",
                    "主菜单", "新春菜单", "\r - 查看全部新春活动！！\r",
