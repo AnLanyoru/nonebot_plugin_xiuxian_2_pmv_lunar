@@ -183,9 +183,34 @@ new_year_guess_get = on_command("获取谜题", priority=9, permission=GROUP, bl
 new_year_guess_answer = on_command("答题", priority=9, permission=GROUP, block=True)
 new_year_gift_get = on_command("拆福袋", priority=9, permission=GROUP, block=True)
 new_year_daily_gift_get = on_command("新春祈愿", priority=8, permission=GROUP, block=True)
-new_year_fight = on_command("年兽菜单", priority=9, permission=GROUP, block=True)
+new_year_fight_menu = on_command("年兽菜单", priority=9, permission=GROUP, block=True)
+new_year_fight = on_command("驱逐年兽", priority=9, permission=GROUP, block=True)
 
 time_set_new_year = on_command('逆转新春', priority=15, permission=SUPERUSER, block=True)
+
+
+@new_year_fight_menu.handle(parameterless=[Cooldown(cd_time=5, at_sender=False)])
+async def new_year_fight_menu_(bot: Bot, event: GroupMessageEvent):
+    """年兽活动菜单！！"""
+
+    _, user_info, _ = await check_user(event)
+
+    user_name = user_info['user_name']
+    msg = (f"祝{user_name}道友新春快乐！！\r"
+           f"驱逐年兽活动规则：\r"
+           f"每位道友每日可以挑战三次年兽，记录伤害最高的一次战斗\r"
+           f"将于挑战活动结束后为各位道友发放与伤害排名对应的福袋奖励\r"
+           f"奖励内容如下：\r"
+           f"前50位：福袋5，前100位：福袋3\r"
+           f"无论伤害如何，凡造成伤害者均发放参与奖：福袋*2！\r"
+           f"高贡献额外奖励：\r"
+           f"1位：福袋50，2位：福袋30，3位：福袋20，4-10位：福袋10\r")
+    msg = three_md(msg, "开始驱逐年兽", "驱逐年兽", "\r - 共同击退年兽获取福袋奖励！！\r",
+                   "驱逐年兽排行", "年兽伤害排行", "\r - 查看为驱逐年兽做出巨大贡献的玩家！！\r",
+                   "主菜单", "新春菜单", "\r - 查看所有活动！！\r"
+                                         "新春活动于大年初一开放，初七过后结束，祈愿签到活动额外持续七日！")
+    await bot.send(event=event, message=msg)
+    await new_year_fight_menu.finish()
 
 
 @time_set_new_year.handle(parameterless=[Cooldown(cd_time=5, at_sender=False)])
@@ -387,7 +412,7 @@ async def new_year_active_menu_(bot: Bot, event: GroupMessageEvent):
     msg = (f"祝{user_name}道友新春快乐！！\r"
            f"进行中的新春活动：\r")
     msg = three_md(msg, "新春猜谜", "猜谜活动菜单", "\r - 参加答题获得福袋奖励！！\r",
-                   "驱逐年兽", "年兽菜单", "\r - 共同击退年兽获取丰厚奖励！！\r",
+                   "驱逐年兽", "年兽菜单", "\r - 共同击退年兽获取福袋奖励！！\r",
                    "新春祈愿", "新春祈愿", "\r - 每日签到获得丰厚奖励！！\r"
                                            "新春活动于大年初一开放，初七过后结束，祈愿签到活动额外持续七日！")
     await bot.send(event=event, message=msg)
