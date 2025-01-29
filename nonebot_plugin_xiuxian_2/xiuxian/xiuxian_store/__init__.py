@@ -9,6 +9,7 @@ from nonebot.adapters.onebot.v11 import (
     GroupMessageEvent
 )
 from nonebot.params import CommandArg, RawCommand
+from nonebot.permission import SUPERUSER
 
 from .store_database import user_store
 from .. import XiuConfig
@@ -35,7 +36,7 @@ user_funds_extract = on_command("灵宝楼取灵石", aliases={"个人摊位取�
                                 permission=GROUP, block=True)
 remove_want_item = on_command("取消灵宝楼求购", aliases={"取消求购"}, priority=2, permission=GROUP, block=True)
 fast_sell_items = on_command("灵宝楼快速出售", aliases={"个人摊位快速出售"}, priority=2, permission=GROUP, block=True)
-bind_break = on_command("物品解绑", priority=2, permission=GROUP, block=True)
+bind_break = on_command("物品解绑", priority=2, permission=SUPERUSER, block=True)
 
 
 @bind_break.handle(

@@ -219,6 +219,7 @@ async def get_treasure_info(user_info, rift_rank):
         give_main_info = get_main_info(user_info['level'], rift_rank)
         if give_main_info[0]:  # 获得了
             main_buff_id = give_main_info[1]
+            print(main_buff_id)
             main_buff = items.get_data_by_item_id(main_buff_id)
             temp_msg = f"{main_buff['level']}功法：{main_buff['name']}"
             msg = random.choice(TREASUREMSG_2).format(temp_msg)
