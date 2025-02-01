@@ -11,7 +11,7 @@ from nonebot.adapters.onebot.v11 import (
 )
 from nonebot.params import RegexGroup
 
-from .work_database import PLAYERSDATA
+from .work_database import PLAYERSDATA, save_work_info
 from .work_handle import work_handle, change_data_to_msg
 from .workmake import WorkMsg
 from ..database_utils.move_database import read_move_data
