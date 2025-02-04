@@ -289,7 +289,7 @@ class AlchemyFurnace:
         herb_fire_change *= herb_power_keep_present
         add_herb_power *= herb_power_keep_present
         self.__herb_power[herb_type] += add_herb_power
-        self.__fire_value = max(self.__fire_value + base_fire_change + herb_fire_change, 0)
+        self.__fire_value += base_fire_change + herb_fire_change
         result = (f"加入{herb_info['药名']}{herb_num}珠作为主药"
                   f"\r保留{herb_power_keep}%药性({herb_type}:{add_herb_power})")
         if herb_fire_change:
@@ -299,7 +299,7 @@ class AlchemyFurnace:
             else:
                 temp_type = '性寒'
                 temp_change_type = '降低'
-            result += f"炉温因药材{temp_type}, {temp_change_type}了{herb_fire_change}"
+            result += f"炉温因药材{temp_type}, {temp_change_type}了{abs(herb_fire_change)}"
         return result
 
     def __input_herb_as_ingredient(self, user_fire_control, user_herb_knowledge, herb_id, herb_num) -> str:
@@ -316,7 +316,7 @@ class AlchemyFurnace:
 
         herb_fire_change = herb_fire_change * herb_power_keep / 100
 
-        self.__fire_value = max(self.__fire_value + base_fire_change + herb_fire_change, 0)
+        self.__fire_value += base_fire_change + herb_fire_change
         if herb_fire_change > 0:
             temp_type = '性热'
             temp_change_type = '升高'
@@ -392,6 +392,8 @@ class AlchemyFurnace:
                     user_herb_knowledge,
                     herb_id=main_herb[0],
                     herb_num=main_herb[1])
+
+        self.__fire_value = max(self.__fire_value, 0)
 
         fire_change = self.__fire_value - start_fire
         msg += f"\r炉温{'升高' if fire_change > 0 else '降低'}了 {abs(fire_change)}!"
