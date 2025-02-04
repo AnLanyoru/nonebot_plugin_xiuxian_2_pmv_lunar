@@ -1,14 +1,9 @@
-import asyncio
-
 from nonebot import on_command, on_fullmatch
 from nonebot.adapters.onebot.v11 import (
     Bot,
     GROUP,
     Message,
     GroupMessageEvent,
-    GROUP_ADMIN,
-    GROUP_OWNER,
-    ActionFailed
 )
 from nonebot.params import CommandArg, RawCommand
 from nonebot.permission import SUPERUSER
@@ -21,7 +16,6 @@ from .back_util import (
 from ..xiuxian_config import XiuConfig, convert_rank
 from ..xiuxian_limit import limit_handle
 from ..xiuxian_mixelixir.mixelixirutil import mix_user_temp, AlchemyFurnace
-from ..xiuxian_place import place
 from ..xiuxian_utils.clean_utils import (
     get_args_num, get_num_from_str,
     get_strs_from_str, get_paged_msg, main_md,
@@ -29,8 +23,8 @@ from ..xiuxian_utils.clean_utils import (
 from ..xiuxian_utils.item_json import items
 from ..xiuxian_utils.lay_out import Cooldown, CooldownIsolateLevel
 from ..xiuxian_utils.utils import (
-    check_user, send_msg_handler,
-    number_to, get_id_from_str, check_user_type
+    check_user, number_to,
+    get_id_from_str, check_user_type
 )
 from ..xiuxian_utils.xiuxian2_handle import (
     sql_message, get_weapon_info_msg, get_armor_info_msg,
@@ -48,22 +42,11 @@ auction_offer_all_count = 0  # 控制线程等待时间
 
 goods_re_root = on_command("炼金", priority=6, permission=GROUP, block=True)
 goods_re_root_fast = on_command("快速炼金", aliases={"批量炼金"}, priority=6, permission=GROUP, block=True)
-shop = on_command("坊市查看", aliases={"查看坊市"}, priority=8, permission=GROUP, block=True)
-auction_view = on_command("拍卖品查看", aliases={"查看拍卖品"}, priority=8, permission=GROUP, block=True)
-shop_added_by_admin = on_command("系统坊市上架", priority=5, permission=SUPERUSER, block=True)
-shop_off_all = on_fullmatch("清空坊市", priority=3, permission=SUPERUSER, block=True)
 main_back = on_command('我的背包', aliases={'我的物品', '背包'}, priority=2, permission=GROUP, block=True)
 skill_back = on_command('功法背包', priority=2, permission=GROUP, block=True)
 check_back = on_command('别人的背包', aliases={'检查背包'}, priority=2, permission=SUPERUSER, block=True)
 use = on_command("使用", priority=15, permission=GROUP, block=True)
 no_use_zb = on_command("换装", aliases={"卸载"}, priority=5, permission=GROUP, block=True)
-buy = on_command("坊市购买", priority=5, block=True)
-auction_added = on_command("提交拍卖品", aliases={"拍卖品提交"}, priority=3, permission=GROUP, block=True)
-auction_withdraw = on_command("撤回拍卖品", aliases={"拍卖品撤回"}, priority=3, permission=GROUP, block=True)
-set_auction = on_command("群拍卖会", priority=4, permission=GROUP and (SUPERUSER | GROUP_ADMIN | GROUP_OWNER),
-                         block=True)
-creat_auction = on_fullmatch("举行拍卖会", priority=5, permission=GROUP and SUPERUSER, block=True)
-offer_auction = on_command("拍卖", priority=5, permission=GROUP, block=True)
 back_help = on_command("背包帮助", aliases={"坊市帮助"}, priority=8, permission=GROUP, block=True)
 xiuxian_stone = on_fullmatch("灵石", priority=4, permission=GROUP, block=True)
 master_rename = on_command("超管改名", priority=2, permission=SUPERUSER, block=True)
@@ -156,210 +139,6 @@ async def xiuxian_stone_(bot: Bot, event: GroupMessageEvent):
     msg = f"当前灵石：{number_to(user_info['stone'])} | {user_info['stone']}"
     await bot.send(event=event, message=msg)
     await xiuxian_stone.finish()
-
-
-buy_lock = asyncio.Lock()
-
-
-@buy.handle(parameterless=[Cooldown(1.4, at_sender=False, isolate_level=CooldownIsolateLevel.GROUP)])
-async def buy_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
-    """购物"""
-    async with buy_lock:
-        isUser, user_info, msg = await check_user(event)
-        user_id = user_info['user_id']
-        user_name = user_info['user_name']
-        place_id = str(await place.get_now_place_id(user_id))
-        shop_data = get_shop_data(place_id)
-
-        if shop_data[place_id] == {}:
-            msg = "此地的坊市目前空空如也！"
-            await bot.send(event=event, message=msg)
-            await buy.finish()
-        input_args = args.extract_plain_text().strip().split()
-        if len(input_args) < 1:
-            # 没有输入任何参数
-            msg = "请输入正确指令！例如：坊市购买 物品编号 数量"
-            await bot.send(event=event, message=msg)
-            await buy.finish()
-        else:
-            try:
-                arg = int(input_args[0])
-                if len(input_args) == 0:
-                    "请输入正确指令！例如：坊市购买 物品编号 数量"
-
-                goods_info = shop_data[place_id].get(str(arg))
-                if not goods_info:
-                    raise ValueError("编号对应的商品不存在！")
-
-                purchase_quantity = int(input_args[1]) if len(input_args) > 1 else 1
-                if purchase_quantity <= 0:
-                    raise ValueError("购买数量必须是正数！")
-
-                if 'stock' in goods_info and purchase_quantity > goods_info['stock']:
-                    raise ValueError("购买数量超过库存限制！")
-            except ValueError:
-                msg = f"请输入正确的物品编号而不是物品名称！！！"
-                await bot.send(event=event, message=msg)
-                await buy.finish()
-        shop_user_id = shop_data[place_id][str(arg)]['user_id']
-        goods_price = goods_info['price'] * purchase_quantity
-        goods_stock = goods_info.get('stock', 1)
-        if user_info['stone'] < goods_price:
-            msg = '没钱还敢来买东西！！'
-            await bot.send(event=event, message=msg)
-            await buy.finish()
-        elif int(user_id) == int(shop_data[place_id][str(arg)]['user_id']):
-            msg = "道友自己的东西就不要自己购买啦！"
-            await bot.send(event=event, message=msg)
-            await buy.finish()
-        elif purchase_quantity > goods_stock and shop_user_id != 0:
-            msg = "库存不足，无法购买所需数量！"
-            await bot.send(event=event, message=msg)
-        else:
-            shop_goods_name = shop_data[place_id][str(arg)]['goods_name']
-            shop_user_name = shop_data[place_id][str(arg)]['user_name']
-            shop_goods_id = shop_data[place_id][str(arg)]['goods_id']
-            shop_goods_type = shop_data[place_id][str(arg)]['goods_type']
-            await sql_message.update_ls(user_id, goods_price, 2)
-            await sql_message.send_back(user_id, int(shop_goods_id), shop_goods_name, shop_goods_type,
-                                        purchase_quantity)
-            save_shop(shop_data)
-
-            if shop_user_id == 0:  # 0为系统
-                msg = f"{user_name}道友成功购买{purchase_quantity}个{shop_goods_name}，消耗灵石{goods_price}枚！"
-            else:
-                goods_info['stock'] -= purchase_quantity
-                if goods_info['stock'] <= 0:
-                    del shop_data[place_id][str(arg)]  # 库存为0，移除物品
-                else:
-                    shop_data[place_id][str(arg)] = goods_info
-                service_charge = int(goods_price * 0.1)  # 手续费10%
-                give_stone = goods_price - service_charge
-                msg = f"{user_name}道友成功购买{purchase_quantity}个{shop_user_name}道友寄售的{shop_goods_name}，消耗灵石{goods_price}枚,坊市收取手续费：{service_charge}枚灵石！"
-                await sql_message.update_ls(shop_user_id, give_stone, 1)
-            shop_data[place_id] = reset_dict_num(shop_data[place_id])
-            save_shop(shop_data)
-            await limit_handle.update_user_shop_log_data(user_id, msg)
-            await limit_handle.update_user_shop_log_data(shop_user_id, msg)
-            await bot.send(event=event, message=msg)
-            await buy.finish()
-
-
-@shop.handle(parameterless=[Cooldown(at_sender=False)])
-async def shop_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
-    """坊市查看"""
-    _, user_info, _ = await check_user(event)
-    user_id = user_info["user_id"]
-    place_id = str(await place.get_now_place_id(user_id))
-    shop_data = get_shop_data(place_id)
-    data_list = []
-    if shop_data[place_id] == {}:
-        msg = "此地的坊市目前空空如也！"
-        await bot.send(event=event, message=msg)
-        await shop.finish()
-    page = get_num_from_str(args.extract_plain_text())
-    arg = get_strs_from_str(args.extract_plain_text())
-    desc_on = True if "详情" in arg else False
-    for k, v in shop_data[place_id].items():
-        msg = f"编号：{k}\r"
-        if desc_on:
-            msg += f"{v['desc']}"
-        else:
-            msg += f"{v['goods_name']}"
-        msg += f"\r价格：{number_to(v['price'])}|{v['price']}枚灵石\r"
-        if v['user_id'] != 0:
-            msg += f"拥有人：{v['user_name']}道友\r"
-            msg += f"数量：{v['stock']}\r"
-        else:
-            msg += f"百宝楼寄售\r"
-        data_list.append(msg)
-    items_all = len(data_list)
-    page_all = ((items_all // 12) + 1) if (items_all % 12 != 0) else (items_all // 12)  # 总页数
-    if page:
-        page = page[0]
-        pass
-    else:
-        page = 1
-    page = int(page)
-    if page_all < page:
-        msg = "此地坊市没有那么多东西！！！"
-        await bot.send(event=event, message=msg)
-        await shop.finish()
-    items_start = page * 12 - 12
-    items_end = items_start + 12
-    data_list = data_list[items_start:items_end]
-    page_info = f"第{page}/{page_all}页\r———tips———\r可以发送 查看坊市 页数 来查看更多商品哦"
-    data_list.append(page_info)
-    await send_msg_handler(bot, event, '坊市', bot.self_id, data_list)
-    await shop.finish()
-
-
-@shop_added_by_admin.handle(
-    parameterless=[Cooldown(1.4, at_sender=False, isolate_level=CooldownIsolateLevel.GROUP, parallel=1)])
-async def shop_added_by_admin_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
-    """系统上架坊市"""
-    args = args.extract_plain_text().split()
-    if not args:
-        msg = "请输入正确指令！例如：系统坊市上架 物品 金额"
-        await bot.send(event=event, message=msg)
-        await shop_added_by_admin.finish()
-    goods_name = args[0]
-    goods_id = -1
-    for k, v in items.items.items():
-        if goods_name == v['name']:
-            goods_id = k
-            break
-        else:
-            continue
-    if goods_id == -1:
-        msg = f"不存在该物品的信息，请检查名字是否输入正确！"
-        await bot.send(event=event, message=msg)
-        await shop_added_by_admin.finish()
-    price = None
-    try:
-        price = args[1]
-    except LookupError:
-        msg = "请输入正确指令！例如：系统坊市上架 物品 金额"
-        await bot.send(event=event, message=msg)
-        await shop_added_by_admin.finish()
-    try:
-        price = int(price)
-        if price < 0:
-            msg = "请不要设置负数！"
-            await bot.send(event=event, message=msg)
-            await shop_added_by_admin.finish()
-    except LookupError:
-        msg = "请输入正确的金额！"
-        await bot.send(event=event, message=msg)
-        await shop_added_by_admin.finish()
-
-    try:
-        var = args[2]
-        msg = "请输入正确指令！例如：系统坊市上架 物品 金额"
-        await bot.send(event=event, message=msg)
-        await shop_added_by_admin.finish()
-    except LookupError:
-        pass
-
-    group_id = str(event.group_id)
-    shop_data = get_shop_data(group_id)
-    if shop_data == {}:
-        shop_data[group_id] = {}
-    goods_info = items.get_data_by_item_id(goods_id)
-
-    id_ = len(shop_data[group_id]) + 1
-    shop_data[group_id][id_] = {}
-    shop_data[group_id][id_]['user_id'] = 0
-    shop_data[group_id][id_]['goods_name'] = goods_name
-    shop_data[group_id][id_]['goods_id'] = goods_id
-    shop_data[group_id][id_]['goods_type'] = goods_info['type']
-    shop_data[group_id][id_]['desc'] = get_item_msg(goods_id)
-    shop_data[group_id][id_]['price'] = price
-    shop_data[group_id][id_]['user_name'] = '系统'
-    save_shop(shop_data)
-    msg = f"物品：{goods_name}成功上架坊市，金额：{price}枚灵石！"
-    await bot.send(event=event, message=msg)
-    await shop_added_by_admin.finish()
 
 
 @goods_re_root.handle(parameterless=[Cooldown(at_sender=False)])
@@ -903,48 +682,6 @@ async def master_rename_(bot: Bot, event: GroupMessageEvent, args: Message = Com
         msg = f"没有ID：{user_id} 的用户！！"
     await bot.send(event=event, message=msg)
     await master_rename.finish()
-
-
-@shop_off_all.handle(parameterless=[Cooldown(60, isolate_level=CooldownIsolateLevel.GROUP, parallel=1)])
-async def shop_off_all_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
-    """坊市清空"""
-    group_id = get_args_num(args, 1)
-    shop_data = get_shop_data(group_id)
-    if not shop_data.get(group_id):
-        msg = "坊市目前空空如也！"
-        await bot.send(event=event, message=msg)
-        await shop_off_all.finish()
-
-    msg = "正在清空,稍等！"
-    await bot.send(event=event, message=msg)
-
-    list_msg = []
-    msg = ""
-    num = len(shop_data[group_id])
-    for x in range(num):
-        x = num - x
-        if shop_data[group_id][str(x)]['user_id'] == 0:  # 这么写为了防止bot.send发送失败，不结算
-            msg += f"成功下架系统物品：{shop_data[group_id][str(x)]['goods_name']}!\r"
-            del shop_data[group_id][str(x)]
-            save_shop(shop_data)
-        else:
-            await sql_message.send_back(shop_data[group_id][str(x)]['user_id'],
-                                        int(shop_data[group_id][str(x)]['goods_id']),
-                                        shop_data[group_id][str(x)]['goods_name'],
-                                        shop_data[group_id][str(x)]['goods_type'], shop_data[group_id][str(x)]['stock'])
-            msg += f"成功下架{shop_data[group_id][str(x)]['user_name']}的{shop_data[group_id][str(x)]['stock']}个{shop_data[group_id][str(x)]['goods_name']}!\r"
-            del shop_data[group_id][str(x)]
-            save_shop(shop_data)
-    shop_data[group_id] = reset_dict_num(shop_data[group_id])
-    save_shop(shop_data)
-    list_msg.append(
-        {"type": "node", "data": {"name": "执行清空坊市ing", "uin": bot.self_id,
-                                  "content": msg}})
-    try:
-        await send_msg_handler(bot, event, list_msg)
-    except ActionFailed:
-        await bot.send(event=event, message=msg)
-    await shop_off_all.finish()
 
 
 def reset_dict_num(dict_):
