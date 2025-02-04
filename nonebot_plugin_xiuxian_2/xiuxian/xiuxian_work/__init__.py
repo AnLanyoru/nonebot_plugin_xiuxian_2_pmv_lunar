@@ -155,7 +155,8 @@ async def do_work_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = R
                    3: "道友在秘境中，请等待结束后才能获取悬赏令！",
                    4: "道友还在修炼中，请等待结束后才能获取悬赏令！",
                    5: simple_md("道友还在虚神界修炼中，请", "出关", "出关", "后获取悬赏令！"),
-                   6: simple_md("道友还在进行位面挑战中，请", "全力以赴", "开始挑战", "！")
+                   6: simple_md("道友还在进行位面挑战中，请", "全力以赴", "开始挑战", "！"),
+                   7: simple_md("道友正在", "炼丹", "丹炉状态", "呢，请全神贯注！！"),
                    }
         msg = msg_map.get(user_type)
         if not msg:
@@ -283,7 +284,7 @@ async def do_work_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = R
     elif mode == "结算":
         is_type, msg = await check_user_type(user_id, 2)  # 需要在悬赏令中的用户
         if not is_type:
-            msg = simple_md("没有查到你的悬赏令信息呢，请", "刷新", "悬赏令刷新", "！")
+            msg = simple_md("道友没有在做悬赏令呢，请先", "接取悬赏令", "悬赏令", "！")
             await bot.send(event=event, message=msg)
             await do_work.finish()
         user_cd_info = await sql_message.get_user_cd(user_id)
