@@ -82,7 +82,29 @@ sect_elixir_get = on_command("宗门丹药领取", aliases={"领取宗门丹药�
 sect_close = on_command("关闭宗门加入", aliases={"开启宗门加入"}, priority=5, permission=GROUP, block=True)
 sect_rename = on_command("宗门改名", priority=5, permission=GROUP, block=True)
 gm_sect_rename = on_command("超管宗门改名", priority=12, permission=SUPERUSER, block=True)
+gm_root_rename = on_command("超管灵根改名", priority=12, permission=SUPERUSER, block=True)
 gm_sect_materials = on_command("发放宗门资材", priority=12, permission=SUPERUSER, block=True)
+
+
+@gm_root_rename.handle(parameterless=[Cooldown(stamina_cost=0, at_sender=False)])
+async def gm_root_rename_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
+    arg_str = args.extract_plain_text()
+    strs = get_strs_from_str(arg_str)
+    num = get_num_from_str(arg_str)
+    sect_id = int(num[0]) if num else None
+    update_sect_name = strs[0] if strs else None
+    if not update_sect_name:
+        msg = '请输入要更改的灵根名称'
+        await bot.send(event, msg)
+        await gm_root_rename.finish()
+    if not sect_id:
+        msg = '请输入要更改的玩家ID'
+        await bot.send(event, msg)
+        await gm_root_rename.finish()
+    await sql_message.gm_update_root_name(sect_id, update_sect_name)
+    msg = f'ID为:{sect_id}的道友, 灵根名称已更改为：{update_sect_name}'
+    await bot.send(event, msg)
+    await gm_root_rename.finish()
 
 
 @gm_sect_materials.handle(parameterless=[Cooldown(stamina_cost=0, at_sender=False)])

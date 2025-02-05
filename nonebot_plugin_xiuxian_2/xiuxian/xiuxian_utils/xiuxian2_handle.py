@@ -598,6 +598,18 @@ class XiuxianDateManage:
         async with self.pool.acquire() as db:
             await db.execute(sql, sect_name, user_id)
 
+    async def gm_update_root_name(self, sect_id, sect_name) -> bool:
+        """
+        修改灵根名称
+        :param sect_id: 宗门id
+        :param sect_name: 宗门名称
+        :return: 返回是否更新成功的标志，True表示更新成功，False表示更新失败（已存在同名宗门）
+        """
+        async with self.pool.acquire() as db:
+            sql = f"UPDATE user_xiuxian SET root_name=$1 WHERE user_id=$2"
+            await db.execute(sql, sect_name, sect_id)
+            return True
+
     async def update_sect_name(self, sect_id, sect_name) -> bool:
         """
         修改宗门名称

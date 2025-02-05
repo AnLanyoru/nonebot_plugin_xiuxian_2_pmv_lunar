@@ -619,13 +619,16 @@ def number_to(num):
     return final_num
 
 
-async def get_id_from_str(msg: str):
+async def get_id_from_str(msg: str | list):
     """
     将消息中的首个字符组合转换为用户id
     :param msg: 从args中获取的消息字符串
     :return: 如果有该用户，返回用户ID，若无，返回None
     """
-    user_name = re.findall(r"[\u4e00-\u9fa5_a-zA-Z]+", msg)
+    if isinstance(msg, str):
+        user_name = re.findall(r"[\u4e00-\u9fa5_a-zA-Z]+", msg)
+    else:
+        user_name = msg
     user_id = await sql_message.get_user_id(user_name[0]) if user_name else None
     return user_id
 

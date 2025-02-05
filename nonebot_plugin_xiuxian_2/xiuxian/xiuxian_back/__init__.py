@@ -55,6 +55,7 @@ check_items = on_command("查看", aliases={"查", "查看物品", "查看效果
 back_fix = on_fullmatch("背包修复", priority=1, permission=GROUP, block=True)
 test_md = on_command("测试模板", priority=25, permission=SUPERUSER, block=True)
 check_item_json = on_command("物品结构", aliases={"json"}, priority=25, permission=SUPERUSER, block=True)
+gm_goods_delete = on_command("回收", priority=6, permission=SUPERUSER, block=True)
 
 __back_help__ = f"""
 指令：
@@ -73,6 +74,67 @@ __back_help__ = f"""
 ——tips——
 官方群914556251
 """.strip()
+
+
+@gm_goods_delete.handle(parameterless=[Cooldown(at_sender=False)])
+async def gm_goods_delete_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
+    """炼金"""
+    user_id = await get_id_from_str(args)
+    strs = args.extract_plain_text()
+    args = get_strs_from_str(strs)
+    num = get_num_from_str(strs)
+    if num:
+        num = int(num[0])
+    else:
+        num = 1
+    if args:
+        if len(args) > 1:
+            goods_name = args[1]
+        else:
+            goods_name = None
+    else:
+        goods_name = None
+    if goods_name is None:
+        msg = "请输入要没收的物品！"
+        await bot.send(event=event, message=msg)
+        await gm_goods_delete.finish()
+    back_msg = await sql_message.get_back_msg(user_id)  # 背包sql信息,list(back)
+    if back_msg is None:
+        msg = "对方的背包空空如也！"
+        await bot.send(event=event, message=msg)
+        await gm_goods_delete.finish()
+    in_flag = False  # 判断指令是否正确，道具是否在背包内
+    goods_id = None
+    goods_type = None
+    goods_state = None
+    goods_num = None
+    for back in back_msg:
+        if goods_name == back['goods_name']:
+            in_flag = True
+            goods_id = back['goods_id']
+            goods_type = back['goods_type']
+            goods_state = back['state']
+            goods_num = back['goods_num']
+            break
+    if not in_flag:
+        msg = f"请检查该道具 {goods_name} 是否在对方背包内！"
+        await bot.send(event=event, message=msg)
+        await gm_goods_delete.finish()
+
+    if goods_num < num:
+        msg = f"对方的包内没有那么多 {goods_name} ！"
+        await bot.send(event=event, message=msg)
+        await gm_goods_delete.finish()
+
+    if goods_type == "装备" and int(goods_state) == 1 and int(goods_num) == 1:
+        msg = f"装备：{goods_name}已经被对方装备在身，无法没收！"
+        await bot.send(event=event, message=msg)
+        await gm_goods_delete.finish()
+
+    await sql_message.update_back_j(user_id, goods_id, num=num, use_key=0)
+    msg = f"物品：{goods_name} 数量：{num} 没收成功"
+    await bot.send(event=event, message=msg)
+    await gm_goods_delete.finish()
 
 
 @test_md.handle()
