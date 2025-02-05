@@ -272,13 +272,9 @@ async def active_daily_reset_():
 
 
 new_year_active_menu = on_command("新春", priority=9, permission=GROUP, block=True)
-new_year_guess_menu = on_command("猜谜活动", priority=9, permission=GROUP, block=True)
-new_year_guess_get = on_command("获取谜题", aliases={"获取题目"}, priority=9, permission=GROUP, block=True)
-new_year_guess_answer = on_command("答题", priority=9, permission=GROUP, block=True)
 new_year_gift_get = on_command("拆福袋", priority=9, permission=GROUP, block=True)
 new_year_daily_gift_get = on_command("新春祈愿", priority=8, permission=GROUP, block=True)
 new_year_fight_menu = on_command("年兽菜单", priority=9, permission=GROUP, block=True)
-new_year_fight = on_command("驱逐年兽", priority=9, permission=GROUP, block=True)
 new_year_fight_top = on_command("年兽伤害排行", priority=9, permission=GROUP, block=True)
 
 time_set_new_year = on_command('逆转新春', priority=15, permission=SUPERUSER, block=True)
@@ -319,67 +315,13 @@ async def new_year_fight_top_(bot: Bot, event: GroupMessageEvent, args: Message 
     await new_year_fight_top.finish()
 
 
-@new_year_fight.handle(parameterless=[Cooldown(cd_time=5, at_sender=False)])
-async def new_year_fight_(bot: Bot, event: GroupMessageEvent):
-    """驱逐年兽"""
-    now_day = datetime.date.today()
-    if not (datetime.date(year=2025, month=1, day=28) < now_day):
-        msg = "活动尚未开始！！"
-        await bot.send(event=event, message=msg)
-        await new_year_fight.finish()
-
-    if not (datetime.date(year=2025, month=2, day=5) > now_day):
-        msg = "活动已结束！！"
-        await bot.send(event=event, message=msg)
-        await new_year_fight.finish()
-
-    _, user_info, _ = await check_user(event)
-    user_id = user_info['user_id']
-    user_new_year_info = await get_user_new_year_info(user_id)
-    user_name = user_info['user_name']
-    if user_new_year_info['fight_num'] > 2:
-        msg = f"道友今天已经为驱逐年兽做出了足够大的奉献啦！！\r去看看别的活动吧\r"
-        msg = three_md(msg, "猜谜活动", "猜谜活动菜单", "\r —— 答题成功将获得福袋奖励！！\r",
-                       "主菜单", "新春菜单", "\r —— 查看全部新春活动！！\r",
-                       "拆福袋", "拆福袋", "\r —— 打开福袋获取丰厚奖励！！")
-        await bot.send(event=event, message=msg)
-        await new_year_fight.finish()
-
-    msg_list, boss_info = await get_new_year_battle_info(user_id)
-    new_damage = boss_info['总血量'] - boss_info['气血']
-    user_new_year_info['fight_num'] += 1
-    user_new_year_info['fight_damage'] = max(user_new_year_info['fight_damage'], new_damage)
-    await update_user_new_year_info(user_id, user_new_year_info)
-    text = msg_handler(msg_list)
-    msg = f"{user_name}道友全力施为，对年兽造成{number_to(new_damage)}伤害！！"
-    msg = main_md(
-        msg, text,
-        '主菜单', '新春菜单',
-        '猜谜活动', '猜谜活动菜单',
-        '查看排行', '年兽伤害排行',
-        '再次驱逐', '驱逐年兽')
-    await bot.send(event=event, message=msg)
-    await new_year_fight.finish()
-
-
 @new_year_fight_menu.handle(parameterless=[Cooldown(cd_time=5, at_sender=False)])
 async def new_year_fight_menu_(bot: Bot, event: GroupMessageEvent):
     """年兽活动菜单！！"""
-    now_day = datetime.date.today()
-    if not (datetime.date(year=2025, month=1, day=28) < now_day):
-        msg = "活动尚未开始！！"
-        await bot.send(event=event, message=msg)
-        await new_year_fight_menu.finish()
-
-    if not (datetime.date(year=2025, month=2, day=5) > now_day):
-        msg = "活动已结束！！"
-        await bot.send(event=event, message=msg)
-        await new_year_fight_menu.finish()
-
     _, user_info, _ = await check_user(event)
 
     user_name = user_info['user_name']
-    msg = (f"祝{user_name}道友新春快乐！！\r"
+    msg = (f"活动已结束，可查看排行榜\r"
            f"驱逐年兽活动规则：\r"
            f"每位道友每日可以挑战三次年兽，记录伤害最高的一次战斗\r"
            f"将于挑战活动结束后为各位道友发放与伤害排名对应的福袋奖励\r"
@@ -388,7 +330,7 @@ async def new_year_fight_menu_(bot: Bot, event: GroupMessageEvent):
            f"无论伤害如何，凡造成伤害者均发放参与奖：福袋*2！\r"
            f"高贡献额外奖励：\r"
            f"1位：福袋50，2位：福袋30，3位：福袋20，4-10位：福袋10\r")
-    msg = three_md(msg, "开始驱逐年兽", "驱逐年兽", "\r —— 共同击退年兽获取福袋奖励！！\r",
+    msg = three_md(msg, "新春签到", "新春祈愿", "\r —— 共同击退年兽获取福袋奖励！！\r",
                    "驱逐年兽排行", "年兽伤害排行", "\r —— 查看为驱逐年兽做出巨大贡献的玩家！！\r",
                    "主菜单", "新春菜单", "\r —— 查看所有活动！！\r"
                                          "新春活动于大年初一开放，初七过后结束，祈愿签到活动额外持续七日！")
@@ -486,133 +428,6 @@ async def new_year_gift_get_(bot: Bot, event: GroupMessageEvent, args: Message =
                    f"继续拆福袋(余剩{gift_num - 1})", "拆福袋", "\r —— 打开福袋获取丰厚奖励！！")
     await bot.send(event=event, message=msg)
     await new_year_gift_get.finish()
-
-
-@new_year_guess_answer.handle(parameterless=[Cooldown(cd_time=5, at_sender=False)])
-async def new_year_guess_answer_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
-    """答题"""
-    now_day = datetime.date.today()
-    if not (datetime.date(year=2025, month=1, day=28) < now_day):
-        msg = "活动尚未开始！！"
-        await bot.send(event=event, message=msg)
-        await new_year_guess_answer.finish()
-
-    if not (datetime.date(year=2025, month=2, day=5) > now_day):
-        msg = "活动已结束！！"
-        await bot.send(event=event, message=msg)
-        await new_year_guess_answer.finish()
-
-    _, user_info, _ = await check_user(event)
-    user_id = user_info['user_id']
-    user_new_year_info = await get_user_new_year_info(user_id)
-    user_problem = user_new_year_info['now_problem']
-    user_name = user_info['user_name']
-    if not user_problem:
-        msg = f"{user_name}道友暂时没有谜题需要解答！！\r"
-        msg = three_md(msg, "获取题目", "获取题目", "\r —— 答题成功将获得福袋奖励！！\r",
-                       "主菜单", "新春菜单", "\r —— 查看全部新春活动！！\r",
-                       "拆福袋", "拆福袋", "\r —— 打开福袋获取丰厚奖励！！")
-        await bot.send(event=event, message=msg)
-        await new_year_guess_answer.finish()
-
-    problem = json.loads(user_new_year_info['now_problem'])
-    answer = args.extract_plain_text()
-    if answer not in problem['答案']:
-        msg = f"{user_name}道友的答案不对哦，道友再好好猜猜看吧\r"
-        msg = three_md(msg, "继续答题", "答题", "\r —— 答题成功将获得福袋奖励！！\r",
-                       "主菜单", "新春菜单", "\r —— 查看全部新春活动！！\r",
-                       "拆福袋", "拆福袋", "\r —— 打开福袋获取丰厚奖励！！")
-        await bot.send(event=event, message=msg)
-        await new_year_guess_answer.finish()
-
-    user_new_year_info['now_problem'] = None
-    await update_user_new_year_info(user_id, user_new_year_info)
-    await sql_message.send_item(user_id, {700001: 1}, is_bind=1)
-    msg = (f"恭喜{user_name}道友成功答对谜题！！\r"
-           f"获得了：福袋 1个\r"
-           f" —— 快去拆福袋看看里面有什么好东西吧！！\r")
-    msg = three_md(msg, "继续答题", "获取题目", "\r —— 答题成功将获得福袋奖励！！\r",
-                   "主菜单", "新春菜单", "\r —— 查看全部新春活动！！\r",
-                   "拆福袋", "拆福袋", "\r —— 打开福袋获取丰厚奖励！！")
-    await bot.send(event=event, message=msg)
-    await new_year_guess_answer.finish()
-
-
-@new_year_guess_get.handle(parameterless=[Cooldown(cd_time=5, at_sender=False)])
-async def new_year_guess_get_(bot: Bot, event: GroupMessageEvent):
-    """获取谜题"""
-    now_day = datetime.date.today()
-    if not (datetime.date(year=2025, month=1, day=28) < now_day):
-        msg = "活动尚未开始！！"
-        await bot.send(event=event, message=msg)
-        await new_year_guess_get.finish()
-
-    if not (datetime.date(year=2025, month=2, day=5) > now_day):
-        msg = "活动已结束！！"
-        await bot.send(event=event, message=msg)
-        await new_year_guess_get.finish()
-
-    _, user_info, _ = await check_user(event)
-    user_id = user_info['user_id']
-    user_new_year_info = await get_user_new_year_info(user_id)
-    user_problem = user_new_year_info['now_problem']
-    user_name = user_info['user_name']
-    if user_problem:
-        problem = json.loads(user_problem)
-        msg = (f"道友已经有谜题啦！！\r"
-               f"{user_name}道友的谜题：\r"
-               f"{problem['题目']}\r")
-        msg = three_md(msg, "答题", "答题", "\r —— 答题成功将获得福袋奖励！！\r",
-                       "主菜单", "新春菜单", "\r —— 查看全部新春活动！！\r",
-                       "拆福袋", "拆福袋", "\r —— 打开福袋获取丰厚奖励！！")
-        await bot.send(event=event, message=msg)
-        await new_year_guess_get.finish()
-    if user_new_year_info['today_answered'] > 2:
-        msg = f"道友今天已经答了够多的谜题啦！！\r去看看别的活动吧\r"
-        msg = three_md(msg, "驱逐年兽", "年兽菜单", "\r —— 驱逐年兽获得福袋奖励！！\r",
-                       "主菜单", "新春菜单", "\r —— 查看全部新春活动！！\r",
-                       "拆福袋", "拆福袋", "\r —— 打开福袋获取丰厚奖励！！")
-        await bot.send(event=event, message=msg)
-        await new_year_guess_get.finish()
-
-    problem = random.choice(all_problems)
-    user_new_year_info['now_problem'] = json.dumps(problem)
-    user_new_year_info['today_answered'] += 1
-    await update_user_new_year_info(user_id, user_new_year_info)
-    msg = (f"{user_name}道友的谜题：\r"
-           f"{problem['题目']}\r")
-    msg = three_md(msg, "答题", "答题", "\r —— 答题成功将获得福袋奖励！！\r",
-                   "主菜单", "新春菜单", "\r —— 查看全部新春活动！！\r",
-                   "拆福袋", "拆福袋", "\r —— 打开福袋获取丰厚奖励！！")
-    await bot.send(event=event, message=msg)
-    await new_year_guess_get.finish()
-
-
-@new_year_guess_menu.handle(parameterless=[Cooldown(cd_time=5, at_sender=False)])
-async def new_year_guess_menu_(bot: Bot, event: GroupMessageEvent):
-    """猜谜活动菜单！！"""
-    now_day = datetime.date.today()
-    if not (datetime.date(year=2025, month=1, day=28) < now_day):
-        msg = "活动尚未开始！！"
-        await bot.send(event=event, message=msg)
-        await new_year_guess_menu.finish()
-
-    if not (datetime.date(year=2025, month=2, day=5) > now_day):
-        msg = "活动已结束！！"
-        await bot.send(event=event, message=msg)
-        await new_year_guess_menu.finish()
-
-    _, user_info, _ = await check_user(event)
-
-    user_name = user_info['user_name']
-    msg = (f"祝{user_name}道友新春快乐！！\r"
-           f"新春猜谜菜单：\r")
-    msg = three_md(msg, "开始猜谜", "获取谜题", "\r —— 参加答题获得福袋奖励！！\r",
-                   "主菜单", "新春菜单", "\r —— 查看全部新春活动！！\r",
-                   "拆福袋", "拆福袋", "\r —— 打开福袋获取丰厚奖励！！\r"
-                                       "新春活动于大年初一开放，初七过后结束，祈愿签到活动额外持续七日！")
-    await bot.send(event=event, message=msg)
-    await new_year_guess_menu.finish()
 
 
 @new_year_active_menu.handle(parameterless=[Cooldown(cd_time=5, at_sender=False)])
