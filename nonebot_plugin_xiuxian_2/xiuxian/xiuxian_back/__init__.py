@@ -55,7 +55,7 @@ check_items = on_command("查看", aliases={"查", "查看物品", "查看效果
 back_fix = on_fullmatch("背包修复", priority=1, permission=GROUP, block=True)
 test_md = on_command("测试模板", priority=25, permission=SUPERUSER, block=True)
 check_item_json = on_command("物品结构", aliases={"json"}, priority=25, permission=SUPERUSER, block=True)
-gm_goods_delete = on_command("回收", priority=6, permission=SUPERUSER, block=True)
+gm_goods_delete = on_command("回收", aliases={"没收"}, priority=6, permission=SUPERUSER, block=True)
 
 __back_help__ = f"""
 指令：
@@ -79,9 +79,9 @@ __back_help__ = f"""
 @gm_goods_delete.handle(parameterless=[Cooldown(at_sender=False)])
 async def gm_goods_delete_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """炼金"""
-    user_id = await get_id_from_str(args)
     strs = args.extract_plain_text()
     args = get_strs_from_str(strs)
+    user_id = await get_id_from_str(args)
     num = get_num_from_str(strs)
     if num:
         num = int(num[0])

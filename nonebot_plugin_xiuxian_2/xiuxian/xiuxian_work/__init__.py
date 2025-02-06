@@ -139,7 +139,8 @@ async def do_work_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = R
         await do_work.finish()
     user_cd_info = await sql_message.get_user_cd(user_id)
     user_type = user_cd_info['type']
-    user_work_data = json.loads(user_cd_info['work_info'])
+    user_work_info = user_cd_info['work_info']
+    user_work_data = json.loads(user_work_info) if user_work_info else None
     await sql_message.update_last_check_info_time(user_id)  # 更新查看修仙信息时间
     if user_type == 2:
         work_name = user_cd_info['scheduled_time']

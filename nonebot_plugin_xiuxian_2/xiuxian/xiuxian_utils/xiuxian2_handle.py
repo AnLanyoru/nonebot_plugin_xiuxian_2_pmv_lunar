@@ -606,7 +606,7 @@ class XiuxianDateManage:
         :return: 返回是否更新成功的标志，True表示更新成功，False表示更新失败（已存在同名宗门）
         """
         async with self.pool.acquire() as db:
-            sql = f"UPDATE user_xiuxian SET root_name=$1 WHERE user_id=$2"
+            sql = f"UPDATE user_xiuxian SET root=$1 WHERE user_id=$2"
             await db.execute(sql, sect_name, sect_id)
             return True
 
