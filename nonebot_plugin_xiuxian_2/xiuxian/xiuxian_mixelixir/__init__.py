@@ -20,7 +20,8 @@ from ..xiuxian_back.back_util import get_user_yaocai_back_msg, get_user_yaocai_b
     get_user_back_msg
 from ..xiuxian_config import convert_rank
 from ..xiuxian_database.database_connect import database
-from ..xiuxian_utils.clean_utils import get_strs_from_str, get_args_num, get_paged_msg, get_num_from_str
+from ..xiuxian_utils.clean_utils import get_strs_from_str, get_args_num, get_paged_msg, get_num_from_str, main_md, \
+    three_md, simple_md
 from ..xiuxian_utils.item_json import items
 from ..xiuxian_utils.lay_out import Cooldown
 from ..xiuxian_utils.utils import (
@@ -37,7 +38,7 @@ herb_id_map = {herb_name: herb_id for herb_name, herb_id in items.items_map.item
 
 alchemy_furnace_state = on_command("丹炉状态", priority=5, permission=GROUP, block=True)
 alchemy_furnace_fire_control = on_command("丹炉升温", aliases={"丹炉降温"}, priority=5, permission=GROUP, block=True)
-make_elixir = on_command("凝结丹药", aliases={"成丹"}, priority=5, permission=GROUP, block=True)
+make_elixir = on_command("凝结丹药", aliases={"成丹", "开"}, priority=10, permission=GROUP, block=True)
 alchemy_furnace_add_herb = on_command("添加药材", priority=5, permission=GROUP, block=True)
 mix_stop = on_command("停止炼丹", priority=5, permission=GROUP, block=True)
 mix_elixir = on_fullmatch("丹方", priority=17, permission=GROUP, block=True)
@@ -47,7 +48,10 @@ mix_elixir_help = on_fullmatch("炼丹配方帮助", priority=7, permission=GROU
 elixir_back = on_command("丹药背包", priority=10, permission=GROUP, block=True)
 yaocai_back = on_command("药材背包", priority=10, permission=GROUP, block=True)
 yaocai_get = on_command("灵田收取", aliases={"灵田结算"}, priority=8, permission=GROUP, block=True)
-my_mix_elixir_info = on_fullmatch("我的炼丹信息", priority=6, permission=GROUP, block=True)
+my_mix_elixir_info = on_command("我的炼丹信息", aliases={"炼丹信息"}, priority=6, permission=GROUP, block=True)
+mix_elixir_fire_improve = on_command("丹火升级", aliases={"升级丹火"}, priority=6, permission=GROUP, block=True)
+mix_elixir_fire_improve_num = on_fullmatch("丹火升级塑形", priority=5, permission=GROUP, block=True)
+mix_elixir_fire_improve_power = on_fullmatch("丹火升级萃取", priority=5, permission=GROUP, block=True)
 yaocai_get_op = on_command("op灵田收取", aliases={"op灵田结算"}, priority=8, permission=SUPERUSER, block=True)
 
 __elixir_help__ = f"""
@@ -67,6 +71,144 @@ __mix_elixir_help__ = f"""
 1、炼丹需要主药、药引、辅药
 3、草药的类型控制产出丹药的类型
 """
+
+level_up_need_exp = {0: 1000,
+                     1: 5000,
+                     2: 10000,
+                     3: 50000,
+                     4: 100000}.copy()
+
+fire_name_by_level = {0: '普通火焰',
+                      1: '蕴丹玄火',
+                      2: '蕴丹灵火',
+                      3: '混元灵火',
+                      4: '万象灵火'}.copy()
+
+
+@mix_elixir_fire_improve_num.handle(
+    parameterless=[Cooldown(stamina_cost=0,
+                            at_sender=False,
+                            parallel_block=True)])
+async def mix_elixir_fire_improve_num_(bot: Bot, event: GroupMessageEvent):
+    """丹火升级塑形"""
+
+    _, user_info, _ = await check_user(event)
+
+    user_id = user_info['user_id']
+    user_name = user_info['user_name']
+
+    # 获取用户炼丹数据
+    user_mix_elixir_info = await get_user_mix_elixir_info(user_id)
+    user_elixir_exp = user_mix_elixir_info['user_mix_elixir_exp']
+    user_fire_num = user_mix_elixir_info['user_fire_more_num']
+    user_fire_power = user_mix_elixir_info['user_fire_more_power']
+    sum_level = user_fire_num + user_fire_power
+
+    if sum_level == 4:
+        msg = f"道友的丹火已暂时提升到顶了！"
+        await bot.send(event=event, message=msg)
+        await mix_elixir_fire_improve_power.finish()
+
+    if (need_exp := level_up_need_exp.get(sum_level)) > user_elixir_exp:
+        msg = f"道友当前炼丹经验不足以提升丹火，当前：{user_elixir_exp} 所需：{need_exp}"
+        await bot.send(event=event, message=msg)
+        await mix_elixir_fire_improve_num.finish()
+
+    user_skill_improve_data = {
+        'user_fire_more_num': 1 + user_mix_elixir_info['user_fire_more_num'],
+        'user_mix_elixir_exp': user_mix_elixir_info['user_mix_elixir_exp']
+                               - need_exp}
+    await database.update(table='mix_elixir_info',
+                          where={'user_id': user_id},
+                          **user_skill_improve_data)
+
+    msg = simple_md(f"丹火升级方向：塑形，升级成功\r{user_name}道友本次升级丹火消耗{need_exp}",
+                    "炼丹经验", "我的炼丹信息",
+                    f"\r丹药凝结数量提升 1"
+                    f"\r当前等级：{user_skill_improve_data['user_fire_more_num']}"
+                    f"\r余剩炼丹经验：{user_skill_improve_data['user_mix_elixir_exp']}")
+    await bot.send(event=event, message=msg)
+    await mix_elixir_fire_improve_num.finish()
+
+
+@mix_elixir_fire_improve_power.handle(
+    parameterless=[Cooldown(stamina_cost=0,
+                            at_sender=False,
+                            parallel_block=True)])
+async def mix_elixir_fire_improve_power_(bot: Bot, event: GroupMessageEvent):
+    """丹火升级萃取"""
+
+    _, user_info, _ = await check_user(event)
+
+    user_id = user_info['user_id']
+    user_name = user_info['user_name']
+
+    # 获取用户炼丹数据
+    user_mix_elixir_info = await get_user_mix_elixir_info(user_id)
+    user_elixir_exp = user_mix_elixir_info['user_mix_elixir_exp']
+    user_fire_num = user_mix_elixir_info['user_fire_more_num']
+    user_fire_power = user_mix_elixir_info['user_fire_more_power']
+    sum_level = user_fire_num + user_fire_power
+
+    if sum_level == 4:
+        msg = f"道友的丹火已暂时提升到顶了！"
+        await bot.send(event=event, message=msg)
+        await mix_elixir_fire_improve_power.finish()
+
+    if (need_exp := level_up_need_exp.get(sum_level)) > user_elixir_exp:
+        msg = f"道友当前炼丹经验不足以提升丹火，当前：{user_elixir_exp} 所需：{need_exp}"
+        await bot.send(event=event, message=msg)
+        await mix_elixir_fire_improve_power.finish()
+
+    user_skill_improve_data = {
+        'user_fire_more_power': 1 + user_mix_elixir_info['user_fire_more_power'],
+        'user_mix_elixir_exp': user_mix_elixir_info['user_mix_elixir_exp']
+                               - need_exp}
+    await database.update(table='mix_elixir_info',
+                          where={'user_id': user_id},
+                          **user_skill_improve_data)
+
+    msg = simple_md(f"丹火升级方向：萃取，升级成功\r{user_name}道友本次升级丹火消耗{need_exp}",
+                    "炼丹经验", "我的炼丹信息",
+                    f"\r药材药力萃取提升 30%"
+                    f"\r当前等级：{user_skill_improve_data['user_fire_more_power']}"
+                    f"\r余剩炼丹经验：{user_skill_improve_data['user_mix_elixir_exp']}")
+    await bot.send(event=event, message=msg)
+    await mix_elixir_fire_improve_power.finish()
+
+
+@mix_elixir_fire_improve.handle(parameterless=[Cooldown(stamina_cost=0, at_sender=False)])
+async def mix_elixir_fire_improve_(bot: Bot, event: GroupMessageEvent):
+    """丹火升级"""
+
+    _, user_info, _ = await check_user(event)
+
+    user_id = user_info['user_id']
+    user_name = user_info['user_name']
+
+    # 获取用户炼丹数据
+    user_mix_elixir_info = await get_user_mix_elixir_info(user_id)
+    user_elixir_exp = user_mix_elixir_info['user_mix_elixir_exp']
+    user_fire_num = user_mix_elixir_info['user_fire_more_num']
+    user_fire_power = user_mix_elixir_info['user_fire_more_power']
+    sum_level = user_fire_num + user_fire_power
+
+    if sum_level == 4:
+        msg = f"道友的丹火已暂时提升到顶了！"
+        await bot.send(event=event, message=msg)
+        await mix_elixir_fire_improve_power.finish()
+
+    if (need_exp := level_up_need_exp.get(sum_level)) > user_elixir_exp:
+        msg = f"道友当前炼丹经验不足以提升丹火，当前：{user_elixir_exp} 所需：{need_exp}"
+        await bot.send(event=event, message=msg)
+        await mix_elixir_fire_improve.finish()
+
+    msg = three_md(f"{user_name}道友本次升级丹火将消耗{need_exp}", "炼丹经验", "我的炼丹信息",
+                   "道友可以选择将丹火向两个方向提升：\r  1.", "塑形", "丹火升级塑形",
+                   ": 提升丹药成型数量(每级1)\r  2.", "萃取", "丹火升级萃取",
+                   ": 炼丹加入药材时药性萃取率提升(每级30%)")
+    await bot.send(event=event, message=msg)
+    await mix_elixir_fire_improve.finish()
 
 
 @make_elixir.handle(parameterless=[Cooldown(stamina_cost=0, at_sender=False)])
@@ -96,26 +238,41 @@ async def make_elixir_(bot: Bot, event: GroupMessageEvent):
     main_dan_data = await UserBuffDate(user_id).get_user_main_buff_data()
     # 功法炼丹数量加成
     main_dan = main_dan_data['dan_buff'] if main_dan_data else 0
-    # 炼丹数量提升
-    num = 1 + user_alchemy_furnace.make_elixir_improve + impart_mix_per + main_dan
+    # 丹火炼丹数量提升
+    fire_num_up = user_mix_elixir_info['user_fire_more_num']
+
+    # 总炼丹数量提升
+    num = 1 + user_alchemy_furnace.make_elixir_improve + impart_mix_per + main_dan + fire_num_up
     await sql_message.send_back(user_id=user_id,
                                 goods_id=mix_elixir_info['item_id'],
                                 goods_name=mix_elixir_info['name'],
                                 goods_type=mix_elixir_info['type'],
                                 goods_num=num)
     msg += f"{num}颗"
+
+    # 提升炼丹经验计算
+    main_dan_exp = main_dan_data['dan_exp'] if main_dan_data else 0
+    final_dan_exp = max(20, mix_elixir_info['rank'] - 50) + main_dan_exp * num
+
     user_skill_improve_data = {
         'user_fire_control': mix_elixir_info['give_fire_control_exp']
                              + user_mix_elixir_info['user_fire_control'],
         'user_herb_knowledge': mix_elixir_info['give_herb_knowledge_exp']
-                               + user_mix_elixir_info['user_herb_knowledge']}
+                               + user_mix_elixir_info['user_herb_knowledge'],
+        'user_mix_elixir_exp': final_dan_exp
+                               + user_mix_elixir_info['user_mix_elixir_exp'],
+        'sum_mix_num': num
+                       + user_mix_elixir_info['sum_mix_num']
+    }
     await database.update(table='mix_elixir_info',
                           where={'user_id': user_id},
                           **user_skill_improve_data)
     msg += (f"\r控火经验增加：{mix_elixir_info['give_fire_control_exp']}"
-            f"（当前{mix_elixir_info['give_fire_control_exp'] + user_mix_elixir_info['user_fire_control']}）"
+            f"（当前{user_skill_improve_data['user_fire_control']}）"
             f"\r药理知识增加：{mix_elixir_info['give_herb_knowledge_exp']}"
-            f"（当前{mix_elixir_info['give_herb_knowledge_exp'] + user_mix_elixir_info['user_herb_knowledge']}）")
+            f"（当前{user_skill_improve_data['user_herb_knowledge']}）"
+            f"\r炼丹经验增加：{final_dan_exp}"
+            f"（当前{user_skill_improve_data['user_mix_elixir_exp']}）")
 
     # 保存丹炉数据
     await user_alchemy_furnace.save_data(user_id)
@@ -173,8 +330,16 @@ async def alchemy_furnace_state_(bot: Bot, event: GroupMessageEvent):
         msg = "道友现在没在炼丹呢！！"
         await bot.send(event=event, message=msg)
         await alchemy_furnace_state.finish()
+
+    # 获取用户炼丹数据
+    user_mix_elixir_info = await get_user_mix_elixir_info(user_id)
     user_alchemy_furnace: AlchemyFurnace = await get_user_alchemy_furnace(user_id)
-    msg = user_alchemy_furnace.get_state_msg()
+    fire_name = user_mix_elixir_info['user_fire_name']
+    user_fire_num = user_mix_elixir_info['user_fire_more_num']
+    user_fire_power = user_mix_elixir_info['user_fire_more_power']
+    sum_level = user_fire_num + user_fire_power
+    fire_name = fire_name if fire_name else fire_name_by_level.get(sum_level)
+    msg = user_alchemy_furnace.get_state_msg(fire_name)
     await bot.send(event=event, message=msg)
     await alchemy_furnace_state.finish()
 
@@ -278,6 +443,7 @@ async def alchemy_furnace_add_herb_(bot: Bot, event: GroupMessageEvent, args: Me
     msg = user_alchemy_furnace.input_herbs(
         user_mix_elixir_info['user_fire_control'],
         user_mix_elixir_info['user_herb_knowledge'],
+        user_mix_elixir_info['user_fire_more_power'],
         temp_dict)
 
     # 保存丹炉数据
@@ -400,18 +566,26 @@ async def my_mix_elixir_info_(bot: Bot, event: GroupMessageEvent):
 
     # 获取用户炼丹数据
     user_mix_elixir_info = await get_user_mix_elixir_info(user_id)
-    l_msg = [f"☆----道友的炼丹信息----☆"]
-    msg = f"丹药控火经验：{user_mix_elixir_info['user_fire_control']}\r"
-    msg += f"药理知识：{user_mix_elixir_info['user_herb_knowledge']}\r"
-    l_msg.append(msg)
+    user_fire_more_num = user_mix_elixir_info['user_fire_more_num']
+    user_fire_more_power = user_mix_elixir_info['user_fire_more_power']
+    sum_level = user_fire_more_num + user_fire_more_power
+    fire_name = user_mix_elixir_info['user_fire_name']
+    fire_name = fire_name if fire_name else fire_name_by_level.get(sum_level)
+    msg = (f"☆----道友的炼丹信息----☆\r"
+           f"丹火：{fire_name}\r"
+           f"(塑形：lv.{user_fire_more_num}"
+           f"|萃取：lv.{user_fire_more_power})\r"
+           f"控火经验：{user_mix_elixir_info['user_fire_control']}\r"
+           f"药理知识：{user_mix_elixir_info['user_herb_knowledge']}\r"
+           f"炼丹经验：{user_mix_elixir_info['user_mix_elixir_exp']}\r")
     if user_mix_elixir_info['mix_elixir_data']:
-        l_msg.append(f"☆------道友的炼丹记录------☆")
-        i = 1
-        for k, v in user_mix_elixir_info['mix_elixir_data'].items():
-            msg = f"编号：{i},{v['name']}，炼成次数：{v['num']}次"
-            l_msg.append(msg)
-            i += 1
-    await send_msg_handler(bot, event, '炼丹信息', bot.self_id, l_msg)
+        pass
+    msg_md = main_md(msg, '暂无炼丹记录',
+                     '升级丹火', '升级丹火',
+                     '灵田结算', '灵田结算',
+                     '洞天福地', '洞天福地查看',
+                     '丹炉状态', '丹炉状态')
+    await bot.send(event=event, message=msg_md)
     await my_mix_elixir_info.finish()
 
 

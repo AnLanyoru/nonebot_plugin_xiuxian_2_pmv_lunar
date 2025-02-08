@@ -69,7 +69,7 @@ async def read_rift_():
 @set_rift.scheduled_job("cron", hour=8, minute=0)
 async def set_rift_(place_cls=place):
     global world_rift
-    normal_refresh = 0
+    normal_refresh = 1
     if normal_refresh:
         if place_cls.get_worlds():
             world_rift = {}

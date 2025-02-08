@@ -5,7 +5,9 @@ from ..xiuxian_utils.clean_utils import zips
 
 buff_type_def = {'atk': '攻击提升',
                  'hp': '气血提升',
-                 'mp': '真元提升'}
+                 'mp': '真元提升',
+                 '破甲': '破甲提升',
+                 '破厄': '下次战斗抵消负面buff'}
 temp_buff_def = {'atk': '攻击',
                  'hp': '气血',
                  'mp': '真元'}

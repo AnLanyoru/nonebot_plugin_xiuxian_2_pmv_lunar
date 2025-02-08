@@ -171,6 +171,11 @@ class XiuxianDateManage:
       "last_alchemy_furnace_data" json DEFAULT NULL,
       "user_fire_control" bigint DEFAULT 0,
       "user_herb_knowledge" bigint DEFAULT 0,
+      "user_mix_elixir_exp" bigint DEFAULT 0,
+      "user_fire_name" text DEFAULT NULL,
+      "user_fire_more_num" bigint DEFAULT 0,
+      "user_fire_more_power" bigint DEFAULT 0,
+      "sum_mix_num" bigint DEFAULT 0,
       "mix_elixir_data" json DEFAULT NULL
     );""")
 
