@@ -630,6 +630,7 @@ async def get_id_from_str(msg: str | list):
     else:
         user_name = msg
     user_id = await sql_message.get_user_id(user_name[0]) if user_name else None
+    user_id = int(user_id) if user_id else None
     return user_id
 
 

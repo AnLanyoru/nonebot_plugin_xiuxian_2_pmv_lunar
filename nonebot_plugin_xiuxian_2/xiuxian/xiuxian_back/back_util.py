@@ -645,6 +645,7 @@ async def check_use_elixir(user_id, goods_id, num):
     goods_name = goods_info['name']
     back = await sql_message.get_item_by_good_id_and_user_id(user_id, goods_id)
     goods_all_num = back['all_num']
+    goods_day_num = back['day_num']
     if goods_info['buff_type'] == "level_up_rate":  # 增加突破概率的丹药
         if abs(goods_rank - 55) > user_rank:  # 最低使用限制
             msg = f"丹药：{goods_name}的最低使用境界为{goods_info['境界']}，道友不满足使用条件"
@@ -665,6 +666,22 @@ async def check_use_elixir(user_id, goods_id, num):
                 await sql_message.update_back_j(user_id, goods_id, num, 1)
                 await sql_message.update_levelrate(user_id, user_info['level_up_rate'] + goods_info['buff'] * num)
                 msg = f"道友成功使用丹药：{goods_name}{num}颗,下一次突破的成功概率提高{goods_info['buff'] * num}%!"
+
+    elif goods_info['buff_type'] == "stamina":  # 增加体力的丹药
+        if goods_day_num + num > goods_info['day_num']:
+            msg = f"道友使用的丹药：{goods_name}{num}颗 超出今日的使用上限({goods_day_num}/{goods_info['day_num']})！！"
+        else:  # 检查完毕
+            sum_buff = goods_info['buff'] * num
+            user_data = await sql_message.get_user_info_with_id(user_id)
+            now_stamina = user_data['user_stamina']
+            set_stamina = now_stamina + sum_buff
+            if set_stamina < XiuConfig().max_stamina:
+                await sql_message.update_back_j(user_id, goods_id, num, 1)
+                await sql_message.update_user_stamina(user_id, sum_buff, 1)
+                msg = f"道友成功使用丹药：{goods_name}{num}颗,恢复体力{sum_buff}!"
+            else:
+                msg = f"道友当前体力{now_stamina}/{XiuConfig().max_stamina}，使用丹药：{goods_name}{num}颗,将为道友恢复{sum_buff}点体力，超出上限！！！"
+            pass
 
     elif goods_info['buff_type'] == "hp":  # 回复状态的丹药
         if user_info['root'] == "器师":

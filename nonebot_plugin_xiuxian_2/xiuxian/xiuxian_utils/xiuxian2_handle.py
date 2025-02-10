@@ -825,10 +825,11 @@ class XiuxianDateManage:
         return await self.no_same_name(temp)
 
     async def no_same_name(self, name):
-        sql = f"SELECT * FROM user_xiuxian WHERE user_name is NOT NULL"
+        sql = f"SELECT user_name FROM user_xiuxian WHERE user_name=$1"
         async with self.pool.acquire() as db:
-            result = await db.fetch(sql)
+            result = await db.fetch(sql, name)
             result_all = [result_per[0] for result_per in result]
+            print(result_all)
             if name not in result_all:
                 return name
             else:

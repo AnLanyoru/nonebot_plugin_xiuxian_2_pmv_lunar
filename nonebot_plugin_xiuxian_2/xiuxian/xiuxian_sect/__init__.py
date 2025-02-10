@@ -433,7 +433,7 @@ async def sect_mainbuff_get_(bot: Bot, event: GroupMessageEvent):
     total_stone_cost = stonecost
     total_materials_cost = materialscost
 
-    if sect_info['sect_used_stone'] < total_stone_cost and sect_info['sect_materials'] >= total_materials_cost:
+    if sect_info['sect_used_stone'] < total_stone_cost or sect_info['sect_materials'] < total_materials_cost:
         msg = f"需要消耗{total_stone_cost}宗门灵石，{total_materials_cost}宗门资材，不满足条件！"
         await bot.send(event=event, message=msg)
         await sect_mainbuff_get.finish()
