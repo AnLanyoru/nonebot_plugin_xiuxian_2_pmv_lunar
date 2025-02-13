@@ -58,7 +58,7 @@ __impart_help__ = f"""
 """
 
 
-@impart_help.handle(parameterless=[Cooldown(at_sender=False)])
+@impart_help.handle(parameterless=[Cooldown()])
 async def impart_help_(bot: Bot, event: GroupMessageEvent):
     """传承帮助"""
     # 这里曾经是风控模块，但是已经不再需要了
@@ -67,7 +67,7 @@ async def impart_help_(bot: Bot, event: GroupMessageEvent):
     await impart_help.finish()
 
 
-@impart_img.handle(parameterless=[Cooldown(at_sender=False)])
+@impart_img.handle(parameterless=[Cooldown()])
 async def impart_img_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """传承卡图"""
     # 这里曾经是风控模块，但是已经不再需要了
@@ -107,7 +107,7 @@ async def impart_img_(bot: Bot, event: GroupMessageEvent, args: Message = Comman
     await impart_img.finish()
 
 
-@impart_draw.handle(parameterless=[Cooldown(cd_time=5, at_sender=False)])
+@impart_draw.handle(parameterless=[Cooldown(cd_time=5)])
 async def impart_draw_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """传承抽卡"""
 
@@ -174,7 +174,7 @@ async def impart_draw_(bot: Bot, event: GroupMessageEvent, args: Message = Comma
     await impart_draw.finish()
 
 
-@impart_draw_fast.handle(parameterless=[Cooldown(cd_time=5, at_sender=False)])
+@impart_draw_fast.handle(parameterless=[Cooldown(cd_time=5)])
 async def impart_draw_fast_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """传承抽卡"""
 
@@ -246,7 +246,7 @@ async def impart_draw_fast_(bot: Bot, event: GroupMessageEvent, args: Message = 
     await impart_draw_fast.finish()
 
 
-@impart_back.handle(parameterless=[Cooldown(at_sender=False)])
+@impart_back.handle(parameterless=[Cooldown()])
 async def impart_back_(bot: Bot, event: GroupMessageEvent):
     """传承背包"""
 
@@ -289,7 +289,7 @@ async def impart_back_(bot: Bot, event: GroupMessageEvent):
     await impart_back.finish()
 
 
-@re_impart_load.handle(parameterless=[Cooldown(at_sender=False)])
+@re_impart_load.handle(parameterless=[Cooldown()])
 async def re_impart_load_(bot: Bot, event: GroupMessageEvent):
     """加载传承数据"""
 
@@ -311,7 +311,7 @@ async def re_impart_load_(bot: Bot, event: GroupMessageEvent):
     await re_impart_load.finish()
 
 
-@impart_info.handle(parameterless=[Cooldown(at_sender=False)])
+@impart_info.handle(parameterless=[Cooldown()])
 async def impart_info_(bot: Bot, event: GroupMessageEvent):
     """传承信息"""
 

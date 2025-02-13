@@ -17,7 +17,7 @@ from .tower_fight import get_tower_battle_info
 from ..xiuxian_place import place
 from ..xiuxian_utils.clean_utils import msg_handler, main_md, get_num_from_str, get_args_num
 from ..xiuxian_utils.item_json import items
-from ..xiuxian_utils.lay_out import Cooldown
+from ..xiuxian_utils.lay_out import Cooldown, UserCmdLock
 from ..xiuxian_utils.utils import check_user, check_user_type
 from ..xiuxian_utils.xiuxian2_handle import (
     sql_message
@@ -62,7 +62,7 @@ async def tower_point_give_():
     logger.opt(colors=True).info(f"<green>发放塔积分完毕！！！</green>")
 
 
-@tower_top.handle(parameterless=[Cooldown(at_sender=False)])
+@tower_top.handle(parameterless=[Cooldown()])
 async def tower_top_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """结算挑战积分"""
     _, user_info, _ = await check_user(event)
@@ -106,9 +106,7 @@ async def tower_top_(bot: Bot, event: GroupMessageEvent, args: Message = Command
 
 @tower_point_get_reset.handle(
     parameterless=[
-        Cooldown(
-            cd_time=5,
-            at_sender=False)])
+        Cooldown(cd_time=5)])
 async def tower_point_get_reset_(
         bot: Bot,  # 机器人实例
         event: GroupMessageEvent,  # 消息主体
@@ -138,9 +136,7 @@ async def tower_point_get_reset_(
 
 @tower_shop_buy.handle(
     parameterless=[
-        Cooldown(
-            cd_time=5,
-            at_sender=False)])
+        Cooldown(cd_time=5)])
 async def tower_shop_buy_(
         bot: Bot,  # 机器人实例
         event: GroupMessageEvent,  # 消息主体
@@ -156,54 +152,56 @@ async def tower_shop_buy_(
     """挑战积分兑换"""
     _, user_info, _ = await check_user(event)
     user_id = user_info['user_id']
-    arg_str = args.extract_plain_text()
-    nums = get_num_from_str(arg_str)
-    goods_id = int(nums[0]) if nums else 0
-    goods_num = int(nums[1]) if len(nums) > 1 else 1
-    user_tower_info = await tower_handle.get_user_tower_info(user_id)
-    if not user_tower_info:
-        msg = "道友还未参加过位面挑战！"
+    user_cmd_lock = UserCmdLock(user_id)
+    with user_cmd_lock:
+        arg_str = args.extract_plain_text()
+        nums = get_num_from_str(arg_str)
+        goods_id = int(nums[0]) if nums else 0
+        goods_num = int(nums[1]) if len(nums) > 1 else 1
+        user_tower_info = await tower_handle.get_user_tower_info(user_id)
+        if not user_tower_info:
+            msg = "道友还未参加过位面挑战！"
+            await bot.send(event=event, message=msg)
+            await tower_shop_buy.finish()
+        place_id = user_tower_info.get('tower_place')
+        world_id = place.get_world_id(place_id)
+        tower = tower_handle.tower_data.get(world_id)
+        goods_info = tower.shop
+        goods = goods_info.get(goods_id, 0)
+        if not goods:
+            msg = "请输入正确的物品编号！！！"
+            await bot.send(event=event, message=msg)
+            await tower_shop_buy.finish()
+        goods_price = operator.mul(goods['price'], goods_num)
+        point = user_tower_info.get('tower_point')
+        item_id = goods.get('item', 0)
+        if item_id:
+            item = items.get_data_by_item_id(item_id)
+            item_name = item['name']
+        else:  # 兼容性处理
+            item = {}
+            item_name = "未知物品"
+        if operator.gt(goods_price, point):
+            msg = f"兑换{goods_num}个{item_name},需要{goods_price}点积分，道友仅有{point}点积分！！！"
+            await bot.send(event=event, message=msg)
+            await tower_shop_buy.finish()
+        await tower_handle.update_user_tower_point(user_id, goods_price, 1)
+        if item_id:
+            await sql_message.send_back(user_id, item_id, item_name, item['type'], goods_num, 1)
+        last_point = point - goods_price
+        msg = f"成功兑换{item_name}{goods_num}个"
+        text = f"消耗{goods_price}积分，余剩{last_point}积分"
+        msg = main_md(
+            msg, text,
+            '挑战积分兑换 物品编号 数量', '挑战积分兑换',
+            '挑战商店', '挑战商店',
+            '积分规则详情', '挑战之地规则详情',
+            '挑战排行', '挑战排行')
         await bot.send(event=event, message=msg)
         await tower_shop_buy.finish()
-    place_id = user_tower_info.get('tower_place')
-    world_id = place.get_world_id(place_id)
-    tower = tower_handle.tower_data.get(world_id)
-    goods_info = tower.shop
-    goods = goods_info.get(goods_id, 0)
-    if not goods:
-        msg = "请输入正确的物品编号！！！"
-        await bot.send(event=event, message=msg)
-        await tower_shop_buy.finish()
-    goods_price = operator.mul(goods['price'], goods_num)
-    point = user_tower_info.get('tower_point')
-    item_id = goods.get('item', 0)
-    if item_id:
-        item = items.get_data_by_item_id(item_id)
-        item_name = item['name']
-    else:  # 兼容性处理
-        item = {}
-        item_name = "未知物品"
-    if operator.gt(goods_price, point):
-        msg = f"兑换{goods_num}个{item_name},需要{goods_price}点积分，道友仅有{point}点积分！！！"
-        await bot.send(event=event, message=msg)
-        await tower_shop_buy.finish()
-    await tower_handle.update_user_tower_point(user_id, goods_price, 1)
-    if item_id:
-        await sql_message.send_back(user_id, item_id, item_name, item['type'], goods_num, 1)
-    last_point = point - goods_price
-    msg = f"成功兑换{item_name}{goods_num}个"
-    text = f"消耗{goods_price}积分，余剩{last_point}积分"
-    msg = main_md(
-        msg, text,
-        '挑战积分兑换 物品编号 数量', '挑战积分兑换',
-        '挑战商店', '挑战商店',
-        '积分规则详情', '挑战之地规则详情',
-        '挑战排行', '挑战排行')
-    await bot.send(event=event, message=msg)
-    await tower_shop_buy.finish()
 
 
-@tower_point_get.handle(parameterless=[Cooldown(at_sender=False)])
+@tower_point_get.handle(parameterless=[Cooldown()])
 async def tower_point_get_(bot: Bot, event: GroupMessageEvent):
     """结算挑战积分"""
     time_now = datetime.now()
@@ -243,9 +241,7 @@ async def tower_point_get_(bot: Bot, event: GroupMessageEvent):
 
 @tower_rule.handle(
     parameterless=[
-        Cooldown(
-            cd_time=3,
-            at_sender=False)])
+        Cooldown(cd_time=3)])
 async def tower_rule_(
         bot: Bot,  # 机器人实例
         event: GroupMessageEvent,  # 消息主体
@@ -263,9 +259,7 @@ async def tower_rule_(
 
 @tower_shop.handle(
     parameterless=[
-        Cooldown(
-            cd_time=3,
-            at_sender=False)])
+        Cooldown(cd_time=3)])
 async def tower_shop_(
         bot: Bot,  # 机器人实例
         event: GroupMessageEvent,  # 消息主体
@@ -295,7 +289,7 @@ async def tower_shop_(
     await tower_shop.finish()
 
 
-@tower_fight.handle(parameterless=[Cooldown(at_sender=False)])
+@tower_fight.handle(parameterless=[Cooldown()])
 async def tower_fight_(bot: Bot, event: GroupMessageEvent):
     """进行挑战"""
     time_now = datetime.now()
@@ -352,7 +346,7 @@ async def tower_fight_(bot: Bot, event: GroupMessageEvent):
     await tower_fight.finish()
 
 
-@tower_start.handle(parameterless=[Cooldown(at_sender=False)])
+@tower_start.handle(parameterless=[Cooldown()])
 async def tower_start_(bot: Bot, event: GroupMessageEvent):
     """进入挑战之地"""
     time_now = datetime.now()
@@ -416,7 +410,7 @@ async def tower_start_(bot: Bot, event: GroupMessageEvent):
         await tower_start.finish()
 
 
-@tower_info.handle(parameterless=[Cooldown(at_sender=False)])
+@tower_info.handle(parameterless=[Cooldown()])
 async def tower_info_(bot: Bot, event: GroupMessageEvent):
     """查看挑战"""
     time_now = datetime.now()
@@ -446,7 +440,7 @@ async def tower_info_(bot: Bot, event: GroupMessageEvent):
         await tower_info.finish()
 
 
-@tower_end.handle(parameterless=[Cooldown(at_sender=False)])
+@tower_end.handle(parameterless=[Cooldown()])
 async def tower_end_(bot: Bot, event: GroupMessageEvent):
     """离开挑战之地"""
     time_now = datetime.now()

@@ -21,7 +21,7 @@ from ..xiuxian_back.back_util import get_user_yaocai_back_msg, get_user_yaocai_b
 from ..xiuxian_config import convert_rank
 from ..xiuxian_database.database_connect import database
 from ..xiuxian_utils.clean_utils import get_strs_from_str, get_args_num, get_paged_msg, get_num_from_str, main_md, \
-    three_md, simple_md
+    three_md, simple_md, zips
 from ..xiuxian_utils.item_json import items
 from ..xiuxian_utils.lay_out import Cooldown
 from ..xiuxian_utils.utils import (
@@ -36,15 +36,31 @@ cache_help = {}
 herb_id_map = {herb_name: herb_id for herb_name, herb_id in items.items_map.items()
                if items.get_data_by_item_id(herb_id).get('type') == '药材'}
 
+
+async def get_yuan_xiao_top():
+    """挑战排行"""
+    sql = (f"SELECT "
+           f"(SELECT max(user_name) FROM user_xiuxian WHERE user_xiuxian.user_id = mix_elixir_info.user_id) "
+           f"as user_name, "
+           f"sum_mix_num "
+           f"FROM mix_elixir_info "
+           f"ORDER BY sum_mix_num DESC "
+           f"limit 100")
+    async with database.pool.acquire() as db:
+        result = await db.fetch(sql)
+        result_all = [zips(**result_per) for result_per in result]
+        return result_all
+
+
 alchemy_furnace_state = on_command("丹炉状态", priority=5, permission=GROUP, block=True)
 alchemy_furnace_fire_control = on_command("丹炉升温", aliases={"丹炉降温"}, priority=5, permission=GROUP, block=True)
 make_elixir = on_command("凝结丹药", aliases={"成丹", "开"}, priority=10, permission=GROUP, block=True)
 alchemy_furnace_add_herb = on_command("添加药材", priority=5, permission=GROUP, block=True)
-mix_stop = on_command("停止炼丹", priority=5, permission=GROUP, block=True)
+mix_stop = on_command("停止炼丹", aliases={'退出炼丹'}, priority=5, permission=GROUP, block=True)
 mix_elixir = on_fullmatch("丹方", priority=17, permission=GROUP, block=True)
 mix_make = on_command("使用丹方", priority=5, permission=GROUP, block=True)
 elixir_help = on_command("炼丹", priority=7, permission=GROUP, block=True)
-mix_elixir_help = on_fullmatch("炼丹配方帮助", priority=7, permission=GROUP, block=True)
+mix_elixir_help = on_fullmatch("炼丹帮助", priority=6, permission=GROUP, block=True)
 elixir_back = on_command("丹药背包", priority=10, permission=GROUP, block=True)
 yaocai_back = on_command("药材背包", priority=10, permission=GROUP, block=True)
 yaocai_get = on_command("灵田收取", aliases={"灵田结算"}, priority=8, permission=GROUP, block=True)
@@ -53,6 +69,9 @@ mix_elixir_fire_improve = on_command("丹火升级", aliases={"升级丹火"}, p
 mix_elixir_fire_improve_num = on_fullmatch("丹火升级塑形", priority=5, permission=GROUP, block=True)
 mix_elixir_fire_improve_power = on_fullmatch("丹火升级萃取", priority=5, permission=GROUP, block=True)
 yaocai_get_op = on_command("op灵田收取", aliases={"op灵田结算"}, priority=8, permission=SUPERUSER, block=True)
+elixir_top = on_command("炼丹排行榜", priority=8, permission=GROUP, block=True)
+alchemy_furnace_get = on_command("购买丹炉", priority=8, permission=GROUP, block=True)
+mix_elixir_fire_remake = on_command("重塑丹火", priority=5, permission=GROUP, block=True)
 
 __elixir_help__ = f"""
 炼丹帮助信息:
@@ -64,12 +83,21 @@ __elixir_help__ = f"""
 4、丹炉（升|降）温 温度
 5、凝结丹药|成丹
 6、停止炼丹
+7、购买丹炉
+8、丹火升级
+9、重塑丹火
+10、炼丹帮助
 """
 
 __mix_elixir_help__ = f"""
-炼丹配方信息
+炼丹教程
 1、炼丹需要主药、药引、辅药
 3、草药的类型控制产出丹药的类型
+3、使用 炼丹炉 来开始炼丹
+4、通过丹炉升温/丹炉降温来控制丹炉温度稳定在500上下
+5、丹炉温度稳定后，开始加入药材
+6、可以利用低级药材探索成丹规律并且练习控制丹炉火焰来为炼制高级药材做准备
+7、发送 炼丹 来查看所有炼丹具体指令
 """
 
 level_up_need_exp = {0: 1000,
@@ -85,10 +113,106 @@ fire_name_by_level = {0: '普通火焰',
                       4: '万象灵火'}.copy()
 
 
+@alchemy_furnace_get.handle(parameterless=[Cooldown(stamina_cost=0)])
+async def alchemy_furnace_get_(bot: Bot, event: GroupMessageEvent):
+    """结束炼丹"""
+    user_type = 0  # 状态为空闲
+
+    _, user_info, _ = await check_user(event)
+
+    user_id = user_info['user_id']
+    user_stone = user_info['stone']
+    if user_stone < 5000000:
+        msg = '道友的灵石不足呢，购置丹炉需要花费500w灵石！'
+        await bot.send(event=event, message=msg)
+        await alchemy_furnace_get.finish()
+    alchemy_furnace_in_back = await sql_message.get_item_by_good_id_and_user_id(user_id=user_id,
+                                                                                goods_id=4003)
+    if alchemy_furnace_in_back:
+        msg = '道友已经购置过丹炉了呢！'
+        await bot.send(event=event, message=msg)
+        await alchemy_furnace_get.finish()
+
+    msg = "陨铁炉*1 购买成功，道友还请好好爱惜！"
+    await sql_message.update_ls(user_id, 5000000, 2)
+    await sql_message.send_item(user_id, {4003: 1}, 1)
+    await bot.send(event=event, message=msg)
+    await alchemy_furnace_get.finish()
+
+
+@elixir_top.handle(parameterless=[Cooldown()])
+async def elixir_top_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
+    """炼丹排行榜"""
+    page = get_args_num(args, 1, default=1)
+    lt_rank = await get_yuan_xiao_top()
+    long_rank = len(lt_rank)
+    page_all = (long_rank // 20) + 1 if long_rank % 20 != 0 else long_rank // 20  # 总页数
+    if page_all < page != 1:
+        msg = f"炼丹排行榜没有那么广阔！！！"
+        await bot.send(event=event, message=msg)
+        await elixir_top.finish()
+    if long_rank != 0:
+        # 获取页数物品数量
+        item_num = page * 20 - 20
+        item_num_end = item_num + 20
+        lt_rank = lt_rank[item_num:item_num_end]
+        top_msg = f"✨炼丹排行TOP{item_num_end}✨"
+        msg = ''
+        num = item_num
+        for i in lt_rank:
+            i = list(i.values())
+            num += 1
+            msg += f"第{num}位 {i[0]} 总成丹数:{i[1]}颗\r"
+        msg += f"第 {page}/{page_all} 页"
+        msg = main_md(top_msg, msg,
+                      '灵石排行榜', '灵石排行榜',
+                      '修为排行榜', '排行榜',
+                      '宗门排行榜', '宗门排行榜',
+                      '下一页', f'炼丹排行榜 {page + 1}')
+    else:
+        msg = f"该排行榜空空如也！"
+    await bot.send(event=event, message=msg)
+    await elixir_top.finish()
+
+
+@mix_elixir_fire_remake.handle(
+    parameterless=[Cooldown(stamina_cost=0, parallel_block=True)])
+async def mix_elixir_fire_remake_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
+    """丹火重塑"""
+
+    _, user_info, _ = await check_user(event)
+
+    user_id = user_info['user_id']
+
+    # 获取用户炼丹数据
+    user_mix_elixir_info = await get_user_mix_elixir_info(user_id)
+    user_fire_num = user_mix_elixir_info['user_fire_more_num']
+    user_fire_power = user_mix_elixir_info['user_fire_more_power']
+    if '确认' not in args.extract_plain_text():
+        msg = simple_md(f"道友当前丹火升级状态为："
+                        f"萃取lv.{user_fire_power}, 塑形lv.{user_fire_num}\r"
+                        f"若确定清空当前丹火升级，请自行在指令后加上",
+                        "确认", "确认",
+                        f"。")
+        await bot.send(event=event, message=msg)
+        await mix_elixir_fire_remake.finish()
+
+    user_skill_improve_data = {
+        'user_fire_more_power': 0,
+        'user_fire_more_num': 0}
+    await database.update(table='mix_elixir_info',
+                          where={'user_id': user_id},
+                          **user_skill_improve_data)
+
+    msg = simple_md(f"道友成功重塑丹火，丹火等级归0\r",
+                    "升级丹火", "升级丹火",
+                    f"。")
+    await bot.send(event=event, message=msg)
+    await mix_elixir_fire_remake.finish()
+
+
 @mix_elixir_fire_improve_num.handle(
-    parameterless=[Cooldown(stamina_cost=0,
-                            at_sender=False,
-                            parallel_block=True)])
+    parameterless=[Cooldown(stamina_cost=0, parallel_block=True)])
 async def mix_elixir_fire_improve_num_(bot: Bot, event: GroupMessageEvent):
     """丹火升级塑形"""
 
@@ -132,9 +256,7 @@ async def mix_elixir_fire_improve_num_(bot: Bot, event: GroupMessageEvent):
 
 
 @mix_elixir_fire_improve_power.handle(
-    parameterless=[Cooldown(stamina_cost=0,
-                            at_sender=False,
-                            parallel_block=True)])
+    parameterless=[Cooldown(stamina_cost=0, parallel_block=True)])
 async def mix_elixir_fire_improve_power_(bot: Bot, event: GroupMessageEvent):
     """丹火升级萃取"""
 
@@ -177,7 +299,7 @@ async def mix_elixir_fire_improve_power_(bot: Bot, event: GroupMessageEvent):
     await mix_elixir_fire_improve_power.finish()
 
 
-@mix_elixir_fire_improve.handle(parameterless=[Cooldown(stamina_cost=0, at_sender=False)])
+@mix_elixir_fire_improve.handle(parameterless=[Cooldown(stamina_cost=0)])
 async def mix_elixir_fire_improve_(bot: Bot, event: GroupMessageEvent):
     """丹火升级"""
 
@@ -196,7 +318,7 @@ async def mix_elixir_fire_improve_(bot: Bot, event: GroupMessageEvent):
     if sum_level == 4:
         msg = f"道友的丹火已暂时提升到顶了！"
         await bot.send(event=event, message=msg)
-        await mix_elixir_fire_improve_power.finish()
+        await mix_elixir_fire_improve.finish()
 
     if (need_exp := level_up_need_exp.get(sum_level)) > user_elixir_exp:
         msg = f"道友当前炼丹经验不足以提升丹火，当前：{user_elixir_exp} 所需：{need_exp}"
@@ -211,7 +333,7 @@ async def mix_elixir_fire_improve_(bot: Bot, event: GroupMessageEvent):
     await mix_elixir_fire_improve.finish()
 
 
-@make_elixir.handle(parameterless=[Cooldown(stamina_cost=0, at_sender=False)])
+@make_elixir.handle(parameterless=[Cooldown(stamina_cost=0)])
 async def make_elixir_(bot: Bot, event: GroupMessageEvent):
     """凝结丹药"""
 
@@ -280,7 +402,7 @@ async def make_elixir_(bot: Bot, event: GroupMessageEvent):
     await make_elixir.finish()
 
 
-@alchemy_furnace_fire_control.handle(parameterless=[Cooldown(stamina_cost=0, at_sender=False)])
+@alchemy_furnace_fire_control.handle(parameterless=[Cooldown(stamina_cost=0)])
 async def alchemy_furnace_fire_control_(
         bot: Bot, event: GroupMessageEvent, args: Message = CommandArg(), cmd: str = RawCommand()):
     """丹炉控制温度"""
@@ -318,7 +440,7 @@ async def alchemy_furnace_fire_control_(
     await alchemy_furnace_fire_control.finish()
 
 
-@alchemy_furnace_state.handle(parameterless=[Cooldown(stamina_cost=0, at_sender=False)])
+@alchemy_furnace_state.handle(parameterless=[Cooldown(stamina_cost=0)])
 async def alchemy_furnace_state_(bot: Bot, event: GroupMessageEvent):
     """丹炉状态"""
 
@@ -344,7 +466,7 @@ async def alchemy_furnace_state_(bot: Bot, event: GroupMessageEvent):
     await alchemy_furnace_state.finish()
 
 
-@mix_stop.handle(parameterless=[Cooldown(stamina_cost=0, at_sender=False)])
+@mix_stop.handle(parameterless=[Cooldown(stamina_cost=0)])
 async def mix_stop_(bot: Bot, event: GroupMessageEvent):
     """结束炼丹"""
     user_type = 0  # 状态为空闲
@@ -363,7 +485,7 @@ async def mix_stop_(bot: Bot, event: GroupMessageEvent):
     await mix_stop.finish()
 
 
-@alchemy_furnace_add_herb.handle(parameterless=[Cooldown(stamina_cost=0, at_sender=False)])
+@alchemy_furnace_add_herb.handle(parameterless=[Cooldown(stamina_cost=0)])
 async def alchemy_furnace_add_herb_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """丹炉加药"""
 
@@ -452,7 +574,7 @@ async def alchemy_furnace_add_herb_(bot: Bot, event: GroupMessageEvent, args: Me
     await alchemy_furnace_add_herb.finish()
 
 
-@yaocai_get_op.handle(parameterless=[Cooldown(stamina_cost=0, at_sender=False)])
+@yaocai_get_op.handle(parameterless=[Cooldown(stamina_cost=0)])
 async def yaocai_get_op_(bot: Bot, event: GroupMessageEvent):
     """灵田收取"""
 
@@ -486,7 +608,7 @@ async def yaocai_get_op_(bot: Bot, event: GroupMessageEvent):
     await yaocai_get_op.finish()
 
 
-@yaocai_get.handle(parameterless=[Cooldown(stamina_cost=0, at_sender=False)])
+@yaocai_get.handle(parameterless=[Cooldown(stamina_cost=0)])
 async def yaocai_get_(bot: Bot, event: GroupMessageEvent):
     """灵田收取"""
 
@@ -556,7 +678,7 @@ async def yaocai_get_(bot: Bot, event: GroupMessageEvent):
             await yaocai_get.finish()
 
 
-@my_mix_elixir_info.handle(parameterless=[Cooldown(at_sender=False)])
+@my_mix_elixir_info.handle(parameterless=[Cooldown()])
 async def my_mix_elixir_info_(bot: Bot, event: GroupMessageEvent):
     """我的炼丹信息"""
 
@@ -589,7 +711,7 @@ async def my_mix_elixir_info_(bot: Bot, event: GroupMessageEvent):
     await my_mix_elixir_info.finish()
 
 
-@elixir_help.handle(parameterless=[Cooldown(at_sender=False)])
+@elixir_help.handle(parameterless=[Cooldown()])
 async def elixir_help_(bot: Bot, event: GroupMessageEvent):
     """炼丹帮助"""
     # 这里曾经是风控模块，但是已经不再需要了
@@ -598,7 +720,7 @@ async def elixir_help_(bot: Bot, event: GroupMessageEvent):
     await elixir_help.finish()
 
 
-@mix_elixir_help.handle(parameterless=[Cooldown(at_sender=False)])
+@mix_elixir_help.handle(parameterless=[Cooldown()])
 async def mix_elixir_help_(bot: Bot, event: GroupMessageEvent):
     """炼丹配方帮助"""
     # 这里曾经是风控模块，但是已经不再需要了
@@ -611,7 +733,7 @@ user_ldl_dict = {}
 user_ldl_flag = {}
 
 
-@elixir_back.handle(parameterless=[Cooldown(at_sender=False)])
+@elixir_back.handle(parameterless=[Cooldown()])
 async def elixir_back_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """丹药背包
     ["user_id", "goods_id", "goods_name", "goods_type", "goods_num", "create_time", "update_time",
@@ -630,7 +752,7 @@ async def elixir_back_(bot: Bot, event: GroupMessageEvent, args: Message = Comma
     await elixir_back.finish()
 
 
-@yaocai_back.handle(parameterless=[Cooldown(at_sender=False)])
+@yaocai_back.handle(parameterless=[Cooldown()])
 async def yaocai_back_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg(), cmd: str = RawCommand()):
     """药材背包
     ["user_id", "goods_id", "goods_name", "goods_type", "goods_num", "create_time", "update_time",

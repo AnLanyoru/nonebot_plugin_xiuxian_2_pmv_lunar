@@ -5,7 +5,7 @@ from nonebot.adapters.onebot.v11 import (
     Bot,
     GROUP,
     GroupMessageEvent,
-    MessageSegment, Message
+    Message
 )
 from nonebot.log import logger
 from nonebot.params import CommandArg
@@ -25,7 +25,6 @@ from ..xiuxian_utils.item_json import items
 from ..xiuxian_utils.lay_out import Cooldown
 from ..xiuxian_utils.utils import (
     check_user, check_user_type,
-    CommandObjectID
 )
 from ..xiuxian_utils.xiuxian2_handle import sql_message
 
@@ -38,6 +37,8 @@ set_rift = require("nonebot_plugin_apscheduler").scheduler
 rift_help = on_command("秘境帮助", priority=6, permission=GROUP, block=True)
 create_rift = on_command("生成秘境", priority=5, permission=SUPERUSER, block=True)
 create_rift_with_args = on_command("创造秘境", priority=5, permission=SUPERUSER, block=True)
+create_rift_open = on_command("开启自动生成秘境", priority=5, permission=SUPERUSER, block=True)
+create_rift_close = on_command("关闭自动生成秘境", priority=5, permission=SUPERUSER, block=True)
 complete_rift = on_command("探索秘境", aliases={"结算秘境"}, priority=7, permission=GROUP, block=True)
 rift_protect_handle = on_command("秘境战斗事件保底", priority=5, permission=GROUP, block=True)
 rift_protect_msg = on_command("查看秘境战斗事件保底", priority=5, permission=GROUP, block=True)
@@ -57,6 +58,8 @@ __rift_help__ = f"""
 tips：每天早八各位面将会生成一个随机等级的秘境供各位道友探索
 """.strip()
 
+normal_refresh = 0
+
 
 @DRIVER.on_startup
 async def read_rift_():
@@ -69,7 +72,6 @@ async def read_rift_():
 @set_rift.scheduled_job("cron", hour=8, minute=0)
 async def set_rift_(place_cls=place):
     global world_rift
-    normal_refresh = 1
     if normal_refresh:
         if place_cls.get_worlds():
             world_rift = {}
@@ -89,7 +91,27 @@ async def set_rift_(place_cls=place):
             logger.opt(colors=True).info(f"<green>rift数据已保存</green>")
 
 
-@create_rift_with_args.handle(parameterless=[Cooldown(at_sender=False)])
+@create_rift_open.handle(parameterless=[Cooldown()])
+async def create_rift_open_(bot: Bot, event: GroupMessageEvent):
+    """秘境帮助"""
+    global normal_refresh
+    normal_refresh = 1
+    msg = "秘境自动生成已开启"
+    await bot.send(event=event, message=msg)
+    await create_rift_open.finish()
+
+
+@create_rift_close.handle(parameterless=[Cooldown()])
+async def create_rift_close_(bot: Bot, event: GroupMessageEvent):
+    """秘境帮助"""
+    global normal_refresh
+    normal_refresh = 0
+    msg = "秘境自动生成已关闭"
+    await bot.send(event=event, message=msg)
+    await create_rift_close.finish()
+
+
+@create_rift_with_args.handle(parameterless=[Cooldown()])
 async def create_rift_with_args_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """
     生成秘境，格式为 生成秘境 等级 秘境名称 位置（不填则随机）
@@ -136,20 +158,15 @@ async def create_rift_with_args_(bot: Bot, event: GroupMessageEvent, args: Messa
     await create_rift_with_args.finish()
 
 
-@rift_help.handle(parameterless=[Cooldown(at_sender=False)])
-async def rift_help_(bot: Bot, event: GroupMessageEvent, session_id: int = CommandObjectID()):
+@rift_help.handle(parameterless=[Cooldown()])
+async def rift_help_(bot: Bot, event: GroupMessageEvent):
     """秘境帮助"""
-    # 这里曾经是风控模块，但是已经不再需要了
-    if session_id in cache_help:
-        await bot.send(event=event, message=MessageSegment.image(cache_help[session_id]))
-        await rift_help.finish()
-    else:
-        msg = __rift_help__
-        await bot.send(event=event, message=msg)
-        await rift_help.finish()
+    msg = __rift_help__
+    await bot.send(event=event, message=msg)
+    await rift_help.finish()
 
 
-@create_rift.handle(parameterless=[Cooldown(at_sender=False)])
+@create_rift.handle(parameterless=[Cooldown()])
 async def create_rift_(bot: Bot, event: GroupMessageEvent):
     """
     生成秘境，格式为 生成秘境 位置 秘境名称（可不填）//未完成
@@ -184,7 +201,7 @@ async def create_rift_(bot: Bot, event: GroupMessageEvent):
     await create_rift.finish()
 
 
-@complete_rift.handle(parameterless=[Cooldown(stamina_cost=240, at_sender=False)])
+@complete_rift.handle(parameterless=[Cooldown(stamina_cost=240)])
 async def complete_rift_(bot: Bot, event: GroupMessageEvent):
     """探索秘境"""
 
@@ -258,7 +275,7 @@ async def complete_rift_(bot: Bot, event: GroupMessageEvent):
     await complete_rift.finish()
 
 
-@rift_protect_handle.handle(parameterless=[Cooldown(cd_time=2400, at_sender=False)])
+@rift_protect_handle.handle(parameterless=[Cooldown(cd_time=2400)])
 async def rift_protect_handle_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """秘境保底"""
 
@@ -291,7 +308,7 @@ async def rift_protect_handle_(bot: Bot, event: GroupMessageEvent, args: Message
     await rift_protect_handle.finish()
 
 
-@rift_protect_msg.handle(parameterless=[Cooldown(cd_time=10, at_sender=False)])
+@rift_protect_msg.handle(parameterless=[Cooldown(cd_time=10)])
 async def rift_protect_msg_(bot: Bot, event: GroupMessageEvent):
     """秘境保底"""
 

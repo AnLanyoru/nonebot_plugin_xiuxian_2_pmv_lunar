@@ -49,7 +49,7 @@ timeback = on_command('回到过去', priority=15, permission=SUPERUSER, block=T
 time_set_now = on_command('逆转时空', priority=15, permission=SUPERUSER, block=True)
 
 
-@warring_help.handle(parameterless=[Cooldown(at_sender=False)])
+@warring_help.handle(parameterless=[Cooldown()])
 async def warring_help_(bot: Bot, event: GroupMessageEvent):
     """轮回重修帮助"""
 
@@ -58,7 +58,7 @@ async def warring_help_(bot: Bot, event: GroupMessageEvent):
     await warring_help.finish()
 
 
-@lunhui.handle(parameterless=[Cooldown(at_sender=False)])
+@lunhui.handle(parameterless=[Cooldown()])
 async def lunhui_(bot: Bot, event: GroupMessageEvent):
     _, user_info, _ = await check_user(event)
 
@@ -108,7 +108,7 @@ async def lunhui_(bot: Bot, event: GroupMessageEvent):
         await lunhui.finish()
 
 
-@twolun.handle(parameterless=[Cooldown(at_sender=False)])
+@twolun.handle(parameterless=[Cooldown()])
 async def twolun_(bot: Bot, event: GroupMessageEvent):
     _, user_info, _ = await check_user(event)
 
@@ -158,7 +158,7 @@ async def twolun_(bot: Bot, event: GroupMessageEvent):
         await twolun.finish()
 
 
-@threelun.handle(parameterless=[Cooldown(at_sender=False)])
+@threelun.handle(parameterless=[Cooldown()])
 async def threelun_(bot: Bot, event: GroupMessageEvent):
     _, user_info, _ = await check_user(event)
 
@@ -205,7 +205,7 @@ async def threelun_(bot: Bot, event: GroupMessageEvent):
         await threelun.finish()
 
 
-@resetting.handle(parameterless=[Cooldown(at_sender=False)])
+@resetting.handle(parameterless=[Cooldown()])
 async def resetting_(bot: Bot, event: GroupMessageEvent):
     _, user_info, _ = await check_user(event)
 
@@ -229,7 +229,7 @@ async def resetting_(bot: Bot, event: GroupMessageEvent):
         await resetting.finish()
 
 
-@gettest.handle(parameterless=[Cooldown(at_sender=False)])
+@gettest.handle(parameterless=[Cooldown()])
 async def gettest_(bot: Bot, event: GroupMessageEvent, state: T_State):
     # 这里曾经是风控模块，但是已经不再需要了
     _, user_info, _ = await check_user(event)
@@ -263,7 +263,7 @@ async def gettest_(bot: Bot, event: GroupMessageEvent, state: T_State):
         await gettest.finish()
 
 
-@time_set_now.handle(parameterless=[Cooldown(at_sender=False)])
+@time_set_now.handle(parameterless=[Cooldown()])
 async def time_set_now_(bot: Bot, event: GroupMessageEvent):
     _, user_info, _ = await check_user(event)
 

@@ -25,7 +25,7 @@ get_shop_log = on_command('坊市日志', aliases={"查询坊市日志", "查看
                           block=True)
 
 
-@offset.handle(parameterless=[Cooldown(cd_time=30, at_sender=False)])
+@offset.handle(parameterless=[Cooldown()])
 async def offset_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     _, user_info, _ = await check_user(event)
 
@@ -56,7 +56,7 @@ async def offset_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg
     await offset.finish()
 
 
-@offset_get.handle(parameterless=[Cooldown(cd_time=3, at_sender=False)])
+@offset_get.handle(parameterless=[Cooldown(cd_time=3)])
 async def offset_get_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     _, user_info, _ = await check_user(event)
 
@@ -91,7 +91,7 @@ async def offset_get_(bot: Bot, event: GroupMessageEvent, args: Message = Comman
     await offset.finish()
 
 
-@get_log.handle(parameterless=[Cooldown(cd_time=30, at_sender=False)])
+@get_log.handle(parameterless=[Cooldown(cd_time=30)])
 async def offset_(bot: Bot, event: GroupMessageEvent):
     _, user_info, _ = await check_user(event)
 
@@ -106,7 +106,7 @@ async def offset_(bot: Bot, event: GroupMessageEvent):
         await get_log.finish()
 
 
-@get_shop_log.handle(parameterless=[Cooldown(cd_time=30, at_sender=False)])
+@get_shop_log.handle(parameterless=[Cooldown(cd_time=30)])
 async def offset_(bot: Bot, event: GroupMessageEvent):
     _, user_info, _ = await check_user(event)
 

@@ -33,14 +33,14 @@ beg_stone = on_command("仙途奇缘", permission=GROUP, priority=7, block=True)
 beg_help = on_command("仙途奇缘帮助", permission=GROUP, priority=7, block=True)
 
 
-@beg_help.handle(parameterless=[Cooldown(at_sender=False)])
+@beg_help.handle(parameterless=[Cooldown()])
 async def beg_help_(bot: Bot, event: GroupMessageEvent):
     msg = __beg_help__
     await bot.send(event=event, message=msg)
     await beg_help.finish()
 
 
-@beg_stone.handle(parameterless=[Cooldown(at_sender=False)])
+@beg_stone.handle(parameterless=[Cooldown()])
 async def beg_stone_(bot: Bot, event: GroupMessageEvent):
     # 这里曾经是风控模块，但是已经不再需要了
 

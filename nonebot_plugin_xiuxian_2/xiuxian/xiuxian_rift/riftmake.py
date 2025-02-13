@@ -65,7 +65,7 @@ STORY = {
             "type_rate": 20,
         },
         "灵石": {
-            "type_rate": 20,
+            "type_rate": 10,
             "stone": 20000000
         }
     },

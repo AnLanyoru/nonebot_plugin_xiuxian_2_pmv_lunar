@@ -64,7 +64,7 @@ a_test = on_fullmatch("测试保存", priority=9, permission=SUPERUSER, block=Tr
 daily_work = on_command("日常", priority=9, permission=GROUP, block=True)
 
 
-@blessed_spot_create.handle(parameterless=[Cooldown(at_sender=False)])
+@blessed_spot_create.handle(parameterless=[Cooldown()])
 async def blessed_spot_create_(bot: Bot, event: GroupMessageEvent):
     """洞天福地购买"""
     _, user_info, _ = await check_user(event)
@@ -94,7 +94,7 @@ async def blessed_spot_create_(bot: Bot, event: GroupMessageEvent):
         await blessed_spot_create.finish()
 
 
-@blessed_spot_info.handle(parameterless=[Cooldown(at_sender=False)])
+@blessed_spot_info.handle(parameterless=[Cooldown()])
 async def blessed_spot_info_(bot: Bot, event: GroupMessageEvent):
     """洞天福地信息"""
     _, user_info, _ = await check_user(event)
@@ -118,7 +118,7 @@ async def blessed_spot_info_(bot: Bot, event: GroupMessageEvent):
     await blessed_spot_info.finish()
 
 
-@ling_tian_up.handle(parameterless=[Cooldown(at_sender=False)])
+@ling_tian_up.handle(parameterless=[Cooldown()])
 async def ling_tian_up_(bot: Bot, event: GroupMessageEvent):
     """洞天福地灵田升级"""
     # 这里曾经是风控模块，但是已经不再需要了
@@ -192,7 +192,7 @@ async def ling_tian_up_(bot: Bot, event: GroupMessageEvent):
     await ling_tian_up.finish()
 
 
-@blessed_spot_rename.handle(parameterless=[Cooldown(at_sender=False)])
+@blessed_spot_rename.handle(parameterless=[Cooldown()])
 async def blessed_spot_rename_(bot: Bot, event: GroupMessageEvent):
     """洞天福地改名"""
     # 这里曾经是风控模块，但是已经不再需要了
@@ -219,7 +219,7 @@ async def blessed_spot_rename_(bot: Bot, event: GroupMessageEvent):
     await blessed_spot_rename.finish()
 
 
-@qc.handle(parameterless=[Cooldown(cd_time=10, stamina_cost=0, at_sender=False)])
+@qc.handle(parameterless=[Cooldown(cd_time=20)])
 async def qc_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """切磋，不会掉血"""
     args = args.extract_plain_text()
@@ -276,7 +276,7 @@ async def qc_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
         await qc.finish()
 
 
-@two_exp.handle(parameterless=[Cooldown(stamina_cost=0, at_sender=False)])
+@two_exp.handle(parameterless=[Cooldown(stamina_cost=0)])
 async def two_exp_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg(), cmd: str = RawCommand()):
     """双修"""
 
@@ -411,7 +411,7 @@ async def two_exp_(bot: Bot, event: GroupMessageEvent, args: Message = CommandAr
     await two_exp.finish()
 
 
-@stone_exp.handle(parameterless=[Cooldown(at_sender=False)])
+@stone_exp.handle(parameterless=[Cooldown()])
 async def stone_exp_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """灵石修炼"""
 
@@ -480,7 +480,7 @@ async def stone_exp_(bot: Bot, event: GroupMessageEvent, args: Message = Command
             await stone_exp.finish()
 
 
-@in_closing.handle(parameterless=[Cooldown(at_sender=False)])
+@in_closing.handle(parameterless=[Cooldown()])
 async def in_closing_(bot: Bot, event: GroupMessageEvent):
     """闭关"""
     user_type = 1  # 状态1为闭关状态
@@ -496,7 +496,7 @@ async def in_closing_(bot: Bot, event: GroupMessageEvent):
     await in_closing.finish()
 
 
-@out_closing.handle(parameterless=[Cooldown(at_sender=False)])
+@out_closing.handle(parameterless=[Cooldown()])
 async def out_closing_(bot: Bot, event: GroupMessageEvent):
     """出关"""
     # 状态变更事件标识
@@ -557,7 +557,7 @@ async def out_closing_(bot: Bot, event: GroupMessageEvent):
     await out_closing.finish()
 
 
-@mind_state.handle(parameterless=[Cooldown(at_sender=False)])
+@mind_state.handle(parameterless=[Cooldown()])
 async def mind_state_(bot: Bot, event: GroupMessageEvent):
     """我的状态信息"""
 
@@ -657,7 +657,7 @@ async def mind_state_(bot: Bot, event: GroupMessageEvent):
     await mind_state.finish()
 
 
-@select_state.handle(parameterless=[Cooldown(at_sender=False)])
+@select_state.handle(parameterless=[Cooldown()])
 async def select_state_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """查看其他角色状态信息"""
 
@@ -736,7 +736,7 @@ boss战增益:{int(boss_atk * 100)}%
     await select_state.finish()
 
 
-@buffinfo.handle(parameterless=[Cooldown(at_sender=False)])
+@buffinfo.handle(parameterless=[Cooldown()])
 async def buffinfo_(bot: Bot, event: GroupMessageEvent):
     """我的功法"""
 
@@ -769,7 +769,7 @@ async def buffinfo_(bot: Bot, event: GroupMessageEvent):
     await buffinfo.finish()
 
 
-@del_exp_decimal.handle(parameterless=[Cooldown(at_sender=False)])
+@del_exp_decimal.handle(parameterless=[Cooldown()])
 async def del_exp_decimal_(bot: Bot, event: GroupMessageEvent):
     """清除修为浮点数"""
 
@@ -783,7 +783,7 @@ async def del_exp_decimal_(bot: Bot, event: GroupMessageEvent):
     await del_exp_decimal.finish()
 
 
-@my_exp_num.handle(parameterless=[Cooldown(at_sender=False)])
+@my_exp_num.handle(parameterless=[Cooldown()])
 async def my_exp_num_(bot: Bot, event: GroupMessageEvent):
     """我的双修次数"""
     # 这里曾经是风控模块，但是已经不再需要了
@@ -803,7 +803,7 @@ async def my_exp_num_(bot: Bot, event: GroupMessageEvent):
     await my_exp_num.finish()
 
 
-@daily_work.handle(parameterless=[Cooldown(at_sender=False)])
+@daily_work.handle(parameterless=[Cooldown()])
 async def daily_work_(bot: Bot, event: GroupMessageEvent):
     """我的双修次数"""
     # 这里曾经是风控模块，但是已经不再需要了
@@ -864,7 +864,7 @@ async def daily_work_(bot: Bot, event: GroupMessageEvent):
             f"宗门任务完成 {user_info['sect_task']}/4\r"
             f"灵田当前状态 {farm}\r"
             f"本周位面挑战{tower_msg}\r"
-            f"新春活动进行中：发送 新春 参与！！")
+            f"元宵活动进行中：发送 元宵 参与！！")
     msg = main_md(msg, text,
                   "双修", "双修",
                   "悬赏令", "悬赏令",

@@ -34,7 +34,7 @@ active_gift = on_command("神州大地齐欢腾，祝福祖国永太平", priori
 hp_set = on_command("设置血量", priority=1, permission=GROUP, block=True)
 
 
-@hp_set.handle(parameterless=[Cooldown(cd_time=60, at_sender=False)])
+@hp_set.handle(parameterless=[Cooldown(cd_time=60)])
 async def hp_set_(bot: Bot, event: GroupMessageEvent):
     """修炼"""
 
@@ -49,7 +49,7 @@ async def hp_set_(bot: Bot, event: GroupMessageEvent):
     await hp_set.finish()
 
 
-@exp_up.handle(parameterless=[Cooldown(cd_time=60, at_sender=False)])
+@exp_up.handle(parameterless=[Cooldown(cd_time=60)])
 async def exp_up_(bot: Bot, event: GroupMessageEvent):
     """修炼"""
 
@@ -127,7 +127,7 @@ async def exp_up_(bot: Bot, event: GroupMessageEvent):
         await exp_up.finish()
 
 
-@exp_up_end.handle(parameterless=[Cooldown(cd_time=240, at_sender=False)])
+@exp_up_end.handle(parameterless=[Cooldown(cd_time=240)])
 async def exp_up_end_(bot: Bot, event: GroupMessageEvent):
     """退出修炼"""
     # 这里曾经是风控模块，但是已经不再需要了
@@ -146,7 +146,7 @@ async def exp_up_end_(bot: Bot, event: GroupMessageEvent):
     await exp_up_end.finish()
 
 
-@all_end.handle(parameterless=[Cooldown(at_sender=False)])
+@all_end.handle(parameterless=[Cooldown()])
 async def all_end_(bot: Bot, event: GroupMessageEvent, state: T_State):
     """重置状态"""
 
@@ -184,7 +184,7 @@ async def all_end_(bot: Bot, event: GroupMessageEvent, state: T_State):
         await all_end.finish()
 
 
-@world_rank_up.handle(parameterless=[Cooldown(cd_time=10, at_sender=False)])
+@world_rank_up.handle(parameterless=[Cooldown(cd_time=10)])
 async def world_rank_up_(bot: Bot, event: GroupMessageEvent, state: T_State):
     """飞升上界"""
     # 这里曾经是风控模块，但是已经不再需要了
@@ -221,7 +221,7 @@ async def world_rank_up_(bot: Bot, event: GroupMessageEvent, state: T_State):
             await world_rank_up.finish()
 
 
-@world_rank_up.receive(parameterless=[Cooldown(cd_time=10, at_sender=False)])
+@world_rank_up.receive(parameterless=[Cooldown(cd_time=10)])
 async def world_rank_up_(bot: Bot, event: GroupMessageEvent, state: T_State):
     # 这里曾经是风控模块，但是已经不再需要了
     _, user_info, _ = await check_user(event)
@@ -245,7 +245,7 @@ async def world_rank_up_(bot: Bot, event: GroupMessageEvent, state: T_State):
     await world_rank_up.finish()
 
 
-@power_break_up.handle(parameterless=[Cooldown(cd_time=2, at_sender=False)])
+@power_break_up.handle(parameterless=[Cooldown(cd_time=2)])
 async def power_break_up_(bot: Bot, event: GroupMessageEvent):
     """利用天地精华"""
 
@@ -288,7 +288,7 @@ async def power_break_up_(bot: Bot, event: GroupMessageEvent):
     await power_break_up.finish()
 
 
-@power_break_up_help.handle(parameterless=[Cooldown(cd_time=2, at_sender=False)])
+@power_break_up_help.handle(parameterless=[Cooldown(cd_time=2)])
 async def power_break_up_help_(bot: Bot, event: GroupMessageEvent):
     """天地精华帮助"""
 
@@ -303,7 +303,7 @@ async def power_break_up_help_(bot: Bot, event: GroupMessageEvent):
     await power_break_up_help.finish()
 
 
-@active_gift.handle(parameterless=[Cooldown(cd_time=60, at_sender=False)])
+@active_gift.handle(parameterless=[Cooldown(cd_time=60)])
 async def active_gift_(bot: Bot, event: GroupMessageEvent):
     """国庆福利"""
 

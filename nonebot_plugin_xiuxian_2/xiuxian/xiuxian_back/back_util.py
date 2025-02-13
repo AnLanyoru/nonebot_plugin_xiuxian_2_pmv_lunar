@@ -802,11 +802,6 @@ async def get_use_jlq_msg(user_id, goods_id):
         if int(user_buff_data['blessed_spot']) >= item_info['修炼速度']:
             msg = f"该聚灵旗的等级不能满足道友的福地了，使用了也没效果"
         else:
-            farm_grow_speed = item_info['药材速度']
-            update_data = {'farm_grow_speed': farm_grow_speed}
-            database.update(table='mix_elixir_info',
-                            where={"user_id": user_id},
-                            **update_data)
             await sql_message.update_back_j(user_id, goods_id)
             await sql_message.updata_user_blessed_spot(user_id, item_info['修炼速度'])
             msg = f"道友洞天福地的聚灵旗已经替换为：{item_info['name']}"

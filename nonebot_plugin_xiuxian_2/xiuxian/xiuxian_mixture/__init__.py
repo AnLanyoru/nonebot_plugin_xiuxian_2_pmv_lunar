@@ -14,7 +14,7 @@ from ..xiuxian_utils.xiuxian2_handle import sql_message
 mixture = on_command('合成', priority=15, permission=GROUP, block=True)
 
 
-@mixture.handle(parameterless=[Cooldown(at_sender=False)])
+@mixture.handle(parameterless=[Cooldown()])
 async def use_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     _, user_info, _ = await check_user(event)
 

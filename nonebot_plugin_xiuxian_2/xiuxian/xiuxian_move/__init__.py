@@ -27,7 +27,7 @@ stop_move = on_fullmatch("停止移动", permission=GROUP, priority=10, block=Tr
 near_player = on_fullmatch("附近玩家", permission=GROUP, priority=10, block=True)
 
 
-@go_to.handle(parameterless=[Cooldown(at_sender=False)])
+@go_to.handle(parameterless=[Cooldown()])
 async def go_to_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """
     移动位置
@@ -80,7 +80,7 @@ async def go_to_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg(
     await go_to.finish()
 
 
-@stop_move.handle(parameterless=[Cooldown(cd_time=30, at_sender=False)])
+@stop_move.handle(parameterless=[Cooldown(cd_time=30)])
 async def stop_move_(bot: Bot, event: GroupMessageEvent):
     """停止移动"""
 
@@ -98,7 +98,7 @@ async def stop_move_(bot: Bot, event: GroupMessageEvent):
     await stop_move.finish()
 
 
-@complete_move.handle(parameterless=[Cooldown(at_sender=False)])
+@complete_move.handle(parameterless=[Cooldown()])
 async def complete_move_(bot: Bot, event: GroupMessageEvent):
     """移动结算"""
 
@@ -133,7 +133,7 @@ async def complete_move_(bot: Bot, event: GroupMessageEvent):
             await complete_move.finish()
 
 
-@get_map.handle(parameterless=[Cooldown(at_sender=False)])
+@get_map.handle(parameterless=[Cooldown()])
 async def get_map_(bot: Bot, event: GroupMessageEvent):
     """
     获取地图
@@ -162,7 +162,7 @@ async def get_map_(bot: Bot, event: GroupMessageEvent):
     await get_map.finish()
 
 
-@near_player.handle(parameterless=[Cooldown(at_sender=False)])
+@near_player.handle(parameterless=[Cooldown()])
 async def near_player_(bot: Bot, event: GroupMessageEvent):
     """
     获取附近玩家： 10名

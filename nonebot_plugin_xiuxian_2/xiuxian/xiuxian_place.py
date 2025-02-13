@@ -189,7 +189,7 @@ class Place:
                 pass
         return place_list
 
-    async def get_user_place(self, user_id):
+    async def __get_user_place(self, user_id):
         """
         获取用户信息
         :param user_id: QQ
@@ -221,7 +221,7 @@ class Place:
         :param user_id: type = str 用户id
         :return: type = int 位置ID
         """
-        user_info = await self.get_user_place(user_id)
+        user_info = await self.__get_user_place(user_id)
         user_place_id = user_info["place_id"]
         return user_place_id
 

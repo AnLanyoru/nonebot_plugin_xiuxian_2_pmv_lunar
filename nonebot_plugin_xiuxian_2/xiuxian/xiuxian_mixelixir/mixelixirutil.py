@@ -38,6 +38,10 @@ for mix_elixir_table in all_mix_elixir_table:
                                                          key=lambda x: x[0], reverse=True))
 
 
+def round_two(num):
+    return round(num, 2)
+
+
 def get_herb_info(herb_id):
     real_herb_info = items.get_data_by_item_id(herb_id)
     herb_info = {
@@ -173,8 +177,8 @@ class AlchemyFurnace:
         msg = (f"丹炉状态：\r"
                f"丹炉名称：{self.name}\r"
                f"丹火：{fire_name}\r"
-               f"炉温：{round(self.__fire_value, 2)}\r"
-               f"炉内总药力：{round(self.get_sum_herb_power(), 2)}\r"
+               f"炉温：{self.__fire_value:.2f}\r"
+               f"炉内总药力：{self.get_sum_herb_power():.2f}\r"
                f"炉内主导药力：{self.get_main_herb_power()}\r"
                f"药力详情：\r"
                f"{self.get_herb_power_msg()}")
@@ -191,30 +195,30 @@ class AlchemyFurnace:
         if not self.get_sum_herb_power():
             if over_point > 1.5:
                 if over_fire > 0:
-                    msg = f"\r炉温({self.__fire_value})严重超出控制，丹炉发生了爆炸！！"
+                    msg = f"\r炉温({self.__fire_value:.2f})严重超出控制，丹炉发生了爆炸！！"
                     safe_level = 0
                     self.__fire_value = random.randint(50, 100)
                 else:
-                    msg = f"\r炉温({self.__fire_value})过低！！请提高温度后加入药材！！"
+                    msg = f"\r炉温({self.__fire_value:.2f})过低！！请提高温度后加入药材！！"
                     safe_level = 1
 
             elif over_point > 0.3:
-                msg = f"\r当前炉温({self.__fire_value})偏"
+                msg = f"\r当前炉温({self.__fire_value:.2f})偏"
                 msg += '高' if over_fire > 0 else '低'
                 msg += ' 不宜加入药材'
                 safe_level = 3
             else:
-                msg = f"\r当前炉温({self.__fire_value})平稳，宜加入药材"
+                msg = f"\r当前炉温({self.__fire_value:.2f})平稳，宜加入药材"
                 safe_level = 6
             return msg, safe_level
 
         if over_point > 1.5:
             if over_fire > 0:
-                msg = f"\r炉温({self.__fire_value})严重超出控制，丹炉发生了爆炸！！"
+                msg = f"\r炉温({self.__fire_value:.2f})严重超出控制，丹炉发生了爆炸！！"
                 safe_level = 0
                 self.__fire_value = random.randint(50, 100)
             else:
-                msg = f"\r炉温({self.__fire_value})严重过低，丹炉内的药液彻底冷凝了！！"
+                msg = f"\r炉温({self.__fire_value:.2f})严重过低，丹炉内的药液彻底冷凝了！！"
                 safe_level = 1
                 self.__fire_value = max(self.__fire_value, 0)
             for herb_type in self.__herb_power:
@@ -222,13 +226,13 @@ class AlchemyFurnace:
             return msg, safe_level
         elif over_point > 1.2:
             # 20% 超出
-            msg = f"\r炉温({self.__fire_value})超出控制，药性发生了严重流失！！"
+            msg = f"\r炉温({self.__fire_value:.2f})超出控制，药性发生了严重流失！！"
             loss_power = over_point - 1
             if over_fire > 0:
                 loss_power *= 2
-                msg += f"\r药力蒸发流失了{loss_power * 100}%!!"
+                msg += f"\r药力蒸发流失了{loss_power * 100:.2f}%!!"
             else:
-                msg += f"\r药力凝固流失了{loss_power * 100}%!!"
+                msg += f"\r药力凝固流失了{loss_power * 100:.2f}%!!"
             for herb_type in self.__herb_power:
                 self.__herb_power[herb_type] *= 1 - loss_power
             safe_level = 2
@@ -236,28 +240,28 @@ class AlchemyFurnace:
             # 超出
             loss_power = (over_point - 1) / 2 + 0.1
             if over_fire > 0:
-                loss_msg = f"\r药力蒸发流失了{loss_power * 100}%!!"
+                loss_msg = f"\r药力蒸发流失了{loss_power * 100:.2f}%!!"
                 loss_type = "高"
             else:
-                loss_msg = f"\r药力凝固流失了{loss_power * 100}%!!"
+                loss_msg = f"\r药力凝固流失了{loss_power * 100:.2f}%!!"
                 loss_type = "低"
             for herb_type in self.__herb_power:
                 self.__herb_power[herb_type] *= 1 - loss_power
-            msg = f"\r炉温({self.__fire_value})过{loss_type}，药性发生了严重流失！！" + loss_msg
+            msg = f"\r炉温({self.__fire_value:.2f})过{loss_type}，药性发生了严重流失！！" + loss_msg
             safe_level = 3
 
         elif over_point > 0.5:
             # 接近超出
             loss_power = 0.1 * over_point / 1
             if over_fire > 0:
-                loss_msg = f'\r药力蒸发流失了{loss_power * 100}%!!'
+                loss_msg = f'\r药力蒸发流失了{loss_power * 100:.2f}%!!'
                 loss_type = "高"
             else:
-                loss_msg = f'\r药力凝固流失了{loss_power * 100}%!!'
+                loss_msg = f'\r药力凝固流失了{loss_power * 100:.2f}%!!'
                 loss_type = "低"
             for herb_type in self.__herb_power:
                 self.__herb_power[herb_type] *= 1 - loss_power
-            msg = f"\r炉温({self.__fire_value})偏{loss_type}，药性发生了流失！！" + loss_msg
+            msg = f"\r炉温({self.__fire_value:.2f})偏{loss_type}，药性发生了流失！！" + loss_msg
             safe_level = 4
 
         elif over_point > 0.3:
@@ -265,11 +269,11 @@ class AlchemyFurnace:
                 loss_type = "高"
             else:
                 loss_type = "低"
-            msg = f'当前炉温({self.__fire_value})略{loss_type},道友注意控制丹炉温度！！'
+            msg = f'当前炉温({self.__fire_value:.2f})略{loss_type},道友注意控制丹炉温度！！'
             safe_level = 5
 
         else:
-            msg = f'当前丹炉平稳运行！炉温({self.__fire_value})'
+            msg = f'当前丹炉平稳运行！炉温({self.__fire_value:.2f})'
             safe_level = 6
         return msg, safe_level
 
@@ -299,8 +303,8 @@ class AlchemyFurnace:
         add_herb_power *= herb_power_keep_present
         self.__herb_power[herb_type] += add_herb_power
         self.__fire_value += base_fire_change + herb_fire_change
-        result = (f"加入{herb_info['药名']}{herb_num}珠作为主药"
-                  f"\r保留{herb_power_keep}%药性({herb_type}:{add_herb_power})")
+        result = (f"\r加入{herb_info['药名']}{herb_num}珠作为主药"
+                  f"\r保留{herb_power_keep:.2f}%药性({herb_type}:{add_herb_power:.2f})")
         if herb_fire_change:
             if herb_fire_change > 0:
                 temp_type = '性热'
@@ -308,7 +312,7 @@ class AlchemyFurnace:
             else:
                 temp_type = '性寒'
                 temp_change_type = '降低'
-            result += f"炉温因药材{temp_type}, {temp_change_type}了{abs(herb_fire_change)}"
+            result += f"炉温因药材{temp_type}, {temp_change_type}了{abs(herb_fire_change):.2f}"
         return result
 
     def __input_herb_as_ingredient(self,
@@ -321,7 +325,7 @@ class AlchemyFurnace:
         herb_fire_change = herb_info_main['冷热'] * herb_num
         self.__sum_herb_value_input += herb_info['品级'] * herb_num
         if not herb_fire_change:
-            return f"加入{herb_info['药名']}{herb_num}珠作为药引，但无效果"
+            return f"\r加入{herb_info['药名']}{herb_num}珠作为药引，但无效果"
 
         # 计算技巧系数
         base_fire_change, herb_power_keep = count_mix_param(user_fire_control=user_fire_control,
@@ -340,9 +344,9 @@ class AlchemyFurnace:
         else:
             temp_type = '性寒'
             temp_change_type = '降低'
-        result = (f"加入{herb_info['药名']}{herb_num}珠作为药引"
-                  f"\r保留{herb_power_keep}%药性({temp_type}:{herb_fire_change})\r"
-                  f"炉温因药材{temp_type}, {temp_change_type}了{herb_fire_change}")
+        result = (f"\r加入{herb_info['药名']}{herb_num}珠作为药引"
+                  f"\r保留{herb_power_keep:.2f}%药性({temp_type}:{herb_fire_change:.2f})\r"
+                  f"炉温因药材{temp_type}, {temp_change_type}了{abs(herb_fire_change):.2f}")
 
         return result
 
@@ -377,16 +381,17 @@ class AlchemyFurnace:
             most_herb_type = herb_type
             most_herb_power = 0
         if herb_type == most_herb_type:
-            return f"加入{herb_info['药名']}{herb_num}珠作为辅药\r因为药性没有主药力调和，药性全部流失了"
+            return f"\r加入{herb_info['药名']}{herb_num}珠作为辅药\r因为药性没有主药力调和，药性全部流失了"
         max_add_herb_power = most_herb_power - self.__herb_power[herb_type]
         real_add_herb_power = min(add_herb_power, max_add_herb_power)
         self.__herb_power[herb_type] += real_add_herb_power
-        result = f"加入{herb_info['药名']}{herb_num}珠作为辅药\r保留{herb_power_keep}%药性({herb_type}:{add_herb_power})"
+        result = (f"\r加入{herb_info['药名']}{herb_num}珠作为辅药"
+                  f"\r保留{herb_power_keep:.2f}%药性({herb_type}:{add_herb_power:.2f})")
         if real_add_herb_power < add_herb_power:
             final_keep = real_add_herb_power / add_herb_power
             loss_power = 1 - final_keep
-            result += (f"\r由于主药力不足，保留的药性流失了{round(loss_power * 100, 2)}%！！\r"
-                       f"最终保留{herb_power_keep * final_keep}%药性({herb_type}:{real_add_herb_power})")
+            result += (f"\r由于主药力不足，保留的药性流失了{loss_power * 100:.2f}%！！\r"
+                       f"最终保留{(herb_power_keep * final_keep):.2f}%药性({herb_type}:{real_add_herb_power:.2f})")
         return result
 
     def input_herbs(self,
@@ -449,12 +454,13 @@ class AlchemyFurnace:
 
         random_fire_change = ((random.randint(10 + fire_control_param, 190 - fire_control_param) - 100)
                               * random.choice([1, -1]))
-        msg += f"{change_type}炉温过程中，丹炉温度波动{'升高' if random_fire_change > 0 else '降低'}了{abs(random_fire_change)}\r"
-        msg += f"道友成功使丹炉温度{change_type}了{user_fire_change}\r"
+        msg += (f"{change_type}炉温过程中，"
+                f"丹炉温度波动{'升高' if random_fire_change > 0 else '降低'}了{abs(random_fire_change):.2f}\r")
+        msg += f"道友成功使丹炉温度{change_type}了{abs(user_fire_change):.2f}\r"
         if not is_warm_up:
             user_fire_change *= -1
         sum_fire_change = user_fire_change + random_fire_change
-        msg += f"丹炉总温度{'升高' if sum_fire_change > 0 else '降低'}了{sum_fire_change}\r"
+        msg += f"丹炉总温度{'升高' if sum_fire_change > 0 else '降低'}了{abs(sum_fire_change):.2f}\r"
         self.__fire_value = max(sum_fire_change + self.__fire_value, 0)
         msg += self.__check_alchemy_furnace_state(user_fire_control)[0]
 
@@ -468,7 +474,7 @@ class AlchemyFurnace:
         herb_power_rank_set = "".join(herb_power_rank)
         make_elixir_info = {}
         if herb_power_rank_set not in all_mix_elixir_table:
-            msg = f"当前丹炉主导药力对应丹药开发中！！"
+            msg = f"当前药力无法成丹！！"
             return msg, make_elixir_info
         mix_table = all_mix_elixir_table[herb_power_rank_set]
         now_sum_power = self.get_sum_herb_power()

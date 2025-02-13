@@ -27,13 +27,21 @@ limit_message_time = XiuConfig().message_limit_time
 cmd_lock = {}
 
 
-@DRIVER.on_startup
-def cmd_lock_start_():
+class UserCmdLock:
+    def __init__(self, user_id: int):
+        self.user_id = user_id
+
+    def __enter__(self):
+        now_time = time.time()
+        set_cmd_lock(user_id=self.user_id, lock_time=now_time)
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        set_cmd_lock(user_id=self.user_id, lock_time=0)
+
+
+def set_cmd_lock(user_id, lock_time: float | int):
     global cmd_lock
-
-
-def set_cmd_lock(user_id, lock_time: int):
-    cmd_lock[str(user_id)] = lock_time
+    cmd_lock[int(user_id)] = lock_time
 
 
 @limit_all_message.scheduled_job('interval', seconds=limit_message_time)
@@ -138,12 +146,11 @@ class CooldownIsolateLevel(IntEnum):
 
 def Cooldown(
         cd_time: float = 2,
-        at_sender: bool = True,
         isolate_level: CooldownIsolateLevel = CooldownIsolateLevel.USER,
         parallel: int = 1,
         stamina_cost: int = 0,
         check_user: bool = True,
-        parallel_block: bool = False
+        parallel_block: bool = True
 ) -> None:
     """
     依赖注入形式的命令冷却
@@ -182,7 +189,7 @@ def Cooldown(
         else:
             pass
         if lock_time := cmd_lock.get(user_id):
-            if time.time() < (lock_time + 5):
+            if time.time() < (lock_time + 3):
                 too_fast_notice = f"道友的指令还在执行中！！"
                 await bot.send(event=event, message=too_fast_notice)
                 await matcher.finish()
@@ -230,7 +237,7 @@ def Cooldown(
             running[key] -= 1
             loop.call_later(cd_time, lambda: increase(key))
         if parallel_block:
-            set_cmd_lock(user_id, int(time.time()))
+            set_cmd_lock(user_id, time.time())
 
         # 用户检查
 

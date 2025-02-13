@@ -46,7 +46,7 @@ def img2b64(out_img) -> str:
 img_path = Path(f"{os.getcwd()}/data/xiuxian/image")
 
 
-@pic_test.handle(parameterless=[Cooldown(at_sender=False)])
+@pic_test.handle(parameterless=[Cooldown()])
 async def impart_img_(bot: Bot, event: GroupMessageEvent):
     # 这里曾经是风控模块，但是已经不再需要了
     img = img_path / f"background.png"
@@ -56,7 +56,7 @@ async def impart_img_(bot: Bot, event: GroupMessageEvent):
     await pic_test.finish()
 
 
-@xiuxian_message.handle(parameterless=[Cooldown(at_sender=False)])
+@xiuxian_message.handle(parameterless=[Cooldown()])
 async def xiuxian_message_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """我的修仙信息"""
     # 这里曾经是风控模块，但是已经不再需要了

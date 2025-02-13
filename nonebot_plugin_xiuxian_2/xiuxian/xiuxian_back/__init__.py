@@ -76,28 +76,30 @@ __back_help__ = f"""
 """.strip()
 
 
-@gm_goods_delete.handle(parameterless=[Cooldown(at_sender=False)])
+@gm_goods_delete.handle(parameterless=[Cooldown()])
 async def gm_goods_delete_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """炼金"""
     strs = args.extract_plain_text()
     args = get_strs_from_str(strs)
-    user_id = await get_id_from_str(args)
+    user_id = await get_id_from_str(args, 2)
     num = get_num_from_str(strs)
     if num:
         num = int(num[0])
     else:
         num = 1
     if args:
-        if len(args) > 1:
-            goods_name = args[1]
-        else:
-            goods_name = None
+        goods_name = args[0]
     else:
         goods_name = None
     if goods_name is None:
         msg = "请输入要没收的物品！"
         await bot.send(event=event, message=msg)
         await gm_goods_delete.finish()
+    if not user_id:
+        msg = "请输入正确的用户道号！"
+        await bot.send(event=event, message=msg)
+        await gm_goods_delete.finish()
+
     back_msg = await sql_message.get_back_msg(user_id)  # 背包sql信息,list(back)
     if back_msg is None:
         msg = "对方的背包空空如也！"
@@ -148,7 +150,7 @@ async def md_test_(bot: Bot, event: GroupMessageEvent):
     await test_md.finish()
 
 
-@back_fix.handle(parameterless=[Cooldown(at_sender=False, parallel_block=True)])
+@back_fix.handle(parameterless=[Cooldown(parallel_block=True)])
 async def back_help_(bot: Bot, event: GroupMessageEvent):
     """背包修复"""
     _, user_info, _ = await check_user(event)
@@ -186,7 +188,7 @@ async def back_help_(bot: Bot, event: GroupMessageEvent):
     await back_fix.finish()
 
 
-@back_help.handle(parameterless=[Cooldown(at_sender=False)])
+@back_help.handle(parameterless=[Cooldown()])
 async def back_help_(bot: Bot, event: GroupMessageEvent):
     """背包帮助"""
     msg = __back_help__
@@ -194,7 +196,7 @@ async def back_help_(bot: Bot, event: GroupMessageEvent):
     await back_help.finish()
 
 
-@xiuxian_stone.handle(parameterless=[Cooldown(at_sender=False)])
+@xiuxian_stone.handle(parameterless=[Cooldown()])
 async def xiuxian_stone_(bot: Bot, event: GroupMessageEvent):
     """我的灵石信息"""
     _, user_info, _ = await check_user(event)
@@ -203,7 +205,7 @@ async def xiuxian_stone_(bot: Bot, event: GroupMessageEvent):
     await xiuxian_stone.finish()
 
 
-@goods_re_root.handle(parameterless=[Cooldown(at_sender=False)])
+@goods_re_root.handle(parameterless=[Cooldown()])
 async def goods_re_root_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """炼金"""
     isUser, user_info, msg = await check_user(event)
@@ -274,7 +276,7 @@ async def goods_re_root_(bot: Bot, event: GroupMessageEvent, args: Message = Com
     await goods_re_root.finish()
 
 
-@goods_re_root_fast.handle(parameterless=[Cooldown(at_sender=False)])
+@goods_re_root_fast.handle(parameterless=[Cooldown()])
 async def goods_re_root_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """快速炼金"""
     is_user, user_info, msg = await check_user(event)
@@ -326,7 +328,7 @@ async def goods_re_root_(bot: Bot, event: GroupMessageEvent, args: Message = Com
     await goods_re_root_fast.finish()
 
 
-@main_back.handle(parameterless=[Cooldown(cd_time=10, at_sender=False)])
+@main_back.handle(parameterless=[Cooldown()])
 async def main_back_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg(), cmd: str = RawCommand()):
     """我的背包
     ["user_id", "goods_id", "goods_name", "goods_type", "goods_num", "create_time", "update_time",
@@ -365,7 +367,7 @@ async def main_back_(bot: Bot, event: GroupMessageEvent, args: Message = Command
     await main_back.finish()
 
 
-@skill_back.handle(parameterless=[Cooldown(cd_time=10, at_sender=False)])
+@skill_back.handle(parameterless=[Cooldown()])
 async def skill_back_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg(), cmd: str = RawCommand()):
     """我的背包
     ["user_id", "goods_id", "goods_name", "goods_type", "goods_num", "create_time", "update_time",
@@ -396,7 +398,7 @@ async def skill_back_(bot: Bot, event: GroupMessageEvent, args: Message = Comman
     await skill_back.finish()
 
 
-@check_back.handle(parameterless=[Cooldown(cd_time=10, at_sender=False)])
+@check_back.handle(parameterless=[Cooldown()])
 async def check_back_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg(), cmd: str = RawCommand()):
     """别人的背包
     ["user_id", "goods_id", "goods_name", "goods_type", "goods_num", "create_time", "update_time",
@@ -433,7 +435,7 @@ async def check_back_(bot: Bot, event: GroupMessageEvent, args: Message = Comman
     await check_back.finish()
 
 
-@no_use_zb.handle(parameterless=[Cooldown(at_sender=False)])
+@no_use_zb.handle(parameterless=[Cooldown()])
 async def no_use_zb_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """卸载物品（只支持装备）
     ["user_id", "goods_id", "goods_name", "goods_type", "goods_num", "create_time", "update_time",
@@ -473,7 +475,7 @@ async def no_use_zb_(bot: Bot, event: GroupMessageEvent, args: Message = Command
         await no_use_zb.finish()
 
 
-@use.handle(parameterless=[Cooldown(at_sender=False)])
+@use.handle(parameterless=[Cooldown()])
 async def use_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """使用物品
     ["user_id", "goods_id", "goods_name", "goods_type", "goods_num", "create_time", "update_time",
@@ -677,7 +679,7 @@ async def use_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg())
         await use.finish()
 
 
-@check_items.handle(parameterless=[Cooldown(cd_time=10, at_sender=False)])
+@check_items.handle(parameterless=[Cooldown()])
 async def check_items_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """查看修仙界物品"""
     args = args.extract_plain_text()
@@ -702,7 +704,7 @@ async def check_items_(bot: Bot, event: GroupMessageEvent, args: Message = Comma
     await check_items.finish()
 
 
-@check_item_json.handle(parameterless=[Cooldown(cd_time=10, at_sender=False)])
+@check_item_json.handle(parameterless=[Cooldown()])
 async def check_item_json_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """查看修仙界物品"""
     args = args.extract_plain_text()

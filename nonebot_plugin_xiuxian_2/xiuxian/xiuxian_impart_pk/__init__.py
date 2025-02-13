@@ -23,7 +23,7 @@ impart_shop = on_command("虚神界兑换", priority=3, permission=GROUP, block=
 impart_pk_exp = on_command("虚神界闭关", aliases={"进入虚神界修炼"}, priority=3, permission=GROUP, block=True)
 
 
-@impart_shop.handle(parameterless=[Cooldown(stamina_cost=0, at_sender=False)])
+@impart_shop.handle(parameterless=[Cooldown(stamina_cost=0)])
 async def impart_shop_(bot: Bot, event: GroupMessageEvent):
     """虚神界兑换"""
     msg = "敬请期待"
@@ -31,7 +31,7 @@ async def impart_shop_(bot: Bot, event: GroupMessageEvent):
     await impart_shop.finish()
 
 
-@impart_pk_now_all.handle(parameterless=[Cooldown(stamina_cost=0, at_sender=False)])
+@impart_pk_now_all.handle(parameterless=[Cooldown(stamina_cost=0)])
 async def impart_pk_now_all_(bot: Bot, event: GroupMessageEvent):
     """虚神界活动"""
 
@@ -55,7 +55,7 @@ async def impart_pk_now_all_(bot: Bot, event: GroupMessageEvent):
     await impart_pk_now_all.finish()
 
 
-@impart_pray.handle(parameterless=[Cooldown(stamina_cost=0, at_sender=False)])
+@impart_pray.handle(parameterless=[Cooldown(stamina_cost=0)])
 async def impart_pray_(bot: Bot, event: GroupMessageEvent):
     """虚神界祈愿"""
 
@@ -76,7 +76,7 @@ async def impart_pray_(bot: Bot, event: GroupMessageEvent):
     await impart_pray.finish()
 
 
-@impart_pk_now.handle(parameterless=[Cooldown(stamina_cost=0, at_sender=False)])
+@impart_pk_now.handle(parameterless=[Cooldown(stamina_cost=0)])
 async def impart_pk_now_(bot: Bot, event: GroupMessageEvent):
     """虚神界对决"""
 
@@ -97,7 +97,7 @@ async def impart_pk_now_(bot: Bot, event: GroupMessageEvent):
     await impart_pk_now.finish()
 
 
-@impart_pk_exp.handle(parameterless=[Cooldown(at_sender=False)])
+@impart_pk_exp.handle(parameterless=[Cooldown()])
 async def impart_pk_exp_(bot: Bot, event: GroupMessageEvent):
     """虚神界闭关"""
 

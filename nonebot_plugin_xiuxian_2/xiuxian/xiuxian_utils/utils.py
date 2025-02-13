@@ -509,26 +509,6 @@ async def send_msg_handler(bot, event, *args):
             raise ValueError("参数数量或类型不匹配")
 
 
-def CommandObjectID() -> int:
-    """
-    根据消息事件的类型获取对象id
-    私聊->用户id
-    群聊->群id
-    频道->子频道id
-    :return: 对象id
-    """
-
-    def _event_id(event):
-        if event.message_type == 'private':
-            return event.user_id
-        elif event.message_type == 'group':
-            return event.group_id
-        elif event.message_type == 'guild':
-            return event.channel_id
-
-    return Depends(_event_id)
-
-
 def number_to(num):
     """
     递归实现，精确为最大单位值 + 小数点后一位
@@ -619,17 +599,21 @@ def number_to(num):
     return final_num
 
 
-async def get_id_from_str(msg: str | list):
+async def get_id_from_str(msg: str | list, no: int = 1):
     """
     将消息中的首个字符组合转换为用户id
     :param msg: 从args中获取的消息字符串
+    :param no: 获取第几个字符串集合为用户名称
     :return: 如果有该用户，返回用户ID，若无，返回None
     """
     if isinstance(msg, str):
         user_name = re.findall(r"[\u4e00-\u9fa5_a-zA-Z]+", msg)
     else:
         user_name = msg
-    user_id = await sql_message.get_user_id(user_name[0]) if user_name else None
+    if not user_name:
+        return None
+    print(user_name[no - 1])
+    user_id = await sql_message.get_user_id(user_name[no - 1]) if len(user_name) >= no else None
     user_id = int(user_id) if user_id else None
     return user_id
 

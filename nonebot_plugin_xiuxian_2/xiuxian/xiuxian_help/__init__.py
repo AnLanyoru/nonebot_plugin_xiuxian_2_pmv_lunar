@@ -184,7 +184,7 @@ __tower_help__ = f"""
 """.strip()
 
 
-@help_in.handle(parameterless=[Cooldown(at_sender=False)])
+@help_in.handle(parameterless=[Cooldown()])
 async def help_in_(bot: Bot, event: GroupMessageEvent):
     """修仙帮助"""
     msg = help_md("102368631_1733157336", "测试中")
@@ -192,7 +192,7 @@ async def help_in_(bot: Bot, event: GroupMessageEvent):
     await help_in.finish()
 
 
-@help_newer.handle(parameterless=[Cooldown(at_sender=False)])
+@help_newer.handle(parameterless=[Cooldown()])
 async def help_in_(bot: Bot, event: GroupMessageEvent):
     """修仙新手帮助"""
     msg = help_md("102368631_1733157618", "测试中")
@@ -200,7 +200,7 @@ async def help_in_(bot: Bot, event: GroupMessageEvent):
     await help_newer.finish()
 
 
-@sect_help.handle(parameterless=[Cooldown(at_sender=False)])
+@sect_help.handle(parameterless=[Cooldown()])
 async def sect_help_(bot: Bot, event: GroupMessageEvent):
     """宗门帮助"""
     msg = __sect_help__
@@ -208,7 +208,7 @@ async def sect_help_(bot: Bot, event: GroupMessageEvent):
     await sect_help.finish()
 
 
-@sect_help_control.handle(parameterless=[Cooldown(at_sender=False)])
+@sect_help_control.handle(parameterless=[Cooldown()])
 async def sect_help_control_(bot: Bot, event: GroupMessageEvent):
     """宗门管理帮助"""
     msg = f"""\r———宗门管理菜单———
@@ -228,7 +228,7 @@ async def sect_help_control_(bot: Bot, event: GroupMessageEvent):
     await sect_help_control.finish()
 
 
-@sect_help_owner.handle(parameterless=[Cooldown(at_sender=False)])
+@sect_help_owner.handle(parameterless=[Cooldown()])
 async def sect_help_owner_(bot: Bot, event: GroupMessageEvent):
     """宗主帮助"""
     msg = f"""\r———宗主菜单———
@@ -258,7 +258,7 @@ async def sect_help_owner_(bot: Bot, event: GroupMessageEvent):
     await sect_help_owner.finish()
 
 
-@sect_help_member.handle(parameterless=[Cooldown(at_sender=False)])
+@sect_help_member.handle(parameterless=[Cooldown()])
 async def sect_help_member_(bot: Bot, event: GroupMessageEvent):
     """宗门管理帮助"""
     msg = f"""\r————宗门指令帮助————
@@ -299,7 +299,7 @@ async def sect_help_member_(bot: Bot, event: GroupMessageEvent):
     await sect_help_member.finish()
 
 
-@buff_help.handle(parameterless=[Cooldown(at_sender=False)])
+@buff_help.handle(parameterless=[Cooldown()])
 async def buff_help_(bot: Bot, event: GroupMessageEvent):
     """功法帮助"""
     msg = __buff_help__
@@ -307,7 +307,7 @@ async def buff_help_(bot: Bot, event: GroupMessageEvent):
     await buff_help.finish()
 
 
-@buff_home.handle(parameterless=[Cooldown(at_sender=False)])
+@buff_home.handle(parameterless=[Cooldown()])
 async def buff_home_(bot: Bot, event: GroupMessageEvent):
     """灵田帮助"""
     msg = __home_help__
@@ -315,7 +315,7 @@ async def buff_home_(bot: Bot, event: GroupMessageEvent):
     await buff_home.finish()
 
 
-@store_help.handle(parameterless=[Cooldown(at_sender=False)])
+@store_help.handle(parameterless=[Cooldown()])
 async def store_help_(bot: Bot, event: GroupMessageEvent):
     """帮助"""
     msg = __store_help__
@@ -323,7 +323,7 @@ async def store_help_(bot: Bot, event: GroupMessageEvent):
     await store_help.finish()
 
 
-@tower_help.handle(parameterless=[Cooldown(at_sender=False)])
+@tower_help.handle(parameterless=[Cooldown()])
 async def tower_help_(bot: Bot, event: GroupMessageEvent):
     """帮助"""
     msg = __tower_help__

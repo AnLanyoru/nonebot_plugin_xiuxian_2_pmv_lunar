@@ -1,5 +1,4 @@
 import asyncio
-import time
 
 from nonebot import on_command
 from nonebot.adapters.onebot.v11 import (
@@ -15,7 +14,7 @@ from .store_database import user_store
 from .. import XiuConfig
 from ..xiuxian_utils.clean_utils import get_args_num, get_paged_msg, number_to_msg, get_strs_from_str
 from ..xiuxian_utils.item_json import items
-from ..xiuxian_utils.lay_out import Cooldown, set_cmd_lock
+from ..xiuxian_utils.lay_out import Cooldown, UserCmdLock
 from ..xiuxian_utils.utils import (
     check_user,
     send_msg_handler, get_id_from_str, number_to)
@@ -41,10 +40,7 @@ bind_break = on_command("物品解绑", priority=2, permission=SUPERUSER, block=
 
 @bind_break.handle(
     parameterless=[
-        Cooldown(
-            cd_time=24000,
-            at_sender=False,
-            parallel_block=True)])
+        Cooldown(cd_time=24000, parallel_block=True)])
 async def bind_break_(
         bot: Bot,  # 机器人实例
         event: GroupMessageEvent,  # 消息主体
@@ -59,7 +55,6 @@ async def bind_break_(
     if user_id in break_bind:
         msg = '道友已解绑过物品！！'
         await bot.send(event, msg)
-        set_cmd_lock(user_id, 0)
         await bind_break.finish()
     break_bind.append(user_id)
     msg = '开始为道友解绑物品，请稍后.....'
@@ -75,19 +70,14 @@ async def bind_break_(
                 continue
             item_id = back_item['goods_id']
             await sql_message.break_bind_item(user_id, item_id)
-            set_cmd_lock(user_id, int(time.time()))
     msg = '道友的物品解绑完成啦！'
     await bot.send(event, msg)
-    set_cmd_lock(user_id, 0)
     await bind_break.finish()
 
 
 @fast_sell_items.handle(
     parameterless=[
-        Cooldown(
-            cd_time=30,
-            at_sender=False,
-            parallel_block=True)])
+        Cooldown(cd_time=30, parallel_block=True)])
 async def fast_sell_items_(
         bot: Bot,  # 机器人实例
         event: GroupMessageEvent,  # 消息主体
@@ -99,111 +89,106 @@ async def fast_sell_items_(
     # 获取用户数据
     _, user_info, _ = await check_user(event)
     user_id = user_info["user_id"]
-    # 提取命令详情
-    strs = args.extract_plain_text()
-    want_user_id = await get_id_from_str(strs)
-    if not want_user_id:
-        msg = "请输正确的道号来快速向对应道友出售物品！！！"
-        await bot.send(event=event, message=msg)
-        set_cmd_lock(user_id, 0)
-        await fast_sell_items.finish()
-    if want_user_id == user_id:
-        msg = "请不要向自己出售物品！！！"
-        await bot.send(event=event, message=msg)
-        set_cmd_lock(user_id, 0)
-        await fast_sell_items.finish()
-    args = get_strs_from_str(strs)
-    want_user_name = args[0]
-    args = args[1:]
-    if not args:
-        # 无参数
+    user_cmd_lock = UserCmdLock(user_id)
+    with user_cmd_lock:
+        # 提取命令详情
+        strs = args.extract_plain_text()
+        want_user_id = await get_id_from_str(strs)
+        if not want_user_id:
+            msg = "请输正确的道号来快速向对应道友出售物品！！！"
+            await bot.send(event=event, message=msg)
+            await fast_sell_items.finish()
+        if want_user_id == user_id:
+            msg = "请不要向自己出售物品！！！"
+            await bot.send(event=event, message=msg)
+            await fast_sell_items.finish()
+        args = get_strs_from_str(strs)
+        want_user_name = args[0]
+        args = args[1:]
+        if not args:
+            # 无参数
+            msg = f"请指定你要向{want_user_name}道友出售的物品的类型！！"
+            await bot.send(event, msg)
+            await fast_sell_items.finish()
+        the_same = XiuConfig().elixir_def
+        real_args = [the_same[i] if i in the_same else i for i in args]
         sell_list = []
-        msg = f"请指定你要向{want_user_name}道友出售的物品的类型！！"
+        for goal_level, goal_level_name in zip(real_args, args):
+            back_msg = await sql_message.get_back_msg(user_id)  # 背包sql信息,list(back)
+            for back in back_msg:
+                goods_name = back['goods_name']
+                goods_id = back['goods_id']
+                goods_num = back['goods_num'] - back['bind_num']
+                item_info = items.get_data_by_item_id(goods_id)
+                buff_type = item_info.get('buff_type')
+                item_level = item_info.get('level') if item_info else None
+                item_type = back.get('goods_type')
+                if (item_level == goal_level
+                    or goods_name == goal_level
+                    or buff_type == goal_level
+                    or item_type == goal_level) and goods_num > 0:
+                    sell_list.append(back)
+        msg = f"开始向{want_user_name}道友快速出售以下类型物品：\r" + "|".join(args) + "请等待...."
         await bot.send(event, msg)
-        set_cmd_lock(user_id, 0)
-        await fast_sell_items.finish()
-    the_same = XiuConfig().elixir_def
-    real_args = [the_same[i] if i in the_same else i for i in args]
-    sell_list = []
-    for goal_level, goal_level_name in zip(real_args, args):
-        back_msg = await sql_message.get_back_msg(user_id)  # 背包sql信息,list(back)
-        for back in back_msg:
-            goods_name = back['goods_name']
-            goods_id = back['goods_id']
-            goods_num = back['goods_num'] - back['bind_num']
-            item_info = items.get_data_by_item_id(goods_id)
-            buff_type = item_info.get('buff_type')
-            item_level = item_info.get('level') if item_info else None
-            item_type = back.get('goods_type')
-            if (item_level == goal_level
-                or goods_name == goal_level
-                or buff_type == goal_level
-                or item_type == goal_level) and goods_num > 0:
-                sell_list.append(back)
-    msg = f"开始向{want_user_name}道友快速出售以下类型物品：\r" + "|".join(args) + "请等待...."
-    await bot.send(event, msg)
-    msg = '出售结果如下'
-    sell_msg = []
-    price_sum = 0
-    want_pass = False
-    funds_pass = True
-    for item_in_back in sell_list:
-        item_id = item_in_back['goods_id']
-        item_name = item_in_back['goods_name']
-        # 物品数量检查
-        sell_item_num = item_in_back['goods_num'] - item_in_back['bind_num']
-        if item_in_back['goods_type'] == "装备" and int(item_in_back['state']) == 1:
-            continue
-        want_item = await user_store.check_user_want_item(want_user_id, item_id, 1)
-        if not want_item:
-            continue
-        want_pass = True
-        want_item_num = want_item['need_items_num']
-        want_item_price = want_item['need_items_price']
-        get_stone = want_item_price * sell_item_num
-        if want_item_num:  # 有数量限制
-            # 卖的太多啦！！！！人家收不下！
-            if want_item_num < sell_item_num:
-                msg += f"\r尝试出售【{item_name}】！！"
+        msg = '出售结果如下'
+        sell_msg = []
+        price_sum = 0
+        want_pass = False
+        funds_pass = True
+        for item_in_back in sell_list:
+            item_id = item_in_back['goods_id']
+            item_name = item_in_back['goods_name']
+            # 物品数量检查
+            sell_item_num = item_in_back['goods_num'] - item_in_back['bind_num']
+            if item_in_back['goods_type'] == "装备" and int(item_in_back['state']) == 1:
                 continue
-            if want_item_num == sell_item_num:
-                # 卖完了
-                await user_store.del_want_item(want_user_id, item_id)
-            else:
-                await user_store.update_user_want(user_info, sell_item_num, want_user_id, want_item)
-        else:  # 无数量限制，检查资金是否充足
-            want_item_funds = await user_store.get_user_funds(want_user_id)  # 获取玩家摊位资金
-            if get_stone > want_item_funds:  # 资金不足
-                funds_pass = False
+            want_item = await user_store.check_user_want_item(want_user_id, item_id, 1)
+            if not want_item:
                 continue
-            await user_store.update_user_funds(want_user_id, get_stone, 1)  # 减少资金
-        # 检查通过，减少出售者物品，增加买家物品，减少买家资金储备，增加卖家灵石
-        await sql_message.update_back_j(user_id, item_id, num=sell_item_num)
-        await sql_message.update_ls(user_id, get_stone, 1)
-        price_sum += get_stone
-        item_type = items.items.get(str(item_id)).get('type')
-        await sql_message.send_back(want_user_id, item_id, item_name, item_type, sell_item_num, 0)
-        sell_msg.append(f"【{item_name}】{sell_item_num}个 获取了{get_stone}灵石")
-        set_cmd_lock(user_id, int(time.time()))
-    if sell_msg:
-        msg += f"\r成功向{want_user_name}道友出售了：\r" + '\r'.join(sell_msg) + f'\r总计: {number_to(price_sum)}灵石'
-    elif not want_pass:
-        msg += f"\r对方对道友的物品没有需求！"
-    elif not funds_pass:
-        msg += f"\r对方的资金不足！！！"
-    else:
-        msg += f"\r对方无法收下道友的全部物品！！"
+            want_pass = True
+            want_item_num = want_item['need_items_num']
+            want_item_price = want_item['need_items_price']
+            get_stone = want_item_price * sell_item_num
+            if want_item_num:  # 有数量限制
+                # 卖的太多啦！！！！人家收不下！
+                if want_item_num < sell_item_num:
+                    msg += f"\r尝试出售【{item_name}】！！"
+                    continue
+                if want_item_num == sell_item_num:
+                    # 卖完了
+                    await user_store.del_want_item(want_user_id, item_id)
+                else:
+                    await user_store.update_user_want(user_info, sell_item_num, want_user_id, want_item)
+            else:  # 无数量限制，检查资金是否充足
+                want_item_funds = await user_store.get_user_funds(want_user_id)  # 获取玩家摊位资金
+                if get_stone > want_item_funds:  # 资金不足
+                    funds_pass = False
+                    continue
+                await user_store.update_user_funds(want_user_id, get_stone, 1)  # 减少资金
+            # 检查通过，减少出售者物品，增加买家物品，减少买家资金储备，增加卖家灵石
+            await sql_message.update_back_j(user_id, item_id, num=sell_item_num)
+            await sql_message.update_ls(user_id, get_stone, 1)
+            price_sum += get_stone
+            item_type = items.items.get(str(item_id)).get('type')
+            await sql_message.send_back(want_user_id, item_id, item_name, item_type, sell_item_num, 0)
+            sell_msg.append(f"【{item_name}】{sell_item_num}个 获取了{get_stone}灵石")
+        if sell_msg:
+            msg += f"\r成功向{want_user_name}道友出售了：\r" + '\r'.join(
+                sell_msg) + f'\r总计: {number_to(price_sum)}灵石'
+        elif not want_pass:
+            msg += f"\r对方对道友的物品没有需求！"
+        elif not funds_pass:
+            msg += f"\r对方的资金不足！！！"
+        else:
+            msg += f"\r对方无法收下道友的全部物品！！"
 
-    await bot.send(event, msg)
-    set_cmd_lock(user_id, 0)
-    await fast_sell_items.finish()
+        await bot.send(event, msg)
+        await fast_sell_items.finish()
 
 
 @user_want_funds.handle(
     parameterless=[
-        Cooldown(
-            cd_time=10,
-            at_sender=False)])
+        Cooldown(cd_time=10)])
 async def user_want_funds_(
         bot: Bot,  # 机器人实例
         event: GroupMessageEvent,  # 消息主体
@@ -215,24 +200,24 @@ async def user_want_funds_(
     # 获取用户数据
     _, user_info, _ = await check_user(event)
     user_id = user_info["user_id"]
-    # 提取命令详情
-    funds_num = get_args_num(args, 1)
-    if funds_num > user_info['stone']:
-        msg = "道友的灵石不足！！！"
+    user_cmd_lock = UserCmdLock(user_id)
+    with user_cmd_lock:
+        # 提取命令详情
+        funds_num = get_args_num(args, 1)
+        if funds_num > user_info['stone']:
+            msg = "道友的灵石不足！！！"
+            await bot.send(event, msg)
+            await user_want_funds.finish()
+        await sql_message.update_ls(user_id, funds_num, 2)  # 减少灵石
+        user_funds = await user_store.update_user_funds(user_id, funds_num, 0)  # 增加资金
+        msg = f"道友成功在灵宝楼存入{number_to_msg(funds_num)}灵石作为资金。\r当前灵宝楼存有：{number_to_msg(user_funds)}灵石"
         await bot.send(event, msg)
         await user_want_funds.finish()
-    await sql_message.update_ls(user_id, funds_num, 2)  # 减少灵石
-    user_funds = await user_store.update_user_funds(user_id, funds_num, 0)  # 增加资金
-    msg = f"道友成功在灵宝楼存入{number_to_msg(funds_num)}灵石作为资金。\r当前灵宝楼存有：{number_to_msg(user_funds)}灵石"
-    await bot.send(event, msg)
-    await user_want_funds.finish()
 
 
 @remove_want_item.handle(
     parameterless=[
-        Cooldown(
-            cd_time=10,
-            at_sender=False)])
+        Cooldown(cd_time=10)])
 async def remove_want_item_(
         bot: Bot,  # 机器人实例
         event: GroupMessageEvent,  # 消息主体
@@ -244,30 +229,30 @@ async def remove_want_item_(
     # 获取用户数据
     _, user_info, _ = await check_user(event)
     user_id = user_info["user_id"]
-    # 提取命令详情
-    args_str = args.extract_plain_text()
-    arg_strs = get_strs_from_str(args_str)
-    item_name = arg_strs[0] if arg_strs else None
-    item_id = items.items_map.get(item_name)
-    want_item_info = await user_store.check_user_want_item(user_id, item_id, 1)
-    if not want_item_info:
-        # 如果没有物品则驳回
-        msg = f"道友没有此物品的求购！！！"
+    user_cmd_lock = UserCmdLock(user_id)
+    with user_cmd_lock:
+        # 提取命令详情
+        args_str = args.extract_plain_text()
+        arg_strs = get_strs_from_str(args_str)
+        item_name = arg_strs[0] if arg_strs else None
+        item_id = items.items_map.get(item_name)
+        want_item_info = await user_store.check_user_want_item(user_id, item_id, 1)
+        if not want_item_info:
+            # 如果没有物品则驳回
+            msg = f"道友没有此物品的求购！！！"
+            await bot.send(event, msg)
+            await remove_want_item.finish()
+        await user_store.del_want_item(user_id, item_id)
+        back_stone = int(want_item_info['need_items_price'] * want_item_info['need_items_num'] * 0.8)
+        await sql_message.update_ls(user_id, back_stone, 1)  # 增加灵石
+        msg = f"成功取消对{item_name}的求购。\r回退{number_to_msg(back_stone)}灵石"
         await bot.send(event, msg)
         await remove_want_item.finish()
-    await user_store.del_want_item(user_id, item_id)
-    back_stone = int(want_item_info['need_items_price'] * want_item_info['need_items_num'] * 0.8)
-    await sql_message.update_ls(user_id, back_stone, 1)  # 增加灵石
-    msg = f"成功取消对{item_name}的求购。\r回退{number_to_msg(back_stone)}灵石"
-    await bot.send(event, msg)
-    await remove_want_item.finish()
 
 
 @user_funds_extract.handle(
     parameterless=[
-        Cooldown(
-            cd_time=10,
-            at_sender=False)])
+        Cooldown(cd_time=3)])
 async def user_funds_extract_(
         bot: Bot,  # 机器人实例
         event: GroupMessageEvent,  # 消息主体
@@ -279,29 +264,29 @@ async def user_funds_extract_(
     # 获取用户数据
     _, user_info, _ = await check_user(event)
     user_id = user_info["user_id"]
-    # 提取命令详情
-    funds_num = get_args_num(args, 1)
-    user_funds = await user_store.get_user_funds(user_id)  # 获取玩家摊位资金
-    if funds_num > user_funds:
-        msg = f"道友的灵宝楼内资金不足！！！\r当前灵宝楼内仅存有：{number_to_msg(user_funds)}灵石"
+    user_cmd_lock = UserCmdLock(user_id)
+    with user_cmd_lock:
+        # 提取命令详情
+        funds_num = get_args_num(args, 1)
+        user_funds = await user_store.get_user_funds(user_id)  # 获取玩家摊位资金
+        if funds_num > user_funds:
+            msg = f"道友的灵宝楼内资金不足！！！\r当前灵宝楼内仅存有：{number_to_msg(user_funds)}灵石"
+            await bot.send(event, msg)
+            await user_funds_extract.finish()
+        user_funds = await user_store.update_user_funds(user_id, funds_num, 1)  # 减少资金
+        stone_extract = int(funds_num * 0.8)
+        stone_handle = funds_num * 0.2
+        await sql_message.update_ls(user_id, stone_extract, 1)  # 增加灵石
+        msg = (f"道友成功自灵宝楼取出{number_to_msg(stone_extract)}灵石。\r"
+               f"收取手续费{number_to_msg(stone_handle)}枚灵石。\r"
+               f"当前灵宝楼存有：{number_to_msg(user_funds)}灵石")
         await bot.send(event, msg)
         await user_funds_extract.finish()
-    user_funds = await user_store.update_user_funds(user_id, funds_num, 1)  # 减少资金
-    stone_extract = int(funds_num * 0.8)
-    stone_handle = funds_num * 0.2
-    await sql_message.update_ls(user_id, stone_extract, 1)  # 增加灵石
-    msg = (f"道友成功自灵宝楼取出{number_to_msg(stone_extract)}灵石。\r"
-           f"收取手续费{number_to_msg(stone_handle)}枚灵石。\r"
-           f"当前灵宝楼存有：{number_to_msg(user_funds)}灵石")
-    await bot.send(event, msg)
-    await user_funds_extract.finish()
 
 
 @user_sell_to.handle(
     parameterless=[
-        Cooldown(
-            cd_time=2,
-            at_sender=False)])
+        Cooldown(cd_time=2)])
 async def user_sell_to_(
         bot: Bot,  # 机器人实例
         event: GroupMessageEvent,  # 消息主体
@@ -406,9 +391,7 @@ async def user_sell_to_(
 
 @check_my_want_item.handle(
     parameterless=[
-        Cooldown(
-            cd_time=10,
-            at_sender=False)])
+        Cooldown(cd_time=10)])
 async def check_my_want_item_(
         bot: Bot,  # 机器人实例
         event: GroupMessageEvent,  # 消息主体
@@ -439,9 +422,7 @@ async def check_my_want_item_(
 
 @check_user_want_item.handle(
     parameterless=[
-        Cooldown(
-            cd_time=10,
-            at_sender=False)])
+        Cooldown(cd_time=10)])
 async def check_user_want_item_(
         bot: Bot,  # 机器人实例
         event: GroupMessageEvent,  # 消息主体
@@ -474,61 +455,63 @@ async def check_user_want_item_(
     await check_user_want_item.finish()
 
 
-@user_want_item.handle(parameterless=[Cooldown(at_sender=False)])
+@user_want_item.handle(parameterless=[Cooldown()])
 async def user_want_item_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """物品求购"""
     _, user_info, _ = await check_user(event)
     user_id = user_info['user_id']
-    user_stone = user_info['stone']
-    # 获取指令参数
-    args_str = args.extract_plain_text()
-    msg_strs = get_strs_from_str(args_str)
-    item_name = msg_strs[0] if msg_strs else None
-    item_id = items.get_item_id(item_name)
-    if not item_id:
-        msg = "物品不存在！！"
-        await bot.send(event=event, message=msg)
-        await user_want_item.finish()
-    item_info = items.get_data_by_item_id(item_id)
-    item_rank = int(item_info["rank"])
-    max_price_mul = max(3 * (item_rank - 90), 10)
-    max_price = 1000000 + abs(item_rank - 55) * 100000 * max_price_mul
-    min_price = 1000000 + abs(item_rank - 55) * 100000
-    item_price = get_args_num(args_str, 1)
-    if item_price % 100000:
-        msg = "求购价格必须为10w的整数倍！！！"
-        await bot.send(event=event, message=msg)
-        await user_want_item.finish()
-
-    if item_price > max_price:
-        msg = "道友的求购价格未免太高了！！！"
-        await bot.send(event=event, message=msg)
-        await user_want_item.finish()
-    if item_price < min_price:
-        msg = f"道友的求购价格未免太低了！！！\r{item_name}的价值至少为：{number_to(min_price)}|{min_price}！！！"
-        await bot.send(event=event, message=msg)
-        await user_want_item.finish()
-    want_item = await user_store.check_user_want_item(user_id, item_id, 1)
-    if want_item:
-        if want_item.get('need_items_num'):
-            msg = f"道友已有此物的求购！！！\r若要更改，请先【取消求购{item_name}】!!!!"
+    user_cmd_lock = UserCmdLock(user_id)
+    with user_cmd_lock:
+        user_stone = user_info['stone']
+        # 获取指令参数
+        args_str = args.extract_plain_text()
+        msg_strs = get_strs_from_str(args_str)
+        item_name = msg_strs[0] if msg_strs else None
+        item_id = items.get_item_id(item_name)
+        if not item_id:
+            msg = "物品不存在！！"
+            await bot.send(event=event, message=msg)
+            await user_want_item.finish()
+        item_info = items.get_data_by_item_id(item_id)
+        item_rank = int(item_info["rank"])
+        max_price_mul = max(3 * (item_rank - 90), 10)
+        max_price = 1000000 + abs(item_rank - 55) * 100000 * max_price_mul
+        min_price = 1000000 + abs(item_rank - 55) * 100000
+        item_price = get_args_num(args_str, 1)
+        if item_price % 100000:
+            msg = "求购价格必须为10w的整数倍！！！"
             await bot.send(event=event, message=msg)
             await user_want_item.finish()
 
-    item_num = get_args_num(args_str, 2)
-    want_dict = {"need_items_id": item_id, "need_items_price": item_price, "need_items_num": item_num}
-    if item_num:
-        sum_price = item_price * item_num
-        if sum_price > user_stone:
-            msg = f"道友的灵石不足！！！\r当前仅有{number_to(user_stone)}|{user_stone}！！！"
+        if item_price > max_price:
+            msg = "道友的求购价格未免太高了！！！"
             await bot.send(event=event, message=msg)
             await user_want_item.finish()
-        await sql_message.update_ls(user_id, sum_price, 2)
-        funds_msg = f"消耗{number_to(sum_price)}|{sum_price}灵石"
-    else:
-        funds_msg = "请使用【灵宝楼存灵石】预存灵石来维持摊位运转"
-        item_num = "不限"
-    msg = f"成功向本位面灵宝楼提交求购申请\r物品：{item_name}\r价格：{number_to(item_price)}|{item_price}灵石\r需求数量：{item_num}\r{funds_msg}"
-    await user_store.create_user_want(user_id, want_dict)
-    await bot.send(event=event, message=msg)
-    await user_want_item.finish()
+        if item_price < min_price:
+            msg = f"道友的求购价格未免太低了！！！\r{item_name}的价值至少为：{number_to(min_price)}|{min_price}！！！"
+            await bot.send(event=event, message=msg)
+            await user_want_item.finish()
+        want_item = await user_store.check_user_want_item(user_id, item_id, 1)
+        if want_item:
+            if want_item.get('need_items_num'):
+                msg = f"道友已有此物的求购！！！\r若要更改，请先【取消求购{item_name}】!!!!"
+                await bot.send(event=event, message=msg)
+                await user_want_item.finish()
+
+        item_num = get_args_num(args_str, 2)
+        want_dict = {"need_items_id": item_id, "need_items_price": item_price, "need_items_num": item_num}
+        if item_num:
+            sum_price = item_price * item_num
+            if sum_price > user_stone:
+                msg = f"道友的灵石不足！！！\r当前仅有{number_to(user_stone)}|{user_stone}！！！"
+                await bot.send(event=event, message=msg)
+                await user_want_item.finish()
+            await sql_message.update_ls(user_id, sum_price, 2)
+            funds_msg = f"消耗{number_to(sum_price)}|{sum_price}灵石"
+        else:
+            funds_msg = "请使用【灵宝楼存灵石】预存灵石来维持摊位运转"
+            item_num = "不限"
+        msg = f"成功向本位面灵宝楼提交求购申请\r物品：{item_name}\r价格：{number_to(item_price)}|{item_price}灵石\r需求数量：{item_num}\r{funds_msg}"
+        await user_store.create_user_want(user_id, want_dict)
+        await bot.send(event=event, message=msg)
+        await user_want_item.finish()
