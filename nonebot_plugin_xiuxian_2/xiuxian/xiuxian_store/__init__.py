@@ -12,7 +12,7 @@ from nonebot.permission import SUPERUSER
 
 from .store_database import user_store
 from .. import XiuConfig
-from ..xiuxian_utils.clean_utils import get_args_num, get_paged_msg, number_to_msg, get_strs_from_str
+from ..xiuxian_utils.clean_utils import get_args_num, get_paged_msg, number_to_msg, get_strs_from_str, simple_md
 from ..xiuxian_utils.item_json import items
 from ..xiuxian_utils.lay_out import Cooldown, UserCmdLock
 from ..xiuxian_utils.utils import (
@@ -90,7 +90,7 @@ async def fast_sell_items_(
     _, user_info, _ = await check_user(event)
     user_id = user_info["user_id"]
     user_cmd_lock = UserCmdLock(user_id)
-    with user_cmd_lock:
+    with (user_cmd_lock):
         # 提取命令详情
         strs = args.extract_plain_text()
         want_user_id = await get_id_from_str(strs)
@@ -173,8 +173,11 @@ async def fast_sell_items_(
             await sql_message.send_back(want_user_id, item_id, item_name, item_type, sell_item_num, 0)
             sell_msg.append(f"【{item_name}】{sell_item_num}个 获取了{get_stone}灵石")
         if sell_msg:
-            msg += f"\r成功向{want_user_name}道友出售了：\r" + '\r'.join(
-                sell_msg) + f'\r总计: {number_to(price_sum)}灵石'
+            msg += f"\r成功向{want_user_name}道友"
+            msg = simple_md(msg,
+                            "出售", "灵宝楼出售",
+                            "了：\r" + '\r'.join(sell_msg) + f'\r总计: {number_to(price_sum)}灵石',
+                            "102368631_1739372858")
         elif not want_pass:
             msg += f"\r对方对道友的物品没有需求！"
         elif not funds_pass:
@@ -210,7 +213,10 @@ async def user_want_funds_(
             await user_want_funds.finish()
         await sql_message.update_ls(user_id, funds_num, 2)  # 减少灵石
         user_funds = await user_store.update_user_funds(user_id, funds_num, 0)  # 增加资金
-        msg = f"道友成功在灵宝楼存入{number_to_msg(funds_num)}灵石作为资金。\r当前灵宝楼存有：{number_to_msg(user_funds)}灵石"
+        msg = simple_md("道友成功在灵宝楼", "存入", "灵宝楼存灵石",
+                        f"{number_to_msg(funds_num)}灵石作为资金。"
+                        f"\r当前灵宝楼存有：{number_to_msg(user_funds)}灵石",
+                        "102368631_1739372858")
         await bot.send(event, msg)
         await user_want_funds.finish()
 
@@ -245,7 +251,10 @@ async def remove_want_item_(
         await user_store.del_want_item(user_id, item_id)
         back_stone = int(want_item_info['need_items_price'] * want_item_info['need_items_num'] * 0.8)
         await sql_message.update_ls(user_id, back_stone, 1)  # 增加灵石
-        msg = f"成功取消对{item_name}的求购。\r回退{number_to_msg(back_stone)}灵石"
+        msg = simple_md(f"成功取消对{item_name}的",
+                        f"求购", "灵宝楼求购",
+                        f"。\r回退{number_to_msg(back_stone)}灵石",
+                        "102368631_1739372858")
         await bot.send(event, msg)
         await remove_want_item.finish()
 
@@ -383,7 +392,11 @@ async def user_sell_to_(
         await sql_message.update_ls(user_id, get_stone, 1)
         item_type = items.items.get(str(item_id)).get('type')
         await sql_message.send_back(want_user_id, item_id, item_name, item_type, sell_item_num, 0)
-        msg = f"成功通过向灵宝楼向{want_user_name}道友出售了：\r{item_name}{sell_item_num}个\r获取了{get_stone}灵石"
+        msg = simple_md(f"成功通过向灵宝楼向{want_user_name}道友",
+                        "出售", "灵宝楼出售",
+                        f"了：\r{item_name}{sell_item_num}个"
+                        f"\r获取了{get_stone}灵石",
+                        "102368631_1739372858")
 
         await bot.send(event, msg)
         await user_sell_to.finish()
@@ -511,7 +524,12 @@ async def user_want_item_(bot: Bot, event: GroupMessageEvent, args: Message = Co
         else:
             funds_msg = "请使用【灵宝楼存灵石】预存灵石来维持摊位运转"
             item_num = "不限"
-        msg = f"成功向本位面灵宝楼提交求购申请\r物品：{item_name}\r价格：{number_to(item_price)}|{item_price}灵石\r需求数量：{item_num}\r{funds_msg}"
+        msg = simple_md(f"成功向本位面灵宝楼提交",
+                        "求购", "灵宝楼求购",
+                        f"申请\r物品：{item_name}"
+                        f"\r价格：{number_to(item_price)}|{item_price}灵石"
+                        f"\r需求数量：{item_num}\r{funds_msg}",
+                        "102368631_1739372858")
         await user_store.create_user_want(user_id, want_dict)
         await bot.send(event=event, message=msg)
         await user_want_item.finish()

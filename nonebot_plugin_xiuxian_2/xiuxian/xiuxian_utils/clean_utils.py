@@ -297,7 +297,8 @@ def get_strs_from_str(msg: str) -> list:
 
 
 def simple_md(msg_head, inlinecmd,
-              inlinecmd_url, msg_end):
+              inlinecmd_url, msg_end,
+              button_id: str = None):
     if NICKNAME != "凌云":
         return msg_head + inlinecmd + msg_end
     param = [
@@ -318,7 +319,11 @@ def simple_md(msg_head, inlinecmd,
             "values": [f"{msg_end}"]
         }
     ]
-    msg = MessageSegmentPlus.markdown_template("102368631_1732781247", param)
+    if not button_id:
+        msg = MessageSegmentPlus.markdown_template("102368631_1732781247", param)
+    else:
+        msg = MessageSegmentPlus.markdown_template_with_button("102368631_1732781247", param, button_id)
+
     return msg
 
 
@@ -326,7 +331,8 @@ def main_md(title, text,
             cmd_see, cmd,
             cmd_see_2, cmd_2,
             cmd_see_3, cmd_3,
-            cmd_see_4, cmd_4):
+            cmd_see_4, cmd_4,
+            button_id: str = None):
     if NICKNAME != "凌云":
         return title + '\r' + text
     param = [
@@ -371,11 +377,14 @@ def main_md(title, text,
             "values": [f"{quote(cmd_4)}"]
         }
     ]
-    msg = MessageSegmentPlus.markdown_template("102368631_1734180296", param)
+    if not button_id:
+        msg = MessageSegmentPlus.markdown_template("102368631_1734180296", param)
+    else:
+        msg = MessageSegmentPlus.markdown_template_with_button("102368631_1734180296", param, button_id)
     return msg
 
 
-def help_md(md_id, text):
+def help_md(md_id, text, button_id: str = None):
     if NICKNAME != "凌云":
         return text
     param = [
@@ -384,14 +393,18 @@ def help_md(md_id, text):
             "values": [f"{text}"]
         }
     ]
-    msg = MessageSegmentPlus.markdown_template(md_id, param)
+    if not button_id:
+        msg = MessageSegmentPlus.markdown_template(md_id, param)
+    else:
+        msg = MessageSegmentPlus.markdown_template_with_button(md_id, param, button_id)
     return msg
 
 
 def three_md(text_1,
              cmd_see_1, cmd_1, text_2,
              cmd_see_2, cmd_2, text_3,
-             cmd_see_3, cmd_3, text_4):
+             cmd_see_3, cmd_3, text_4,
+             button_id: str = None):
     if NICKNAME != "凌云":
         return text_1 + cmd_see_1 + text_2 + cmd_see_2 + text_3 + cmd_see_3 + text_4
     param = [
@@ -436,7 +449,11 @@ def three_md(text_1,
             "values": [f"{text_4}"]
         }
     ]
-    return MessageSegmentPlus.markdown_template("102368631_1733318207", param)
+    if not button_id:
+        msg = MessageSegmentPlus.markdown_template("102368631_1733318207", param)
+    else:
+        msg = MessageSegmentPlus.markdown_template_with_button("102368631_1733318207", param, button_id)
+    return msg
 
 
 def msg_handler(*args):

@@ -44,7 +44,6 @@ class DataBase:
                 await db.execute(sql, *data)
             return True
 
-
     async def select(self, table: str, where: dict, need_column: list = None):
         """
         简单逻辑数据查找接口
@@ -67,7 +66,6 @@ class DataBase:
                 sql = f"select {need_column_str} from {table}"
                 result = await db.fetch(sql)
                 return zips(**result[0]) if result else None
-
 
     async def update(self, table: str, where: dict, create_column: bool = 0, **kwargs):
         """

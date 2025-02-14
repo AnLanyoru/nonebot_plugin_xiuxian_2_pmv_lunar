@@ -36,6 +36,36 @@ class MessageSegmentPlus(MessageSegment):
         )
 
     @classmethod
+    def markdown_template_with_button(
+            cls,
+            md_id: str,
+            msg_body: list,
+            button_id: str
+    ) -> Self:
+        """
+        markdown模板
+        :param md_id: 模板id
+        :param msg_body: 模板参数
+        :param button_id: 按钮id
+        :return:
+        """
+        return cls(
+            "markdown",
+            {
+                "data": {
+                    "markdown": {
+                        "custom_template_id": md_id,
+                        "params": msg_body
+                    },
+                    "keyboard": {
+                        "id": button_id,
+                    }
+
+                }
+            }
+        )
+
+    @classmethod
     def markdown(
             cls,
             msg_body: list,

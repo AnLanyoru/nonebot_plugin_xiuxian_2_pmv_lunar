@@ -53,6 +53,7 @@ def join_card_check(card_list: list, card_pre_join: str) -> bool:
     card_list.append(card_pre_join)
     return False
 
+
 async def impart_check(user_id):
     if await xiuxian_impart.get_user_info_with_id(user_id) is None:
         await xiuxian_impart.impart_create_user(user_id)

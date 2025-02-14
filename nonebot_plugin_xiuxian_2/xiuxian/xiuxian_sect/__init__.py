@@ -3,7 +3,7 @@ import random
 import re
 import time
 
-from nonebot import on_command, on_fullmatch
+from nonebot import on_command
 from nonebot.adapters.onebot.v11 import (
     Bot,
     GROUP,
@@ -57,7 +57,7 @@ buffrankkey = {
 
 upatkpractice = on_command("升级攻击修炼", priority=5, permission=GROUP, block=True)
 my_sect = on_command("我的宗门", aliases={"宗门信息"}, priority=5, permission=GROUP, block=True)
-create_sect = on_fullmatch("创建宗门", priority=5, permission=GROUP, block=True)
+create_sect = on_command("创建宗门", priority=5, permission=GROUP, block=True)
 join_sect = on_command("加入宗门", priority=5, permission=GROUP, block=True)
 sect_position_update = on_command("宗门职位变更", priority=5, permission=GROUP, block=True)
 sect_donate = on_command("宗门捐献", priority=5, permission=GROUP, block=True)
@@ -66,8 +66,8 @@ sect_kick_out = on_command("踢出宗门", priority=5, permission=GROUP, block=T
 sect_owner_change = on_command("宗主传位", priority=5, permission=GROUP, block=True)
 sect_list = on_command("宗门列表", priority=5, permission=GROUP, block=True)
 sect_task = on_command("宗门任务接取", aliases={"我的宗门任务"}, priority=7, permission=GROUP, block=True)
-sect_task_complete = on_fullmatch("宗门任务完成", priority=7, permission=GROUP, block=True)
-sect_task_refresh = on_fullmatch("宗门任务刷新", priority=7, permission=GROUP, block=True)
+sect_task_complete = on_command("宗门任务完成", priority=7, permission=GROUP, block=True)
+sect_task_refresh = on_command("宗门任务刷新", priority=7, permission=GROUP, block=True)
 sect_mainbuff_get = on_command("宗门功法搜寻", aliases={"搜寻宗门功法", "宗门搜寻功法"}, priority=6, permission=GROUP,
                                block=True)
 sect_mainbuff_learn = on_command("学习宗门功法", priority=5, permission=GROUP, block=True)

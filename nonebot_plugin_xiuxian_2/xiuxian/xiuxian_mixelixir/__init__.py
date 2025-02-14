@@ -3,7 +3,7 @@ import re
 import time
 from datetime import datetime
 
-from nonebot import on_command, on_fullmatch
+from nonebot import on_command
 from nonebot.adapters.onebot.v11 import (
     Bot,
     GROUP,
@@ -57,17 +57,17 @@ alchemy_furnace_fire_control = on_command("丹炉升温", aliases={"丹炉降温
 make_elixir = on_command("凝结丹药", aliases={"成丹", "开"}, priority=10, permission=GROUP, block=True)
 alchemy_furnace_add_herb = on_command("添加药材", priority=5, permission=GROUP, block=True)
 mix_stop = on_command("停止炼丹", aliases={'退出炼丹'}, priority=5, permission=GROUP, block=True)
-mix_elixir = on_fullmatch("丹方", priority=17, permission=GROUP, block=True)
+mix_elixir = on_command("丹方", priority=17, permission=GROUP, block=True)
 mix_make = on_command("使用丹方", priority=5, permission=GROUP, block=True)
 elixir_help = on_command("炼丹", priority=7, permission=GROUP, block=True)
-mix_elixir_help = on_fullmatch("炼丹帮助", priority=6, permission=GROUP, block=True)
+mix_elixir_help = on_command("炼丹帮助", priority=6, permission=GROUP, block=True)
 elixir_back = on_command("丹药背包", priority=10, permission=GROUP, block=True)
 yaocai_back = on_command("药材背包", priority=10, permission=GROUP, block=True)
 yaocai_get = on_command("灵田收取", aliases={"灵田结算"}, priority=8, permission=GROUP, block=True)
 my_mix_elixir_info = on_command("我的炼丹信息", aliases={"炼丹信息"}, priority=6, permission=GROUP, block=True)
 mix_elixir_fire_improve = on_command("丹火升级", aliases={"升级丹火"}, priority=6, permission=GROUP, block=True)
-mix_elixir_fire_improve_num = on_fullmatch("丹火升级塑形", priority=5, permission=GROUP, block=True)
-mix_elixir_fire_improve_power = on_fullmatch("丹火升级萃取", priority=5, permission=GROUP, block=True)
+mix_elixir_fire_improve_num = on_command("丹火升级塑形", priority=5, permission=GROUP, block=True)
+mix_elixir_fire_improve_power = on_command("丹火升级萃取", priority=5, permission=GROUP, block=True)
 yaocai_get_op = on_command("op灵田收取", aliases={"op灵田结算"}, priority=8, permission=SUPERUSER, block=True)
 elixir_top = on_command("炼丹排行榜", priority=8, permission=GROUP, block=True)
 alchemy_furnace_get = on_command("购买丹炉", priority=8, permission=GROUP, block=True)

@@ -2,6 +2,7 @@ from .limit_database import limit_data
 from .. import XiuConfig
 from ..xiuxian_utils.xiuxian2_handle import UserBuffDate, xiuxian_impart
 
+
 class LimitCheck:
     def __init__(self):
         self.two_exp_limit = XiuConfig().two_exp_limit

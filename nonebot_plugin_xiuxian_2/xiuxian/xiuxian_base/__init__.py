@@ -2,7 +2,7 @@ import random
 import re
 from datetime import datetime
 
-from nonebot import on_command, on_fullmatch
+from nonebot import on_command
 from nonebot.adapters.onebot.v11 import (
     Bot,
     GROUP,
@@ -46,7 +46,7 @@ rank = on_command("排行榜", aliases={"修仙排行榜", "灵石排行榜", "�
 rename = on_command("改头换面", aliases={"修仙改名", "改名", "改头", "换面"}, priority=5, permission=GROUP,
                     block=True)
 level_up = on_command("突破", aliases={"tp"}, priority=6, permission=GROUP, block=True)
-level_up_dr = on_fullmatch("渡厄突破", priority=7, permission=GROUP, block=True)
+level_up_dr = on_command("渡厄突破", priority=7, permission=GROUP, block=True)
 level_up_zj = on_command("直接突破", aliases={"破", "/突破"}, priority=2, permission=GROUP, block=True)
 level_up_zj_all = on_command("快速突破", aliases={"连续突破", "一键突破"}, priority=2, permission=GROUP, block=True)
 give_stone = on_command("送灵石", priority=5, permission=GROUP, block=True)
@@ -60,7 +60,7 @@ cz_ts = on_command('调试创造', permission=SUPERUSER, priority=15, block=True
 rob_stone = on_command("抢灵石", priority=5, permission=GROUP, block=True)
 user_leveluprate = on_command('我的突破概率', aliases={'突破概率'}, priority=5, permission=GROUP, block=True)
 user_stamina = on_command('我的体力', aliases={'体力'}, priority=5, permission=GROUP, block=True)
-xiuxian_update_data = on_fullmatch('更新记录', priority=15, permission=GROUP, block=True)
+xiuxian_update_data = on_command('更新记录', priority=15, permission=GROUP, block=True)
 level_help = on_command('列表', aliases={"灵根列表", "品阶列表", "境界列表"}, priority=15, permission=GROUP, block=True)
 
 __xiuxian_update_data__ = f"""

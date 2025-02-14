@@ -2,7 +2,7 @@ import random
 import re
 from datetime import datetime
 
-from nonebot import on_command, on_fullmatch
+from nonebot import on_command
 from nonebot.adapters.onebot.v11 import (
     Bot,
     GROUP,
@@ -43,9 +43,9 @@ cache_help = {}
 BLESSEDSPOTCOST = 3500000
 two_exp_limit = XiuConfig().two_exp_limit  # 默认双修次数上限，修仙之人一天7次也不奇怪（
 
-buffinfo = on_fullmatch("我的功法", priority=1, permission=GROUP, block=True)
+buffinfo = on_command("我的功法", priority=1, permission=GROUP, block=True)
 out_closing = on_command("出关", aliases={"灵石出关"}, priority=5, permission=GROUP, block=True)
-in_closing = on_fullmatch("闭关", priority=5, permission=GROUP, block=True)
+in_closing = on_command("闭关", priority=5, permission=GROUP, block=True)
 stone_exp = on_command("灵石修仙", aliases={"灵石修炼", "/灵石修炼"}, priority=1, permission=GROUP, block=True)
 two_exp = on_command("双修", aliases={"快速双修", "确认快速双修"}, priority=5, permission=GROUP, block=True)
 mind_state = on_command("我的状态", aliases={"/我的状态"}, priority=1, permission=GROUP, block=True)
@@ -57,10 +57,10 @@ blessed_spot_info = on_command("洞天福地查看", aliases={"我的洞天福�
                                block=True)
 blessed_spot_rename = on_command("洞天福地改名", aliases={"改名洞天福地", "改洞天福地名"}, priority=1, permission=GROUP,
                                  block=True)
-ling_tian_up = on_fullmatch("灵田开垦", priority=5, permission=GROUP, block=True)
-del_exp_decimal = on_fullmatch("抑制黑暗动乱", priority=9, permission=GROUP, block=True)
-my_exp_num = on_fullmatch("我的双修次数", priority=9, permission=GROUP, block=True)
-a_test = on_fullmatch("测试保存", priority=9, permission=SUPERUSER, block=True)
+ling_tian_up = on_command("灵田开垦", priority=5, permission=GROUP, block=True)
+del_exp_decimal = on_command("抑制黑暗动乱", priority=9, permission=GROUP, block=True)
+my_exp_num = on_command("我的双修次数", priority=9, permission=GROUP, block=True)
+a_test = on_command("测试保存", priority=9, permission=SUPERUSER, block=True)
 daily_work = on_command("日常", priority=9, permission=GROUP, block=True)
 
 
@@ -112,7 +112,8 @@ async def blessed_spot_info_(bot: Bot, event: GroupMessageEvent):
         blessed_spot_name = user_info['blessed_spot_name']
     mix_elixir_info = await get_user_mix_elixir_info(user_id)
     msg += f"名字：{blessed_spot_name}\r"
-    msg += f"修炼速度：增加{int(user_buff_data['blessed_spot']) * 100}%\r"
+    msg += f"聚灵旗：{user_buff_data['blessed_spot_name']}\r"
+    msg += f"修炼速度：增加{user_buff_data['blessed_spot'] * 100:.2f}%\r"
     msg += f"灵田数量：{mix_elixir_info['farm_num']}"
     await bot.send(event=event, message=msg)
     await blessed_spot_info.finish()
@@ -836,7 +837,7 @@ async def daily_work_(bot: Bot, event: GroupMessageEvent):
                               - datetime.strptime(last_time, '%Y-%m-%d %H:%M:%S')).total_seconds() / 3600, 2)
             if timedeff >= round(
                     GETCONFIG['time_cost'] * (1 - (GETCONFIG['加速基数'] * mix_elixir_info['farm_grow_speed'])),
-                                 2):
+                    2):
                 farm = "可收取！！"
             else:
                 next_get_time = round(

@@ -20,7 +20,6 @@ from ..xiuxian_utils.xiuxian2_handle import sql_message
 cache_level_help = {}
 cache_beg_help = {}
 
-
 __beg_help__ = f"""
 详情:
 为了让初入仙途的道友们更顺利地踏上修炼之路，特别开辟了额外的机缘

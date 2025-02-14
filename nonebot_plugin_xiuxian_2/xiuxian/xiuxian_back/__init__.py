@@ -1,4 +1,4 @@
-from nonebot import on_command, on_fullmatch
+from nonebot import on_command
 from nonebot.adapters.onebot.v11 import (
     Bot,
     GROUP,
@@ -48,11 +48,11 @@ check_back = on_command('别人的背包', aliases={'检查背包'}, priority=2,
 use = on_command("使用", priority=15, permission=GROUP, block=True)
 no_use_zb = on_command("换装", aliases={"卸载"}, priority=5, permission=GROUP, block=True)
 back_help = on_command("背包帮助", aliases={"坊市帮助"}, priority=8, permission=GROUP, block=True)
-xiuxian_stone = on_fullmatch("灵石", priority=4, permission=GROUP, block=True)
+xiuxian_stone = on_command("灵石", priority=4, permission=GROUP, block=True)
 master_rename = on_command("超管改名", priority=2, permission=SUPERUSER, block=True)
 check_items = on_command("查看", aliases={"查", "查看物品", "查看效果", "详情"}, priority=25, permission=GROUP,
                          block=True)
-back_fix = on_fullmatch("背包修复", priority=1, permission=GROUP, block=True)
+back_fix = on_command("背包修复", priority=1, permission=GROUP, block=True)
 test_md = on_command("测试模板", priority=25, permission=SUPERUSER, block=True)
 check_item_json = on_command("物品结构", aliases={"json"}, priority=25, permission=SUPERUSER, block=True)
 gm_goods_delete = on_command("回收", aliases={"没收"}, priority=6, permission=SUPERUSER, block=True)

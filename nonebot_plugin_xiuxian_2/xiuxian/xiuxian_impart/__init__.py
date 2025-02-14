@@ -4,7 +4,7 @@ import os
 import random
 from pathlib import Path
 
-from nonebot import on_command, on_fullmatch
+from nonebot import on_command
 from nonebot.adapters.onebot.v11 import (
     Bot,
     GROUP,
@@ -25,13 +25,12 @@ from ..xiuxian_utils.xiuxian2_handle import xiuxian_impart
 cache_help = {}
 img_path = Path(f"{os.getcwd()}/data/xiuxian/卡图")
 
-
 impart_draw_fast = on_command("连续抽卡", aliases={"传承抽卡"}, priority=16, permission=GROUP, block=True)
 impart_draw = on_command("传承共鸣", aliases={"传承祈愿"}, priority=16, permission=GROUP, block=True)
 impart_back = on_command("传承背包", aliases={"我的传承背包"}, priority=15, permission=GROUP, block=True)
 impart_info = on_command("传承信息", aliases={"我的传承信息", "我的传承"}, priority=10, permission=GROUP, block=True)
 impart_help = on_command("传承帮助", aliases={"虚神界帮助"}, priority=8, permission=GROUP, block=True)
-re_impart_load = on_fullmatch("加载传承数据", priority=45, permission=GROUP, block=True)
+re_impart_load = on_command("加载传承数据", priority=45, permission=GROUP, block=True)
 impart_img = on_command("传承卡图", aliases={"传承卡片"}, priority=50, permission=GROUP, block=True)
 __impart_help__ = f"""
 传承帮助信息:

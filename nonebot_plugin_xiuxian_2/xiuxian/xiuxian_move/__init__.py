@@ -1,7 +1,7 @@
 import math
 from datetime import datetime
 
-from nonebot import on_command, on_fullmatch
+from nonebot import on_command
 from nonebot.adapters.onebot.v11 import (
     Bot,
     GROUP,
@@ -23,8 +23,8 @@ from ..xiuxian_utils.xiuxian2_handle import sql_message
 go_to = on_command("移动", aliases={"前往", "去"}, permission=GROUP, priority=10, block=True)
 get_map = on_command("地图", aliases={"我的位置", "位置"}, permission=GROUP, priority=10, block=True)
 complete_move = on_command("行动结算", aliases={"到达"}, permission=GROUP, priority=10, block=True)
-stop_move = on_fullmatch("停止移动", permission=GROUP, priority=10, block=True)
-near_player = on_fullmatch("附近玩家", permission=GROUP, priority=10, block=True)
+stop_move = on_command("停止移动", permission=GROUP, priority=10, block=True)
+near_player = on_command("附近玩家", permission=GROUP, priority=10, block=True)
 
 
 @go_to.handle(parameterless=[Cooldown()])

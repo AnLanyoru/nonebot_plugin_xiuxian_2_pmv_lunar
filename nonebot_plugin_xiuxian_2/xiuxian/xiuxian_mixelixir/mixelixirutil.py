@@ -25,7 +25,7 @@ all_mix_elixir = {item_id: items_info
 all_mix_elixir_table = {}
 for mix_elixir_id, mix_elixir_info in all_mix_elixir.items():
     elixir_mix_type_list = [herb_value_def[int(here_type)]
-                       for here_type in mix_elixir_info['elixir_config'].keys()]
+                            for here_type in mix_elixir_info['elixir_config'].keys()]
     elixir_mix_type_list.sort()
     elixir_mix_type = "".join(elixir_mix_type_list)
     need_power = sum(mix_elixir_info['elixir_config'].values())
@@ -363,7 +363,7 @@ class AlchemyFurnace:
 
         # 计算技巧系数
         base_fire_change, herb_power_keep = count_mix_param(user_fire_control=user_fire_control,
-                                             user_herb_knowledge=user_herb_knowledge)
+                                                            user_herb_knowledge=user_herb_knowledge)
 
         # 丹火增幅
         herb_power_keep *= (1 + 0.3 * user_fire_more_power)

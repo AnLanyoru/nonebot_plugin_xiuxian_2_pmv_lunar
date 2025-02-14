@@ -78,16 +78,16 @@ yuan_xiao_gift_list = {'思恋结晶': yuan_xiao_send_impart_stone,
 
 yuan_xiao_daily_gift_list = {1: {'msg':
                                      '汤圆十个，团团圆圆！\r福包 1个\r',
-                       'items':
+                                 'items':
                                      {25011: 10, 700002: 1}},
                              2: {'msg':
                                      '汤圆十个，团团圆圆！\r福包 1个\r',
-                       'items':
+                                 'items':
                                      {25011: 10, 700002: 1}},
                              3: {'msg':
-                           '汤圆十个，团团圆圆！\r福包 1个\r',
-                       'items':
-                                     {25011: 10, 700002: 1}}}
+                                     '幻境宵灯一盏。\r汤圆十个，团团圆圆！\r福包 1个\r',
+                                 'items':
+                                     {2506: 1, 25011: 10, 700002: 1}}}
 
 
 # 创建一个临时活动数据库
@@ -110,7 +110,7 @@ async def yuan_xiao_prepare():
 
 async def get_user_yuan_xiao_info(user_id: int) -> dict:
     user_yuan_xiao_info = await database.select(table='yuan_xiao_temp',
-                                               where={'user_id': user_id})
+                                                where={'user_id': user_id})
     if not user_yuan_xiao_info:
         insert_data = {'user_id': user_id}
         await database.insert(table='yuan_xiao_temp', create_column=0, **insert_data)
@@ -454,7 +454,6 @@ async def yuan_xiao_daily_gift_get_(bot: Bot, event: GroupMessageEvent, args: Me
         msg = "活动已结束！！"
         await bot.send(event=event, message=msg)
         await yuan_xiao_daily_gift_get.finish()
-
 
     _, user_info, _ = await check_user(event)
     user_id = user_info['user_id']

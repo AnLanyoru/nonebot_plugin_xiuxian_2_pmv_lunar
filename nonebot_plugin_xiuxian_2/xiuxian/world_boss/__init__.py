@@ -214,7 +214,8 @@ async def world_boss_shop_buy_(
             '世界boss商店兑换 物品编号 数量', '世界boss商店兑换',
             '世界boss排行', '世界boss排行',
             '世界boss菜单', '世界boss',
-            '挑战世界boss', '挑战世界boss')
+            '挑战世界boss', '挑战世界boss',
+            "102368631_1739372651")
         await bot.send(event=event, message=msg)
         await world_boss_shop_buy.finish()
 
@@ -245,7 +246,8 @@ async def world_boss_shop_menu_(
         '世界boss商店兑换 物品编号 数量', '世界boss商店兑换',
         '世界boss排行', '世界boss排行',
         '世界boss菜单', '世界boss',
-        '挑战世界boss', '挑战世界boss')
+        '挑战世界boss', '挑战世界boss',
+        "102368631_1739372651")
     await bot.send(event=event, message=msg)
     await world_boss_shop_menu.finish()
 
@@ -283,7 +285,8 @@ async def world_boss_fight_top_(bot: Bot, event: GroupMessageEvent, args: Messag
                       '挑战之地排行', '挑战排行',
                       '世界boss商店', '世界boss商店',
                       '世界boss菜单', '世界boss',
-                      '前往挑战世界boss', '挑战世界boss')
+                      '前往挑战世界boss', '挑战世界boss',
+                      "102368631_1739372651")
     else:
         msg = f"该排行榜空空如也！"
     await bot.send(event=event, message=msg)
@@ -324,7 +327,8 @@ async def world_boss_fight_(bot: Bot, event: GroupMessageEvent):
             '世界boss排行', '世界boss排行',
             '世界boss商店', '世界boss商店',
             '世界boss菜单', '世界boss',
-            '继续挑战世界boss', '挑战世界boss')
+            '继续挑战世界boss', '挑战世界boss',
+            "102368631_1739372651")
         await bot.send(event=event, message=msg)
         await world_boss_fight.finish()
 
@@ -352,6 +356,7 @@ async def world_boss_active_menu_(bot: Bot, event: GroupMessageEvent):
         f"\r🔹今日余剩次数{user_world_boss_info['fight_num']}/3\r",
         '世界boss商店', '世界boss商店',
         f"\r🔹当前积分{user_world_boss_info['world_point']}\r",
-        '世界boss排行', '世界boss伤害排行', '。')
+        '世界boss排行', '世界boss伤害排行', '。',
+        "102368631_1739372651")
     await bot.send(event=event, message=msg)
     await world_boss_active_menu.finish()

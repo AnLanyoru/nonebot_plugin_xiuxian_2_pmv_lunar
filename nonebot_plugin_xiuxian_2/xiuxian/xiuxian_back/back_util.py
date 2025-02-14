@@ -798,13 +798,9 @@ async def get_use_jlq_msg(user_id, goods_id):
         msg = f"道友还未拥有洞天福地，无法使用该物品"
     else:
         item_info = items.get_data_by_item_id(goods_id)
-        user_buff_data = await UserBuffDate(user_id).buff_info
-        if int(user_buff_data['blessed_spot']) >= item_info['修炼速度']:
-            msg = f"该聚灵旗的等级不能满足道友的福地了，使用了也没效果"
-        else:
-            await sql_message.update_back_j(user_id, goods_id)
-            await sql_message.updata_user_blessed_spot(user_id, item_info['修炼速度'])
-            msg = f"道友洞天福地的聚灵旗已经替换为：{item_info['name']}"
+        await sql_message.updata_user_blessed_spot_name(user_id, item_info['name'])
+        await sql_message.updata_user_blessed_spot(user_id, item_info['修炼速度'])
+        msg = f"道友洞天福地的聚灵旗已经替换为：{item_info['name']}"
     return msg
 
 

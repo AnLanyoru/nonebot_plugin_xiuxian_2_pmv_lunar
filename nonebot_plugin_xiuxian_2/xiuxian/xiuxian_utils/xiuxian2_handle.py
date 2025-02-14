@@ -147,6 +147,7 @@ class XiuxianDateManage:
       "sub_buff" numeric DEFAULT 0,
       "atk_buff" numeric DEFAULT 0,
       "blessed_spot" numeric DEFAULT 0,
+      "blessed_spot_name" text
       "elixir_buff" bytea
     );""")
                 elif i == "bank_info":
@@ -1220,6 +1221,12 @@ class XiuxianDateManage:
         sql = f"UPDATE buff_info SET blessed_spot=$1 WHERE user_id = $2"
         async with self.pool.acquire() as db:
             await db.execute(sql, blessed_spot, user_id)
+
+    async def updata_user_blessed_spot_name(self, user_id, blessed_spot_name: str):
+        """更新用户洞天福地等级"""
+        sql = f"UPDATE buff_info SET blessed_spot_name=$1 WHERE user_id = $2"
+        async with self.pool.acquire() as db:
+            await db.execute(sql, blessed_spot_name, user_id)
 
     async def update_user_blessed_spot_flag(self, user_id):
         """更新用户洞天福地是否开启"""
