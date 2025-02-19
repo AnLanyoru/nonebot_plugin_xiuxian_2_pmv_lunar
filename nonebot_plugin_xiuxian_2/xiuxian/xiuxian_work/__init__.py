@@ -14,6 +14,7 @@ from nonebot.params import RegexGroup
 from .work_database import PLAYERSDATA, save_work_info
 from .work_handle import work_handle, change_data_to_msg
 from .workmake import WorkMsg
+from .. import NICKNAME
 from ..database_utils.move_database import read_move_data
 from ..xiuxian_config import convert_rank, XiuConfig
 from ..xiuxian_limit import limit_handle
@@ -126,6 +127,8 @@ async def last_work_(bot: Bot, event: GroupMessageEvent):
 
 @do_work.handle(parameterless=[Cooldown(cd_time=1, stamina_cost=0)])
 async def do_work_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = RegexGroup()):
+    if NICKNAME != "凌云":
+        await do_work.finish()
     _, user_info, _ = await check_user(event)
 
     user_id = user_info['user_id']

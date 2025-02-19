@@ -90,7 +90,7 @@ async def exp_up_(bot: Bot, event: GroupMessageEvent):
     mainbuffratebuff = mainbuffdata['ratebuff'] if mainbuffdata is not None else 0  # 功法修炼倍率
     place_id = await place.get_now_place_id(user_id)
     world_id = place.get_world_id(place_id)
-    world_buff = world_id * 0.3  # 位面灵气加成
+    world_buff = world_id * 0.6  # 位面灵气加成
     exp = int(
         (exp_time * XiuConfig().closing_exp) * (
             (level_rate * realm_rate * (1 + mainbuffratebuff)))

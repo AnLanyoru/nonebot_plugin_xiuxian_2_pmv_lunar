@@ -621,7 +621,7 @@ async def yaocai_get_(bot: Bot, event: GroupMessageEvent):
         await yaocai_get.finish()
     mix_elixir_info = await get_user_mix_elixir_info(user_id)
     GETCONFIG = {
-        "time_cost": 47,  # 单位小时
+        "time_cost": 23,  # 单位小时
         "加速基数": 0.10
     }
     last_time = mix_elixir_info['farm_harvest_time']

@@ -1,15 +1,43 @@
-from nonebot import require, logger
+from nonebot import require, logger, on_command
+from nonebot.adapters.onebot.v11 import GroupMessageEvent, Bot
+from nonebot.permission import SUPERUSER
 
+from .tools import get_world_boss_damage_top_limit, send_world_boss_point_top_3, send_world_boss_point, \
+    send_world_boss_point_all, all_world_id
 from ..xiuxian_buff import two_exp_cd, reset_send_stone, reset_stone_exp_up
+from ..xiuxian_database.database_connect import database
 from ..xiuxian_impart_pk import impart_pk
 from ..xiuxian_limit import limit_data
 from ..xiuxian_sect import sect_config
+from ..xiuxian_utils.lay_out import Cooldown
 from ..xiuxian_utils.xiuxian2_handle import sql_message
 
 weekly_work = require("nonebot_plugin_apscheduler").scheduler
 materials_update = require("nonebot_plugin_apscheduler").scheduler
 reset_user_task = require("nonebot_plugin_apscheduler").scheduler
 daily_reset = require("nonebot_plugin_apscheduler").scheduler
+
+world_boss_point_hand_send = on_command('世界BOSS积分发放', priority=1, permission=SUPERUSER, block=True)
+
+
+@world_boss_point_hand_send.handle(parameterless=[Cooldown()])
+async def world_boss_point_hand_send_(bot: Bot, event: GroupMessageEvent):
+    """挑战世界boss"""
+
+    await send_world_boss_point_top_3(database)
+
+    for world_id in all_world_id:
+        top_10_list = await get_world_boss_damage_top_limit(database, 10, world_id)
+        await send_world_boss_point(database, top_10_list, 20)
+
+        top_100_list = await get_world_boss_damage_top_limit(database, 100, world_id)
+        await send_world_boss_point(database, top_100_list, 20)
+
+    await send_world_boss_point_all(database, 10)
+
+    msg = f"已发放世界BOSS累计伤害奖励"
+    await bot.send(event=event, message=msg)
+    await world_boss_point_hand_send.finish()
 
 
 # 每日0点重置用户宗门任务次数、宗门丹药领取次数
@@ -46,6 +74,28 @@ async def weekly_work_():
     logger.opt(colors=True).info(f"<green>已更新周常事件</green>")
 
 
+@weekly_work.scheduled_job("cron", day_of_week='mon', hour=0)
+async def weekly_world_boss_reset_():
+    await database.sql_execute("update world_boss set fight_damage=0")
+    logger.opt(colors=True).info(f"<green>已重置世界BOSS累计伤害</green>")
+
+
+@weekly_work.scheduled_job("cron", day_of_week='sun', hour=9)
+async def weekly_world_boss_point_give_():
+    await send_world_boss_point_top_3(database)
+
+    for world_id in all_world_id:
+        top_10_list = await get_world_boss_damage_top_limit(database, 10, world_id)
+        await send_world_boss_point(database, top_10_list, 20)
+
+        top_100_list = await get_world_boss_damage_top_limit(database, 100, world_id)
+        await send_world_boss_point(database, top_100_list, 20)
+
+    await send_world_boss_point_all(database, 10)
+
+    logger.opt(colors=True).info(f"<green>已发放世界BOSS累计伤害奖励</green>")
+
+
 # 每日0点重置用虚神界次数
 @daily_reset.scheduled_job("cron", hour=0, minute=0)
 async def daily_reset_():
@@ -78,3 +128,6 @@ async def daily_reset_():
 
     await sql_message.beg_remake()
     logger.opt(colors=True).info(f"<green>仙途奇缘重置成功！</green>")
+
+    await database.sql_execute("update world_boss set fight_num=0")
+    logger.opt(colors=True).info(f"<green>每日BOSS挑战次数重置成功！</green>")

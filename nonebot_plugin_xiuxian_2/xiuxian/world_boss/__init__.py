@@ -57,7 +57,7 @@ boss_name_now = random.choice(boss_names)
 
 with open(Path(__file__).parent / 'world_boss_shop.json', "r", encoding="UTF-8") as file_data:
     problem_data = file_data.read()
-WORLD_BOSS_SHOP: dict[int, dict] = {item_no: item_info for item_no, item_info in json.loads(problem_data).items()}
+WORLD_BOSS_SHOP: dict[int, dict] = {int(item_no): item_info for item_no, item_info in json.loads(problem_data).items()}
 
 
 # 创建一个世界boss数据库
@@ -118,12 +118,6 @@ async def get_world_boss_fight_top(world_id):
         return result_all
 
 
-# 活动日常刷新
-@boss_daily_reset.scheduled_job("cron", hour=0, minute=1)
-async def boss_daily_reset_():
-    await database.sql_execute("update world_boss set fight_num=0")
-
-
 world_boss_active_menu = on_command("世界boss",
                                     aliases={'世界Boss', '世界BOSS'},
                                     priority=9, permission=GROUP, block=True)
@@ -160,7 +154,7 @@ async def world_boss_shop_reload_(bot: Bot, event: GroupMessageEvent):
     global WORLD_BOSS_SHOP
     with open(Path(__file__).parent / 'world_boss_shop.json', "r", encoding="UTF-8") as file:
         data = file.read()
-    WORLD_BOSS_SHOP = {item_no: item_info for item_no, item_info in json.loads(data).items()}
+    WORLD_BOSS_SHOP = {int(item_no): item_info for item_no, item_info in json.loads(data).items()}
     msg = f"重载世界boss商店成功"
     await bot.send(event=event, message=msg)
     await world_boss_shop_reload.finish()

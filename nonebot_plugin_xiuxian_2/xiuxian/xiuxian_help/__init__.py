@@ -319,7 +319,7 @@ async def buff_home_(bot: Bot, event: GroupMessageEvent):
 async def store_help_(bot: Bot, event: GroupMessageEvent):
     """帮助"""
     msg = simple_md(__store_help__ + "\r",
-                    "查看日常", "日常", ".",
+                    "查看日常", "日常", "。",
                     "102368631_1739372858")
     await bot.send(event=event, message=msg)
     await store_help.finish()

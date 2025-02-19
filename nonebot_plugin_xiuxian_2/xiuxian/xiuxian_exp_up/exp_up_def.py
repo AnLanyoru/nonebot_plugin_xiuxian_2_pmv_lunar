@@ -38,7 +38,7 @@ async def exp_up_by_time(user_info, exp_time) -> tuple[str, int, dict]:
     # 位面灵气加成
     place_id = await place.get_now_place_id(user_id)
     world_id = place.get_world_id(place_id)
-    world_buff = world_id * 0.3
+    world_buff = world_id * 0.6
 
     # 计算传承增益
     impart_data = await xiuxian_impart.get_user_info_with_id(user_id)
