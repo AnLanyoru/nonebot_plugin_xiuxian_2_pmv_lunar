@@ -14,6 +14,7 @@ from nonebot.permission import SUPERUSER
 
 from .limit import check_limit, reset_send_stone, reset_stone_exp_up
 from .two_exp_cd import two_exp_cd
+from ..world_boss.world_boss_database import get_user_world_boss_info
 from ..xiuxian_config import XiuConfig
 from ..xiuxian_data.data.境界_data import level_data
 from ..xiuxian_data.data.突破概率_data import break_rate
@@ -668,7 +669,6 @@ async def select_state_(bot: Bot, event: GroupMessageEvent, args: Message = Comm
         await select_state.finish()
     await sql_message.update_last_check_info_time(user_id)  # 更新查看修仙信息时间
     user_msg = await sql_message.get_user_real_info(user_id)
-    main_hp_rank = level_data[user_msg['level']]["HP"]  # 添加血量补偿测试
     level_rate = await sql_message.get_root_rate(user_msg['root_type'])  # 灵根倍率
     realm_rate = level_data[user_msg['level']]["spend"]  # 境界倍率
     user_buff_data = UserBuffDate(user_id)
@@ -710,9 +710,7 @@ async def select_state_(bot: Bot, event: GroupMessageEvent, args: Message = Comm
         main_crit_buff = 0
 
     main_buff_rate_buff = main_buff_data['ratebuff'] if main_buff_data is not None else 0
-    main_hp_buff = main_buff_data['hpbuff'] if main_buff_data is not None else 0
     impart_data = await xiuxian_impart.get_user_info_with_id(user_id)
-    impart_hp_per = impart_data['impart_hp_per'] if impart_data is not None else 0
     impart_know_per = impart_data['impart_know_per'] if impart_data is not None else 0
     impart_burst_per = impart_data['impart_burst_per'] if impart_data is not None else 0
     boss_atk = impart_data['boss_atk'] if impart_data is not None else 0
@@ -827,7 +825,7 @@ async def daily_work_(bot: Bot, event: GroupMessageEvent):
     else:
         mix_elixir_info = await get_user_mix_elixir_info(user_id)
         GETCONFIG = {
-            "time_cost": 47,  # 单位小时
+            "time_cost": 23,  # 单位小时
             "加速基数": 0.10
         }
         last_time = mix_elixir_info['farm_harvest_time']
@@ -855,6 +853,8 @@ async def daily_work_(bot: Bot, event: GroupMessageEvent):
             tower_msg = f"尚未挑战"
     else:
         tower_msg = f"尚未挑战"
+
+    world_boss_info = await get_user_world_boss_info(user_id)
     msg = f"今日日常完成情况"
     text = (f"签到 {user_info['is_sign']}/1\r"
             f"体力 {user_info['user_stamina']}/2400\r"
@@ -865,7 +865,7 @@ async def daily_work_(bot: Bot, event: GroupMessageEvent):
             f"宗门任务完成 {user_info['sect_task']}/4\r"
             f"灵田当前状态 {farm}\r"
             f"本周位面挑战{tower_msg}\r"
-            f"元宵活动进行中：发送 元宵 参与！！")
+            f"今日世界BOSS挑战 {world_boss_info['fight_num']}/3")
     msg = main_md(msg, text,
                   "双修", "双修",
                   "悬赏令", "悬赏令",
