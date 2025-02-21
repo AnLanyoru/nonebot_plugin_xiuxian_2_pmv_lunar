@@ -22,7 +22,7 @@ all_mix_elixir = {item_id: items_info
                   for item_id, items_info in items.items.items()
                   if items_info["item_type"] == '合成丹药'}
 
-all_mix_elixir_table = {}
+all_mix_elixir_table: dict = {}
 for mix_elixir_id, mix_elixir_info in all_mix_elixir.items():
     elixir_mix_type_list = [herb_value_def[int(here_type)]
                             for here_type in mix_elixir_info['elixir_config'].keys()]
