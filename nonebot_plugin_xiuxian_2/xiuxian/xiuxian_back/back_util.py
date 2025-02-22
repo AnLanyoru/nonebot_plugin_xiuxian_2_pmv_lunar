@@ -214,7 +214,7 @@ async def get_user_main_back_msg_easy(user_id):
     l_types_msg_dict = {}
     for item_type in item_types:
         if l_items := l_types_dict.get(item_type):
-            l_items.sort(key=lambda k: int(items.get_data_by_item_id(k.get('goods_id'), {}).get('rank')))
+            l_items.sort(key=lambda k: int(items.get_data_by_item_id(k.get('goods_id')).get('rank')))
             l_items_msg = []
             l_types_sec_dict = {}
             for item in l_items:
