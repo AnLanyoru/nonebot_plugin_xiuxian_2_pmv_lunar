@@ -377,7 +377,7 @@ class TowerHandle(WorldTowerData):
             shop = tower.shop
             for goods_no, goods in shop.items():
                 msg = (f"商品编号：{goods_no}\r"
-                       f"物品名称：{items.items.get(str(goods.get('item'))).get('name')}\r"
+                       f"物品名称：{items.get_data_by_item_id(goods.get('item')).get('name')}\r"
                        f"兑换需要积分：{goods.get('price')}")
                 msg_list.append(msg)
         return msg_list, msg_head

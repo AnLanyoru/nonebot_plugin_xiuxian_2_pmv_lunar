@@ -215,7 +215,7 @@ async def get_user_main_back_msg_easy(user_id):
     l_types_msg_dict = {}
     for item_type in item_types:
         if l_items := l_types_dict.get(item_type):
-            l_items.sort(key=lambda k: int(items.items.get(str(k.get('goods_id')), {}).get('rank')))
+            l_items.sort(key=lambda k: int(items.get_data_by_item_id(k.get('goods_id'), {}).get('rank')))
             l_items_msg = []
             l_types_sec_dict = {}
             for item in l_items:
@@ -257,7 +257,7 @@ async def get_user_back_msg(user_id, item_types: list):
     l_types_msg_dict = {}
     for item_type in item_types:
         if l_items := l_types_dict.get(item_type):
-            l_items.sort(key=lambda k: int(items.items.get(str(k.get('goods_id')), {}).get('rank')))
+            l_items.sort(key=lambda k: int(items.get_data_by_item_id(k.get('goods_id')).get('rank')))
             l_items_msg = []
             l_types_sec_dict = {}
             for item in l_items:
@@ -377,7 +377,7 @@ async def get_user_yaocai_back_msg(user_id):
         return l_msg
     level_dict = {"一品药材": 1, "二品药材": 2, "三品药材": 3, "四品药材": 4,
                   "五品药材": 5, "六品药材": 6, "七品药材": 7, "八品药材": 8, "九品药材": 9}
-    user_backs.sort(key=lambda k: level_dict.get(items.items.get(str(k.get('goods_id'))).get('level'), 0))
+    user_backs.sort(key=lambda k: level_dict.get(items.get_data_by_item_id(k.get('goods_id')).get('level'), 0))
     for user_back in user_backs:
         if user_back['goods_type'] == "药材":
             l_yaocai_msg = get_yaocai_msg(l_yaocai_msg, user_back['goods_id'], user_back['goods_num'])
@@ -399,7 +399,7 @@ async def get_user_yaocai_back_msg_easy(user_id):
     level_dict = {"一品药材": 1, "二品药材": 2, "三品药材": 3, "四品药材": 4,
                   "五品药材": 5, "六品药材": 6, "七品药材": 7, "八品药材": 8, "九品药材": 9}
     user_backs.sort(key=lambda k: level_dict.get(
-        items.items.get(str(k.get('goods_id'))).get('level'), 0) + 0.01 * len(k.get('goods_name')))
+        items.get_data_by_item_id(k.get('goods_id')).get('level'), 0) + 0.01 * len(k.get('goods_name')))
     if user_backs is None:
         return l_msg
     for user_back in user_backs:

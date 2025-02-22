@@ -169,7 +169,7 @@ async def fast_sell_items_(
             await sql_message.update_back_j(user_id, item_id, num=sell_item_num)
             await sql_message.update_ls(user_id, get_stone, 1)
             price_sum += get_stone
-            item_type = items.items.get(str(item_id)).get('type')
+            item_type = items.get_data_by_item_id(item_id).get('type')
             await sql_message.send_back(want_user_id, item_id, item_name, item_type, sell_item_num, 0)
             sell_msg.append(f"【{item_name}】{sell_item_num}个 获取了{get_stone}灵石")
         if sell_msg:
@@ -390,7 +390,7 @@ async def user_sell_to_(
         # 检查通过，减少出售者物品，增加买家物品，减少买家资金储备，增加卖家灵石
         await sql_message.update_back_j(user_id, item_id, num=sell_item_num)
         await sql_message.update_ls(user_id, get_stone, 1)
-        item_type = items.items.get(str(item_id)).get('type')
+        item_type = items.get_data_by_item_id(item_id).get('type')
         await sql_message.send_back(want_user_id, item_id, item_name, item_type, sell_item_num, 0)
         msg = simple_md(f"成功通过向灵宝楼向{want_user_name}道友",
                         "出售", "灵宝楼出售",

@@ -231,7 +231,7 @@ async def world_boss_shop_menu_(
     shop = WORLD_BOSS_SHOP
     for goods_no, goods in shop.items():
         msg = (f"商品编号：{goods_no}\r"
-               f"物品名称：{items.items.get(str(goods.get('item'))).get('name')}\r"
+               f"物品名称：{items.get_data_by_item_id(goods.get('item')).get('name')}\r"
                f"兑换需要积分：{goods.get('price')}")
         msg_list.append(msg)
     text = msg_handler(bot, event, msg_list)

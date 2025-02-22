@@ -330,7 +330,7 @@ class LimitHandle:
             if offset_items:
                 msg += "包含物品：\r"
                 for item_id in offset_items:
-                    msg += f"物品：{items.items.get(str(item_id), {}).get('name', '不存在的物品')}  物品数量：{offset_items[item_id]}\r"
+                    msg += f"物品：{items.get_data_by_item_id(item_id).get('name', '不存在的物品')}  物品数量：{offset_items[item_id]}\r"
             msg += f"补偿领取截止时间：{last_time}\r"
             if daily_update:
                 msg += "每日刷新领取\r"
