@@ -10,7 +10,6 @@ from nonebot.adapters.onebot.v11 import (
 from nonebot.params import RegexGroup
 
 from .bank_config import CONFIG as BANK_CONFIG
-from .. import NICKNAME
 from ..xiuxian_database.database_connect import database
 from ..xiuxian_utils.lay_out import Cooldown
 from ..xiuxian_utils.utils import check_user, number_to
@@ -45,8 +44,6 @@ __bank_help__ = f"""
 
 @bank.handle(parameterless=[Cooldown()])
 async def bank_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = RegexGroup()):
-    if NICKNAME != "凌云":
-        await bank.finish()
     _, user_info, _ = await check_user(event)
 
     mode = args[0]  # 存灵石、取灵石、升级会员、信息查看

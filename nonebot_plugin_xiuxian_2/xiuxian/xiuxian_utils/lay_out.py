@@ -1,8 +1,10 @@
+import json
 import random
 import time
 from asyncio import get_running_loop
 from collections import defaultdict
 from enum import IntEnum, auto
+from pathlib import Path
 from typing import DefaultDict, Dict, Any
 
 from nonebot import require
@@ -14,7 +16,6 @@ from nonebot.params import Depends
 
 from .clean_utils import simple_md
 from .xiuxian2_handle import sql_message
-from .. import DRIVER
 from ..xiuxian_config import XiuConfig
 
 limit_all_message = require("nonebot_plugin_apscheduler").scheduler
@@ -25,7 +26,11 @@ limit_all_data: Dict[str, Any] = {}
 limit_message_num = XiuConfig().message_limit
 limit_message_time = XiuConfig().message_limit_time
 cmd_lock = {}
+test_user = []
 
+with open(Path(__file__).parent / 'sever_type.json', "r", encoding="UTF-8") as f:
+    data = f.read()
+sever_mode = json.loads(data)['type']
 
 class UserCmdLock:
     def __init__(self, user_id: int):
@@ -150,7 +155,8 @@ def Cooldown(
         parallel: int = 1,
         stamina_cost: int = 0,
         check_user: bool = True,
-        parallel_block: bool = True
+        parallel_block: bool = True,
+        pass_test_check: bool = False
 ) -> None:
     """
     依赖注入形式的命令冷却
@@ -179,6 +185,15 @@ def Cooldown(
     async def dependency(bot: Bot, matcher: Matcher, event: MessageEvent):
         user_id = str(event.get_user_id())
         limit_type = limit_all_run(user_id)
+        if user_id in test_user:
+            if sever_mode:
+                if not pass_test_check:
+                    await matcher.finish()
+        else:
+            if not sever_mode:
+                if not pass_test_check:
+                    await matcher.finish()
+
         # 发言限制，请前往xiuxian_config设置
         if limit_type is True:
             too_fast_notice = f"道友的指令太迅速了，让我缓会儿！！"
