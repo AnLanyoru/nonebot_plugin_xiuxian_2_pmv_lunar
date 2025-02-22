@@ -140,25 +140,24 @@ __home_help__ = f"""
 灵田基础成长时间为47小时
 """.strip()
 
-__store_help__ = f"""
-——灵宝楼帮助——
-灵宝楼指令大全
-1：灵宝楼求购 物品 价格 数量
- - 向灵宝楼提交求购物品申请
-2：灵宝楼出售 物品 道号
- - 向有求购的玩家出售对应物品
- - 不输 道号 会按市场最高价出售
-3：灵宝楼求购查看 物品
- - 查看对应物品的最高求购价
-4：我的灵宝楼求购
- - 查看自身灵宝楼求购
-5：灵宝楼取灵石 数量
- - 从灵宝楼中取出灵石，收取20%手续费
-6：取消求购 物品名称
- - 下架你的求购物品
-——tips——
-官方群914556251
-""".strip()
+__store_help__ = (f"\r"
+                  f"——灵宝楼帮助——\r"
+                  f"灵宝楼指令大全\r"
+                  f"1：灵宝楼求购 物品 价格 数量\r"
+                  f" 🔹 向灵宝楼提交求购物品申请\r"
+                  f"2：灵宝楼出售 物品 道号\r"
+                  f" 🔹 向有求购的玩家出售对应物品\r"
+                  f" 🔹 不输 道号 会按市场最高价出售\r"
+                  f"3：灵宝楼求购查看 物品\r"
+                  f" 🔹 查看对应物品的最高求购价\r"
+                  f"4：我的灵宝楼求购\r"
+                  f" 🔹 查看自身灵宝楼求购\r"
+                  f"5：灵宝楼取灵石 数量\r"
+                  f" 🔹 从灵宝楼中取出灵石，收取20%手续费\r"
+                  f"6：取消求购 物品名称\r"
+                  f" 🔹 下架你的求购物品\r"
+                  f"——tips——\r"
+                  f"官方群914556251\r").strip()
 
 __tower_help__ = f"""
 ——位面挑战指令帮助——
@@ -318,8 +317,8 @@ async def buff_home_(bot: Bot, event: GroupMessageEvent):
 @store_help.handle(parameterless=[Cooldown()])
 async def store_help_(bot: Bot, event: GroupMessageEvent):
     """帮助"""
-    msg = simple_md(__store_help__ + "\r",
-                    "查看日常", "日常", "。",
+    msg = simple_md(__store_help__,
+                    "查看日常", "日常", "！",
                     "102368631_1739372858")
     await bot.send(event=event, message=msg)
     await store_help.finish()
