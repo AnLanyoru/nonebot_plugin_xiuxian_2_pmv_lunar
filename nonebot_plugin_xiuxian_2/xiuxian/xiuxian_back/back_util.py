@@ -6,7 +6,6 @@ from pathlib import Path
 
 from ..user_data_handle import UserBuffData
 from ..xiuxian_config import convert_rank, XiuConfig
-from ..xiuxian_database.database_connect import database
 from ..xiuxian_place import place
 from ..xiuxian_utils.item_json import items
 from ..xiuxian_utils.xiuxian2_handle import (
@@ -657,15 +656,12 @@ async def check_use_elixir(user_id, goods_id, num):
             msg = f"道友成功使用丹药：{goods_name}{num}颗，下一次突破的成功概率提高{goods_info['buff'] * num}%!"
 
     elif goods_info['buff_type'] == "level_up_big":  # 增加大境界突破概率的丹药
-        if goods_rank != user_rank:  # 使用限制
+        if goods_info['境界'] != user_info['level']:  # 使用限制
             msg = f"丹药：{goods_name}的使用境界为{goods_info['境界']}，道友不满足使用条件！"
         else:
-            if goods_all_num >= goods_info['all_num']:
-                msg = f"道友使用的丹药：{goods_name}已经达到丹药的耐药性上限！已经无法使用该丹药了！"
-            else:  # 检查完毕
-                await sql_message.update_back_j(user_id, goods_id, num, 1)
-                await sql_message.update_levelrate(user_id, user_info['level_up_rate'] + goods_info['buff'] * num)
-                msg = f"道友成功使用丹药：{goods_name}{num}颗,下一次突破的成功概率提高{goods_info['buff'] * num}%!"
+            await sql_message.update_back_j(user_id, goods_id, num, 1)
+            await sql_message.update_levelrate(user_id, user_info['level_up_rate'] + goods_info['buff'] * num)
+            msg = f"道友成功使用丹药：{goods_name}{num}颗,下一次突破的成功概率提高{goods_info['buff'] * num}%!"
 
     elif goods_info['buff_type'] == "stamina":  # 增加体力的丹药
         if goods_day_num + num > goods_info['day_num']:
