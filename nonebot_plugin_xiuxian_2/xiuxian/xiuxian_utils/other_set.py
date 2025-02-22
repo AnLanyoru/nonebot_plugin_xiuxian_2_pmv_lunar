@@ -21,7 +21,7 @@ class OtherSet(XiuConfig):
             need_exp = await sql_message.get_level_power(is_updata_level)
         return need_exp
 
-    async def get_type(self, user_exp, rate, user_level, user_id):
+    async def get_type(self, user_exp, rate, user_level, user_info):
         list_all = len(self.level) - 1
         now_index = self.level.index(user_level)
         if list_all == now_index:
@@ -34,9 +34,8 @@ class OtherSet(XiuConfig):
         if user_exp < need_exp:
             return f"道友的修为不足以突破！距离下次突破需要{need_exp - user_exp}修为！突破境界为：{is_updata_level}"
         # 判断目标境界是否需要特殊灵根
-        user_msg = await sql_message.get_user_info_with_id(user_id)
-        now_root = user_msg["root_type"]
-        user_place = await place.get_now_place_id(user_id)
+        now_root = user_info["root_type"]
+        user_place = user_info['place_id']
         user_world = place.get_world_id(user_place)
         world_name = place.get_world_name(user_place)
         # 境界限制
