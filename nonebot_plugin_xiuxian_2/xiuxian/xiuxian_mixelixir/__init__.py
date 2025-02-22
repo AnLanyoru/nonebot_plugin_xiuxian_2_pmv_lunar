@@ -402,6 +402,141 @@ async def make_elixir_(bot: Bot, event: GroupMessageEvent):
     await make_elixir.finish()
 
 
+@mix_make.handle(parameterless=[Cooldown(stamina_cost=0)])
+async def mix_make_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
+    """丹炉加药"""
+
+    _, user_info, _ = await check_user(event)
+    user_id = user_info['user_id']
+    is_type, _ = await check_user_type(user_id, 7)
+    if not is_type:
+        msg = "道友现在没在炼丹呢！！"
+        await bot.send(event=event, message=msg)
+        await mix_make.finish()
+    args = args.extract_plain_text()
+
+    # 解析配方参数
+    as_main = r'([\s\S]*)主药([\s\S][^主药引辅]*)'
+    as_ing = r'([\s\S]*)药引([\s\S][^主药引辅]*)'
+    as_sub = r'([\s\S]*)辅药([\s\S][^主药引辅]*)'
+
+    matched_main = re.search(as_main, args)
+    matched_ing = re.search(as_ing, args)
+    matched_sub = re.search(as_sub, args)
+
+    if not matched_main and not matched_ing and not matched_sub:
+        msg = '输入格式有误，输入格式为 添加药材主药xxxx药引xxxx辅药xxxx'
+        await bot.send(event=event, message=msg)
+        await mix_make.finish()
+
+    temp_dict = {}
+    all_herb_as_type = ['主药', '药引', '辅药']
+    for herb_as_type, matched_result in zip(all_herb_as_type, [matched_main, matched_ing, matched_sub]):
+        if matched_result:
+            herb_str = matched_result.group(2)
+            herb_names = get_strs_from_str(herb_str)
+            # 获取所有药材id
+            main_herb_id = [herb_id_map.get(herb_name) for herb_name in herb_names]
+            # 获取所有药材数量
+            add_herb_num = [int(num) for num in get_num_from_str(herb_str)]
+            if None in main_herb_id:
+                msg = f'{herb_as_type}中含有未知的药材'
+                await bot.send(event=event, message=msg)
+                await mix_make.finish()
+            if len(add_herb_num) != len(main_herb_id):
+                msg = f'{herb_as_type}中有药材未指定数量'
+                await bot.send(event=event, message=msg)
+                await mix_make.finish()
+            # 格式化
+            main_herb = list(zip(main_herb_id, add_herb_num, herb_names))
+            temp_dict[herb_as_type] = main_herb
+
+    # 检查用户药材数量是否充足
+    loss_msg = ''
+    user_back = await sql_message.get_back_msg(user_id)
+    user_back_dict = {item_info['goods_id']: item_info for item_info in user_back}
+    decrease_dict = {}
+    for herb_as_type in temp_dict.keys():
+        herbs_input = temp_dict[herb_as_type]
+        for herb_id, herb_num, herb_name in herbs_input:
+            if herb_id in decrease_dict:
+                decrease_dict[herb_id] += herb_num
+            else:
+                decrease_dict[herb_id] = herb_num
+            if (real_num := user_back_dict.get(herb_id, {}).get('goods_num', 0)) < herb_num:
+                loss_msg += f"\r道友欲添加的{herb_as_type}:{herb_name}不足(需要{herb_num},余下{real_num}个)"
+            if herb_id in user_back_dict:
+                user_back_dict[herb_id]['goods_num'] -= herb_num
+
+    if loss_msg:
+        await bot.send(event=event, message=loss_msg)
+        await mix_make.finish()
+
+    # 扣除药材
+    await sql_message.decrease_user_item(user_id, decrease_dict, True)
+    # 获取用户炼丹数据
+    user_mix_elixir_info = await get_user_mix_elixir_info(user_id)
+    user_alchemy_furnace: AlchemyFurnace = await get_user_alchemy_furnace(user_id)
+    msg_herb = user_alchemy_furnace.input_herbs(
+        user_mix_elixir_info['user_fire_control'],
+        user_mix_elixir_info['user_herb_knowledge'],
+        user_mix_elixir_info['user_fire_more_power'],
+        temp_dict)
+
+    msg_make, mix_elixir_info = user_alchemy_furnace.make_elixir()
+    msg = msg_herb + '\r' + msg_make
+    if not mix_elixir_info:
+        await bot.send(event=event, message=msg)
+        await make_elixir.finish()
+    # 加入传承
+    impart_data = await xiuxian_impart.get_user_info_with_id(user_id)
+    impart_mix_per = impart_data['impart_mix_per'] if impart_data is not None else 0
+    # 功法炼丹数加成
+    main_dan_data = await UserBuffDate(user_id).get_user_main_buff_data()
+    # 功法炼丹数量加成
+    main_dan = main_dan_data['dan_buff'] if main_dan_data else 0
+    # 丹火炼丹数量提升
+    fire_num_up = user_mix_elixir_info['user_fire_more_num']
+
+    # 总炼丹数量提升
+    num = 1 + user_alchemy_furnace.make_elixir_improve + impart_mix_per + main_dan + fire_num_up
+    await sql_message.send_back(user_id=user_id,
+                                goods_id=mix_elixir_info['item_id'],
+                                goods_name=mix_elixir_info['name'],
+                                goods_type=mix_elixir_info['type'],
+                                goods_num=num)
+    msg += f"{num}颗"
+
+    # 提升炼丹经验计算
+    main_dan_exp = main_dan_data['dan_exp'] if main_dan_data else 0
+    final_dan_exp = max(20, mix_elixir_info['rank'] - 50) + main_dan_exp * num
+
+    user_skill_improve_data = {
+        'user_fire_control': mix_elixir_info['give_fire_control_exp']
+                             + user_mix_elixir_info['user_fire_control'],
+        'user_herb_knowledge': mix_elixir_info['give_herb_knowledge_exp']
+                               + user_mix_elixir_info['user_herb_knowledge'],
+        'user_mix_elixir_exp': final_dan_exp
+                               + user_mix_elixir_info['user_mix_elixir_exp'],
+        'sum_mix_num': num
+                       + user_mix_elixir_info['sum_mix_num']
+    }
+    await database.update(table='mix_elixir_info',
+                          where={'user_id': user_id},
+                          **user_skill_improve_data)
+    msg += (f"\r控火经验增加：{mix_elixir_info['give_fire_control_exp']}"
+            f"（当前{user_skill_improve_data['user_fire_control']}）"
+            f"\r药理知识增加：{mix_elixir_info['give_herb_knowledge_exp']}"
+            f"（当前{user_skill_improve_data['user_herb_knowledge']}）"
+            f"\r炼丹经验增加：{final_dan_exp}"
+            f"（当前{user_skill_improve_data['user_mix_elixir_exp']}）\r")
+    msg = simple_md(msg, '再次使用此丹方', event.get_message().extract_plain_text(), '。')
+    # 保存丹炉数据
+    await user_alchemy_furnace.save_data(user_id)
+    await bot.send(event=event, message=msg)
+    await mix_make.finish()
+
+
 @alchemy_furnace_fire_control.handle(parameterless=[Cooldown(stamina_cost=0)])
 async def alchemy_furnace_fire_control_(
         bot: Bot, event: GroupMessageEvent, args: Message = CommandArg(), cmd: str = RawCommand()):
