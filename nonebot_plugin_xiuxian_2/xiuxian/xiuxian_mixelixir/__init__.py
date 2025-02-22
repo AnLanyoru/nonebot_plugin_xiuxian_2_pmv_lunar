@@ -54,7 +54,7 @@ async def get_yuan_xiao_top():
 
 alchemy_furnace_state = on_command("丹炉状态", priority=5, permission=GROUP, block=True)
 alchemy_furnace_fire_control = on_command("丹炉升温", aliases={"丹炉降温"}, priority=5, permission=GROUP, block=True)
-make_elixir = on_command("凝结丹药", aliases={"成丹", "开"}, priority=10, permission=GROUP, block=True)
+make_elixir = on_command("凝结丹药", aliases={"成丹", "开"}, priority=14, permission=GROUP, block=True)
 alchemy_furnace_add_herb = on_command("添加药材", priority=5, permission=GROUP, block=True)
 mix_stop = on_command("停止炼丹", aliases={'退出炼丹'}, priority=5, permission=GROUP, block=True)
 mix_elixir = on_command("丹方", priority=17, permission=GROUP, block=True)
