@@ -8,7 +8,7 @@ test_mode_open = on_command("测试调试模式", priority=14, permission=GROUP,
 test_list = [992551767, 35597641]
 
 
-@test_mode_open.handle(parameterless=[Cooldown(cd_time=3600, pass_test_check=True)])
+@test_mode_open.handle(parameterless=[Cooldown(cd_time=0, pass_test_check=True)])
 async def test_mode_open_(bot: Bot, event: GroupMessageEvent):
     """测试模式切换"""
     user_id = str(event.user_id)
