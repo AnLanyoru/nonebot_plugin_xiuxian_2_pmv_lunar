@@ -481,7 +481,7 @@ class AlchemyFurnace:
         msg = f"药力不足，还不足以凝聚丹药！！"
         for elixir_need_power, elixir_id in mix_table.items():
             if now_sum_power > elixir_need_power:
-                make_elixir_info = items.get_data_by_item_id(elixir_id)
+                make_elixir_info = items.get_data_by_item_id(elixir_id).copy()
                 make_elixir_info['item_id'] = elixir_id
                 make_elixir_info['give_fire_control_exp'] = self.__fire_control_num
                 make_elixir_info['give_herb_knowledge_exp'] = self.__sum_herb_value_input * 5
