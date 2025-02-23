@@ -44,6 +44,14 @@ async def mark_goods(goods_id, mark_user_id):
     return update_result
 
 
+async def mark_goods_many(goods_id_list: list[str], mark_user_id: int) -> str:
+    sql: str = 'update world_shop set buyer=$1 where id=$2 and buyer=0'
+    mark_data: list[tuple[int, str]] = [(mark_user_id, goods_id) for goods_id in goods_id_list]
+    async with database.pool.acquire() as conn:
+        update_result = await conn.executemany(sql, mark_data)
+    return update_result
+
+
 async def fetch_goods_min_price_type(user_id, item_type: tuple[str]):
     sql_arg = ','.join([f"${no}" for no in range(2, len(item_type) + 2)])
     sql = ('select item_id, min(item_price) as item_price '
@@ -61,6 +69,17 @@ async def fetch_goal_goods_data(item_id, user_id):
            'from world_shop '
            'where item_id=$1 and buyer=0 and owner_id != $2 '
            'order by item_price desc '
+           'limit 1')
+    async with database.pool.acquire() as conn:
+        result = await conn.fetch(sql, item_id, user_id)
+    result_all = zips(**result[0]) if result else {}
+    return result_all
+
+
+async def fetch_self_goods_data(item_id, user_id):
+    sql = ('select id, owner_id, item_id, item_type, item_price '
+           'from world_shop '
+           'where item_id=$1 and buyer=0 and owner_id=$2 '
            'limit 1')
     async with database.pool.acquire() as conn:
         result = await conn.fetch(sql, item_id, user_id)

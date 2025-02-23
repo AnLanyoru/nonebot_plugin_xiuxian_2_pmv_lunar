@@ -1,5 +1,3 @@
-import asyncio
-
 from nonebot import on_command
 from nonebot.adapters.onebot.v11 import (
     Bot,
@@ -10,7 +8,7 @@ from nonebot.adapters.onebot.v11 import (
 from nonebot.params import CommandArg
 
 from .shop_database import create_goods, fetch_goal_goods_data, fetch_goods_data_by_id, mark_goods, \
-    fetch_goods_min_price_type
+    fetch_goods_min_price_type, fetch_self_goods_data
 from ..xiuxian_utils.clean_utils import get_strs_from_str, get_args_num, simple_md, number_to, three_md, get_paged_msg, \
     msg_handler, main_md, get_args_uuid
 from ..xiuxian_utils.item_json import items
@@ -36,6 +34,46 @@ TYPE_DEF = {'功法': ('功法', '神通', '辅修功法'),
             '装备': ('法器', '防具'),
             '丹药': ('合成丹药',),
             '主功法': ('功法',)}
+
+
+@shop_goods_back.handle(parameterless=[Cooldown(stamina_cost=0)])
+async def shop_goods_back_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
+    """市场下架"""
+    _, user_info, _ = await check_user(event)
+
+    user_id = user_info['user_id']
+
+    arg_str = args.extract_plain_text()
+    strs = get_strs_from_str(arg_str)
+    if not strs:
+        msg = '请输入要下架的物品名称！'
+        await bot.send(event=event, message=msg)
+        await shop_goods_back.finish()
+    # 解析物品名称
+    item_name = strs[0]
+    item_id = items.items_map.get(item_name)
+    if not item_id:
+        msg = '不存在的物品！'
+        await bot.send(event=event, message=msg)
+        await shop_goods_back.finish()
+    goods_info = await fetch_self_goods_data(user_id=user_id, item_id=item_id)
+    if not goods_info:
+        msg = '道友没有在出售该物品！'
+        await bot.send(event=event, message=msg)
+        await shop_goods_back.finish()
+    goods_id = goods_info['id']
+    shop_result = await mark_goods(goods_id=goods_id, mark_user_id=user_id)
+    if shop_result == 'UPDATE 0':
+        msg = simple_md('道友的物品已被',
+                        '购买', '市场购买',
+                        f'！！')
+        await bot.send(event=event, message=msg)
+        await shop_goods_buy_sure.finish()
+    await sql_message.send_item(user_id, {item_id: 1}, False)
+    msg = f"成功下架{item_name} 1 \r"
+    msg = simple_md(msg, '继续下架物品', f"市场下架", '。')
+    await bot.send(event=event, message=msg)
+    await shop_goods_back.finish()
 
 
 @shop_goods_check.handle(parameterless=[Cooldown(stamina_cost=0)])
