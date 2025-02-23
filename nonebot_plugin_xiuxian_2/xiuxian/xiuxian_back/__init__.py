@@ -42,7 +42,7 @@ auction_offer_all_count = 0  # 控制线程等待时间
 
 goods_re_root = on_command("炼金", priority=6, permission=GROUP, block=True)
 goods_re_root_fast = on_command("快速炼金", aliases={"批量炼金"}, priority=6, permission=GROUP, block=True)
-main_back = on_command('我的背包', aliases={'我的物品', '背包'}, priority=2, permission=GROUP, block=True)
+main_back = on_command('我的背包', aliases={'我的物品', '背包'}, priority=3, permission=GROUP, block=True)
 skill_back = on_command('功法背包', priority=2, permission=GROUP, block=True)
 check_back = on_command('别人的背包', aliases={'检查背包'}, priority=2, permission=SUPERUSER, block=True)
 use = on_command("使用", priority=15, permission=GROUP, block=True)
@@ -52,7 +52,7 @@ xiuxian_stone = on_command("灵石", priority=4, permission=GROUP, block=True)
 master_rename = on_command("超管改名", priority=2, permission=SUPERUSER, block=True)
 check_items = on_command("查看", aliases={"查", "查看物品", "查看效果", "详情"}, priority=25, permission=GROUP,
                          block=True)
-back_fix = on_command("背包修复", priority=1, permission=GROUP, block=True)
+back_fix = on_command("背包修复", priority=2, permission=GROUP, block=True)
 test_md = on_command("测试模板", priority=25, permission=SUPERUSER, block=True)
 check_item_json = on_command("物品结构", aliases={"json"}, priority=25, permission=SUPERUSER, block=True)
 gm_goods_delete = on_command("回收", aliases={"没收"}, priority=6, permission=SUPERUSER, block=True)

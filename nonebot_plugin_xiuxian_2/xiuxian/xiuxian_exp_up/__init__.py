@@ -23,7 +23,7 @@ from ..xiuxian_utils.xiuxian2_handle import (
     sql_message, UserBuffDate
 )
 
-exp_up = on_command("修炼", aliases={"/修炼"}, priority=1, permission=GROUP, block=True)
+exp_up = on_command("修炼", aliases={"/修炼"}, priority=2, permission=GROUP, block=True)
 power_break_up = on_command("吸收天地精华", aliases={"融合天地精华"}, priority=12, permission=GROUP, block=True)
 power_break_up_help = on_command("天地精华", aliases={"天地精华帮助"}, priority=12, permission=GROUP, block=True)
 world_rank_up = on_command("踏破虚空", aliases={"突破位面", "飞升"}, priority=12, permission=GROUP, block=True)

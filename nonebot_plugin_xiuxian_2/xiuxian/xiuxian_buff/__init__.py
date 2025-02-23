@@ -49,8 +49,8 @@ out_closing = on_command("出关", aliases={"灵石出关"}, priority=5, permiss
 in_closing = on_command("闭关", priority=5, permission=GROUP, block=True)
 stone_exp = on_command("灵石修仙", aliases={"灵石修炼", "/灵石修炼"}, priority=1, permission=GROUP, block=True)
 two_exp = on_command("双修", aliases={"快速双修", "确认快速双修"}, priority=5, permission=GROUP, block=True)
-mind_state = on_command("我的状态", aliases={"/我的状态"}, priority=1, permission=GROUP, block=True)
-select_state = on_command("查看状态", aliases={"查状态"}, priority=1, permission=GROUP, block=True)
+mind_state = on_command("我的状态", aliases={"/我的状态"}, priority=2, permission=GROUP, block=True)
+select_state = on_command("查看状态", aliases={"查状态"}, priority=2, permission=GROUP, block=True)
 qc = on_command("切磋", priority=6, permission=GROUP, block=True)
 blessed_spot_create = on_command("洞天福地购买", aliases={"获取洞天福地", "购买洞天福地"}, priority=1, permission=GROUP,
                                  block=True)
