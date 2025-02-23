@@ -15,7 +15,7 @@ async def shop_prepare():
             await conn.execute(f"select count(1) from world_shop")
         except asyncpg.exceptions.UndefinedTableError:
             await conn.execute(f"""CREATE TABLE "world_shop" (
-                "id" bigserial PRIMARY KEY,
+                "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
                 "owner_id" bigint DEFAULT 0,
                 "item_id" bigint DEFAULT 0,
                 "item_type" text,
@@ -38,18 +38,20 @@ async def create_goods(user_id, item_id, item_type, price: int):
 
 
 async def mark_goods(goods_id, mark_user_id):
-    sql = 'update world_shop set buyer=$1 where id=$2'
+    sql = 'update world_shop set buyer=$1 where id=$2 and buyer=0'
     async with database.pool.acquire() as conn:
         update_result = await conn.execute(sql, mark_user_id, goods_id)
     return update_result
 
 
-async def fetch_goods_data_type(user_id, item_type: tuple[str]):
-    sql = ('select id, owner_id, item_id, item_type, item_price '
+async def fetch_goods_min_price_type(user_id, item_type: tuple[str]):
+    sql_arg = ','.join([f"${no}" for no in range(2, len(item_type) + 2)])
+    sql = ('select item_id, min(item_price) as item_price '
            'from world_shop '
-           'where item_type in $1 and buyer=0 and owner_id != $2')
+           f'where item_type in ({sql_arg}) and buyer=0 and owner_id != $1 '
+           'group by item_id')
     async with database.pool.acquire() as conn:
-        result = await conn.fetch(sql, item_type, user_id)
+        result = await conn.fetch(sql, user_id, *item_type)
     result_all = [zips(**result_per) for result_per in result]
     return result_all
 

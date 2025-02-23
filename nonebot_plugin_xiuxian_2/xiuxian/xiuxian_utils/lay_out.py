@@ -189,6 +189,9 @@ def Cooldown(
             if sever_mode:
                 if not pass_test_check:
                     await matcher.finish()
+            else:
+                too_fast_notice = f"以下为测试服数据，滥用请举报该id：{user_id}"
+                await bot.send(event=event, message=too_fast_notice)
         else:
             if not sever_mode:
                 if not pass_test_check:

@@ -276,6 +276,35 @@ def get_args_num(args: Message | str, no: int = 1, default: int = 0) -> int:
         return default
 
 
+def get_uuids_from_str(arg_str) -> list[str]:
+    """
+    从消息字符串中获取uuid列表
+    :param arg_str: 从纯字符串中获取的获取的消息字符串
+    :return: 提取到的分块整数
+    """
+    uuids = re.findall(
+        r"([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})",
+        arg_str)
+    return uuids
+
+
+def get_args_uuid(args: Message | str, no: int = 1, default: int = None) -> str | None:
+    """
+    获取消息指令参数中的数字，自动处理报错
+    :param args: 消息指令参数
+    :param no: 需要第几个数字
+    :param default: 为空默认返回
+    :return: 数字
+    """
+    args_str = args.extract_plain_text() if isinstance(args, Message) else args
+    num_msg = get_uuids_from_str(args_str)
+    try:
+        num = num_msg[no - 1]
+        return num
+    except (IndexError, TypeError):
+        return default
+
+
 def get_num_from_str(msg: str) -> list[str]:
     """
     从消息字符串中获取数字列表
