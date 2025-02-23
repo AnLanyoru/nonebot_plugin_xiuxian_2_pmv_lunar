@@ -6,7 +6,7 @@ from ..xiuxian_utils.lay_out import Cooldown, test_user
 test_mode_open = on_command("开启测试模式", priority=5, permission=GROUP, block=True)
 test_mode_close = on_command("关闭测试模式", priority=5, permission=GROUP, block=True)
 
-test_list = [992551767, 35597641, 260706949, 685823074, 169698047, 977888070, 655738805, 441081340, 102221518]
+test_list = [992551767, 35597641, 260706949, 685823074, 169698047, 977888070, 655738805, 441081340, 102221518, 81910561]
 
 
 @test_mode_open.handle(parameterless=[Cooldown(cd_time=0, pass_test_check=True)])
