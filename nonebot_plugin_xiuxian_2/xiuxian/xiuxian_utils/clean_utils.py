@@ -276,7 +276,7 @@ def get_args_num(args: Message | str, no: int = 1, default: int = 0) -> int:
         return default
 
 
-def get_num_from_str(msg: str) -> list:
+def get_num_from_str(msg: str) -> list[str]:
     """
     从消息字符串中获取数字列表
     :param msg: 从纯字符串中获取的获取的消息字符串
