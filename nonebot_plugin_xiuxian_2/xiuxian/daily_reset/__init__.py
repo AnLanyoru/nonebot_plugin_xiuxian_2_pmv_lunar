@@ -80,7 +80,7 @@ async def weekly_world_boss_reset_():
     logger.opt(colors=True).info(f"<green>已重置世界BOSS累计伤害</green>")
 
 
-@weekly_work.scheduled_job("cron", day_of_week='sun', hour=9)
+@weekly_work.scheduled_job("cron", day_of_week='sun', hour=21)
 async def weekly_world_boss_point_give_():
     await send_world_boss_point_top_3(database)
 
