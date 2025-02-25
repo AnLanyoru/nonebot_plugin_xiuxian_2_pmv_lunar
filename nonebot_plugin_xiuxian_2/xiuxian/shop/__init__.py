@@ -8,9 +8,10 @@ from nonebot.adapters.onebot.v11 import (
 from nonebot.params import CommandArg
 
 from .shop_database import create_goods, fetch_goal_goods_data, fetch_goods_data_by_id, mark_goods, \
-    fetch_goods_min_price_type, fetch_self_goods_data
-from ..xiuxian_utils.clean_utils import get_strs_from_str, get_args_num, simple_md, number_to, three_md, get_paged_msg, \
-    msg_handler, main_md, get_args_uuid
+    fetch_goods_min_price_type, fetch_self_goods_data, create_goods_many
+from .shop_util import back_pick_tool
+from ..xiuxian_utils.clean_utils import get_strs_from_str, get_args_num, simple_md, number_to, three_md, \
+    msg_handler, main_md, get_args_uuid, get_paged_item
 from ..xiuxian_utils.item_json import items
 from ..xiuxian_utils.lay_out import Cooldown
 from ..xiuxian_utils.utils import (
@@ -28,12 +29,62 @@ shop_goods_send_sure = on_command("确认市场上架", priority=5, permission=G
 shop_goods_check = on_command("市场查看",
                               aliases={"坊市查看", "查看坊市", "查看市场"},
                               priority=5, permission=GROUP, block=True)
-shop_goods_send_many = on_command("快速市场上架", aliases={'快速坊市上架'}, priority=5, permission=GROUP, block=True)
+shop_goods_send_many = on_command("快速市场上架", aliases={'快速坊市上架', '市场快速上架', '坊市快速上架'}, priority=5,
+                                  permission=GROUP, block=True)
 
 TYPE_DEF = {'功法': ('功法', '神通', '辅修功法'),
             '装备': ('法器', '防具'),
             '丹药': ('合成丹药',),
             '主功法': ('功法',)}
+
+user_shop_temp_pick_dict: dict[int, list[str]] = {}
+
+
+@shop_goods_send_many.handle(parameterless=[Cooldown(stamina_cost=0)])
+async def shop_goods_send_many_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
+    """市场快速上架"""
+    _, user_info, _ = await check_user(event)
+
+    user_id = user_info['user_id']
+    user_stone = user_info['stone']
+
+    arg_str = args.extract_plain_text()
+    price = get_args_num(arg_str, 1, 500000)
+    strs = get_strs_from_str(arg_str)
+    if not strs:
+        msg = '请输入要上架的物品类别！'
+        await bot.send(event=event, message=msg)
+        await shop_goods_send_many.finish()
+    # 价格合理性检测
+    if price % 100000:
+        msg = '价格必须为10w的整数倍！'
+        await bot.send(event=event, message=msg)
+        await shop_goods_send_many.finish()
+    if price < 500000:
+        msg = '价格最低为50w灵石！'
+        await bot.send(event=event, message=msg)
+        await shop_goods_send_many.finish()
+    user_back_items = await sql_message.get_back_msg(user_id)
+    if not user_back_items:
+        msg = '道友的背包空空如也！！'
+        await bot.send(event=event, message=msg)
+        await shop_goods_send_many.finish()
+    # 解析物品
+    all_pick_items: dict[int, int] = back_pick_tool(user_back_items, strs)
+    # 检查手续费
+    handle_price: int = int(price * 0.2) * sum(all_pick_items.values())
+    if user_stone < handle_price:
+        msg = f'道友的灵石不足以支付上架物品花费的手续费{number_to(handle_price)}灵石！！'
+        await bot.send(event=event, message=msg)
+        await shop_goods_send_many.finish()
+    await sql_message.update_ls(user_id, handle_price, 2)
+    await sql_message.decrease_user_item(user_id, all_pick_items, False)
+    await create_goods_many(user_id, all_pick_items, price)
+    item_msg: str = items.change_id_num_dict_to_msg(all_pick_items)
+    msg = f"成功上架：{item_msg}\r单价：{number_to(price)}灵石\r收取道友{number_to(handle_price)}灵石手续费\r"
+    msg = simple_md(msg, '继续上架', '市场快速上架', '物品')
+    await bot.send(event=event, message=msg)
+    await shop_goods_send_many.finish()
 
 
 @shop_goods_back.handle(parameterless=[Cooldown(stamina_cost=0)])
@@ -99,13 +150,20 @@ async def shop_goods_check_(bot: Bot, event: GroupMessageEvent, args: Message = 
     else:
         all_type = tuple(strs)
     item_price_data = await fetch_goods_min_price_type(user_id=user_id, item_type=all_type)
+    item_price_data = get_paged_item(msg_list=item_price_data, page=page, per_page_item=24)
     item_price_data.sort(key=lambda item_per: item_per['item_id'])
-    msg_list = []
+    msg_list: list[str] = []
+    temp_pick_list: list[str] = []
+    item_no = 0
     for item_price_data_per in item_price_data:
         item_name = items.get_data_by_item_id(item_price_data_per['item_id'])['name']
-        msg_per = f"{item_name} 价格：{item_price_data_per['item_price']}"
+        temp_pick_list.append(item_name)
+        item_no += 1
+        msg_per = (f"编号: {item_no} {item_name} "
+                   f"价格：{number_to(item_price_data_per['item_price'])}"
+                   f"|{item_price_data_per['item_price']}")
         msg_list.append(msg_per)
-    msg_list = get_paged_msg(msg_list=msg_list, page=page, per_page_item=24)
+    user_shop_temp_pick_dict[user_id] = temp_pick_list
     text = msg_handler(msg_list)
     type_msg = '、'.join(all_type)
     msg_head = f"{type_msg}市场情况"
@@ -113,7 +171,7 @@ async def shop_goods_check_(bot: Bot, event: GroupMessageEvent, args: Message = 
                   '上架物品', '市场上架',
                   '当前灵石', '灵石',
                   '下一页', f"市场查看{type_msg} {page + 1}",
-                  '市场购买 物品名称', '市场购买')
+                  '市场购买 物品名称|物品编号', '市场购买')
     await bot.send(event=event, message=msg)
     await shop_goods_check.finish()
 
@@ -138,6 +196,10 @@ async def shop_goods_send_sure_(bot: Bot, event: GroupMessageEvent, args: Messag
         msg = '价格必须为10w的整数倍！'
         await bot.send(event=event, message=msg)
         await shop_goods_send_sure.finish()
+    if price < 500000:
+        msg = '价格最低为50w灵石！'
+        await bot.send(event=event, message=msg)
+        await shop_goods_send_many.finish()
     # 解析物品名称
     item_name = strs[0]
     item_id = items.items_map.get(item_name)
@@ -188,6 +250,10 @@ async def shop_goods_send_(bot: Bot, event: GroupMessageEvent, args: Message = C
         msg = '价格必须为10w的整数倍！'
         await bot.send(event=event, message=msg)
         await shop_goods_send.finish()
+    if price < 500000:
+        msg = '价格最低为50w灵石！'
+        await bot.send(event=event, message=msg)
+        await shop_goods_send_many.finish()
     # 解析物品名称
     item_name = strs[0]
     item_id = items.items_map.get(item_name)
@@ -222,17 +288,22 @@ async def shop_goods_buy_(bot: Bot, event: GroupMessageEvent, args: Message = Co
     """市场上架"""
     _, user_info, _ = await check_user(event)
 
-    user_id = user_info['user_id']
-    user_stone = user_info['stone']
+    user_id: int = user_info['user_id']
+    user_stone: str = user_info['stone']
 
-    arg_str = args.extract_plain_text()
+    arg_str: str = args.extract_plain_text()
+    item_no: int = get_args_num(arg_str)
     strs = get_strs_from_str(arg_str)
+    if user_id in user_shop_temp_pick_dict:
+        user_shop_temp_pick: list[str] = user_shop_temp_pick_dict[user_id]
+        if item_no and item_no <= len(user_shop_temp_pick):
+            strs = user_shop_temp_pick[item_no - 1]
     if not strs:
         msg = '请输入要购买的物品名称！'
         await bot.send(event=event, message=msg)
         await shop_goods_buy.finish()
     # 解析物品名称
-    item_name = strs[0]
+    item_name = strs[0] if isinstance(strs, list) else strs
     item_id = items.items_map.get(item_name)
     if not item_id:
         msg = '不存在的物品！'

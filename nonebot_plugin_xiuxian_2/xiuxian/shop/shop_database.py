@@ -5,6 +5,7 @@ import asyncpg
 from .. import DRIVER
 from ..xiuxian_database.database_connect import database
 from ..xiuxian_utils.clean_utils import zips
+from ..xiuxian_utils.item_json import items
 
 
 # 创建一个临时活动数据库
@@ -35,6 +36,23 @@ async def create_goods(user_id, item_id, item_type, price: int):
                  "buyer": 0}
     await database.insert(table='world_shop',
                           **item_data)
+
+
+async def create_goods_many(user_id: int, item_dict: dict[int, int], price: int):
+    sql = ('insert into world_shop (owner_id, item_id, item_type, item_price, insert_time, buyer) '
+           'values ($1, $2, $3, $4, $5, 0)')
+    insert_data = []
+    now_time = datetime.now()
+    for item_id, item_num in item_dict.items():
+        item_info = items.get_data_by_item_id(item_id)
+        item_type = item_info['item_type']
+        goods_tuple = (user_id, item_id, item_type, price, now_time)
+        for _ in range(item_num):
+            insert_data.append(goods_tuple)
+
+    async with database.pool.acquire() as conn:
+        update_result = await conn.executemany(sql, insert_data)
+    return update_result
 
 
 async def mark_goods(goods_id, mark_user_id):
@@ -68,7 +86,7 @@ async def fetch_goal_goods_data(item_id, user_id):
     sql = ('select id, owner_id, item_id, item_type, item_price '
            'from world_shop '
            'where item_id=$1 and buyer=0 and owner_id != $2 '
-           'order by item_price desc '
+           'order by item_price asc '
            'limit 1')
     async with database.pool.acquire() as conn:
         result = await conn.fetch(sql, item_id, user_id)

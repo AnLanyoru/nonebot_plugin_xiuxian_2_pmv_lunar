@@ -138,7 +138,7 @@ class Items:
         final_rank += 0  # 新增境界补正
         for k, v in self.items.items():
             if item_type is not None:
-                if v['item_type'] in item_type and int(abs(int(v['rank']) - 55)) <= final_rank and final_rank - int(
+                if v['item_type'] in item_type and abs(int(v['rank']) - 55) <= final_rank and final_rank - int(
                         abs(int(v['rank']) - 55)) <= 150:
                     l_id.append(k)
                 else:
@@ -153,6 +153,12 @@ class Items:
     def get_item_id(self, item_name):
         item_id = self.items_map.get(item_name, 0)
         return item_id
+
+    def change_id_num_dict_to_msg(self, item_dict: dict[int, int]) -> str:
+        msg: str = ''
+        for item_id, item_num in item_dict.items():
+            msg += f"\r{self.get_data_by_item_id(item_id)['name']} {item_num}"
+        return msg
 
 
 items = Items()

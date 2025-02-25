@@ -247,7 +247,7 @@ def get_paged_msg(msg_list: list, page: int | Message,
         page = int(page_msg[0]) if page_msg else 1
     items_all = len(msg_list)
     # 总页数
-    page_all = ((items_all // per_page_item) + 1) if (items_all % per_page_item != 0) else (items_all // per_page_item)
+    page_all = (items_all - 1 // per_page_item) + 1
     if page_all < page:
         msg = [f"\r{cmd}没有那么多页！！！"]
         return msg
@@ -256,6 +256,29 @@ def get_paged_msg(msg_list: list, page: int | Message,
     msg_head = [msg_head] if msg_head else []
     page_info = [f"第{page}/{page_all}页\r——tips——\r可以发送 {cmd}+页数 来查看更多页！\r"]  # 页面尾
     msg_list = msg_head + msg_list[item_num:item_num_end] + page_info
+    return msg_list
+
+
+def get_paged_item(msg_list: list, page: int | Message, per_page_item: int = 12) -> list:
+    """
+    分组化信息
+    :param msg_list: 需要翻页化的信息列表
+    :param page: 获取的页数
+    :param per_page_item: 每页信息
+    :return: 处理后信息列表
+    """
+    if isinstance(page, Message):
+        page_msg = get_num_from_str(page.extract_plain_text())
+        page = int(page_msg[0]) if page_msg else 1
+    items_all = len(msg_list)
+    # 总页数
+    page_all = (items_all - 1 // per_page_item) + 1
+    if page_all < page:
+        msg = []
+        return msg
+    item_num = page * per_page_item - per_page_item
+    item_num_end = item_num + per_page_item
+    msg_list = msg_list[item_num:item_num_end]
     return msg_list
 
 
