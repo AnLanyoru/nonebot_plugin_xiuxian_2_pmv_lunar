@@ -105,6 +105,29 @@ async def fetch_self_goods_data(item_id, user_id):
     return result_all
 
 
+async def fetch_self_goods_data_all(user_id: int):
+    sql = ('select id, owner_id, item_id, item_type, item_price '
+           'from world_shop '
+           'where buyer=0 and owner_id=$1 '
+           'limit 10000')
+    async with database.pool.acquire() as conn:
+        result = await conn.fetch(sql, user_id)
+    result_all = [zips(**result_per) for result_per in result]
+    return result_all
+
+
+async def fetch_self_goods_data_all_type(user_id: int, item_type: tuple[str]):
+    sql_arg = ','.join([f"${no}" for no in range(2, len(item_type) + 2)])
+    sql = ('select id, owner_id, item_id, item_type, item_price '
+           'from world_shop '
+           f'where item_type in ({sql_arg}) and buyer=0 and owner_id=$1 '
+           'limit 10000')
+    async with database.pool.acquire() as conn:
+        result = await conn.fetch(sql, user_id, *item_type)
+    result_all = [zips(**result_per) for result_per in result]
+    return result_all
+
+
 async def fetch_goods_data_by_id(item_shop_id, user_id):
     sql = ('select id, owner_id, item_id, item_type, item_price '
            'from world_shop '

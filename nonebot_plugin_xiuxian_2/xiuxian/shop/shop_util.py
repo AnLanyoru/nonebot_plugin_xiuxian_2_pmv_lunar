@@ -31,6 +31,8 @@ def back_pick_tool(user_back_data: list[dict], pick_key_word: list) -> dict[int,
                 if num + sum_num >= max_num:
                     num = max_num - sum_num
                     pick_item_dict[goods_id] = num
+                    sum_num = max_num
                     break
                 pick_item_dict[goods_id] = num
+                sum_num += num
     return pick_item_dict

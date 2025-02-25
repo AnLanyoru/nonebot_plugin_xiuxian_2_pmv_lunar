@@ -8,7 +8,8 @@ from nonebot.adapters.onebot.v11 import (
 from nonebot.params import CommandArg
 
 from .shop_database import create_goods, fetch_goal_goods_data, fetch_goods_data_by_id, mark_goods, \
-    fetch_goods_min_price_type, fetch_self_goods_data, create_goods_many
+    fetch_goods_min_price_type, fetch_self_goods_data, create_goods_many, fetch_self_goods_data_all, \
+    fetch_self_goods_data_all_type
 from .shop_util import back_pick_tool
 from ..xiuxian_utils.clean_utils import get_strs_from_str, get_args_num, simple_md, number_to, three_md, \
     msg_handler, main_md, get_args_uuid, get_paged_item
@@ -23,6 +24,7 @@ from ..xiuxian_utils.xiuxian2_handle import (
 
 shop_goods_send = on_command("市场上架", aliases={'坊市上架'}, priority=5, permission=GROUP, block=True)
 shop_goods_buy = on_command("市场购买", aliases={"坊市购买"}, priority=5, permission=GROUP, block=True)
+my_shop_goods = on_command("我的市场", aliases={"我的坊市"}, priority=5, permission=GROUP, block=True)
 shop_goods_back = on_command("市场下架", aliases={"坊市下架"}, priority=5, permission=GROUP, block=True)
 shop_goods_buy_sure = on_command("确认市场购买", priority=5, permission=GROUP, block=True)
 shop_goods_send_sure = on_command("确认市场上架", priority=5, permission=GROUP, block=True)
@@ -95,13 +97,18 @@ async def shop_goods_back_(bot: Bot, event: GroupMessageEvent, args: Message = C
     user_id = user_info['user_id']
 
     arg_str = args.extract_plain_text()
-    strs = get_strs_from_str(arg_str)
+    strs: list = get_strs_from_str(arg_str)
+    item_no: int = get_args_num(arg_str)
+    if user_id in user_shop_temp_pick_dict:
+        user_shop_temp_pick: list[str] = user_shop_temp_pick_dict[user_id]
+        if item_no and item_no <= len(user_shop_temp_pick):
+            strs: str = user_shop_temp_pick[item_no - 1]
     if not strs:
         msg = '请输入要下架的物品名称！'
         await bot.send(event=event, message=msg)
         await shop_goods_back.finish()
     # 解析物品名称
-    item_name = strs[0]
+    item_name = strs[0] if isinstance(strs, list) else strs
     item_id = items.items_map.get(item_name)
     if not item_id:
         msg = '不存在的物品！'
@@ -174,6 +181,54 @@ async def shop_goods_check_(bot: Bot, event: GroupMessageEvent, args: Message = 
                   '市场购买 物品名称|物品编号', '市场购买')
     await bot.send(event=event, message=msg)
     await shop_goods_check.finish()
+
+
+@my_shop_goods.handle(parameterless=[Cooldown(stamina_cost=0)])
+async def my_shop_goods_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
+    """市场查看"""
+    _, user_info, _ = await check_user(event)
+
+    user_id = user_info['user_id']
+    user_name = user_info['user_name']
+
+    arg_str = args.extract_plain_text()
+    strs = get_strs_from_str(arg_str)
+    page = get_args_num(arg_str, default=1)
+    if not strs:
+        # 未指定则获取所有
+        item_price_data = await fetch_self_goods_data_all(user_id=user_id)
+        type_msg: str = ''
+    else:
+        item_type = strs[0]
+        if item_type in ['功法', '装备', '丹药']:
+            all_type = TYPE_DEF[item_type]
+        else:
+            all_type = tuple(strs)
+        item_price_data = await fetch_self_goods_data_all_type(user_id=user_id, item_type=all_type)
+        type_msg: str = '、'.join(all_type)
+    item_price_data = get_paged_item(msg_list=item_price_data, page=page, per_page_item=24)
+    item_price_data.sort(key=lambda item_per: item_per['item_id'])
+    msg_list: list[str] = []
+    temp_pick_list: list[str] = []
+    item_no = 0
+    for item_price_data_per in item_price_data:
+        item_name = items.get_data_by_item_id(item_price_data_per['item_id'])['name']
+        temp_pick_list.append(item_name)
+        item_no += 1
+        msg_per = (f"编号: {item_no} {item_name} "
+                   f"价格：{number_to(item_price_data_per['item_price'])}"
+                   f"|{item_price_data_per['item_price']}")
+        msg_list.append(msg_per)
+    user_shop_temp_pick_dict[user_id] = temp_pick_list
+    text = msg_handler(msg_list)
+    msg_head = f"{user_name}道友的{type_msg}市场上架物品情况"
+    msg = main_md(msg_head, text,
+                  '上架物品', '市场上架',
+                  '当前灵石', '灵石',
+                  '下一页', f"我的市场{type_msg} {page + 1}",
+                  '市场下架 物品名称|物品编号', '市场下架')
+    await bot.send(event=event, message=msg)
+    await my_shop_goods.finish()
 
 
 @shop_goods_send_sure.handle(parameterless=[Cooldown(stamina_cost=0)])
