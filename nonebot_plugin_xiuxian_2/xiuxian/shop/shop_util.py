@@ -9,6 +9,8 @@ def back_pick_tool(user_back_data: list[dict], pick_key_word: list) -> dict[int,
     the_same: dict[str, str] = XiuConfig().elixir_def
     real_args: list[str] = [the_same[i] if i in the_same else i for i in pick_key_word]
     pick_item_dict: dict[int, int] = {}
+    sum_num: int = 0  # 总数量计数 不超过1w个物品
+    max_num: int = 10000  # 单次处理上架上限
     for goal_level in real_args:
         for back in user_back_data:
             goods_id: int = back['goods_id']
@@ -26,5 +28,9 @@ def back_pick_tool(user_back_data: list[dict], pick_key_word: list) -> dict[int,
                     or buff_type == goal_level
                     or goods_type == goal_level
                     or item_type == goal_level):
+                if num + sum_num >= max_num:
+                    num = max_num - sum_num
+                    pick_item_dict[goods_id] = num
+                    break
                 pick_item_dict[goods_id] = num
     return pick_item_dict

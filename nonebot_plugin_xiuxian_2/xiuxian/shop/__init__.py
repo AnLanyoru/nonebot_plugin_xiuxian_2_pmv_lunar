@@ -64,7 +64,7 @@ async def shop_goods_send_many_(bot: Bot, event: GroupMessageEvent, args: Messag
         msg = '价格最低为50w灵石！'
         await bot.send(event=event, message=msg)
         await shop_goods_send_many.finish()
-    user_back_items = await sql_message.get_back_msg(user_id)
+    user_back_items: list[dict] = await sql_message.get_back_msg(user_id)
     if not user_back_items:
         msg = '道友的背包空空如也！！'
         await bot.send(event=event, message=msg)
