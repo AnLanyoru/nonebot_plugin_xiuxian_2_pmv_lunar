@@ -232,7 +232,6 @@ async def resetting_(bot: Bot, event: GroupMessageEvent):
 @gettest.handle(parameterless=[Cooldown()])
 async def gettest_(bot: Bot, event: GroupMessageEvent, state: T_State):
     # 这里曾经是风控模块，但是已经不再需要了
-    user_info = await check_user(event)
 
     await bot.send(event=event, message="正在申请测试用灵石，请在10秒内输入后台获取的代码")
     key = ""
@@ -265,7 +264,6 @@ async def gettest_(bot: Bot, event: GroupMessageEvent, state: T_State):
 
 @time_set_now.handle(parameterless=[Cooldown()])
 async def time_set_now_(bot: Bot, event: GroupMessageEvent):
-    user_info = await check_user(event)
 
     await sql_message.sign_remake()
     await sql_message.day_num_reset()

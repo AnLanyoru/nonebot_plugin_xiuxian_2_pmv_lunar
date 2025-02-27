@@ -320,7 +320,7 @@ async def tower_fight_(bot: Bot, event: GroupMessageEvent):
         msg = f"道友已抵达【{tower_handle.tower_data[world_id].name}】之底！！！"
         await bot.send(event=event, message=msg)
         await tower_fight.finish()
-    result, victor = await get_tower_battle_info(user_info, tower_floor_info, bot.self_id)
+    result, victor = await get_tower_battle_info(user_info, tower_floor_info)
     if victor == "群友赢了":  # 获胜
         user_tower_info['now_floor'] += 1
         await tower_handle.update_user_tower_info(user_tower_info)

@@ -116,8 +116,6 @@ fire_name_by_level = {0: '普通火焰',
 @alchemy_furnace_get.handle(parameterless=[Cooldown(stamina_cost=0)])
 async def alchemy_furnace_get_(bot: Bot, event: GroupMessageEvent):
     """结束炼丹"""
-    user_type = 0  # 状态为空闲
-
     user_info = await check_user(event)
 
     user_id = user_info['user_id']

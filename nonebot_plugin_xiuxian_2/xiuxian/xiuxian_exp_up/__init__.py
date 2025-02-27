@@ -306,9 +306,6 @@ async def power_break_up_help_(bot: Bot, event: GroupMessageEvent):
 @active_gift.handle(parameterless=[Cooldown(cd_time=60)])
 async def active_gift_(bot: Bot, event: GroupMessageEvent):
     """国庆福利"""
-
-    user_info = await check_user(event)
-
     msg = f"国庆已经结束啦！！明年国庆再来吧！"
     await bot.send(event=event, message=msg)
     await active_gift.finish()

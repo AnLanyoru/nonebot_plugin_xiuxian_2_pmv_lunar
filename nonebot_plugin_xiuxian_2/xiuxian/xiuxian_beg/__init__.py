@@ -1,13 +1,12 @@
 import random
 from datetime import datetime
 
-from nonebot import require, on_command
+from nonebot import on_command
 from nonebot.adapters.onebot.v11 import (
     Bot,
     GROUP,
     GroupMessageEvent
 )
-from nonebot.log import logger
 
 from ..xiuxian_config import XiuConfig
 from ..xiuxian_data.data.境界_data import level_data

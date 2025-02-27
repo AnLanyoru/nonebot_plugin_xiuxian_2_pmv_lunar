@@ -3,7 +3,7 @@ from ..xiuxian_utils.player_fight import boss_fight
 from ..xiuxian_utils.xiuxian2_handle import sql_message
 
 
-async def get_tower_battle_info(user_info, tower_floor_info: dict, bot_id):
+async def get_tower_battle_info(user_info, tower_floor_info: dict):
     """获取Boss战事件的内容"""
     player = await sql_message.get_user_real_info(user_info['user_id'])
     player['道号'] = player['user_name']

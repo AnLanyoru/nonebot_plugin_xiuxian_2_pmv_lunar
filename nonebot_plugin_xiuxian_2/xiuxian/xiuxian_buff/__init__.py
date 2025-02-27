@@ -282,7 +282,7 @@ async def qc_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
 async def two_exp_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg(), cmd: str = RawCommand()):
     """双修"""
 
-    _, user_1, _ = await check_user(event)
+    user_1 = await check_user(event)
 
     args = args.extract_plain_text()
 

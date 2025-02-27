@@ -625,7 +625,6 @@ async def upatkpractice_(bot: Bot, event: GroupMessageEvent, args: Message = Com
 
     user_id = user_info['user_id']
     sect_id = user_info['sect_id']
-    level_up_count = 1
     config_max_level = max(int(key) for key in LEVLECOST.keys())
     raw_args = get_num_from_str(args.extract_plain_text())
     if raw_args:
@@ -936,7 +935,6 @@ async def sect_task_complete_(bot: Bot, event: GroupMessageEvent):
                     user_info['level'])) * XiuConfig().closing_exp_upper_limit))  # 获取下个境界需要的修为 * 1.5为闭关上限
                 if int(get_exp + user_info['exp']) > max_exp_next:
                     get_exp = 1
-                    msg = f"检测到修为将要到达上限！"
                 sect_stone = int(userstask[user_id]['任务内容']['sect'])
                 await sql_message.update_user_hp_mp(user_id, user_info['hp'] - costhp, user_info['mp'])
                 await sql_message.update_exp(user_id, get_exp)
@@ -979,7 +977,6 @@ async def sect_task_complete_(bot: Bot, event: GroupMessageEvent):
                     user_info['level'])) * XiuConfig().closing_exp_upper_limit))  # 获取下个境界需要的修为 * 1.5为闭关上限
                 if int(get_exp + user_info['exp']) > max_exp_next:
                     get_exp = 1
-                    msg = f"检测到修为将要到达上限！"
                 sect_stone = int(userstask[user_id]['任务内容']['sect'])
                 await sql_message.update_ls(user_id, costls, 2)
                 await sql_message.update_exp(user_id, get_exp)

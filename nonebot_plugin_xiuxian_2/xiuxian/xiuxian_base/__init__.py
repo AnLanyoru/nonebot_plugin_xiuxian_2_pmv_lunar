@@ -119,7 +119,7 @@ async def run_xiuxian_(bot: Bot, event: GroupMessageEvent):
         user_id, root, root_type, int(power), create_time, user_name
     )
     if is_new_user:
-        is_user, user_msg, _ = await check_user(event)
+        user_msg = await check_user(event)
         if user_msg['hp'] is None or user_msg['hp'] == 0 or user_msg['hp'] == 0:
             await sql_message.update_user_hp(user_id)
         text = "耳边响起一个神秘人的声音：不要忘记仙途奇缘！!\r不知道怎么玩的话可以发送 修仙帮助 喔！！"
