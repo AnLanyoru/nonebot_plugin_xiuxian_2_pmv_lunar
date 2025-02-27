@@ -135,7 +135,7 @@ async def run_xiuxian_(bot: Bot, event: GroupMessageEvent):
 async def sign_in_(bot: Bot, event: GroupMessageEvent):
     """修仙签到"""
     # 这里曾经是风控模块，但是已经不再需要了
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
     user_id = user_info['user_id']
     result = await sql_message.get_sign(user_id)
     msg = result
@@ -170,7 +170,7 @@ async def level_help_(bot: Bot, event: GroupMessageEvent):
 async def restart_(bot: Bot, event: GroupMessageEvent, state: T_State):
     """刷新灵根信息"""
     # 这里曾经是风控模块，但是已经不再需要了
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     if user_info['stone'] < XiuConfig().remake:
         msg = "你的灵石还不够呢，快去赚点灵石吧！"
@@ -236,7 +236,7 @@ async def handle_user_choice(bot: Bot, event: GroupMessageEvent, state: T_State)
 async def rank_(bot: Bot, event: GroupMessageEvent):
     """排行榜"""
     # 这里曾经是风控模块，但是已经不再需要了
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
     user_place = user_info['place_id']
     world_name = place.get_world_name(user_place)
     world_id = place.get_world_id(user_place)
@@ -306,7 +306,7 @@ async def rank_(bot: Bot, event: GroupMessageEvent):
 async def remaname_(bot: Bot, event: GroupMessageEvent):
     """修改道号"""
     # 这里曾经是风控模块，但是已经不再需要了
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
     user_id = user_info['user_id']
     user_name = await sql_message.random_name()
     msg = f"道友前往一处偏僻之地，施展乾坤换面诀\r霎时之间面容变换，并且修改道号为：{user_name}"
@@ -319,7 +319,7 @@ async def remaname_(bot: Bot, event: GroupMessageEvent):
 async def level_up_(bot: Bot, event: GroupMessageEvent):
     """突破"""
     # 这里曾经是风控模块，但是已经不再需要了
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
     user_id = user_info['user_id']
     if user_info['hp'] is None:
         # 判断用户气血是否为空
@@ -364,7 +364,7 @@ async def level_up_(bot: Bot, event: GroupMessageEvent):
 async def level_up_zj_(bot: Bot, event: GroupMessageEvent):
     """直接突破"""
     # 这里曾经是风控模块，但是已经不再需要了
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
     user_id = user_info['user_id']
     if user_info['hp'] is None:
         # 判断用户气血是否为空
@@ -419,7 +419,7 @@ async def level_up_zj_(bot: Bot, event: GroupMessageEvent):
 async def level_up_zj_all_(bot: Bot, event: GroupMessageEvent):
     """快速突破"""
     # 这里曾经是风控模块，但是已经不再需要了
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
     run = 0
     user_id = user_info['user_id']
     lost_exp = 0
@@ -491,7 +491,7 @@ async def level_up_zj_all_(bot: Bot, event: GroupMessageEvent):
 async def level_up_dr_(bot: Bot, event: GroupMessageEvent):
     """渡厄 突破"""
     # 这里曾经是风控模块，但是已经不再需要了
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
     user_id = user_info['user_id']
     if user_info['hp'] is None:
         # 判断用户气血是否为空
@@ -565,7 +565,7 @@ async def level_up_dr_(bot: Bot, event: GroupMessageEvent):
 async def level_up_dr_fast_(bot: Bot, event: GroupMessageEvent):
     """渡厄 突破"""
     # 这里曾经是风控模块，但是已经不再需要了
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
     user_id = user_info['user_id']
     elixir_name = "渡厄丹"
     user_backs = await sql_message.get_item_by_good_id_and_user_id(user_id=user_id, goods_id=1999)
@@ -625,7 +625,7 @@ async def level_up_dr_fast_(bot: Bot, event: GroupMessageEvent):
 async def user_leveluprate_(bot: Bot, event: GroupMessageEvent):
     """我的突破概率"""
     # 这里曾经是风控模块，但是已经不再需要了
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
     user_id = user_info['user_id']
     leveluprate = int(user_info['level_up_rate'])  # 用户失败次数加成
     level_name = user_info['level']  # 用户境界
@@ -641,7 +641,7 @@ async def user_leveluprate_(bot: Bot, event: GroupMessageEvent):
 async def user_stamina_(bot: Bot, event: GroupMessageEvent):
     """我的体力信息"""
     # 这里曾经是风控模块，但是已经不再需要了
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
     msg = f"当前体力：{user_info['user_stamina']}"
     await bot.send(event=event, message=msg)
     await user_stamina.finish()
@@ -651,7 +651,7 @@ async def user_stamina_(bot: Bot, event: GroupMessageEvent):
 async def give_stone_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """送灵石"""
     # 这里曾经是风控模块，但是已经不再需要了
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
     user_id = user_info['user_id']
     user_name = user_info['user_name']
     user_stone_num = user_info['stone']
@@ -722,7 +722,7 @@ async def give_stone_(bot: Bot, event: GroupMessageEvent, args: Message = Comman
 @steal_stone.handle(parameterless=[Cooldown(stamina_cost=2400)])
 async def steal_stone_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     # 这里曾经是风控模块，但是已经不再需要了
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
     args = args.extract_plain_text()
     user_id = user_info['user_id']
     steal_user = None
@@ -1008,7 +1008,7 @@ async def rob_stone_(bot: Bot, event: GroupMessageEvent, args: Message = Command
             "ATK": ATK,
             "COMBO": COMBO
         }"""
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
     user_id = user_info["user_id"]
     give_qq = await sql_message.get_user_id(args)  # 使用道号获取用户id，代替原at
     player1 = {"user_id": None, "道号": None, "气血": None, "攻击": None, "真元": None, '会心': None, '爆伤': None,

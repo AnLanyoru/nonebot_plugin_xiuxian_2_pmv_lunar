@@ -169,7 +169,7 @@ async def world_boss_shop_buy_(
         args: Message = CommandArg()  # 命令参数
 ):
     """挑战积分兑换"""
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
     user_id = user_info['user_id']
     user_cmd_lock = UserCmdLock(user_id)
     with user_cmd_lock:
@@ -221,7 +221,7 @@ async def world_boss_shop_menu_(
         bot: Bot,  # 机器人实例
         event: GroupMessageEvent,  # 消息主体
 ):
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
     user_id = user_info['user_id']
     user_world_boss_info = await get_user_world_boss_info(user_id)
     point = user_world_boss_info['world_point']
@@ -249,7 +249,7 @@ async def world_boss_shop_menu_(
 @world_boss_fight_top.handle(parameterless=[Cooldown()])
 async def world_boss_fight_top_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """世界boss伤害排行榜"""
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
     user_id = user_info['user_id']
     place_id = await place.get_now_place_id(user_id=user_id)
     world_id = place.get_world_id(place_id)
@@ -291,7 +291,7 @@ async def world_boss_fight_top_(bot: Bot, event: GroupMessageEvent, args: Messag
 async def world_boss_fight_(bot: Bot, event: GroupMessageEvent):
     """挑战世界boss"""
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
     user_id = user_info['user_id']
     user_cmd_lock = UserCmdLock(user_id)
     with user_cmd_lock:
@@ -331,7 +331,7 @@ async def world_boss_fight_(bot: Bot, event: GroupMessageEvent):
 async def world_boss_active_menu_(bot: Bot, event: GroupMessageEvent):
     """挑战世界boss"""
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
     user_id = user_info['user_id']
     user_world_boss_info = await get_user_world_boss_info(user_id)
     msg = (f"世界boss菜单：\r"

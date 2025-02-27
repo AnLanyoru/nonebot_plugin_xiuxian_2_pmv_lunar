@@ -338,7 +338,7 @@ def get_num_from_str(msg: str) -> list[str]:
     return nums
 
 
-def get_strs_from_str(msg: str) -> list:
+def get_strs_from_str(msg: str) -> list[str]:
     """
     从消息字符串中获取字符列表
     :param msg: 从args中获取的消息字符串

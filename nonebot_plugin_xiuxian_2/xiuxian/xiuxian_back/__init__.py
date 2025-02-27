@@ -153,7 +153,7 @@ async def md_test_(bot: Bot, event: GroupMessageEvent):
 @back_fix.handle(parameterless=[Cooldown(parallel_block=True)])
 async def back_help_(bot: Bot, event: GroupMessageEvent):
     """背包修复"""
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
     user_id = user_info["user_id"]
     user_backs = await sql_message.get_back_msg_all(user_id)  # list(back)
     item_check = {}
@@ -199,7 +199,7 @@ async def back_help_(bot: Bot, event: GroupMessageEvent):
 @xiuxian_stone.handle(parameterless=[Cooldown()])
 async def xiuxian_stone_(bot: Bot, event: GroupMessageEvent):
     """我的灵石信息"""
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
     msg = f"当前灵石：{number_to(user_info['stone'])} | {user_info['stone']}"
     await bot.send(event=event, message=msg)
     await xiuxian_stone.finish()
@@ -208,7 +208,7 @@ async def xiuxian_stone_(bot: Bot, event: GroupMessageEvent):
 @goods_re_root.handle(parameterless=[Cooldown()])
 async def goods_re_root_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """炼金"""
-    isUser, user_info, msg = await check_user(event)
+    user_info = await check_user(event)
     user_id = user_info['user_id']
     strs = args.extract_plain_text()
     args = get_strs_from_str(strs)
@@ -279,7 +279,7 @@ async def goods_re_root_(bot: Bot, event: GroupMessageEvent, args: Message = Com
 @goods_re_root_fast.handle(parameterless=[Cooldown()])
 async def goods_re_root_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """快速炼金"""
-    is_user, user_info, msg = await check_user(event)
+    user_info = await check_user(event)
     user_id = user_info['user_id']
     strs = args.extract_plain_text()
     args = get_strs_from_str(strs)
@@ -334,7 +334,7 @@ async def main_back_(bot: Bot, event: GroupMessageEvent, args: Message = Command
     ["user_id", "goods_id", "goods_name", "goods_type", "goods_num", "create_time", "update_time",
     "remake", "day_num", "all_num", "action_time", "state"]
     """
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
     user_id = user_info['user_id']
 
     args = args.extract_plain_text()
@@ -373,7 +373,7 @@ async def skill_back_(bot: Bot, event: GroupMessageEvent, args: Message = Comman
     ["user_id", "goods_id", "goods_name", "goods_type", "goods_num", "create_time", "update_time",
     "remake", "day_num", "all_num", "action_time", "state"]
     """
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
     user_id = user_info['user_id']
 
     args = args.extract_plain_text()
@@ -404,7 +404,7 @@ async def check_back_(bot: Bot, event: GroupMessageEvent, args: Message = Comman
     ["user_id", "goods_id", "goods_name", "goods_type", "goods_num", "create_time", "update_time",
     "remake", "day_num", "all_num", "action_time", "state"]
     """
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     args = args.extract_plain_text()
     arg = get_strs_from_str(args)
@@ -441,7 +441,7 @@ async def no_use_zb_(bot: Bot, event: GroupMessageEvent, args: Message = Command
     ["user_id", "goods_id", "goods_name", "goods_type", "goods_num", "create_time", "update_time",
     "remake", "day_num", "all_num", "action_time", "state"]
     """
-    isUser, user_info, msg = await check_user(event)
+    user_info = await check_user(event)
     user_id = user_info['user_id']
     args = args.extract_plain_text()
     msg_info = get_strs_from_str(args)
@@ -481,7 +481,7 @@ async def use_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg())
     ["user_id", "goods_id", "goods_name", "goods_type", "goods_num", "create_time", "update_time",
     "remake", "day_num", "all_num", "action_time", "state"]
     """
-    is_user, user_info, msg = await check_user(event)
+    user_info = await check_user(event)
     user_id = user_info['user_id']
     args = args.extract_plain_text()
     msg_info = get_strs_from_str(args)

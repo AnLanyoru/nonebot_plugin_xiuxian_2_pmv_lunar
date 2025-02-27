@@ -49,7 +49,7 @@ __work_help__ = f"""
 
 @last_work.handle(parameterless=[Cooldown(stamina_cost=0)])
 async def last_work_(bot: Bot, event: GroupMessageEvent):
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
     user_cmd_lock = UserCmdLock(user_id)
@@ -126,7 +126,7 @@ async def last_work_(bot: Bot, event: GroupMessageEvent):
 
 @do_work.handle(parameterless=[Cooldown(cd_time=1, stamina_cost=0)])
 async def do_work_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = RegexGroup()):
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
     user_cmd_lock = UserCmdLock(user_id)

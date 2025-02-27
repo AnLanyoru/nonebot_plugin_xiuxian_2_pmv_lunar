@@ -27,7 +27,7 @@ get_shop_log = on_command('坊市日志', aliases={"查询坊市日志", "查看
 
 @offset.handle(parameterless=[Cooldown()])
 async def offset_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
     msg_list = await limit_handle.get_all_user_offset_msg(user_id)  # 存入需要被翻页的数据
@@ -58,7 +58,7 @@ async def offset_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg
 
 @offset_get.handle(parameterless=[Cooldown(cd_time=3)])
 async def offset_get_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
     num_msg = get_num_from_str(args.extract_plain_text())
@@ -93,7 +93,7 @@ async def offset_get_(bot: Bot, event: GroupMessageEvent, args: Message = Comman
 
 @get_log.handle(parameterless=[Cooldown(cd_time=30)])
 async def offset_(bot: Bot, event: GroupMessageEvent):
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
     logs = await limit_handle.get_user_log_data(user_id)
@@ -108,7 +108,7 @@ async def offset_(bot: Bot, event: GroupMessageEvent):
 
 @get_shop_log.handle(parameterless=[Cooldown(cd_time=30)])
 async def offset_(bot: Bot, event: GroupMessageEvent):
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
     logs = await limit_handle.get_user_shop_log_data(user_id)

@@ -17,13 +17,13 @@ from nonebot.adapters.onebot.v11 import (
     GroupMessageEvent
 )
 from nonebot.adapters.onebot.v11 import MessageSegment
-from nonebot.params import Depends
 from wcwidth import wcwidth
 
 from .clean_utils import simple_md
 from .other_set import OtherSet
 from .xiuxian2_handle import sql_message
 from ..database_utils.move_database import read_move_data
+from ..types import UserInfo
 from ..xiuxian_config import XiuConfig
 from ..xiuxian_data.data.灵根_data import root_data
 from ..xiuxian_place import place
@@ -99,7 +99,7 @@ async def check_user_type(user_id, need_type):
     return isType, msg
 
 
-async def check_user(event: GroupMessageEvent):
+async def check_user(event: GroupMessageEvent) -> UserInfo:
     """
     判断用户信息是否存在
     :返回参数:
@@ -108,9 +108,8 @@ async def check_user(event: GroupMessageEvent):
       * `msg: 消息体
     """
     user_id = int(event.get_user_id())
-    user_info = await sql_message.get_user_info_with_id(user_id)
-
-    return True, user_info, ''
+    user_info: UserInfo = await sql_message.get_user_info_with_id(user_id)
+    return user_info
 
 
 class Txt2Img:

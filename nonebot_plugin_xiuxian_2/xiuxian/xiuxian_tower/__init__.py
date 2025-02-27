@@ -65,7 +65,7 @@ async def tower_point_give_():
 @tower_top.handle(parameterless=[Cooldown()])
 async def tower_top_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """结算挑战积分"""
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
     user_id = user_info['user_id']
     user_tower_info = await tower_handle.check_user_tower_info(user_id)
     if not user_tower_info['tower_place']:
@@ -150,7 +150,7 @@ async def tower_shop_buy_(
         await bot.send(event=event, message=msg)
         await tower_shop_buy.finish()
     """挑战积分兑换"""
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
     user_id = user_info['user_id']
     user_cmd_lock = UserCmdLock(user_id)
     with user_cmd_lock:
@@ -213,7 +213,7 @@ async def tower_point_get_(bot: Bot, event: GroupMessageEvent):
         await bot.send(event=event, message=msg)
         await tower_point_get.finish()
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
     user_id = user_info['user_id']
     user_tower_info = await tower_handle.check_user_tower_info(user_id)
     if not user_tower_info['tower_place']:
@@ -273,7 +273,7 @@ async def tower_shop_(
         msg = f'结算挑战积分中，请稍后再试'
         await bot.send(event=event, message=msg)
         await tower_shop_buy.finish()
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
     user_id = user_info['user_id']
     shop_msg, msg = await tower_handle.get_tower_shop_info(user_id)
     if not shop_msg:
@@ -303,7 +303,7 @@ async def tower_fight_(bot: Bot, event: GroupMessageEvent):
         await bot.send(event=event, message=msg)
         await tower_shop_buy.finish()
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
     is_type, msg = await check_user_type(user_id, 6)  # 需要挑战中的用户
@@ -361,7 +361,7 @@ async def tower_start_(bot: Bot, event: GroupMessageEvent):
         await bot.send(event=event, message=msg)
         await tower_start.finish()
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
     is_type, msg = await check_user_type(user_id, 0)  # 需要无状态的用户
@@ -427,7 +427,7 @@ async def tower_info_(bot: Bot, event: GroupMessageEvent):
         await bot.send(event=event, message=msg)
         await tower_start.finish()
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
     is_type, msg = await check_user_type(user_id, 6)  # 需要挑战中的用户
@@ -458,7 +458,7 @@ async def tower_end_(bot: Bot, event: GroupMessageEvent):
         await bot.send(event=event, message=msg)
         await tower_start.finish()
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
     is_type, msg = await check_user_type(user_id, 6)  # 需要挑战中的用户

@@ -11,6 +11,7 @@ from .shop_database import create_goods, fetch_goal_goods_data, fetch_goods_data
     fetch_goods_min_price_type, fetch_self_goods_data, create_goods_many, fetch_self_goods_data_all, \
     fetch_self_goods_data_all_type
 from .shop_util import back_pick_tool
+from ..types import UserInfo
 from ..xiuxian_utils.clean_utils import get_strs_from_str, get_args_num, simple_md, number_to, three_md, \
     msg_handler, main_md, get_args_uuid, get_paged_item
 from ..xiuxian_utils.item_json import items
@@ -33,11 +34,16 @@ shop_goods_check = on_command("市场查看",
                               priority=5, permission=GROUP, block=True)
 shop_goods_send_many = on_command("快速市场上架", aliases={'快速坊市上架', '市场快速上架', '坊市快速上架'}, priority=5,
                                   permission=GROUP, block=True)
+shop_goods_buy_many = on_command("快速市场购买", aliases={'快速坊市购买', '市场快速购买', '坊市快速购买'}, priority=5,
+                                 permission=GROUP, block=True)
+shop_goods_back_many = on_command("快速市场下架", aliases={'快速坊市下架', '市场快速下架', '坊市快速下架'}, priority=5,
+                                  permission=GROUP, block=True)
 
 TYPE_DEF = {'功法': ('功法', '神通', '辅修功法'),
             '装备': ('法器', '防具'),
             '丹药': ('合成丹药',),
-            '主功法': ('功法',)}
+            '主功法': ('功法',),
+            '辅修': ('辅修功法',)}
 
 user_shop_temp_pick_dict: dict[int, list[str]] = {}
 
@@ -45,7 +51,7 @@ user_shop_temp_pick_dict: dict[int, list[str]] = {}
 @shop_goods_send_many.handle(parameterless=[Cooldown(stamina_cost=0)])
 async def shop_goods_send_many_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """市场快速上架"""
-    _, user_info, _ = await check_user(event)
+    user_info: UserInfo = await check_user(event)
 
     user_id = user_info['user_id']
     user_stone = user_info['stone']
@@ -92,7 +98,7 @@ async def shop_goods_send_many_(bot: Bot, event: GroupMessageEvent, args: Messag
 @shop_goods_back.handle(parameterless=[Cooldown(stamina_cost=0)])
 async def shop_goods_back_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """市场下架"""
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
 
@@ -137,7 +143,7 @@ async def shop_goods_back_(bot: Bot, event: GroupMessageEvent, args: Message = C
 @shop_goods_check.handle(parameterless=[Cooldown(stamina_cost=0)])
 async def shop_goods_check_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """市场查看"""
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
 
@@ -186,7 +192,7 @@ async def shop_goods_check_(bot: Bot, event: GroupMessageEvent, args: Message = 
 @my_shop_goods.handle(parameterless=[Cooldown(stamina_cost=0)])
 async def my_shop_goods_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """市场查看"""
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
     user_name = user_info['user_name']
@@ -234,7 +240,7 @@ async def my_shop_goods_(bot: Bot, event: GroupMessageEvent, args: Message = Com
 @shop_goods_send_sure.handle(parameterless=[Cooldown(stamina_cost=0)])
 async def shop_goods_send_sure_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """市场上架"""
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
     user_stone = user_info['stone']
@@ -288,7 +294,7 @@ async def shop_goods_send_sure_(bot: Bot, event: GroupMessageEvent, args: Messag
 @shop_goods_send.handle(parameterless=[Cooldown(stamina_cost=0)])
 async def shop_goods_send_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """市场上架"""
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
     user_stone = user_info['stone']
@@ -341,10 +347,10 @@ async def shop_goods_send_(bot: Bot, event: GroupMessageEvent, args: Message = C
 @shop_goods_buy.handle(parameterless=[Cooldown(stamina_cost=0)])
 async def shop_goods_buy_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """市场上架"""
-    _, user_info, _ = await check_user(event)
+    user_info: UserInfo = await check_user(event)
 
     user_id: int = user_info['user_id']
-    user_stone: str = user_info['stone']
+    user_stone: int = user_info['stone']
 
     arg_str: str = args.extract_plain_text()
     item_no: int = get_args_num(arg_str)
@@ -386,7 +392,7 @@ async def shop_goods_buy_(bot: Bot, event: GroupMessageEvent, args: Message = Co
 @shop_goods_buy_sure.handle(parameterless=[Cooldown(stamina_cost=0)])
 async def shop_goods_buy_sure_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """市场上架"""
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
     user_stone = user_info['stone']
@@ -427,3 +433,64 @@ async def shop_goods_buy_sure_(bot: Bot, event: GroupMessageEvent, args: Message
     await sql_message.send_item(user_id, {item_id: 1}, False)
     await bot.send(event=event, message=msg)
     await shop_goods_buy_sure.finish()
+
+
+@shop_goods_buy_many.handle(parameterless=[Cooldown(stamina_cost=0)])
+async def shop_goods_buy_many_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
+    """市场上架"""
+    user_info = await check_user(event)
+
+    user_id = user_info['user_id']
+    user_stone = user_info['stone']
+
+    arg_str = args.extract_plain_text()
+    strs = get_strs_from_str(arg_str)
+    if not strs:
+        msg = '请输入要购买的物品名称！'
+        await bot.send(event=event, message=msg)
+        await shop_goods_buy.finish()
+    # 解析物品名称
+    item_name = strs[0]
+    item_id = items.items_map.get(item_name)
+    if not item_id:
+        msg = '不存在的物品！'
+        await bot.send(event=event, message=msg)
+        await shop_goods_buy.finish()
+    goods_info = await fetch_goal_goods_data(user_id=user_id, item_id=item_id)
+    if not goods_info:
+        msg = '该物品市场中没有人在出售！'
+        await bot.send(event=event, message=msg)
+        await shop_goods_buy.finish()
+    price = goods_info['item_price']
+    if user_stone < price:
+        msg = simple_md('道友的灵石不足以',
+                        '购买', '市场购买',
+                        f'市场中的{item_name}\r该物品的市场最低价为{number_to(price)}灵石！！')
+        await bot.send(event=event, message=msg)
+        await shop_goods_buy.finish()
+    goods_id = goods_info['id']
+    item_id = goods_info['item_id']
+    price = goods_info['item_price']
+    seller_id = goods_info['owner_id']
+    item_info = items.get_data_by_item_id(item_id)
+    item_name = item_info['name']
+    if user_stone < price:
+        msg = simple_md('道友的灵石不足以',
+                        '购买', '市场购买',
+                        f'{item_name}\r购买该物品需要{number_to(price)}灵石！！')
+        await bot.send(event=event, message=msg)
+        await shop_goods_buy_many.finish()
+    shop_result = await mark_goods(goods_id=goods_id, mark_user_id=user_id)
+    if shop_result == 'UPDATE 0':
+        msg = simple_md('物品已被',
+                        '购买', '市场购买',
+                        f'！！')
+        await bot.send(event=event, message=msg)
+        await shop_goods_buy_many.finish()
+    msg = f"{item_name} 1 购买成功！\r花费{number_to(price)}灵石\r"
+    msg = simple_md(msg, '继续购买', f"市场购买{item_name}", '。')
+    await sql_message.update_ls(seller_id, price, 1)
+    await sql_message.update_ls(user_id, price, 2)
+    await sql_message.send_item(user_id, {item_id: 1}, False)
+    await bot.send(event=event, message=msg)
+    await shop_goods_buy_many.finish()

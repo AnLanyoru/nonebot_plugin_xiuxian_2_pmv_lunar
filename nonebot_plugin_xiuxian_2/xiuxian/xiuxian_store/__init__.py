@@ -49,7 +49,7 @@ async def bind_break_(
     物品解绑
     """
     # 获取用户数据
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
     user_id = user_info["user_id"]
     # 提取命令详情
     if user_id in break_bind:
@@ -87,7 +87,7 @@ async def fast_sell_items_(
     灵宝楼快速出售
     """
     # 获取用户数据
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
     user_id = user_info["user_id"]
     user_cmd_lock = UserCmdLock(user_id)
     with (user_cmd_lock):
@@ -201,7 +201,7 @@ async def user_want_funds_(
     灵宝楼存入灵石
     """
     # 获取用户数据
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
     user_id = user_info["user_id"]
     user_cmd_lock = UserCmdLock(user_id)
     with user_cmd_lock:
@@ -233,7 +233,7 @@ async def remove_want_item_(
     下架自身求购物品
     """
     # 获取用户数据
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
     user_id = user_info["user_id"]
     user_cmd_lock = UserCmdLock(user_id)
     with user_cmd_lock:
@@ -271,7 +271,7 @@ async def user_funds_extract_(
     查看自身求购物品
     """
     # 获取用户数据
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
     user_id = user_info["user_id"]
     user_cmd_lock = UserCmdLock(user_id)
     with user_cmd_lock:
@@ -306,7 +306,7 @@ async def user_sell_to_(
     """
     async with store_sell_lock:
         # 获取用户数据
-        _, user_info, _ = await check_user(event)
+        user_info = await check_user(event)
         user_id = user_info["user_id"]
         # 提取命令详情
         args_str = args.extract_plain_text()
@@ -415,7 +415,7 @@ async def check_my_want_item_(
     查看自身求购物品
     """
     # 获取用户数据
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
     user_id = user_info["user_id"]
     # 提取命令详情
     args_str = args.extract_plain_text()
@@ -446,7 +446,7 @@ async def check_user_want_item_(
     查看求购物品
     """
     # 获取用户数据
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
     user_id = user_info["user_id"]
     # 提取命令详情
     args_str = args.extract_plain_text()
@@ -471,7 +471,7 @@ async def check_user_want_item_(
 @user_want_item.handle(parameterless=[Cooldown()])
 async def user_want_item_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """物品求购"""
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
     user_id = user_info['user_id']
     user_cmd_lock = UserCmdLock(user_id)
     with user_cmd_lock:

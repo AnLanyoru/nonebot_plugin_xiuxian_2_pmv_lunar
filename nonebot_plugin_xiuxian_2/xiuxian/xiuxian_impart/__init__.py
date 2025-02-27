@@ -110,7 +110,7 @@ async def impart_img_(bot: Bot, event: GroupMessageEvent, args: Message = Comman
 async def impart_draw_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """传承抽卡"""
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
     user_id = user_info['user_id']
     arg = args.extract_plain_text()
     num = get_num_from_str(arg)
@@ -177,7 +177,7 @@ async def impart_draw_(bot: Bot, event: GroupMessageEvent, args: Message = Comma
 async def impart_draw_fast_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """传承抽卡"""
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
     user_id = user_info['user_id']
     arg = args.extract_plain_text()
     num = get_num_from_str(arg)
@@ -249,7 +249,7 @@ async def impart_draw_fast_(bot: Bot, event: GroupMessageEvent, args: Message = 
 async def impart_back_(bot: Bot, event: GroupMessageEvent):
     """传承背包"""
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
     impart_data_draw = await impart_check(user_id)
@@ -292,7 +292,7 @@ async def impart_back_(bot: Bot, event: GroupMessageEvent):
 async def re_impart_load_(bot: Bot, event: GroupMessageEvent):
     """加载传承数据"""
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
     impart_data_draw = await impart_check(user_id)
@@ -314,7 +314,7 @@ async def re_impart_load_(bot: Bot, event: GroupMessageEvent):
 async def impart_info_(bot: Bot, event: GroupMessageEvent):
     """传承信息"""
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
     impart_data_draw = await impart_check(user_id)

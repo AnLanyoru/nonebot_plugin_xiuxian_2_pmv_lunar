@@ -68,7 +68,7 @@ daily_work = on_command("日常", priority=9, permission=GROUP, block=True)
 @blessed_spot_create.handle(parameterless=[Cooldown()])
 async def blessed_spot_create_(bot: Bot, event: GroupMessageEvent):
     """洞天福地购买"""
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
     if int(user_info['blessed_spot_flag']) != 0:
@@ -98,7 +98,7 @@ async def blessed_spot_create_(bot: Bot, event: GroupMessageEvent):
 @blessed_spot_info.handle(parameterless=[Cooldown()])
 async def blessed_spot_info_(bot: Bot, event: GroupMessageEvent):
     """洞天福地信息"""
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
     if int(user_info['blessed_spot_flag']) == 0:
@@ -124,7 +124,7 @@ async def blessed_spot_info_(bot: Bot, event: GroupMessageEvent):
 async def ling_tian_up_(bot: Bot, event: GroupMessageEvent):
     """洞天福地灵田升级"""
     # 这里曾经是风控模块，但是已经不再需要了
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
     if int(user_info['blessed_spot_flag']) == 0:
@@ -198,7 +198,7 @@ async def ling_tian_up_(bot: Bot, event: GroupMessageEvent):
 async def blessed_spot_rename_(bot: Bot, event: GroupMessageEvent):
     """洞天福地改名"""
     # 这里曾经是风控模块，但是已经不再需要了
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
     if int(user_info['blessed_spot_flag']) == 0:
@@ -227,7 +227,7 @@ async def qc_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     args = args.extract_plain_text()
     give_qq = await get_id_from_str(args)  # 使用道号获取用户id，代替原at
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
 
@@ -417,7 +417,7 @@ async def two_exp_(bot: Bot, event: GroupMessageEvent, args: Message = CommandAr
 async def stone_exp_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """灵石修炼"""
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
     user_mes = await sql_message.get_user_info_with_id(user_id)  # 获取用户信息
@@ -487,7 +487,7 @@ async def in_closing_(bot: Bot, event: GroupMessageEvent):
     """闭关"""
     user_type = 1  # 状态1为闭关状态
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
     is_type, msg = await check_user_type(user_id, 0)
@@ -504,7 +504,7 @@ async def out_closing_(bot: Bot, event: GroupMessageEvent):
     # 状态变更事件标识
     user_type = 0  # 状态0为无事件
     # 获取用户信息
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
     # 获取用户id
     user_id = user_info['user_id']
 
@@ -563,7 +563,7 @@ async def out_closing_(bot: Bot, event: GroupMessageEvent):
 async def mind_state_(bot: Bot, event: GroupMessageEvent):
     """我的状态信息"""
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
     await sql_message.update_last_check_info_time(user_id)  # 更新查看修仙信息时间
@@ -739,7 +739,7 @@ boss战增益:{int(boss_atk * 100)}%
 async def buffinfo_(bot: Bot, event: GroupMessageEvent):
     """我的功法"""
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
     mainbuffdata = await UserBuffDate(user_id).get_user_main_buff_data()
@@ -772,7 +772,7 @@ async def buffinfo_(bot: Bot, event: GroupMessageEvent):
 async def del_exp_decimal_(bot: Bot, event: GroupMessageEvent):
     """清除修为浮点数"""
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
     exp = user_info['exp']
@@ -786,7 +786,7 @@ async def del_exp_decimal_(bot: Bot, event: GroupMessageEvent):
 async def my_exp_num_(bot: Bot, event: GroupMessageEvent):
     """我的双修次数"""
     # 这里曾经是风控模块，但是已经不再需要了
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
     two_exp_num = await two_exp_cd.find_user(user_id)
@@ -806,7 +806,7 @@ async def my_exp_num_(bot: Bot, event: GroupMessageEvent):
 async def daily_work_(bot: Bot, event: GroupMessageEvent):
     """我的双修次数"""
     # 这里曾经是风控模块，但是已经不再需要了
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
     two_exp_num = await two_exp_cd.find_user(user_id)

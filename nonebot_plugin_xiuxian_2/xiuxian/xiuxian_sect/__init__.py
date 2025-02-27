@@ -16,6 +16,7 @@ from nonebot.params import CommandArg
 from nonebot.permission import SUPERUSER
 
 from .sectconfig import sect_config
+from ..types import SectPosition
 from ..xiuxian_config import XiuConfig, convert_rank
 from ..xiuxian_data.data.功法概率设置_data import skill_rate_set
 from ..xiuxian_data.data.境界_data import level_data
@@ -147,7 +148,7 @@ async def gm_sect_rename_(bot: Bot, event: GroupMessageEvent, args: Message = Co
 async def sect_elixir_room_make_(bot: Bot, event: GroupMessageEvent):
     """宗门丹房建设"""
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     sect_id = user_info['sect_id']
     if sect_id:
@@ -201,7 +202,7 @@ async def sect_elixir_room_make_(bot: Bot, event: GroupMessageEvent):
 async def sect_elixir_get_(bot: Bot, event: GroupMessageEvent):
     """宗门丹药领取"""
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     sect_id = user_info['sect_id']
     user_id = user_info['user_id']
@@ -284,7 +285,7 @@ async def sect_elixir_get_(bot: Bot, event: GroupMessageEvent):
 async def sect_buff_info_(bot: Bot, event: GroupMessageEvent):
     """宗门功法查看"""
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     sect_id = user_info['sect_id']
     if sect_id:
@@ -343,7 +344,7 @@ async def sect_buff_info_(bot: Bot, event: GroupMessageEvent):
 async def sect_mainbuff_learn_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """学习宗门功法"""
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     msg = args.extract_plain_text()
     msg = get_strs_from_str(msg)
@@ -355,7 +356,7 @@ async def sect_mainbuff_learn_(bot: Bot, event: GroupMessageEvent, args: Message
     sect_id = user_info['sect_id']
     if sect_id:
         sect_position = user_info['sect_position']
-        if sect_position > 2:
+        if sect_position > SectPosition.own_disciple.value:
             msg = f"""道友所在宗门的职位为：{sect_config_data[f"{sect_position}"]["title"]}，不满足学习要求!"""
             await bot.send(event=event, message=msg)
             await sect_mainbuff_learn.finish()
@@ -407,7 +408,7 @@ async def sect_mainbuff_learn_(bot: Bot, event: GroupMessageEvent, args: Message
 async def sect_mainbuff_get_(bot: Bot, event: GroupMessageEvent):
     """搜寻宗门功法"""
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     sect_id = user_info['sect_id']
 
@@ -481,7 +482,7 @@ async def sect_mainbuff_get_(bot: Bot, event: GroupMessageEvent):
 async def sect_secbuff_get_(bot: Bot, event: GroupMessageEvent):
     """搜寻宗门神通"""
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     sect_id = user_info['sect_id']
     if sect_id:
@@ -554,7 +555,7 @@ async def sect_secbuff_get_(bot: Bot, event: GroupMessageEvent):
 async def sect_secbuff_learn_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """学习宗门神通"""
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     msg = args.extract_plain_text()
     msg = get_strs_from_str(msg)
@@ -566,7 +567,7 @@ async def sect_secbuff_learn_(bot: Bot, event: GroupMessageEvent, args: Message 
     sect_id = user_info['sect_id']
     if sect_id:
         sect_position = user_info['sect_position']
-        if sect_position > 2:
+        if sect_position > SectPosition.own_disciple.value:
             msg = f"""道友所在宗门的职位为：{sect_config_data[f"{sect_position}"]['title']}，不满足学习要求!"""
             await bot.send(event=event, message=msg)
             await sect_secbuff_learn.finish()
@@ -620,7 +621,7 @@ async def sect_secbuff_learn_(bot: Bot, event: GroupMessageEvent, args: Message 
 async def upatkpractice_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """升级攻击修炼"""
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
     sect_id = user_info['sect_id']
@@ -650,7 +651,7 @@ async def upatkpractice_(bot: Bot, event: GroupMessageEvent, args: Message = Com
         sect_position = user_info['sect_position']
         # 确保用户不会尝试升级超过宗门等级的上限
         level_up_count = min(level_up_count, sect_level - useratkpractice)
-        if sect_position > 2:
+        if sect_position > SectPosition.own_disciple.value:
             msg = f"""道友所在宗门的职位为：{sect_config_data[f"{sect_position}"]["title"]}，不满足使用资材的条件!"""
             await bot.send(event=event, message=msg)
             await upatkpractice.finish()
@@ -689,7 +690,7 @@ async def upatkpractice_(bot: Bot, event: GroupMessageEvent, args: Message = Com
 async def sect_task_refresh_(bot: Bot, event: GroupMessageEvent):
     """刷新宗门任务"""
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
     user_cmd_lock = UserCmdLock(user_id)
@@ -764,7 +765,7 @@ async def sect_users_(bot: Bot, event: GroupMessageEvent, args: Message = Comman
     args = args.extract_plain_text()
     page = get_num_from_str(args)
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     if user_info:
         sect_id = user_info['sect_id']
@@ -814,12 +815,12 @@ async def sect_users_donate_check_(bot: Bot, event: GroupMessageEvent, args: Mes
     args = args.extract_plain_text()
     nums = get_num_from_str(args)
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     sect_id = user_info['sect_id']
     if sect_id:
         sect_position = user_info['sect_position']
-        if sect_position > 1:
+        if sect_position > SectPosition.elder.value:
             msg = f"""道友所在宗门的职位为：{sect_config_data[f"{sect_position}"]["title"]}，无权审判宗门成员!"""
             await bot.send(event=event, message=msg)
             await sect_users_donate_check.finish()
@@ -864,7 +865,7 @@ async def sect_users_donate_check_(bot: Bot, event: GroupMessageEvent, args: Mes
 async def sect_task_(bot: Bot, event: GroupMessageEvent):
     """获取宗门任务"""
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
     user_cmd_lock = UserCmdLock(user_id)
@@ -900,7 +901,7 @@ async def sect_task_(bot: Bot, event: GroupMessageEvent):
 async def sect_task_complete_(bot: Bot, event: GroupMessageEvent):
     """完成宗门任务"""
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
     user_cmd_lock = UserCmdLock(user_id)
@@ -1007,7 +1008,7 @@ async def sect_task_complete_(bot: Bot, event: GroupMessageEvent):
 async def sect_owner_change_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """宗主传位"""
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
     if not user_info['sect_id']:
@@ -1050,7 +1051,7 @@ async def sect_owner_change_(bot: Bot, event: GroupMessageEvent, args: Message =
 async def sect_rename_(bot: Bot, event: GroupMessageEvent):
     """宗门改名"""
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     if not user_info['sect_id']:
         msg = f"道友还未加入一方宗门。"
@@ -1087,7 +1088,7 @@ async def sect_rename_(bot: Bot, event: GroupMessageEvent):
 async def create_sect_(bot: Bot, event: GroupMessageEvent):
     """创建宗门，对灵石、修为等级有要求，且需要当前状态无宗门"""
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
     # 首先判断是否满足创建宗门的三大条件
@@ -1118,7 +1119,7 @@ async def create_sect_(bot: Bot, event: GroupMessageEvent):
 async def sect_kick_out_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """踢出宗门"""
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
     user_cmd_lock = UserCmdLock(user_id)
@@ -1140,27 +1141,17 @@ async def sect_kick_out_(bot: Bot, event: GroupMessageEvent, args: Message = Com
             else:
                 give_user = await sql_message.get_user_info_with_id(give_qq)
                 if give_user['sect_id'] == user_info['sect_id']:
-                    position_zhanglao = [k for k, v in sect_config_data.items() if v.get("title", "") == "长老"]
-                    idx_position = int(position_zhanglao[0]) if len(position_zhanglao) == 1 else 1
-                    if user_info['sect_position'] <= idx_position:
+                    if user_info['sect_position'] <= SectPosition.elder.value:
                         if give_user['sect_position'] <= user_info['sect_position']:
                             msg = f"""{give_user['user_name']}的宗门职务为{sect_config_data[f"{give_user['sect_position']}"]['title']}，不在你之下，无权操作。"""
-                            if XiuConfig().img:
-                                pic = await get_msg_pic(f"@{event.sender.nickname}\r" + msg)
-                                await bot.send(event=event, message=MessageSegment.image(pic))
-                            else:
-                                await bot.send(event=event, message=msg)
+                            await bot.send(event=event, message=msg)
                             await sect_kick_out.finish()
                         else:
                             sect_info = await sql_message.get_sect_info_by_id(give_user['sect_id'])
                             await sql_message.update_usr_sect(give_user['user_id'], None, None)
                             await sql_message.update_user_sect_contribution(give_user['user_id'], 0)
                             msg = f"""传{sect_config_data[f"{user_info['sect_position']}"]['title']}{user_info['user_name']}法旨，即日起{give_user['user_name']}被{sect_info['sect_name']}除名"""
-                            if XiuConfig().img:
-                                pic = await get_msg_pic(f"@{event.sender.nickname}\r" + msg)
-                                await bot.send(event=event, message=MessageSegment.image(pic))
-                            else:
-                                await bot.send(event=event, message=msg)
+                            await bot.send(event=event, message=msg)
                             await sect_kick_out.finish()
                     else:
                         msg = f"""你的宗门职务为{sect_config_data[f"{user_info['sect_position']}"]['title']}，只有长老及以上可执行踢出操作。"""
@@ -1180,7 +1171,7 @@ async def sect_kick_out_(bot: Bot, event: GroupMessageEvent, args: Message = Com
 async def sect_out_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """退出宗门"""
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
     if not user_info['sect_id']:
@@ -1207,7 +1198,7 @@ async def sect_out_(bot: Bot, event: GroupMessageEvent, args: Message = CommandA
 async def sect_close_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """关闭宗门"""
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
     if not user_info['sect_id']:
         msg = f"道友还未加入一方宗门。"
         await bot.send(event=event, message=msg)
@@ -1236,7 +1227,7 @@ async def sect_close_(bot: Bot, event: GroupMessageEvent, args: Message = Comman
 async def sect_donate_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """宗门捐献"""
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
     if not user_info['sect_id']:
@@ -1269,13 +1260,11 @@ async def sect_donate_(bot: Bot, event: GroupMessageEvent, args: Message = Comma
 async def sect_position_update_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """宗门职位变更"""
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
 
-    position_zhanglao = [k for k, v in sect_config_data.items() if v.get("title", "") == "长老"]
-    idx_position = int(position_zhanglao[0]) if len(position_zhanglao) == 1 else 1
-    if user_info['sect_position'] > idx_position:
+    if user_info['sect_position'] > SectPosition.elder.value:
         msg = f"""你的宗门职位为{sect_config_data[f"{user_info['sect_position']}"]['title']}，无权进行职位管理！"""
         await bot.send(event=event, message=msg)
         await sect_position_update.finish()
@@ -1329,7 +1318,7 @@ async def sect_position_update_(bot: Bot, event: GroupMessageEvent, args: Messag
 async def join_sect_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """加入宗门,后跟宗门ID,要求加入者当前状态无宗门,入门默认为外门弟子"""
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
     if not user_info['sect_id']:
@@ -1371,7 +1360,7 @@ async def join_sect_(bot: Bot, event: GroupMessageEvent, args: Message = Command
 async def my_sect_(bot: Bot, event: GroupMessageEvent):
     """我的宗门"""
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     elixir_room_level_up_config = config['宗门丹房参数']['elixir_room_level']
     sect_id = user_info['sect_id']

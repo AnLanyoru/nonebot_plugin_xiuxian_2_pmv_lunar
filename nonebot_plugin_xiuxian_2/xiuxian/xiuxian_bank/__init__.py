@@ -44,7 +44,7 @@ __bank_help__ = f"""
 
 @bank.handle(parameterless=[Cooldown()])
 async def bank_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = RegexGroup()):
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     mode = args[0]  # 存灵石、取灵石、升级会员、信息查看
     num = args[1]  # 数值

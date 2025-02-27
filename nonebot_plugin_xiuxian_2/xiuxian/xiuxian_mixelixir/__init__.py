@@ -118,7 +118,7 @@ async def alchemy_furnace_get_(bot: Bot, event: GroupMessageEvent):
     """结束炼丹"""
     user_type = 0  # 状态为空闲
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
     user_stone = user_info['stone']
@@ -180,7 +180,7 @@ async def elixir_top_(bot: Bot, event: GroupMessageEvent, args: Message = Comman
 async def mix_elixir_fire_remake_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """丹火重塑"""
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
 
@@ -216,7 +216,7 @@ async def mix_elixir_fire_remake_(bot: Bot, event: GroupMessageEvent, args: Mess
 async def mix_elixir_fire_improve_num_(bot: Bot, event: GroupMessageEvent):
     """丹火升级塑形"""
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
     user_name = user_info['user_name']
@@ -260,7 +260,7 @@ async def mix_elixir_fire_improve_num_(bot: Bot, event: GroupMessageEvent):
 async def mix_elixir_fire_improve_power_(bot: Bot, event: GroupMessageEvent):
     """丹火升级萃取"""
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
     user_name = user_info['user_name']
@@ -303,7 +303,7 @@ async def mix_elixir_fire_improve_power_(bot: Bot, event: GroupMessageEvent):
 async def mix_elixir_fire_improve_(bot: Bot, event: GroupMessageEvent):
     """丹火升级"""
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
     user_name = user_info['user_name']
@@ -337,7 +337,7 @@ async def mix_elixir_fire_improve_(bot: Bot, event: GroupMessageEvent):
 async def make_elixir_(bot: Bot, event: GroupMessageEvent):
     """凝结丹药"""
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
     is_type, _ = await check_user_type(user_id, 7)
@@ -406,7 +406,7 @@ async def make_elixir_(bot: Bot, event: GroupMessageEvent):
 async def mix_make_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """丹炉加药"""
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
     user_id = user_info['user_id']
     is_type, _ = await check_user_type(user_id, 7)
     if not is_type:
@@ -542,7 +542,7 @@ async def alchemy_furnace_fire_control_(
         bot: Bot, event: GroupMessageEvent, args: Message = CommandArg(), cmd: str = RawCommand()):
     """丹炉控制温度"""
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
 
@@ -579,7 +579,7 @@ async def alchemy_furnace_fire_control_(
 async def alchemy_furnace_state_(bot: Bot, event: GroupMessageEvent):
     """丹炉状态"""
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
     is_type, _ = await check_user_type(user_id, 7)
@@ -606,7 +606,7 @@ async def mix_stop_(bot: Bot, event: GroupMessageEvent):
     """结束炼丹"""
     user_type = 0  # 状态为空闲
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
     is_type, msg = await check_user_type(user_id, 7)
@@ -624,7 +624,7 @@ async def mix_stop_(bot: Bot, event: GroupMessageEvent):
 async def alchemy_furnace_add_herb_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """丹炉加药"""
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
     user_id = user_info['user_id']
     is_type, _ = await check_user_type(user_id, 7)
     if not is_type:
@@ -713,7 +713,7 @@ async def alchemy_furnace_add_herb_(bot: Bot, event: GroupMessageEvent, args: Me
 async def yaocai_get_op_(bot: Bot, event: GroupMessageEvent):
     """灵田收取"""
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
     start_time = time.time()
 
     user_id = user_info['user_id']
@@ -747,7 +747,7 @@ async def yaocai_get_op_(bot: Bot, event: GroupMessageEvent):
 async def yaocai_get_(bot: Bot, event: GroupMessageEvent):
     """灵田收取"""
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
     if int(user_info['blessed_spot_flag']) == 0:
@@ -817,7 +817,7 @@ async def yaocai_get_(bot: Bot, event: GroupMessageEvent):
 async def my_mix_elixir_info_(bot: Bot, event: GroupMessageEvent):
     """我的炼丹信息"""
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
 
@@ -875,7 +875,7 @@ async def elixir_back_(bot: Bot, event: GroupMessageEvent, args: Message = Comma
     "remake", "day_num", "all_num", "action_time", "state"]
     """
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
     msg_list = await get_user_back_msg(user_id, ['炼丹炉', '丹药', '合成丹药'])
@@ -894,7 +894,7 @@ async def yaocai_back_(bot: Bot, event: GroupMessageEvent, args: Message = Comma
     "remake", "day_num", "all_num", "action_time", "state"]
     """
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
     user_id = user_info['user_id']
 
     args = args.extract_plain_text()

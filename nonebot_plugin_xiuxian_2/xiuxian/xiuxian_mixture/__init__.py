@@ -16,7 +16,7 @@ mixture = on_command('合成', priority=15, permission=GROUP, block=True)
 
 @mixture.handle(parameterless=[Cooldown()])
 async def use_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
     back_msg = await sql_message.get_back_msg(user_id)

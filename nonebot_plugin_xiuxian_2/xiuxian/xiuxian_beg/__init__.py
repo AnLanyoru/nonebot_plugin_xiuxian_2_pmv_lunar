@@ -43,7 +43,7 @@ async def beg_help_(bot: Bot, event: GroupMessageEvent):
 async def beg_stone_(bot: Bot, event: GroupMessageEvent):
     # 这里曾经是风控模块，但是已经不再需要了
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
     user_id = user_info['user_id']
 
     user_msg = await sql_message.get_user_info_with_id(user_id)

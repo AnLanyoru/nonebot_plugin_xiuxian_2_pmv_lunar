@@ -205,7 +205,7 @@ async def create_rift_(bot: Bot, event: GroupMessageEvent):
 async def complete_rift_(bot: Bot, event: GroupMessageEvent):
     """探索秘境"""
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
     is_type, msg = await check_user_type(user_id, 0)  # 需要无状态的用户
@@ -279,7 +279,7 @@ async def complete_rift_(bot: Bot, event: GroupMessageEvent):
 async def rift_protect_handle_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """秘境保底"""
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
 
@@ -312,7 +312,7 @@ async def rift_protect_handle_(bot: Bot, event: GroupMessageEvent, args: Message
 async def rift_protect_msg_(bot: Bot, event: GroupMessageEvent):
     """秘境保底"""
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
 

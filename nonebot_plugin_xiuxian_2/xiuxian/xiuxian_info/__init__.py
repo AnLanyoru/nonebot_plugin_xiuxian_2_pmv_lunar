@@ -67,7 +67,7 @@ async def xiuxian_message_(bot: Bot, event: GroupMessageEvent, args: Message = C
     else:
         args = None
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
     user_info = await sql_message.get_user_real_info(user_id)

@@ -86,7 +86,7 @@ new_year_gift_get = on_command("使用二零二五新春福包", priority=1, per
 async def new_year_gift_get_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """二零二五新春福包"""
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
     user_id = user_info['user_id']
     user_name = user_info['user_name']
     new_year_gift_info = await sql_message.get_item_by_good_id_and_user_id(user_id, 700001)

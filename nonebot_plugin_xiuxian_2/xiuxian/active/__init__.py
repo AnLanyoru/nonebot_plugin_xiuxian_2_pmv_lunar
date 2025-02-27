@@ -251,7 +251,7 @@ async def yuan_xiao_problem_answer_(bot: Bot, event: GroupMessageEvent, args: Me
         await bot.send(event=event, message=msg)
         await yuan_xiao_problem_answer.finish()
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
     user_id = user_info['user_id']
     user_new_year_info = await get_user_yuan_xiao_info(user_id)
     user_problem = user_new_year_info['now_problem']
@@ -317,7 +317,7 @@ async def yuan_xiao_problem_get_(bot: Bot, event: GroupMessageEvent):
         await bot.send(event=event, message=msg)
         await yuan_xiao_problem_get.finish()
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
     user_id = user_info['user_id']
     user_new_year_info = await get_user_yuan_xiao_info(user_id)
     user_problem = user_new_year_info['now_problem']
@@ -368,7 +368,7 @@ async def yuan_xiao_problem_menu_(bot: Bot, event: GroupMessageEvent):
         await bot.send(event=event, message=msg)
         await yuan_xiao_problem_menu.finish()
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_name = user_info['user_name']
     msg = (f"祝{user_name}道友元宵快乐！！\r"
@@ -389,7 +389,7 @@ async def yuan_xiao_problem_menu_(bot: Bot, event: GroupMessageEvent):
 async def yuan_xiao_gift_get_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """二零二五元宵福包"""
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
     user_id = user_info['user_id']
     user_name = user_info['user_name']
     new_year_gift_info = await sql_message.get_item_by_good_id_and_user_id(user_id, 700002)
@@ -433,7 +433,7 @@ async def yuan_xiao_gift_get_(bot: Bot, event: GroupMessageEvent, args: Message 
 async def time_set_new_year_(bot: Bot, event: GroupMessageEvent):
     """当前活动重载！！"""
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
     await database.sql_execute("update yuan_xiao_temp set daily_sign=0, today_answered=0")
     msg = f"活动重置！！"
     await bot.send(event=event, message=msg)
@@ -455,7 +455,7 @@ async def yuan_xiao_daily_gift_get_(bot: Bot, event: GroupMessageEvent, args: Me
         await bot.send(event=event, message=msg)
         await yuan_xiao_daily_gift_get.finish()
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
     user_id = user_info['user_id']
     user_name = user_info['user_name']
     user_yuan_xiao_info = await get_user_yuan_xiao_info(user_id)
@@ -495,7 +495,7 @@ async def yuan_xiao_daily_gift_get_(bot: Bot, event: GroupMessageEvent, args: Me
 async def new_active_menu_(bot: Bot, event: GroupMessageEvent):
     """元宵活动菜单！！"""
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
     user_id = user_info['user_id']
     user_name = user_info['user_name']
     user_yuan_xiao_info = await get_user_yuan_xiao_info(user_id)

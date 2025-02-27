@@ -35,7 +35,7 @@ async def impart_shop_(bot: Bot, event: GroupMessageEvent):
 async def impart_pk_now_all_(bot: Bot, event: GroupMessageEvent):
     """虚神界活动"""
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
     pk_num = await impart_pk.get_impart_pk_num(user_id)
@@ -59,7 +59,7 @@ async def impart_pk_now_all_(bot: Bot, event: GroupMessageEvent):
 async def impart_pray_(bot: Bot, event: GroupMessageEvent):
     """虚神界祈愿"""
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
     pk_num = await impart_pk.get_impart_pk_num(user_id)
@@ -80,7 +80,7 @@ async def impart_pray_(bot: Bot, event: GroupMessageEvent):
 async def impart_pk_now_(bot: Bot, event: GroupMessageEvent):
     """虚神界对决"""
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
     pk_num = await impart_pk.get_impart_pk_num(user_id)
@@ -103,7 +103,7 @@ async def impart_pk_exp_(bot: Bot, event: GroupMessageEvent):
 
     user_type = 5  # 状态0为无事件
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
     is_type, msg = await check_user_type(user_id, 0)

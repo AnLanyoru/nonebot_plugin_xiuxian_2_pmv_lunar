@@ -33,7 +33,7 @@ async def go_to_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg(
     移动位置
     """
 
-    is_user, user_info, msg = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
 
@@ -84,7 +84,7 @@ async def go_to_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg(
 async def stop_move_(bot: Bot, event: GroupMessageEvent):
     """停止移动"""
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
 
@@ -102,7 +102,7 @@ async def stop_move_(bot: Bot, event: GroupMessageEvent):
 async def complete_move_(bot: Bot, event: GroupMessageEvent):
     """移动结算"""
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
 
@@ -139,7 +139,7 @@ async def get_map_(bot: Bot, event: GroupMessageEvent):
     获取地图
     """
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
     place_id = await place.get_now_place_id(user_id)
@@ -168,7 +168,7 @@ async def near_player_(bot: Bot, event: GroupMessageEvent):
     获取附近玩家： 10名
     """
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
     place_id = await place.get_now_place_id(user_id)

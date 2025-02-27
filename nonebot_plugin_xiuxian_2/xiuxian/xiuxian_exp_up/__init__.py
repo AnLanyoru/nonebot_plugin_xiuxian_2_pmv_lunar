@@ -38,7 +38,7 @@ hp_set = on_command("设置血量", priority=1, permission=GROUP, block=True)
 async def hp_set_(bot: Bot, event: GroupMessageEvent):
     """修炼"""
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
     mp = user_info['mp']
@@ -55,7 +55,7 @@ async def exp_up_(bot: Bot, event: GroupMessageEvent):
 
     user_type = 4  # 状态4为修炼中
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
     is_type, msg = await check_user_type(user_id, 0)
@@ -133,7 +133,7 @@ async def exp_up_end_(bot: Bot, event: GroupMessageEvent):
     # 这里曾经是风控模块，但是已经不再需要了
     user_type = 0  # 状态为空闲
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
     is_type, msg = await check_user_type(user_id, 4)
@@ -169,7 +169,7 @@ async def all_end_(bot: Bot, event: GroupMessageEvent, state: T_State):
     :return:
     """
     # 这里曾经是风控模块，但是已经不再需要了
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     input_key = event.get_plaintext().strip()
     user_id = user_info['user_id']
@@ -188,7 +188,7 @@ async def all_end_(bot: Bot, event: GroupMessageEvent, state: T_State):
 async def world_rank_up_(bot: Bot, event: GroupMessageEvent, state: T_State):
     """飞升上界"""
     # 这里曾经是风控模块，但是已经不再需要了
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
     is_type, msg = await check_user_type(user_id, 0)
@@ -224,7 +224,7 @@ async def world_rank_up_(bot: Bot, event: GroupMessageEvent, state: T_State):
 @world_rank_up.receive(parameterless=[Cooldown(cd_time=10)])
 async def world_rank_up_(bot: Bot, event: GroupMessageEvent, state: T_State):
     # 这里曾经是风控模块，但是已经不再需要了
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_name = user_info["user_name"]
     user_id = user_info["user_id"]
@@ -249,7 +249,7 @@ async def world_rank_up_(bot: Bot, event: GroupMessageEvent, state: T_State):
 async def power_break_up_(bot: Bot, event: GroupMessageEvent):
     """利用天地精华"""
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
     is_type, msg = await check_user_type(user_id, 0)
@@ -292,7 +292,7 @@ async def power_break_up_(bot: Bot, event: GroupMessageEvent):
 async def power_break_up_help_(bot: Bot, event: GroupMessageEvent):
     """天地精华帮助"""
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     user_id = user_info['user_id']
     power = await limit_handle.get_user_world_power_data(user_id)
@@ -307,7 +307,7 @@ async def power_break_up_help_(bot: Bot, event: GroupMessageEvent):
 async def active_gift_(bot: Bot, event: GroupMessageEvent):
     """国庆福利"""
 
-    _, user_info, _ = await check_user(event)
+    user_info = await check_user(event)
 
     msg = f"国庆已经结束啦！！明年国庆再来吧！"
     await bot.send(event=event, message=msg)
