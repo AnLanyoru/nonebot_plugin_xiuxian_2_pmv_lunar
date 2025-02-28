@@ -13,7 +13,7 @@ from nonebot.adapters.onebot.v11 import (
 from nonebot.params import CommandArg, RawCommand
 from nonebot.permission import SUPERUSER
 
-from .mix_elixir_config import MIXELIXIRCONFIG
+from .mix_elixir_config import LEVEL_UP_NEED_EXP, FIRE_NAME_BY_LEVEL
 from .mix_elixir_database import create_user_mix_elixir_info, get_user_mix_elixir_info
 from .mixelixirutil import AlchemyFurnace, get_user_alchemy_furnace, remove_mix_user
 from ..xiuxian_back.back_util import get_user_yaocai_back_msg, get_user_yaocai_back_msg_easy, \
@@ -100,17 +100,6 @@ __mix_elixir_help__ = f"""
 7、发送 炼丹 来查看所有炼丹具体指令
 """
 
-level_up_need_exp = {0: 1000,
-                     1: 5000,
-                     2: 10000,
-                     3: 50000,
-                     4: 100000}.copy()
-
-fire_name_by_level = {0: '普通火焰',
-                      1: '蕴丹玄火',
-                      2: '蕴丹灵火',
-                      3: '混元灵火',
-                      4: '万象灵火'}.copy()
 
 
 @alchemy_furnace_get.handle(parameterless=[Cooldown(stamina_cost=0)])
@@ -231,7 +220,7 @@ async def mix_elixir_fire_improve_num_(bot: Bot, event: GroupMessageEvent):
         await bot.send(event=event, message=msg)
         await mix_elixir_fire_improve_power.finish()
 
-    if (need_exp := level_up_need_exp.get(sum_level)) > user_elixir_exp:
+    if (need_exp := LEVEL_UP_NEED_EXP.get(sum_level)) > user_elixir_exp:
         msg = f"道友当前炼丹经验不足以提升丹火，当前：{user_elixir_exp} 所需：{need_exp}"
         await bot.send(event=event, message=msg)
         await mix_elixir_fire_improve_num.finish()
@@ -275,7 +264,7 @@ async def mix_elixir_fire_improve_power_(bot: Bot, event: GroupMessageEvent):
         await bot.send(event=event, message=msg)
         await mix_elixir_fire_improve_power.finish()
 
-    if (need_exp := level_up_need_exp.get(sum_level)) > user_elixir_exp:
+    if (need_exp := LEVEL_UP_NEED_EXP.get(sum_level)) > user_elixir_exp:
         msg = f"道友当前炼丹经验不足以提升丹火，当前：{user_elixir_exp} 所需：{need_exp}"
         await bot.send(event=event, message=msg)
         await mix_elixir_fire_improve_power.finish()
@@ -318,7 +307,7 @@ async def mix_elixir_fire_improve_(bot: Bot, event: GroupMessageEvent):
         await bot.send(event=event, message=msg)
         await mix_elixir_fire_improve.finish()
 
-    if (need_exp := level_up_need_exp.get(sum_level)) > user_elixir_exp:
+    if (need_exp := LEVEL_UP_NEED_EXP.get(sum_level)) > user_elixir_exp:
         msg = f"道友当前炼丹经验不足以提升丹火，当前：{user_elixir_exp} 所需：{need_exp}"
         await bot.send(event=event, message=msg)
         await mix_elixir_fire_improve.finish()
@@ -593,7 +582,7 @@ async def alchemy_furnace_state_(bot: Bot, event: GroupMessageEvent):
     user_fire_num = user_mix_elixir_info['user_fire_more_num']
     user_fire_power = user_mix_elixir_info['user_fire_more_power']
     sum_level = user_fire_num + user_fire_power
-    fire_name = fire_name if fire_name else fire_name_by_level.get(sum_level)
+    fire_name = fire_name if fire_name else FIRE_NAME_BY_LEVEL.get(sum_level)
     msg = user_alchemy_furnace.get_state_msg(fire_name)
     await bot.send(event=event, message=msg)
     await alchemy_furnace_state.finish()
@@ -825,7 +814,7 @@ async def my_mix_elixir_info_(bot: Bot, event: GroupMessageEvent):
     user_fire_more_power = user_mix_elixir_info['user_fire_more_power']
     sum_level = user_fire_more_num + user_fire_more_power
     fire_name = user_mix_elixir_info['user_fire_name']
-    fire_name = fire_name if fire_name else fire_name_by_level.get(sum_level)
+    fire_name = fire_name if fire_name else FIRE_NAME_BY_LEVEL.get(sum_level)
     msg = (f"☆----道友的炼丹信息----☆\r"
            f"丹火：{fire_name}\r"
            f"(塑形：lv.{user_fire_more_num}"
