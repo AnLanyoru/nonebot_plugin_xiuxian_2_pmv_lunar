@@ -2,6 +2,7 @@ from datetime import datetime
 
 import asyncpg
 
+from .shop_models import Goods
 from .. import DRIVER
 from ..xiuxian_database.database_connect import database
 from ..xiuxian_utils.clean_utils import zips
@@ -70,7 +71,7 @@ async def mark_goods_many(goods_id_list: list[str], mark_user_id: int) -> str:
     return update_result
 
 
-async def fetch_goods_min_price_type(user_id, item_type: tuple[str]):
+async def fetch_goods_min_price_type(user_id, item_type: tuple[str]) -> list[dict]:
     sql_arg = ','.join([f"${no}" for no in range(2, len(item_type) + 2)])
     sql = ('select item_id, min(item_price) as item_price '
            'from world_shop '
@@ -82,7 +83,7 @@ async def fetch_goods_min_price_type(user_id, item_type: tuple[str]):
     return result_all
 
 
-async def fetch_goal_goods_data(item_id, user_id):
+async def fetch_goal_goods_data(item_id, user_id) -> Goods | None:
     sql = ('select id, owner_id, item_id, item_type, item_price '
            'from world_shop '
            'where item_id=$1 and buyer=0 and owner_id != $2 '
@@ -90,33 +91,33 @@ async def fetch_goal_goods_data(item_id, user_id):
            'limit 1')
     async with database.pool.acquire() as conn:
         result = await conn.fetch(sql, item_id, user_id)
-    result_all = zips(**result[0]) if result else {}
+    result_all = Goods(**result[0]) if result else None
     return result_all
 
 
-async def fetch_self_goods_data(item_id, user_id):
+async def fetch_self_goods_data(item_id, user_id) -> Goods | None:
     sql = ('select id, owner_id, item_id, item_type, item_price '
            'from world_shop '
            'where item_id=$1 and buyer=0 and owner_id=$2 '
            'limit 1')
     async with database.pool.acquire() as conn:
         result = await conn.fetch(sql, item_id, user_id)
-    result_all = zips(**result[0]) if result else {}
+    result_all = Goods(**result[0]) if result else None
     return result_all
 
 
-async def fetch_self_goods_data_all(user_id: int):
+async def fetch_self_goods_data_all(user_id: int) -> list[Goods]:
     sql = ('select id, owner_id, item_id, item_type, item_price '
            'from world_shop '
            'where buyer=0 and owner_id=$1 '
            'limit 10000')
     async with database.pool.acquire() as conn:
         result = await conn.fetch(sql, user_id)
-    result_all = [zips(**result_per) for result_per in result]
+    result_all = [Goods(**result_per) for result_per in result]
     return result_all
 
 
-async def fetch_self_goods_data_all_type(user_id: int, item_type: tuple[str]):
+async def fetch_self_goods_data_all_type(user_id: int, item_type: tuple[str]) -> list[Goods]:
     sql_arg = ','.join([f"${no}" for no in range(2, len(item_type) + 2)])
     sql = ('select id, owner_id, item_id, item_type, item_price '
            'from world_shop '
@@ -124,15 +125,15 @@ async def fetch_self_goods_data_all_type(user_id: int, item_type: tuple[str]):
            'limit 10000')
     async with database.pool.acquire() as conn:
         result = await conn.fetch(sql, user_id, *item_type)
-    result_all = [zips(**result_per) for result_per in result]
+    result_all = [Goods(**result_per) for result_per in result]
     return result_all
 
 
-async def fetch_goods_data_by_id(item_shop_id, user_id):
+async def fetch_goods_data_by_id(item_shop_id, user_id) -> Goods | None:
     sql = ('select id, owner_id, item_id, item_type, item_price '
            'from world_shop '
            'where id=$1 and buyer=0 and owner_id != $2')
     async with database.pool.acquire() as conn:
         result = await conn.fetch(sql, item_shop_id, user_id)
-    result_all = zips(**result[0]) if result else {}
+    result_all = Goods(**result[0]) if result else None
     return result_all

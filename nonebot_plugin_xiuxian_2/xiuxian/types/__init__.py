@@ -110,3 +110,19 @@ class UserInfo(TypedDict):
     """用户当前体力"""
     place_id: int
     """用户当前地图位置"""
+
+
+class UserMixElixirInfo(TypedDict):
+    user_id: int
+    farm_num: int
+    farm_grow_speed: int
+    farm_harvest_time: str
+    last_alchemy_furnace_data: str
+    user_fire_control: int
+    user_herb_knowledge: int
+    user_mix_elixir_exp: int
+    user_fire_name: str
+    user_fire_more_num: int
+    user_fire_more_power: int
+    mix_elixir_data: str
+    sum_mix_num: int
