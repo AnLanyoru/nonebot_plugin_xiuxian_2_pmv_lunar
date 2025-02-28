@@ -4,12 +4,12 @@ from .item_json import items
 from .xiuxian2_handle import sql_message, xiuxian_impart, UserBuffDate
 
 
-async def final_user_data(user_data, columns):
+async def final_user_data(user_data):
     """
     传入用户当前信息、buff信息,返回最终信息
     糟糕的函数
     """
-    user_dict = dict(zip((col[0] for col in columns), user_data))
+    user_dict = user_data
 
     # 通过字段名称获取相应的值
     impart_data = await xiuxian_impart.get_user_info_with_id(user_dict['user_id'])
