@@ -1,7 +1,8 @@
+from ..types import UserMixElixirInfo
 from ..xiuxian_database.database_connect import database
 
 
-async def create_user_mix_elixir_info(user_id):
+async def create_user_mix_elixir_info(user_id) -> UserMixElixirInfo:
     data = {
         "user_id": user_id,
         "farm_num": 0,
@@ -20,7 +21,7 @@ async def create_user_mix_elixir_info(user_id):
     return data
 
 
-async def get_user_mix_elixir_info(user_id):
+async def get_user_mix_elixir_info(user_id: int) -> UserMixElixirInfo:
     user_mix_elixir_info = await database.select(
         table='mix_elixir_info',
         where={'user_id': user_id},
