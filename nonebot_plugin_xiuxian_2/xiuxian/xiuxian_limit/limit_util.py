@@ -39,5 +39,23 @@ class LimitCheck:
         msg = "pass"
         return True, msg
 
+    async def send_exp_limit_check(self, user_id_2, num: int = 1) -> tuple[bool, str]:
+        user_limit_2, is_pass_2 = await limit_data.get_limit_by_user_id(user_id_2)
+        user_exp_2 = user_limit_2['two_exp_up']
+        # 加入传承
+        impart_data_2 = await xiuxian_impart.get_user_info_with_id(user_id_2)
+        impart_two_exp_2 = impart_data_2['impart_two_exp'] if impart_data_2 is not None else 0
+        main_two_data_2 = await UserBuffDate(user_id_2).get_user_main_buff_data()
+        main_two_2 = main_two_data_2['two_buff'] if main_two_data_2 is not None else 0
+        if (user_exp_least_2 := (self.two_exp_limit + impart_two_exp_2 + main_two_2) - user_exp_2) < num:
+            msg = f"对方今日余剩受指点次数不足！余剩{user_exp_least_2}次！"
+            return False, msg
+        user_exp_2 += num
+        user_limit_2['two_exp_up'] = user_exp_2
+        await limit_data.update_limit_data_with_key(**user_limit_2, update_key='two_exp_up',
+                                                    goal=user_limit_2['two_exp_up'])
+        msg = "pass"
+        return True, msg
+
 
 limit_check = LimitCheck()

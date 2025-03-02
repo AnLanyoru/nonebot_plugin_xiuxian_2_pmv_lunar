@@ -49,6 +49,7 @@ out_closing = on_command("出关", aliases={"灵石出关"}, priority=5, permiss
 in_closing = on_command("闭关", priority=5, permission=GROUP, block=True)
 stone_exp = on_command("灵石修仙", aliases={"灵石修炼", "/灵石修炼"}, priority=1, permission=GROUP, block=True)
 two_exp = on_command("双修", aliases={"快速双修", "确认快速双修"}, priority=5, permission=GROUP, block=True)
+send_exp = on_command("传道", aliases={"传法", "指点"}, priority=5, permission=GROUP, block=True)
 mind_state = on_command("我的状态", aliases={"/我的状态"}, priority=2, permission=GROUP, block=True)
 select_state = on_command("查看状态", aliases={"查状态"}, priority=2, permission=GROUP, block=True)
 qc = on_command("切磋", priority=6, permission=GROUP, block=True)
@@ -276,6 +277,106 @@ async def qc_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
         msg = "修仙界没有对方的信息，快邀请对方加入修仙界吧！"
         await bot.send(event=event, message=msg)
         await qc.finish()
+
+
+@send_exp.handle(parameterless=[Cooldown(cd_time=60, stamina_cost=0)])
+async def send_exp_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
+    """双修"""
+
+    user_1 = await check_user(event)
+
+    args = args.extract_plain_text()
+
+    user_1_id = user_1['user_id']
+    user_2_id = await get_id_from_str(args)  # 使用道号获取用户id，代替原at
+
+    user_2 = await sql_message.get_user_info_with_id(user_2_id)
+
+    num = get_args_num(args=args, no=1, default=1)
+    num = 1 if num == 0 else num
+
+    if num > 50:
+        msg = "道友没有那么闲情逸致连续指点那么多次！"
+        await bot.send(event=event, message=msg)
+        await send_exp.finish()
+
+    if not user_2_id:
+        msg = "请输入你要传道者的道号,为其开悟，彻明万道！"
+        await bot.send(event=event, message=msg)
+        await send_exp.finish()
+
+    if int(user_1_id) == int(user_2_id):
+        msg = "道友无法指点自己！"
+        await bot.send(event=event, message=msg)
+        await send_exp.finish()
+
+    exp_1 = user_1['exp']
+    exp_2 = user_2['exp']
+    if exp_2 > exp_1:
+        msg = "修仙大能看了看你，不屑一顾，扬长而去！"
+        await bot.send(event=event, message=msg)
+        await send_exp.finish()
+
+    is_type, msg = await check_user_type(user_2_id, 0)
+    if not is_type:
+        msg = "对方正在忙碌中，暂时无法蒙受道友恩惠！！"
+        await bot.send(event=event, message=msg)
+        await send_exp.finish()
+    if user_2['root_type'] in ['源宇道根', '道之本源']:
+        msg = "对方已得悟大道，无需道友指点！！"
+        await bot.send(event=event, message=msg)
+        await send_exp.finish()
+    exp = int(exp_1 * 0.0055)
+    max_exp = XiuConfig().two_exp  # 双修上限罪魁祸首
+    if user_1['root_type'] in ['源宇道根', '道之本源']:
+        exp = max_exp
+    if exp < max_exp:
+        msg = "道友正欲指点对方一番，奈何道友尚无深悟，难以指点！！"
+        await bot.send(event=event, message=msg)
+        await send_exp.finish()
+
+    is_pass, msg = await limit_check.send_exp_limit_check(user_id_2=user_2_id, num=num)
+    if not is_pass:
+        await bot.send(event=event, message=msg)
+        await send_exp.finish()
+
+    # 获取下个境界需要的修为 * 1.5为闭关上限
+    max_exp_2 = (int(await OtherSet().set_closing_type(user_2['level']))
+                 * XiuConfig().closing_exp_upper_limit)
+    user_get_exp_max_2 = max(max_exp_2 - user_2['exp'], 0)
+
+    msg = f"{user_1['user_name']}道友见{user_2['user_name']}道友颇有道缘，指点一番。"
+    # 玩家2修为增加
+    exp_limit_2 = min(exp, max_exp)
+    exp_limit_2 *= num
+
+    # 玩家2修为上限
+    if exp_limit_2 >= user_get_exp_max_2:
+        await sql_message.update_exp(user_2_id, user_get_exp_max_2)
+        msg += f"{user_2['user_name']}修为到达上限，增加修为{user_get_exp_max_2}。"
+    else:
+        await sql_message.update_exp(user_2_id, exp_limit_2)
+        msg += f"{user_2['user_name']}增加修为{exp_limit_2}。"
+
+    # 双修彩蛋，突破概率增加
+    break_rate_up = 0
+    for _ in range(num):
+        if random.randint(1, 100) in [13, 14, 52, 10, 66]:
+            break_rate_up += 2
+    if break_rate_up:
+        await sql_message.update_levelrate(user_2_id, user_2['level_up_rate'] + break_rate_up)
+        msg += f"\r道友舌灿莲花，言蕴大道，对方感悟颇丰突破概率提升{break_rate_up}%。"
+    await sql_message.update_power2(user_2_id)
+    await limit_handle.update_user_log_data(user_1_id, msg)
+    await limit_handle.update_user_log_data(user_2_id, msg)
+    msg = main_md(
+        "信息", msg,
+        '查看日常', "日常中心",
+        '指点', '指点',
+        '修炼', '修炼',
+        '继续指点', f"指点{user_2['user_name']} {num}")
+    await bot.send(event=event, message=msg)
+    await send_exp.finish()
 
 
 @two_exp.handle(parameterless=[Cooldown(stamina_cost=0)])
