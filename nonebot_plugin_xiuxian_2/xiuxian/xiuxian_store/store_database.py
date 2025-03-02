@@ -322,7 +322,7 @@ class UserStoreHandle(UserStoreData):
         num = 1
         for want_item in result:
             need_item_id = want_item['need_items_id']
-            need_item_name = items.get_data_by_item_id(need_item_id)['name']
+            need_item_name = items.get_data_by_item_id(need_item_id).get('name', '未知物品')
             need_items_price = want_item['need_items_price']
             need_items_num = want_item['need_items_num']
             need_items_num = need_items_num if need_items_num else "不限"

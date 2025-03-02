@@ -10,7 +10,6 @@ from nonebot.adapters.onebot.v11 import (
     Message,
     GroupMessageEvent,
     MessageSegment,
-    ActionFailed
 )
 from nonebot.params import CommandArg
 from nonebot.permission import SUPERUSER

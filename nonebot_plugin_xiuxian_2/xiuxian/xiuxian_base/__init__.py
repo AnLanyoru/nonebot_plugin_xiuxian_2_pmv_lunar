@@ -58,7 +58,7 @@ gm_command_pray = on_command("祈愿结晶", permission=SUPERUSER, priority=10, 
 gmm_command = on_command("灵根更换", permission=SUPERUSER, priority=10, block=True)
 cz = on_command('创造', permission=SUPERUSER, priority=15, block=True)
 cz_ts = on_command('调试创造', permission=SUPERUSER, priority=15, block=True)
-rob_stone = on_command("抢灵石", priority=5, permission=GROUP, block=True)
+rob_stone = on_command("抢灵石_____", priority=5, permission=GROUP, block=True)
 user_leveluprate = on_command('我的突破概率', aliases={'突破概率'}, priority=5, permission=GROUP, block=True)
 user_stamina = on_command('我的体力', aliases={'体力'}, priority=5, permission=GROUP, block=True)
 xiuxian_update_data = on_command('更新记录', priority=15, permission=GROUP, block=True)

@@ -447,6 +447,10 @@ async def no_use_zb_(bot: Bot, event: GroupMessageEvent, args: Message = Command
     msg_info = get_strs_from_str(args)
     item_name = msg_info[0] if msg_info else None  # 获取第一个名称
     goods_id = items.items_map.get(item_name)
+    if not goods_id:
+        msg = f"不存在的物品！！"
+        await bot.send(event=event, message=msg)
+        await no_use_zb.finish()
     item_info = await sql_message.get_item_by_good_id_and_user_id(user_id, goods_id)
     goods_type = item_info['goods_type']
     if not (item_info and item_info['goods_num']):

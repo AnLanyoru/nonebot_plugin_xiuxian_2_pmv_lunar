@@ -14,6 +14,7 @@ from .shop_database import create_goods, fetch_goal_goods_data, fetch_goods_data
     fetch_self_goods_data_all_type, fetch_goal_goods_data_many
 from ..types import UserInfo
 from ..utils.shop_util import back_pick_tool
+from ..xiuxian_back.back_util import get_item_msg
 from ..xiuxian_utils.clean_utils import get_strs_from_str, get_args_num, simple_md, number_to, three_md, \
     msg_handler, main_md, get_args_uuid, get_paged_item, number_to_msg
 from ..xiuxian_utils.item_json import items
@@ -406,7 +407,7 @@ async def shop_goods_buy_(bot: Bot, event: GroupMessageEvent, args: Message = Co
         await bot.send(event=event, message=msg)
         await shop_goods_buy.finish()
     item_info = items.get_data_by_item_id(item_id)
-    msg = f"{item_name}的市场情况：\r效果：{item_info.get('desc', '无')} \r最低价格：{number_to(price)}灵石\r"
+    msg = f"{item_name}的市场情况：\r{get_item_msg(item_id)} \r最低价格：{number_to(price)}灵石\r"
     msg = simple_md(msg, '确认购买', f"确认市场购买{goods_info['id']}", '该物品')
     await bot.send(event=event, message=msg)
     await shop_goods_buy.finish()
@@ -479,14 +480,14 @@ async def shop_goods_buy_many_(bot: Bot, event: GroupMessageEvent, args: Message
     if not strs:
         msg = '请输入要购买的物品名称！'
         await bot.send(event=event, message=msg)
-        await shop_goods_buy.finish()
+        await shop_goods_buy_many.finish()
     # 解析物品名称
     item_name = strs[0]
     item_id = items.items_map.get(item_name)
     if not item_id:
         msg = '不存在的物品！'
         await bot.send(event=event, message=msg)
-        await shop_goods_buy.finish()
+        await shop_goods_buy_many.finish()
     start_time = time.time()
     msg = f'尝试以{number_to_msg(want_price)}为最高价购买{want_num}个{item_name}'
     if want_num > 100:
@@ -516,7 +517,7 @@ async def shop_goods_buy_many_(bot: Bot, event: GroupMessageEvent, args: Message
     if not sum_num:
         msg = '该物品市场中没有人在出售！'
         await bot.send(event=event, message=msg)
-        await shop_goods_buy.finish()
+        await shop_goods_buy_many.finish()
     await sql_message.update_stone_many(send_stone_dict, 1)
     await sql_message.update_ls(user_id, sum_price, 2)
     await sql_message.send_item(user_id, {item_id: sum_num}, False)
