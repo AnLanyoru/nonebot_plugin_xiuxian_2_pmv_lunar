@@ -161,7 +161,7 @@ async def fast_sell_items_(
             msg = simple_md(msg,
                             "出售", "灵宝楼出售",
                             "了：\r" + '\r'.join(sell_msg) + f'\r总计: {number_to(price_sum)}灵石',
-                            "102368631_1739372858")
+                            )
         elif not want_pass:
             msg += f"\r对方对道友的物品没有需求！"
         elif not funds_pass:
@@ -200,7 +200,7 @@ async def user_want_funds_(
         msg = simple_md("道友成功在灵宝楼", "存入", "灵宝楼存灵石",
                         f"{number_to_msg(funds_num)}灵石作为资金。"
                         f"\r当前灵宝楼存有：{number_to_msg(user_funds)}灵石",
-                        "102368631_1739372858")
+                        )
         await bot.send(event, msg)
         await user_want_funds.finish()
 
@@ -238,7 +238,7 @@ async def remove_want_item_(
         msg = simple_md(f"成功取消对{item_name}的",
                         f"求购", "灵宝楼求购",
                         f"。\r回退{number_to_msg(back_stone)}灵石",
-                        "102368631_1739372858")
+                        )
         await bot.send(event, msg)
         await remove_want_item.finish()
 
@@ -380,7 +380,7 @@ async def user_sell_to_(
                         "出售", "灵宝楼出售",
                         f"了：\r{item_name}{sell_item_num}个"
                         f"\r获取了{get_stone}灵石",
-                        "102368631_1739372858")
+                        )
 
         await bot.send(event, msg)
         await user_sell_to.finish()
@@ -513,7 +513,7 @@ async def user_want_item_(bot: Bot, event: GroupMessageEvent, args: Message = Co
                         f"申请\r物品：{item_name}"
                         f"\r价格：{number_to(item_price)}|{item_price}灵石"
                         f"\r需求数量：{item_num}\r{funds_msg}",
-                        "102368631_1739372858")
+                        )
         await user_store.create_user_want(user_id, want_dict)
         await bot.send(event=event, message=msg)
         await user_want_item.finish()

@@ -247,7 +247,7 @@ def get_paged_msg(msg_list: list, page: int | Message,
         page = int(page_msg[0]) if page_msg else 1
     items_all = len(msg_list)
     # 总页数
-    page_all = (items_all - 1 // per_page_item) + 1
+    page_all = ((items_all - 1) // per_page_item) + 1
     if page_all < page:
         msg = [f"\r{cmd}没有那么多页！！！"]
         return msg
