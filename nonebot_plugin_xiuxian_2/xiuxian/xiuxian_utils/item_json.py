@@ -1,3 +1,5 @@
+from ..types import BaseItem
+
 try:
     import ujson as json
 except ImportError:
@@ -98,7 +100,7 @@ class Items:
     def get_world_qw_data(self):
         return self.readf(self.world_qw_jsonpath)
 
-    def get_data_by_item_id(self, item_id) -> dict:
+    def get_data_by_item_id(self, item_id) -> BaseItem:
         if item_id is None:
             return {}
         if (str_item_id := str(item_id)) not in self.items:

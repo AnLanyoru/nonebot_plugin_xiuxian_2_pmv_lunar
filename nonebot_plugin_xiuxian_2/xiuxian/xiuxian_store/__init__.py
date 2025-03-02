@@ -11,7 +11,7 @@ from nonebot.params import CommandArg, RawCommand
 from nonebot.permission import SUPERUSER
 
 from .store_database import user_store
-from .. import XiuConfig
+from ..utils.shop_util import back_pick_tool
 from ..xiuxian_utils.clean_utils import get_args_num, get_paged_msg, number_to_msg, get_strs_from_str, simple_md
 from ..xiuxian_utils.item_json import items
 from ..xiuxian_utils.lay_out import Cooldown, UserCmdLock
@@ -110,24 +110,12 @@ async def fast_sell_items_(
             msg = f"请指定你要向{want_user_name}道友出售的物品的类型！！"
             await bot.send(event, msg)
             await fast_sell_items.finish()
-        the_same = XiuConfig().elixir_def
-        real_args = [the_same[i] if i in the_same else i for i in args]
-        sell_list = []
-        for goal_level, goal_level_name in zip(real_args, args):
-            back_msg = await sql_message.get_back_msg(user_id)  # 背包sql信息,list(back)
-            for back in back_msg:
-                goods_name = back['goods_name']
-                goods_id = back['goods_id']
-                goods_num = back['goods_num'] - back['bind_num']
-                item_info = items.get_data_by_item_id(goods_id)
-                buff_type = item_info.get('buff_type')
-                item_level = item_info.get('level') if item_info else None
-                item_type = back.get('goods_type')
-                if (item_level == goal_level
-                    or goods_name == goal_level
-                    or buff_type == goal_level
-                    or item_type == goal_level) and goods_num > 0:
-                    sell_list.append(back)
+        user_back_items: list[dict] = await sql_message.get_back_msg(user_id)
+        if not user_back_items:
+            msg = '道友的背包空空如也！！'
+            await bot.send(event=event, message=msg)
+            await fast_sell_items.finish()
+        all_pick_items: dict[int, int] = back_pick_tool(user_back_items, args)
         msg = f"开始向{want_user_name}道友快速出售以下类型物品：\r" + "|".join(args) + "请等待...."
         await bot.send(event, msg)
         msg = '出售结果如下'
@@ -135,13 +123,9 @@ async def fast_sell_items_(
         price_sum = 0
         want_pass = False
         funds_pass = True
-        for item_in_back in sell_list:
-            item_id = item_in_back['goods_id']
-            item_name = item_in_back['goods_name']
-            # 物品数量检查
-            sell_item_num = item_in_back['goods_num'] - item_in_back['bind_num']
-            if item_in_back['goods_type'] == "装备" and int(item_in_back['state']) == 1:
-                continue
+        for item_id, sell_item_num in all_pick_items.items():
+            item_info = items.get_data_by_item_id(item_id)
+            item_name = item_info['name']
             want_item = await user_store.check_user_want_item(want_user_id, item_id, 1)
             if not want_item:
                 continue

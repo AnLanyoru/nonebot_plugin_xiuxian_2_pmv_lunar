@@ -403,6 +403,20 @@ class XiuxianDateManage:
                 sql = f"UPDATE user_xiuxian SET stone=stone-$1 WHERE user_id=$2"
                 await db.execute(sql, price, user_id)
 
+    async def update_stone_many(self, update_dict: dict[int, int], key):
+        """更新灵石  1为增加，2为减少"""
+
+        update_data = list(update_dict.items())
+        async with self.pool.acquire() as db:
+
+            if key == 1:
+                sql = f"UPDATE user_xiuxian SET stone=stone+$2 WHERE user_id=$1"
+                await db.executemany(sql, update_data)
+
+            elif key == 2:
+                sql = f"UPDATE user_xiuxian SET stone=stone-$2 WHERE user_id=$1"
+                await db.execute(sql, update_data)
+
     async def update_root(self, user_id, key):
         """更新灵根  1为混沌,2为融合,3为超,4为龙,5为天,6为千世,7为万世"""
         async with self.pool.acquire() as db:

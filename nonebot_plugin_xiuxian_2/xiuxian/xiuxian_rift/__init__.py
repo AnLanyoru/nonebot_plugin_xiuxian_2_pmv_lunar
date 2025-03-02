@@ -29,6 +29,7 @@ from ..xiuxian_utils.utils import (
 from ..xiuxian_utils.xiuxian2_handle import sql_message
 
 config = get_rift_config()
+RIFT_BUTTON = '102368631_1739818977'
 cache_help = {}
 world_rift = {}  # dict
 # 定时任务
@@ -44,19 +45,17 @@ rift_protect_handle = on_command("秘境战斗事件保底", priority=5, permiss
 rift_protect_msg = on_command("查看秘境战斗事件保底", priority=5, permission=GROUP, block=True)
 
 # 秘境类改动，将原group分隔的群秘境形式更改为位置（依旧套用group），位置实现方式为位置与状态压成元组，原状态访问[0]数据，位置访问[1]数据
-__rift_help__ = f"""
-\r———秘境帮助———
-1、探索秘境:
->消耗240点体力探索秘境获取随机奖励
-2、秘境结算:
->结算秘境奖励
->获取秘境帮助信息
-3、秘境战斗事件保底开启|关闭
->开启或关闭秘境战斗事件保底
-4、查看秘境战斗事件保底
-——————————————
-tips：每天早八各位面将会生成一个随机等级的秘境供各位道友探索
-""".strip()
+__rift_help__ = (f"———秘境帮助———\r"
+                 f"1、探索秘境:\r"
+                 f" 🔹消耗240点体力探索秘境获取随机奖励\r"
+                 f"2、秘境结算:\r"
+                 f" 🔹结算秘境奖励\r"
+                 f" 🔹获取秘境帮助信息\r"
+                 f"3、秘境战斗事件保底开启|关闭\r"
+                 f" 🔹开启或关闭秘境战斗事件保底\r"
+                 f"4、查看秘境战斗事件保底\r"
+                 f"——————\r"
+                 f"tips：每天早八各位面将会生成一个随机等级的秘境供各位道友探索\r").strip()
 
 normal_refresh = 1
 
@@ -162,6 +161,7 @@ async def create_rift_with_args_(bot: Bot, event: GroupMessageEvent, args: Messa
 async def rift_help_(bot: Bot, event: GroupMessageEvent):
     """秘境帮助"""
     msg = __rift_help__
+    msg = simple_md(msg, "查看日常", '日常', '。', RIFT_BUTTON)
     await bot.send(event=event, message=msg)
     await rift_help.finish()
 
@@ -231,7 +231,8 @@ async def complete_rift_(bot: Bot, event: GroupMessageEvent):
         await sql_message.update_user_stamina(user_id, 240, 1)
         msg = simple_md(f"\r道友所在位置没有秘境出世!!\r"
                         f"当前位面【{world_name}】的秘境【{world_rift[world_id].name}】在距你{far:.1f}万里的：【{to_place}】\r"
-                        f"请", "前往", f"前往 {to_place}", "秘境所在位置探索！")
+                        f"请", "前往", f"前往 {to_place}", "秘境所在位置探索！",
+                        RIFT_BUTTON)
         await bot.send(event=event, message=msg)
         await complete_rift.finish()
 
@@ -270,7 +271,8 @@ async def complete_rift_(bot: Bot, event: GroupMessageEvent):
                   "秘境帮助", "秘境帮助",
                   "余剩体力", "体力",
                   "查看日常", "日常中心",
-                  "继续探索", "探索秘境")
+                  "继续探索", "探索秘境",
+                  RIFT_BUTTON)
     await bot.send(event=event, message=msg)
     await complete_rift.finish()
 
@@ -304,6 +306,8 @@ async def rift_protect_handle_(bot: Bot, event: GroupMessageEvent, args: Message
                 await limit_handle.update_user_limit(user_id, 8, rift_protect, 1)
         else:
             msg = "道友未开启秘境战斗事件保底！！！"
+    msg = simple_md(msg + '\r', "探索秘境", "探索秘境", "。",
+                    RIFT_BUTTON)
     await bot.send(event=event, message=msg)
     await rift_protect_handle.finish()
 
@@ -321,5 +325,7 @@ async def rift_protect_msg_(bot: Bot, event: GroupMessageEvent):
         msg = f"当前距离保底余剩{rift_protect}次"
     else:
         msg = "道友未开启秘境战斗事件保底！！！"
+    msg = simple_md(msg + '\r', "探索秘境", "探索秘境", "。",
+                    RIFT_BUTTON)
     await bot.send(event=event, message=msg)
     await rift_protect_msg.finish()

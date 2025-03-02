@@ -126,3 +126,11 @@ class UserMixElixirInfo(TypedDict):
     user_fire_more_power: int
     mix_elixir_data: str
     sum_mix_num: int
+
+
+class BaseItem(TypedDict, total=False):
+    name: str
+    rank: int
+    level: str
+    desc: str
+    item_type: str

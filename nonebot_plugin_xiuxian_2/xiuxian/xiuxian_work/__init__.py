@@ -26,6 +26,7 @@ from ..xiuxian_utils.utils import check_user, check_user_type
 from ..xiuxian_utils.xiuxian2_handle import sql_message
 
 count = 6  # 免费次数
+WORK_BUTTON = '102368631_1739819242'
 
 last_work = on_command("最后的悬赏令", priority=15, block=True)
 do_work = on_regex(
@@ -192,7 +193,7 @@ async def do_work_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = R
                     "--道友的悬赏令--\r", '1、', '悬赏令接取1', work_msg_f[0],
                     '2、', '悬赏令接取2', work_msg_f[1],
                     '3、', '悬赏令接取3', work_msg_f[2],
-                    "102368631_1739371572")
+                    WORK_BUTTON)
             else:
                 msg = simple_md("没有查到你的悬赏令信息呢，请", "刷新", "悬赏令刷新", "！")
             await bot.send(event=event, message=msg)
@@ -206,7 +207,7 @@ async def do_work_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = R
                     "--道友的悬赏令--\r", '1、', '悬赏令接取1', work_msg_f[0],
                     '2、', '悬赏令接取2', work_msg_f[1],
                     '3、', '悬赏令接取3', work_msg_f[2],
-                    "102368631_1739371572"
+                    WORK_BUTTON
                 )
                 await bot.send(event, msg)
                 await do_work.finish()
@@ -238,7 +239,7 @@ async def do_work_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = R
                 title, '1、', '悬赏令接取1', work_msg_f[0],
                 '2、', '悬赏令接取2', work_msg_f[1],
                 '3、', '悬赏令接取3', work_msg_f[2] + count_msg,
-                "102368631_1739371572"
+                WORK_BUTTON
             )
             await bot.send(event=event, message=msg)
 
@@ -250,7 +251,7 @@ async def do_work_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = R
                     "--道友的悬赏令--\r", '1、', '悬赏令接取1', work_msg_f[0],
                     '2、', '悬赏令接取2', work_msg_f[1],
                     '3、', '悬赏令接取3', work_msg_f[2],
-                    "102368631_1739371572"
+                    WORK_BUTTON
                 )
                 await bot.send(event, msg)
                 await do_work.finish()
@@ -275,7 +276,7 @@ async def do_work_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = R
                 title, '1、', '悬赏令接取1', work_msg_f[0],
                 '2、', '悬赏令接取2', work_msg_f[1],
                 '3、', '悬赏令接取3', work_msg_f[2] + count_msg,
-                "102368631_1739371572")
+                WORK_BUTTON)
             await bot.send(event=event, message=msg)
 
         elif mode == "终止":

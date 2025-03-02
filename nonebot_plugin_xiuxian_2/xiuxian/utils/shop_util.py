@@ -11,8 +11,8 @@ def back_pick_tool(user_back_data: list[dict], pick_key_word: list) -> dict[int,
     pick_item_dict: dict[int, int] = {}
     sum_num: int = 0  # 总数量计数 不超过1w个物品
     max_num: int = 10000  # 单次处理上架上限
-    for goal_level in real_args:
-        for back in user_back_data:
+    for back in user_back_data:
+        for goal_level in real_args:
             goods_id: int = back['goods_id']
             num: int = back['goods_num'] - back['bind_num'] - back['state']
             goods_type: str = back['goods_type']
@@ -22,7 +22,7 @@ def back_pick_tool(user_back_data: list[dict], pick_key_word: list) -> dict[int,
             buff_type: str = item_info.get('buff_type')
             item_level: str = item_info.get('level')
             if num < 1:
-                continue
+                break
             if (item_level == goal_level
                     or goods_name == goal_level
                     or buff_type == goal_level
@@ -35,4 +35,5 @@ def back_pick_tool(user_back_data: list[dict], pick_key_word: list) -> dict[int,
                     break
                 pick_item_dict[goods_id] = num
                 sum_num += num
+                break
     return pick_item_dict
