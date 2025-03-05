@@ -511,7 +511,10 @@ async def shop_goods_buy_many_(bot: Bot, event: GroupMessageEvent, args: Message
             msg = f'\r{item_name} 1 购买失败！物品已被购买'
             continue
         msg += f"\r{item_name} 1 购买成功！花费{number_to(price)}灵石"
-        send_stone_dict[seller_id] = price
+        if seller_id in send_stone_dict:
+            send_stone_dict[seller_id] += price
+        else:
+            send_stone_dict[seller_id] = price
         sum_price += price
         sum_num += 1
     if not sum_num:
