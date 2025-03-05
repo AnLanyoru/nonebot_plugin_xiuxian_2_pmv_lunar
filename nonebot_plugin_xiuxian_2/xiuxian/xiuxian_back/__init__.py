@@ -13,13 +13,14 @@ from .back_util import (
     get_item_msg, get_item_msg_rank, check_use_elixir,
     get_use_jlq_msg, get_no_use_equipment_sql, get_use_tool_msg,
     get_user_main_back_msg_easy, get_user_back_msg)
+from ..user_data_handle import UserBuffData
 from ..xiuxian_config import XiuConfig, convert_rank
 from ..xiuxian_limit import limit_handle
 from ..xiuxian_mixelixir.mixelixirutil import mix_user_temp, AlchemyFurnace
 from ..xiuxian_utils.clean_utils import (
     get_args_num, get_num_from_str,
     get_strs_from_str, get_paged_msg, main_md,
-    msg_handler, three_md)
+    msg_handler, three_md, simple_md)
 from ..xiuxian_utils.item_json import items
 from ..xiuxian_utils.lay_out import Cooldown, CooldownIsolateLevel
 from ..xiuxian_utils.utils import (
@@ -46,6 +47,8 @@ main_back = on_command('我的背包', aliases={'我的物品', '背包'}, prior
 skill_back = on_command('功法背包', priority=2, permission=GROUP, block=True)
 check_back = on_command('别人的背包', aliases={'检查背包'}, priority=2, permission=SUPERUSER, block=True)
 use = on_command("使用", priority=15, permission=GROUP, block=True)
+fast_elixir_use_set = on_command("快速丹药设置", aliases={'设置快速丹药'}, priority=3, permission=GROUP, block=True)
+fast_elixir_use = on_command("快速丹药", aliases={'磕'}, priority=15, permission=GROUP, block=True)
 no_use_zb = on_command("换装", aliases={"卸载"}, priority=5, permission=GROUP, block=True)
 back_help = on_command("背包帮助", aliases={"坊市帮助"}, priority=8, permission=GROUP, block=True)
 xiuxian_stone = on_command("灵石", priority=4, permission=GROUP, block=True)
@@ -74,6 +77,65 @@ __back_help__ = f"""
 ——tips——
 官方群914556251
 """.strip()
+
+
+@fast_elixir_use.handle(parameterless=[Cooldown()])
+async def fast_elixir_use_(bot: Bot, event: GroupMessageEvent):
+    """快速丹药设置"""
+    user_info = await check_user(event)
+    user_id = user_info["user_id"]
+    user_buff = UserBuffData(user_id)
+    elixir_list = await user_buff.get_fast_elixir_set()
+    if not elixir_list:
+        msg = simple_md("道友没有",
+                        "设置快速丹药", "设置快速丹药",
+                        "!")
+        await bot.send(event=event, message=msg)
+        await fast_elixir_use.finish()
+    msg = '开始快速使用丹药：'
+    for item_name in elixir_list:
+        msg += f"\r{item_name}: "
+        item_id = items.items_map.get(item_name)
+        item_info = await sql_message.get_item_by_good_id_and_user_id(user_id, item_id)
+        if not item_info:
+            msg += f"请检查是否拥有{item_name}！"
+            continue
+        goods_type = item_info['goods_type']
+        goods_num = item_info['goods_num']
+        if goods_type not in ["丹药", "合成丹药"]:
+            msg += "物品不为丹药！！"
+            continue
+        if 1 > int(goods_num):
+            msg = f"道友背包中的{item_name}数量不足，当前仅有{goods_num}个！"
+            continue
+        msg += await check_use_elixir(user_id, item_id, 1)
+
+    await bot.send(event=event, message=msg)
+    await fast_elixir_use.finish()
+
+
+@fast_elixir_use_set.handle(parameterless=[Cooldown()])
+async def fast_elixir_use_set_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
+    """快速丹药设置"""
+    user_info = await check_user(event)
+    user_id = user_info["user_id"]
+    user_buff = UserBuffData(user_id)
+
+    strs = args.extract_plain_text()
+    args = get_strs_from_str(strs)
+    if not args:
+        msg = simple_md("请输入要设置的",
+                        "快速丹药", "设置快速丹药",
+                        "列表!")
+        await bot.send(event=event, message=msg)
+        await fast_elixir_use_set.finish()
+    msg, is_pass = user_buff.set_prepare_elixir(args)
+    if not is_pass:
+        await bot.send(event=event, message=msg)
+        await fast_elixir_use_set.finish()
+    msg = msg + '、'.join(args) + "为快速使用丹药"
+    await bot.send(event=event, message=msg)
+    await fast_elixir_use_set.finish()
 
 
 @gm_goods_delete.handle(parameterless=[Cooldown()])

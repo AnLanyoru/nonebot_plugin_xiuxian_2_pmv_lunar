@@ -147,8 +147,12 @@ class XiuxianDateManage:
       "sub_buff" numeric DEFAULT 0,
       "atk_buff" numeric DEFAULT 0,
       "blessed_spot" numeric DEFAULT 0,
-      "blessed_spot_name" text
-      "elixir_buff" bytea
+      "blessed_spot_name" text,
+      "elixir_buff" bytea,
+      "learned_main_buff" json,
+      "learned_sub_buff" json,
+      "learned_sec_buff" json,
+      "prepare_elixir_set" json
     );""")
                 elif i == "bank_info":
                     try:

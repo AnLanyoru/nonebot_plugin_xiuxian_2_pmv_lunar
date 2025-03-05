@@ -643,7 +643,6 @@ async def check_use_elixir(user_id, goods_id, num):
     goods_rank = goods_info['rank']
     goods_name = goods_info['name']
     back = await sql_message.get_item_by_good_id_and_user_id(user_id, goods_id)
-    goods_all_num = back['all_num']
     goods_day_num = back['day_num']
     if goods_info['buff_type'] == "level_up_rate":  # 增加突破概率的丹药
         if abs(goods_rank - 55) > user_rank:  # 最低使用限制
