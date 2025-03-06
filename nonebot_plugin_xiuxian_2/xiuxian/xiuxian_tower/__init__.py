@@ -14,8 +14,10 @@ from nonebot.permission import SUPERUSER
 
 from .tower_database import tower_handle
 from .tower_fight import get_tower_battle_info
+from ..user_data_handle import UserBuffData
+from ..xiuxian_back.back_util import check_use_elixir
 from ..xiuxian_place import place
-from ..xiuxian_utils.clean_utils import msg_handler, main_md, get_num_from_str, get_args_num
+from ..xiuxian_utils.clean_utils import msg_handler, main_md, get_num_from_str, get_args_num, simple_md
 from ..xiuxian_utils.item_json import items
 from ..xiuxian_utils.lay_out import Cooldown, UserCmdLock
 from ..xiuxian_utils.utils import check_user, check_user_type
@@ -32,6 +34,7 @@ tower_end = on_command("离开挑战之地", aliases={"离开挑战", "退出挑
                        permission=GROUP | PRIVATE, block=True)
 tower_info = on_command("查看挑战", aliases={"查看挑战信息"}, priority=1, permission=GROUP | PRIVATE, block=True)
 tower_fight = on_command("开始挑战", aliases={"挑战开始"}, priority=3, permission=GROUP | PRIVATE, block=True)
+tower_fight_elixir = on_command("丹药挑战", priority=3, permission=GROUP | PRIVATE, block=True)
 tower_shop = on_command("挑战商店", priority=3, permission=GROUP | PRIVATE, block=True)
 tower_shop_buy = on_command("挑战商店兑换", aliases={"挑战积分兑换", "挑战兑换"}, priority=3,
                             permission=GROUP | PRIVATE, block=True)
@@ -290,6 +293,90 @@ async def tower_shop_(
         "102368631_1739371981")
     await bot.send(event=event, message=msg)
     await tower_shop.finish()
+
+
+@tower_fight_elixir.handle(parameterless=[Cooldown()])
+async def tower_fight_elixir_(bot: Bot, event: GroupMessageEvent):
+    """嗑药进行挑战"""
+    time_now = datetime.now()
+    day_now = time_now.weekday()
+    hour_now = time_now.hour
+    if (day_now == 6) and (hour_now == 20):
+        msg = f'结算挑战积分中，请稍后再试'
+        await bot.send(event=event, message=msg)
+        await tower_fight_elixir.finish()
+
+    user_info = await check_user(event)
+
+    user_id = user_info['user_id']
+    is_type, msg = await check_user_type(user_id, 6)  # 需要挑战中的用户
+    if not is_type:
+        await bot.send(event=event, message=msg)
+        await tower_fight_elixir.finish()
+    user_buff = UserBuffData(user_id)
+    elixir_list = await user_buff.get_fast_elixir_set()
+    if not elixir_list:
+        msg = simple_md("道友没有",
+                        "设置快速丹药", "设置快速丹药",
+                        "!")
+        await bot.send(event=event, message=msg)
+        await tower_fight_elixir.finish()
+    msg = '开始快速使用丹药：'
+    for item_name in elixir_list:
+        msg += f"\r{item_name}: "
+        item_id = items.items_map.get(item_name)
+        item_info = await sql_message.get_item_by_good_id_and_user_id(user_id, item_id)
+        if not item_info:
+            msg += f"请检查是否拥有{item_name}！"
+            continue
+        goods_type = item_info['goods_type']
+        goods_num = item_info['goods_num']
+        if goods_type not in ["丹药", "合成丹药"]:
+            msg += "物品不为丹药！！"
+            continue
+        if 1 > int(goods_num):
+            msg = f"道友背包中的{item_name}数量不足，当前仅有{goods_num}个！"
+            continue
+        msg += await check_use_elixir(user_id, item_id, 1)
+    await bot.send(event=event, message=msg)
+    user_tower_info = await tower_handle.check_user_tower_info(user_id)
+    floor = user_tower_info['now_floor']
+    place_id = user_tower_info.get('tower_place')
+    world_id = place.get_world_id(place_id)
+    next_floor = floor + 1
+    tower_floor_info = await tower_handle.get_tower_floor_info(next_floor, place_id)
+    if not tower_floor_info:
+        msg = f"道友已抵达【{tower_handle.tower_data[world_id].name}】之底！！！"
+        await bot.send(event=event, message=msg)
+        await tower_fight_elixir.finish()
+    result, victor = await get_tower_battle_info(user_info, tower_floor_info)
+    if victor == "群友赢了":  # 获胜
+        user_tower_info['now_floor'] += 1
+        await tower_handle.update_user_tower_info(user_tower_info)
+        msg = (f"道友成功战胜 {tower_floor_info['name']} "
+               f"到达【{tower_handle.tower_data[world_id].name}】第{user_tower_info['now_floor']}区域！！！")
+    else:  # 输了
+        final_floor = user_tower_info['now_floor']
+        best_floor = max(final_floor, user_tower_info['best_floor'])
+        week_best = max(user_tower_info['now_floor'], user_tower_info['weekly_point']) \
+            if user_tower_info['weekly_point'] != -1 else -1
+        user_tower_info['weekly_point'] = week_best
+        user_tower_info['now_floor'] = 0
+        user_tower_info['best_floor'] = best_floor
+        await tower_handle.update_user_tower_info(user_tower_info)
+        await sql_message.do_work(user_id, 0)
+        msg = (f"道友不敌 {tower_floor_info['name']} 退出位面挑战【{tower_handle.tower_data[world_id].name}】！\r"
+               f"本次抵达第{final_floor}区域，本周最深抵达第{week_best}区域，历史最深抵达第{best_floor}区域，已记录！！")
+    text = msg_handler(result)
+    msg = main_md(
+        msg, text,
+        '继续丹药挑战', '丹药挑战',
+        '查看下层', '查看挑战',
+        '终止挑战', '离开挑战',
+        '挑战帮助', '挑战帮助',
+        "102368631_1739371981")
+    await bot.send(event=event, message=msg)
+    await tower_fight_elixir.finish()
 
 
 @tower_fight.handle(parameterless=[Cooldown()])

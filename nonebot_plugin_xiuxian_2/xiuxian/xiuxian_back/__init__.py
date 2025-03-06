@@ -81,7 +81,7 @@ __back_help__ = f"""
 
 @fast_elixir_use.handle(parameterless=[Cooldown()])
 async def fast_elixir_use_(bot: Bot, event: GroupMessageEvent):
-    """快速丹药设置"""
+    """快速丹药"""
     user_info = await check_user(event)
     user_id = user_info["user_id"]
     user_buff = UserBuffData(user_id)
@@ -129,7 +129,7 @@ async def fast_elixir_use_set_(bot: Bot, event: GroupMessageEvent, args: Message
                         "列表!")
         await bot.send(event=event, message=msg)
         await fast_elixir_use_set.finish()
-    msg, is_pass = user_buff.set_prepare_elixir(args)
+    msg, is_pass = await user_buff.set_prepare_elixir(args)
     if not is_pass:
         await bot.send(event=event, message=msg)
         await fast_elixir_use_set.finish()
