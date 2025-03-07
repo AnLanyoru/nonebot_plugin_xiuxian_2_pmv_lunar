@@ -82,6 +82,7 @@ async def shop_goods_send_many_(bot: Bot, event: GroupMessageEvent, args: Messag
 
     arg_str = args.extract_plain_text()
     price = get_args_num(arg_str, 1, 500000)
+    num = get_args_num(arg_str, 2, 10000)
     strs = get_strs_from_str(arg_str)
     if not strs:
         msg = '请输入要上架的物品类别！'
@@ -102,7 +103,11 @@ async def shop_goods_send_many_(bot: Bot, event: GroupMessageEvent, args: Messag
         await bot.send(event=event, message=msg)
         await shop_goods_send_many.finish()
     # 解析物品
-    all_pick_items: dict[int, int] = back_pick_tool(user_back_items, strs)
+    all_pick_items: dict[int, int] = back_pick_tool(user_back_items, strs, num)
+    if not all_pick_items:
+        msg = '道友没有指定物品！！'
+        await bot.send(event=event, message=msg)
+        await shop_goods_send_many.finish()
     # 检查手续费
     handle_price: int = int(price * 0.2) * sum(all_pick_items.values())
     if user_stone < handle_price:

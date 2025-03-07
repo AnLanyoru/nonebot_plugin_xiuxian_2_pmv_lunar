@@ -2,7 +2,7 @@ from .. import XiuConfig
 from ..xiuxian_utils.item_json import items
 
 
-def back_pick_tool(user_back_data: list[dict], pick_key_word: list) -> dict[int, int]:
+def back_pick_tool(user_back_data: list[dict], pick_key_word: list, want_num: int = 10000) -> dict[int, int]:
     """
     快速筛选符合关键词的背包内物品
     """
@@ -10,7 +10,7 @@ def back_pick_tool(user_back_data: list[dict], pick_key_word: list) -> dict[int,
     real_args: list[str] = [the_same[i] if i in the_same else i for i in pick_key_word]
     pick_item_dict: dict[int, int] = {}
     sum_num: int = 0  # 总数量计数 不超过1w个物品
-    max_num: int = 10000  # 单次处理上架上限
+    max_num: int = want_num  # 单次处理上架上限
     for back in user_back_data:
         for goal_level in real_args:
             goods_id: int = back['goods_id']
