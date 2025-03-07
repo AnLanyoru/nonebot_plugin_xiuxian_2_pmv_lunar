@@ -308,7 +308,7 @@ async def world_boss_fight_(bot: Bot, event: GroupMessageEvent):
         msg_list, boss_info = await get_world_boss_battle_info(user_id)
         new_damage = boss_info['总血量'] - boss_info['气血']
         user_world_boss_info['fight_num'] += 1
-        user_world_boss_info['world_point'] += 10
+        user_world_boss_info['world_point'] += 15
         user_world_boss_info['world_id'] = world_id
         user_world_boss_info['fight_damage'] += new_damage
         await update_user_world_boss_info(user_id, user_world_boss_info)
