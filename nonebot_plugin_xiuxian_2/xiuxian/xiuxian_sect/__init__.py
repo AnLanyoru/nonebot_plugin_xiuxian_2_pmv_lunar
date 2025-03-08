@@ -793,8 +793,8 @@ async def sect_users_(bot: Bot, event: GroupMessageEvent, args: Message = Comman
             msg = main_md(title, text,
                           "查看日常", "日常",
                           "周贡检查", "宗门周贡检查",
-                          "移除成员", "踢出宗门"
-                                      "下一页", f"宗门成员查看 {page + 1}",
+                          "移除成员", "踢出宗门",
+                          "下一页", f"宗门成员查看 {page + 1}",
                           SECT_BUTTON)
         else:
             msg = simple_md(f"道友还未",
@@ -859,8 +859,8 @@ async def sect_users_donate_check_(bot: Bot, event: GroupMessageEvent, args: Mes
         msg = main_md(title, text,
                       "查看日常", "日常",
                       "全部成员", "宗门成员查看",
-                      "移除成员", "踢出宗门"
-                                  "下一页", f"宗门周贡检查 {goal_donate} {page + 1}",
+                      "移除成员", "踢出宗门",
+                      "下一页", f"宗门周贡检查 {goal_donate} {page + 1}",
                       SECT_BUTTON)
     else:
         msg = simple_md(f"道友还未",
