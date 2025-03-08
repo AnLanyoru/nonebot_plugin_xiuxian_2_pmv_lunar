@@ -315,7 +315,7 @@ async def world_boss_fight_(bot: Bot, event: GroupMessageEvent):
         text = msg_handler(msg_list)
         msg = (f"{user_name}道友全力施为，对{boss_name_now}造成{number_to(new_damage)}伤害！！"
                f"\r当前总计造成{number_to(user_world_boss_info['fight_damage'])}伤害"
-               f"\r获得10点世界boss积分")
+               f"\r获得15点世界boss积分")
         msg = main_md(
             msg, text,
             '世界boss排行', '世界boss排行',
