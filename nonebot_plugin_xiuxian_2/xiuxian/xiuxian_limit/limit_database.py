@@ -46,6 +46,7 @@ class LimitData:
           "receive_stone" bigint DEFAULT 0,
           "impart_pk" integer DEFAULT 0,
           "two_exp_up" integer DEFAULT 0,
+          "send_exp_accept" boolean DEFAULT false,
           "rift_protect" integer DEFAULT 0,
           "offset_get" bytea,
           "active_get" bytea,

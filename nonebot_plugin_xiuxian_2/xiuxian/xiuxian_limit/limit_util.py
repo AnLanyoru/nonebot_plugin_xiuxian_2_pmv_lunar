@@ -1,5 +1,6 @@
 from .limit_database import limit_data
 from .. import XiuConfig
+from ..xiuxian_utils.clean_utils import simple_md
 from ..xiuxian_utils.xiuxian2_handle import UserBuffDate, xiuxian_impart
 
 
@@ -42,6 +43,12 @@ class LimitCheck:
     async def send_exp_limit_check(self, user_id_2, num: int = 1) -> tuple[bool, str]:
         user_limit_2, is_pass_2 = await limit_data.get_limit_by_user_id(user_id_2)
         user_exp_2 = user_limit_2['two_exp_up']
+        send_exp_accept = user_limit_2['send_exp_accept']
+        if not send_exp_accept:
+            msg = simple_md(f"对方未",
+                            "开启指点", "接受指点",
+                            "功能！")
+            return False, msg
         # 加入传承
         impart_data_2 = await xiuxian_impart.get_user_info_with_id(user_id_2)
         impart_two_exp_2 = impart_data_2['impart_two_exp'] if impart_data_2 is not None else 0

@@ -8,7 +8,7 @@ from nonebot.adapters.onebot.v11 import (
 from nonebot.params import CommandArg
 
 from .limit_database import limit_data, limit_handle
-from ..xiuxian_utils.clean_utils import get_num_from_str
+from ..xiuxian_utils.clean_utils import get_num_from_str, simple_md
 from ..xiuxian_utils.item_json import items
 from ..xiuxian_utils.lay_out import Cooldown
 from ..xiuxian_utils.utils import (
@@ -23,6 +23,54 @@ get_log = on_command('查日志', aliases={"日志查询", "查询日志", "查�
                      block=True)
 get_shop_log = on_command('坊市日志', aliases={"查询坊市日志", "查看坊市日志"}, priority=1, permission=GROUP,
                           block=True)
+send_exp_accept = on_command("接受传道", aliases={"接受传法", "接受指点"}, priority=5, permission=GROUP, block=True)
+send_exp_refuse = on_command("拒绝传道", aliases={"拒绝传法", "拒绝指点"}, priority=5, permission=GROUP, block=True)
+
+
+@send_exp_accept.handle(parameterless=[Cooldown(cd_time=30)])
+async def send_exp_accept_(bot: Bot, event: GroupMessageEvent):
+    user_info = await check_user(event)
+
+    user_id = user_info['user_id']
+    user_limit, is_pass_2 = await limit_data.get_limit_by_user_id(user_id)
+    send_exp_accept_mode = user_limit['send_exp_accept']
+    if send_exp_accept_mode:
+        msg = simple_md("道友已允许指点，如需关闭，发送",
+                        "拒绝指点", "拒绝指点",
+                        "!")
+        await bot.send(event=event, message=msg)
+        await send_exp_accept.finish()
+    user_limit['send_exp_accept'] = True
+    await limit_data.update_limit_data_with_key(**user_limit, update_key='send_exp_accept',
+                                                goal=user_limit['send_exp_accept'])
+    msg = simple_md("道友接受了他人的指点，如需关闭，发送",
+                    "拒绝指点", "拒绝指点",
+                    "!")
+    await bot.send(event=event, message=msg)
+    await send_exp_accept.finish()
+
+
+@send_exp_refuse.handle(parameterless=[Cooldown(cd_time=30)])
+async def send_exp_refuse_(bot: Bot, event: GroupMessageEvent):
+    user_info = await check_user(event)
+
+    user_id = user_info['user_id']
+    user_limit, is_pass_2 = await limit_data.get_limit_by_user_id(user_id)
+    send_exp_accept_mode = user_limit['send_exp_accept']
+    if send_exp_accept_mode:
+        msg = simple_md("道友已拒绝指点，如需接受，发送",
+                        "接受指点", "接受指点",
+                        "!")
+        await bot.send(event=event, message=msg)
+        await send_exp_accept.finish()
+    user_limit['send_exp_accept'] = False
+    await limit_data.update_limit_data_with_key(**user_limit, update_key='send_exp_accept',
+                                                goal=user_limit['send_exp_accept'])
+    msg = simple_md("道友拒绝了他人的指点，如需开启，发送",
+                    "接受指点", "接受指点",
+                    "!")
+    await bot.send(event=event, message=msg)
+    await send_exp_refuse.finish()
 
 
 @offset.handle(parameterless=[Cooldown()])

@@ -279,7 +279,7 @@ async def qc_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
         await qc.finish()
 
 
-@send_exp.handle(parameterless=[Cooldown(cd_time=60, stamina_cost=0)])
+@send_exp.handle(parameterless=[Cooldown(cd_time=3, stamina_cost=0)])
 async def send_exp_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """双修"""
 
@@ -295,7 +295,7 @@ async def send_exp_(bot: Bot, event: GroupMessageEvent, args: Message = CommandA
     num = get_args_num(args=args, no=1, default=1)
     num = 1 if num == 0 else num
 
-    if num > 50:
+    if num > 30:
         msg = "道友没有那么闲情逸致连续指点那么多次！"
         await bot.send(event=event, message=msg)
         await send_exp.finish()
@@ -318,12 +318,16 @@ async def send_exp_(bot: Bot, event: GroupMessageEvent, args: Message = CommandA
         await send_exp.finish()
 
     is_type, msg = await check_user_type(user_2_id, 0)
-    if not is_type:
-        msg = "对方正在忙碌中，暂时无法蒙受道友恩惠！！"
-        await bot.send(event=event, message=msg)
-        await send_exp.finish()
     if user_2['root_type'] in ['源宇道根', '道之本源']:
         msg = "对方已得悟大道，无需道友指点！！"
+        await bot.send(event=event, message=msg)
+        await send_exp.finish()
+    if exp_2 > 18e10:
+        msg = "对方对修炼已颇有见解，无需道友指点！！"
+        await bot.send(event=event, message=msg)
+        await send_exp.finish()
+    if not is_type:
+        msg = "对方正在忙碌中，暂时无法蒙受道友恩惠！！"
         await bot.send(event=event, message=msg)
         await send_exp.finish()
     exp = int(exp_1 * 0.0055)
@@ -956,10 +960,14 @@ async def daily_work_(bot: Bot, event: GroupMessageEvent):
         tower_msg = f"尚未挑战"
 
     world_boss_info = await get_user_world_boss_info(user_id)
+    tips_exp = ''
+    if user_info['root_type'] not in ['源宇道根', '道之本源']:
+        if user_info['exp'] < 18e10:
+            tips_exp = "(被指点)"
     msg = f"今日日常完成情况"
     text = (f"签到 {user_info['is_sign']}/1\r"
             f"体力 {user_info['user_stamina']}/2400\r"
-            f"双修 {two_exp_num}/{two_num}\r"
+            f"双修{tips_exp} {two_exp_num}/{two_num}\r"
             f"悬赏令 {work_num}/6\r"
             f"虚神界行动 {impart_pk_num}/1\r"
             f"宗门丹药领取 {user_info['sect_elixir_get']}/1\r"
