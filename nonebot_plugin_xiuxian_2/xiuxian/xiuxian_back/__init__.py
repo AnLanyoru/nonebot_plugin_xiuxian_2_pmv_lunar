@@ -50,7 +50,7 @@ use = on_command("使用", priority=15, permission=GROUP, block=True)
 fast_elixir_use_set = on_command("快速丹药设置", aliases={'设置快速丹药'}, priority=3, permission=GROUP, block=True)
 fast_elixir_use = on_command("快速丹药", aliases={'磕'}, priority=15, permission=GROUP, block=True)
 no_use_zb = on_command("换装", aliases={"卸载"}, priority=5, permission=GROUP, block=True)
-back_help = on_command("背包帮助", aliases={"坊市帮助"}, priority=8, permission=GROUP, block=True)
+back_help = on_command("背包帮助", priority=8, permission=GROUP, block=True)
 xiuxian_stone = on_command("灵石", priority=4, permission=GROUP, block=True)
 master_rename = on_command("超管改名", priority=2, permission=SUPERUSER, block=True)
 check_items = on_command("查看", aliases={"查", "查看物品", "查看效果", "详情"}, priority=25, permission=GROUP,
