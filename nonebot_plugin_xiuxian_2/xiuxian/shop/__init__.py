@@ -43,10 +43,9 @@ shop_goods_buy_many = on_command("快速市场购买", aliases={'快速坊市购
 shop_goods_back_many = on_command("快速市场下架", aliases={'快速坊市下架', '市场快速下架', '坊市快速下架'}, priority=5,
                                   permission=GROUP, block=True)
 
-TYPE_DEF = {'功法': ('功法', '神通', '辅修功法'),
+TYPE_DEF = {'技能': ('功法', '神通', '辅修功法'),
             '装备': ('法器', '防具'),
             '丹药': ('合成丹药',),
-            '主功法': ('功法',),
             '辅修': ('辅修功法',)}
 
 user_shop_temp_pick_dict: dict[int, list[str]] = {}
@@ -175,19 +174,38 @@ async def shop_goods_check_(bot: Bot, event: GroupMessageEvent, args: Message = 
     user_info = await check_user(event)
 
     user_id = user_info['user_id']
+    user_stone = user_info['stone']
 
     arg_str = args.extract_plain_text()
     strs = get_strs_from_str(arg_str)
     page = get_args_num(arg_str, default=1)
     if not strs:
         msg = three_md('请输入要查看的物品类型：\r',
-                       '功法', '市场查看功法', "|",
+                       '技能', '市场查看技能', "|",
                        '装备', '市场查看装备', '|',
                        '丹药', '市场查看丹药', '\r其他类型请手动输入')
         await bot.send(event=event, message=msg)
         await shop_goods_check.finish()
     item_type = strs[0]
-    if item_type in ['功法', '装备', '丹药']:
+    item_id = items.get_item_id(item_type)
+    if item_id:
+        goods_info = await fetch_goal_goods_data(user_id=user_id, item_id=item_id)
+        if not goods_info:
+            msg = '该物品市场中没有人在出售！'
+            await bot.send(event=event, message=msg)
+            await shop_goods_buy.finish()
+        price = goods_info['item_price']
+        if user_stone < price:
+            msg = simple_md('道友的灵石不足以',
+                            '购买', '市场购买',
+                            f'市场中的{item_type}\r该物品的市场最低价为{number_to(price)}灵石！！')
+            await bot.send(event=event, message=msg)
+            await shop_goods_buy.finish()
+        msg = f"{item_type}的市场情况：\r{get_item_msg(item_id)} \r最低价格：{number_to(price)}灵石\r"
+        msg = simple_md(msg, '确认购买', f"确认市场购买{goods_info['id']}", '该物品')
+        await bot.send(event=event, message=msg)
+        await shop_goods_buy.finish()
+    if item_type in TYPE_DEF:
         all_type = TYPE_DEF[item_type]
     else:
         all_type = tuple(strs)
@@ -235,7 +253,7 @@ async def my_shop_goods_(bot: Bot, event: GroupMessageEvent, args: Message = Com
         type_msg: str = ''
     else:
         item_type = strs[0]
-        if item_type in ['功法', '装备', '丹药']:
+        if item_type in TYPE_DEF:
             all_type = TYPE_DEF[item_type]
         else:
             all_type = tuple(strs)
@@ -411,7 +429,6 @@ async def shop_goods_buy_(bot: Bot, event: GroupMessageEvent, args: Message = Co
                         f'市场中的{item_name}\r该物品的市场最低价为{number_to(price)}灵石！！')
         await bot.send(event=event, message=msg)
         await shop_goods_buy.finish()
-    item_info = items.get_data_by_item_id(item_id)
     msg = f"{item_name}的市场情况：\r{get_item_msg(item_id)} \r最低价格：{number_to(price)}灵石\r"
     msg = simple_md(msg, '确认购买', f"确认市场购买{goods_info['id']}", '该物品')
     await bot.send(event=event, message=msg)
