@@ -43,7 +43,7 @@ class Items:
         return json.loads(data)
 
     def load_items(self):
-        for item_type, item_data_path in self.ITEM_JSON_PATH:
+        for item_type, item_data_path in self.ITEM_JSON_PATH.items():
             self.set_item_data(self.read_file(item_data_path), item_type)
         self.items_map = {self.items[item_id]['name']: int(item_id) for item_id in self.items}
 
