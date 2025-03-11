@@ -29,7 +29,7 @@ from ..xiuxian_utils.utils import (
 from ..xiuxian_utils.xiuxian2_handle import sql_message
 
 config = get_rift_config()
-RIFT_BUTTON = '102368631_1739818977'
+RIFT_BUTTON = '102368631_1740928458'
 cache_help = {}
 world_rift = {}  # dict
 # 定时任务

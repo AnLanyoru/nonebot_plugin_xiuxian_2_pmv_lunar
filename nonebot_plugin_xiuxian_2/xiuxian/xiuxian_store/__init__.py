@@ -37,6 +37,8 @@ remove_want_item = on_command("取消灵宝楼求购", aliases={"取消求购"},
 fast_sell_items = on_command("灵宝楼快速出售", aliases={"个人摊位快速出售"}, priority=2, permission=GROUP, block=True)
 bind_break = on_command("物品解绑", priority=2, permission=SUPERUSER, block=True)
 
+STORE_BUTTON = "102368631_1740929926"
+
 
 @bind_break.handle(
     parameterless=[
@@ -161,7 +163,7 @@ async def fast_sell_items_(
             msg = simple_md(msg,
                             "出售", "灵宝楼出售",
                             "了：\r" + '\r'.join(sell_msg) + f'\r总计: {number_to(price_sum)}灵石',
-                            )
+                            STORE_BUTTON)
         elif not want_pass:
             msg += f"\r对方对道友的物品没有需求！"
         elif not funds_pass:
@@ -200,7 +202,7 @@ async def user_want_funds_(
         msg = simple_md("道友成功在灵宝楼", "存入", "灵宝楼存灵石",
                         f"{number_to_msg(funds_num)}灵石作为资金。"
                         f"\r当前灵宝楼存有：{number_to_msg(user_funds)}灵石",
-                        )
+                        STORE_BUTTON)
         await bot.send(event, msg)
         await user_want_funds.finish()
 
@@ -238,7 +240,7 @@ async def remove_want_item_(
         msg = simple_md(f"成功取消对{item_name}的",
                         f"求购", "灵宝楼求购",
                         f"。\r回退{number_to_msg(back_stone)}灵石",
-                        )
+                        STORE_BUTTON)
         await bot.send(event, msg)
         await remove_want_item.finish()
 
@@ -376,11 +378,11 @@ async def user_sell_to_(
         await sql_message.update_ls(user_id, get_stone, 1)
         item_type = items.get_data_by_item_id(item_id).get('type')
         await sql_message.send_back(want_user_id, item_id, item_name, item_type, sell_item_num, 0)
-        msg = simple_md(f"成功通过向灵宝楼向{want_user_name}道友",
+        msg = simple_md(f"成功通过灵宝楼向{want_user_name}道友",
                         "出售", "灵宝楼出售",
                         f"了：\r{item_name}{sell_item_num}个"
                         f"\r获取了{get_stone}灵石",
-                        )
+                        STORE_BUTTON)
 
         await bot.send(event, msg)
         await user_sell_to.finish()
@@ -513,7 +515,7 @@ async def user_want_item_(bot: Bot, event: GroupMessageEvent, args: Message = Co
                         f"申请\r物品：{item_name}"
                         f"\r价格：{number_to(item_price)}|{item_price}灵石"
                         f"\r需求数量：{item_num}\r{funds_msg}",
-                        )
+                        STORE_BUTTON)
         await user_store.create_user_want(user_id, want_dict)
         await bot.send(event=event, message=msg)
         await user_want_item.finish()

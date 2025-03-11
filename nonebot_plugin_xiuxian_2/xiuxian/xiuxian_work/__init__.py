@@ -26,7 +26,7 @@ from ..xiuxian_utils.utils import check_user, check_user_type
 from ..xiuxian_utils.xiuxian2_handle import sql_message
 
 count = 6  # 免费次数
-WORK_BUTTON = '102368631_1739819242'
+WORK_BUTTON = '102368631_1740928698'
 
 last_work = on_command("最后的悬赏令", priority=15, block=True)
 do_work = on_regex(

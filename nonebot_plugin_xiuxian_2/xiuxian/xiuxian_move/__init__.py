@@ -13,18 +13,21 @@ from nonebot.params import CommandArg
 from ..database_utils.move_database import save_move_data, read_move_data
 from ..xiuxian_config import convert_rank
 from ..xiuxian_place import place
-from ..xiuxian_utils.clean_utils import get_num_from_str, get_strs_from_str
+from ..xiuxian_utils.clean_utils import get_num_from_str, get_strs_from_str, simple_md
 from ..xiuxian_utils.lay_out import Cooldown
 from ..xiuxian_utils.utils import (
     check_user, check_user_type
 )
 from ..xiuxian_utils.xiuxian2_handle import sql_message
 
+MAP_BUTTON = "102368631_1740931292"
+
+
 go_to = on_command("移动", aliases={"前往", "去"}, permission=GROUP, priority=10, block=True)
 get_map = on_command("地图", aliases={"我的位置", "位置"}, permission=GROUP, priority=10, block=True)
 complete_move = on_command("行动结算", aliases={"到达"}, permission=GROUP, priority=10, block=True)
 stop_move = on_command("停止移动", permission=GROUP, priority=10, block=True)
-near_player = on_command("附近玩家", permission=GROUP, priority=10, block=True)
+near_player = on_command("附近玩家", aliases={"附近"}, permission=GROUP, priority=10, block=True)
 
 
 @go_to.handle(parameterless=[Cooldown()])
@@ -157,7 +160,9 @@ async def get_map_(bot: Bot, event: GroupMessageEvent):
                 msg += f"地区ID:{get_place_id}【{places[0]}】位置:{places[1][:2]}\r"
         else:
             pass
-    msg += "——————————\rtips: 发送【前往】+【目的地ID】来进行移动哦"
+    msg += "\r发送【"
+    msg = simple_md(msg, "前往", "前往", "】+【目的地ID】来进行移动哦",
+                    MAP_BUTTON)
     await bot.send(event=event, message=msg)
     await get_map.finish()
 
@@ -173,9 +178,13 @@ async def near_player_(bot: Bot, event: GroupMessageEvent):
     user_id = user_info['user_id']
     place_id = await place.get_now_place_id(user_id)
     place_name = place.get_place_name(place_id)
-    msg = f"当前道友在ID：{place_id} {place_name}\r附近的道友："
+    msg = f"\r附近的道友："
     nearby_players = await sql_message.get_nearby_player(place_id, user_info["exp"])
     for player in nearby_players:
         msg += f"\r{player['user_name']} {player['level']}"
+    msg = simple_md(f"当前道友在ID：{place_id} ",
+                    f"{place_name}", f"前往 {place_name}",
+                    msg,
+                    MAP_BUTTON)
     await bot.send(event=event, message=msg)
     await near_player.finish()

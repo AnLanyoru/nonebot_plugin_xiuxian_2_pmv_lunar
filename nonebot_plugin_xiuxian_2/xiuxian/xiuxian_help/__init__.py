@@ -12,6 +12,7 @@ from ..xiuxian_config import XiuConfig
 from ..xiuxian_data.data.宗门玩法配置_data import sect_config_data
 from ..xiuxian_database.database_connect import database
 from ..xiuxian_sect import sect_config
+from ..xiuxian_store import STORE_BUTTON
 from ..xiuxian_utils.clean_utils import help_md, simple_md
 from ..xiuxian_utils.item_json import items
 from ..xiuxian_utils.lay_out import Cooldown
@@ -185,7 +186,7 @@ __tower_help__ = f"""
 @help_in.handle(parameterless=[Cooldown()])
 async def help_in_(bot: Bot, event: GroupMessageEvent):
     """修仙帮助"""
-    msg = help_md("102368631_1733157336", "测试中", "102368631_1739370528")
+    msg = help_md("102368631_1740931741", "测试中", "102368631_1740931181")
     await bot.send(event=event, message=msg)
     await help_in.finish()
 
@@ -193,7 +194,7 @@ async def help_in_(bot: Bot, event: GroupMessageEvent):
 @help_newer.handle(parameterless=[Cooldown()])
 async def help_in_(bot: Bot, event: GroupMessageEvent):
     """修仙新手帮助"""
-    msg = help_md("102368631_1733157618", "测试中", "102368631_1739370528")
+    msg = help_md("102368631_1733157618", "测试中", "102368631_1740930682")
     await bot.send(event=event, message=msg)
     await help_newer.finish()
 
@@ -318,7 +319,7 @@ async def store_help_(bot: Bot, event: GroupMessageEvent):
     """帮助"""
     msg = simple_md(__store_help__,
                     "查看日常", "日常", "！",
-                    "102368631_1739372858")
+                    STORE_BUTTON)
     await bot.send(event=event, message=msg)
     await store_help.finish()
 

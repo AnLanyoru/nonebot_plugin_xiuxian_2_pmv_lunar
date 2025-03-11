@@ -138,6 +138,8 @@ world_boss_fight_top = on_command("世界boss伤害排行",
 time_set_world_boss = on_command('重置世界BOSS', priority=15, permission=SUPERUSER, block=True)
 world_boss_shop_reload = on_command('重载世界BOSS商店', priority=15, permission=SUPERUSER, block=True)
 
+WORLD_BOSS_BUTTON = "102368631_1740930289"
+
 
 @time_set_world_boss.handle(parameterless=[Cooldown(cd_time=5)])
 async def time_set_world_boss_(bot: Bot, event: GroupMessageEvent):
@@ -209,7 +211,7 @@ async def world_boss_shop_buy_(
             '世界boss排行', '世界boss排行',
             '世界boss菜单', '世界boss',
             '挑战世界boss', '挑战世界boss',
-            "102368631_1739372651")
+            WORLD_BOSS_BUTTON)
         await bot.send(event=event, message=msg)
         await world_boss_shop_buy.finish()
 
@@ -241,7 +243,7 @@ async def world_boss_shop_menu_(
         '世界boss排行', '世界boss排行',
         '世界boss菜单', '世界boss',
         '挑战世界boss', '挑战世界boss',
-        "102368631_1739372651")
+        WORLD_BOSS_BUTTON)
     await bot.send(event=event, message=msg)
     await world_boss_shop_menu.finish()
 
@@ -280,7 +282,7 @@ async def world_boss_fight_top_(bot: Bot, event: GroupMessageEvent, args: Messag
                       '世界boss商店', '世界boss商店',
                       '世界boss菜单', '世界boss',
                       '前往挑战世界boss', '挑战世界boss',
-                      "102368631_1739372651")
+                      WORLD_BOSS_BUTTON)
     else:
         msg = f"该排行榜空空如也！"
     await bot.send(event=event, message=msg)
@@ -322,7 +324,7 @@ async def world_boss_fight_(bot: Bot, event: GroupMessageEvent):
             '世界boss商店', '世界boss商店',
             '世界boss菜单', '世界boss',
             '继续挑战世界boss', '挑战世界boss',
-            "102368631_1739372651")
+            WORLD_BOSS_BUTTON)
         await bot.send(event=event, message=msg)
         await world_boss_fight.finish()
 
@@ -351,6 +353,6 @@ async def world_boss_active_menu_(bot: Bot, event: GroupMessageEvent):
         '世界boss商店', '世界boss商店',
         f"\r🔹当前积分{user_world_boss_info['world_point']}\r",
         '世界boss排行', '世界boss伤害排行', '。',
-        "102368631_1739372651")
+        WORLD_BOSS_BUTTON)
     await bot.send(event=event, message=msg)
     await world_boss_active_menu.finish()
