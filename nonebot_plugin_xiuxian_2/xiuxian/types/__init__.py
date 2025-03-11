@@ -134,3 +134,19 @@ class BaseItem(TypedDict, total=False):
     level: str
     desc: str
     item_type: str
+
+
+class BackItem(TypedDict):
+    user_id: int
+    goods_id: int
+    goods_name: str
+    goods_type: str
+    goods_num: int
+    bind_num: int
+    create_time: str
+    update_time: str
+    remake: str
+    day_num: int
+    all_num: int
+    action_time: str
+    state: int
