@@ -7,98 +7,45 @@ except ImportError:
 from pathlib import Path
 from typing import List
 
-READPATH = Path() / "data" / "xiuxian"
-SKILLPATHH = READPATH / "功法"
-WEAPONPATH = READPATH / "装备"
-ELIXIRPATH = READPATH / "丹药"
-GIFT_PATH = READPATH / "礼包"
-XIULIANITEMPATH = READPATH / "修炼物品"
-BOSSDROPS = READPATH / "boss掉落物"
+READ_PATH = Path() / "data" / "xiuxian"
+SKILL_PATH = READ_PATH / "功法"
+WEAPON_PATH = READ_PATH / "装备"
+ELIXIR_PATH = READ_PATH / "丹药"
+GIFT_PATH = READ_PATH / "礼包"
+XIU_LIAN_ITEM_PATH = READ_PATH / "修炼物品"
+BOSS_DROPS = READ_PATH / "boss掉落物"
 
 
 class Items:
     def __init__(self) -> None:
-        self.mainbuff_jsonpath = SKILLPATHH / "主功法.json"
-        self.subbuff_jsonpath = SKILLPATHH / "辅修功法.json"
-        self.secbuff_jsonpath = SKILLPATHH / "神通.json"
-        self.weapon_jsonpath = WEAPONPATH / "法器.json"
-        self.armor_jsonpath = WEAPONPATH / "防具.json"
-        self.elixir_jsonpath = ELIXIRPATH / "丹药.json"
-        self.lb_jsonpath = GIFT_PATH / "礼包.json"
-        self.yaocai_jsonpath = ELIXIRPATH / "药材.json"
-        self.mix_elixir_type_jsonpath = ELIXIRPATH / "炼丹丹药.json"
-        self.ldl_jsonpath = ELIXIRPATH / "炼丹炉.json"
-        self.jlq_jsonpath = XIULIANITEMPATH / "聚灵旗.json"
-        self.tools_jsonpath = XIULIANITEMPATH / "道具.json"
-        self.sw_jsonpath = ELIXIRPATH / "神物.json"
-        self.world_qw_jsonpath = ELIXIRPATH / "天地奇物.json"
+        self.ITEM_JSON_PATH = {
+            "防具": WEAPON_PATH / "防具.json",
+            "法器": WEAPON_PATH / "法器.json",
+            "功法": SKILL_PATH / "主功法.json",
+            "辅修功法": SKILL_PATH / "辅修功法.json",
+            "神通": SKILL_PATH / "神通.json",
+            "丹药": ELIXIR_PATH / "丹药.json",
+            "礼包": GIFT_PATH / "礼包.json",
+            "药材": ELIXIR_PATH / "药材.json",
+            "合成丹药": ELIXIR_PATH / "炼丹丹药.json",
+            "炼丹炉": ELIXIR_PATH / "炼丹炉.json",
+            "聚灵旗": XIU_LIAN_ITEM_PATH / "聚灵旗.json",
+            "道具": XIU_LIAN_ITEM_PATH / "道具.json",
+            "神物": ELIXIR_PATH / "神物.json",
+            "天地奇物": ELIXIR_PATH / "天地奇物.json"}
         self.items = {}
         self.items_map = {}
 
     @staticmethod
-    def readf(FILEPATH):
-        with open(FILEPATH, "r", encoding="UTF-8") as f:
+    def read_file(file_path):
+        with open(file_path, "r", encoding="UTF-8") as f:
             data = f.read()
         return json.loads(data)
 
     def load_items(self):
-        self.set_item_data(self.get_armor_data(), "防具")
-        self.set_item_data(self.get_weapon_data(), "法器")
-        self.set_item_data(self.get_main_buff_data(), "功法")
-        self.set_item_data(self.get_sub_buff_data(), "辅修功法")
-        self.set_item_data(self.get_sec_buff_data(), "神通")
-        self.set_item_data(self.get_elixir_data(), "丹药")
-        self.set_item_data(self.get_lb_data(), "礼包")
-        self.set_item_data(self.get_yaocai_data(), "药材")
-        self.set_item_data(self.get_mix_elixir_type_data(), "合成丹药")
-        self.set_item_data(self.get_ldl_data(), "炼丹炉")
-        self.set_item_data(self.get_jlq_data(), "聚灵旗")
-        self.set_item_data(self.get_tools_data(), "道具")
-        self.set_item_data(self.get_sw_data(), "神物")
-        self.set_item_data(self.get_world_qw_data(), "天地奇物")
+        for item_type, item_data_path in self.ITEM_JSON_PATH:
+            self.set_item_data(self.read_file(item_data_path), item_type)
         self.items_map = {self.items[item_id]['name']: int(item_id) for item_id in self.items}
-
-    def get_armor_data(self):
-        return self.readf(self.armor_jsonpath)
-
-    def get_weapon_data(self):
-        return self.readf(self.weapon_jsonpath)
-
-    def get_main_buff_data(self):
-        return self.readf(self.mainbuff_jsonpath)
-
-    def get_sub_buff_data(self):  # 辅修功法5
-        return self.readf(self.subbuff_jsonpath)
-
-    def get_sec_buff_data(self):
-        return self.readf(self.secbuff_jsonpath)
-
-    def get_elixir_data(self):
-        return self.readf(self.elixir_jsonpath)
-
-    def get_lb_data(self):
-        return self.readf(self.lb_jsonpath)
-
-    def get_yaocai_data(self):
-        return self.readf(self.yaocai_jsonpath)
-
-    def get_mix_elixir_type_data(self):
-        return self.readf(self.mix_elixir_type_jsonpath)
-
-    def get_ldl_data(self):
-        return self.readf(self.ldl_jsonpath)
-
-    def get_jlq_data(self):
-        return self.readf(self.jlq_jsonpath)
-
-    def get_tools_data(self):
-        return self.readf(self.tools_jsonpath)
-
-    def get_sw_data(self):
-        return self.readf(self.sw_jsonpath)
-
-    def get_world_qw_data(self):
-        return self.readf(self.world_qw_jsonpath)
 
     def get_data_by_item_id(self, item_id) -> BaseItem:
         if item_id is None:
