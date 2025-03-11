@@ -100,6 +100,7 @@ class LimitData:
                     limit_dict[key] = 0
                 limit_dict['user_id'] = user_id
                 limit_dict['last_time'] = now_time
+                limit_dict['send_exp_accept'] = False
 
                 for key in self.blob_data:
                     limit_dict[key] = {}
