@@ -15,6 +15,7 @@ from .shop_database import create_goods, fetch_goal_goods_data, fetch_goods_data
 from ..types import UserInfo
 from ..utils.shop_util import back_pick_tool
 from ..xiuxian_back.back_util import get_item_msg
+from ..xiuxian_limit.limit_database import limit_handle
 from ..xiuxian_utils.clean_utils import get_strs_from_str, get_args_num, simple_md, number_to, three_md, \
     msg_handler, main_md, get_args_uuid, get_paged_item, number_to_msg
 from ..xiuxian_utils.item_json import items
@@ -104,7 +105,8 @@ async def shop_goods_send_many_(bot: Bot, event: GroupMessageEvent, args: Messag
         await bot.send(event=event, message=msg)
         await shop_goods_send_many.finish()
     # 解析物品
-    all_pick_items: dict[int, int] = back_pick_tool(user_back_items, strs, num)
+    lock_item_dict = await limit_handle.get_user_lock_item_dict(user_id)
+    all_pick_items: dict[int, int] = back_pick_tool(user_back_items, lock_item_dict, strs, num)
     if not all_pick_items:
         msg = '道友没有指定物品！！'
         await bot.send(event=event, message=msg)
@@ -154,7 +156,8 @@ async def shop_goods_send_many_sure_(bot: Bot, event: GroupMessageEvent, args: M
         await bot.send(event=event, message=msg)
         await shop_goods_send_many_sure.finish()
     # 解析物品
-    all_pick_items: dict[int, int] = back_pick_tool(user_back_items, strs, num)
+    lock_item_dict = await limit_handle.get_user_lock_item_dict(user_id)
+    all_pick_items: dict[int, int] = back_pick_tool(user_back_items, lock_item_dict, strs, num)
     if not all_pick_items:
         msg = '道友没有指定物品！！'
         await bot.send(event=event, message=msg)
@@ -359,9 +362,15 @@ async def shop_goods_send_sure_(bot: Bot, event: GroupMessageEvent, args: Messag
     if price < 500000:
         msg = '价格最低为50w灵石！'
         await bot.send(event=event, message=msg)
-        await shop_goods_send_many.finish()
+        await shop_goods_send_sure.finish()
     # 解析物品名称
     item_name = strs[0]
+    # 锁定物品信息
+    lock_item_dict = await limit_handle.get_user_lock_item_dict(user_id)
+    if item_name in lock_item_dict:
+        msg = f"\r{item_name}已锁定，无法出售！"
+        await bot.send(event=event, message=msg)
+        await shop_goods_send_sure.finish()
     item_id = items.items_map.get(item_name)
     if not item_id:
         msg = '不存在的物品！'
@@ -449,7 +458,7 @@ async def shop_goods_send_(bot: Bot, event: GroupMessageEvent, args: Message = C
 
 @shop_goods_buy.handle(parameterless=[Cooldown(stamina_cost=0)])
 async def shop_goods_buy_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
-    """市场上架"""
+    """市场购买"""
     user_info: UserInfo = await check_user(event)
 
     user_id: int = user_info['user_id']

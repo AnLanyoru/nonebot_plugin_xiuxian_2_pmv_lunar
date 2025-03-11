@@ -12,6 +12,7 @@ from nonebot.permission import SUPERUSER
 
 from .store_database import user_store
 from ..utils.shop_util import back_pick_tool
+from ..xiuxian_limit.limit_database import limit_handle
 from ..xiuxian_utils.clean_utils import get_args_num, get_paged_msg, number_to_msg, get_strs_from_str, simple_md
 from ..xiuxian_utils.item_json import items
 from ..xiuxian_utils.lay_out import Cooldown, UserCmdLock
@@ -117,7 +118,9 @@ async def fast_sell_items_(
             msg = '道友的背包空空如也！！'
             await bot.send(event=event, message=msg)
             await fast_sell_items.finish()
-        all_pick_items: dict[int, int] = back_pick_tool(user_back_items, args)
+        # 解析物品
+        lock_item_dict = await limit_handle.get_user_lock_item_dict(user_id)
+        all_pick_items: dict[int, int] = back_pick_tool(user_back_items, lock_item_dict, args)
         msg = f"开始向{want_user_name}道友快速出售以下类型物品：\r" + "|".join(args) + "请等待...."
         await bot.send(event, msg)
         msg = '出售结果如下'
@@ -301,6 +304,12 @@ async def user_sell_to_(
         sell_item_num = sell_item_num if sell_item_num else 1
         arg_strs = get_strs_from_str(args_str)
         item_name = arg_strs[0] if arg_strs else None
+        # 锁定物品信息
+        lock_item_dict = await limit_handle.get_user_lock_item_dict(user_id)
+        if item_name in lock_item_dict:
+            msg = f"\r{item_name}已锁定，无法出售！"
+            await bot.send(event=event, message=msg)
+            await user_sell_to.finish()
         item_id = items.items_map.get(item_name)
         if not item_id:
             msg = "物品不存在！！！"

@@ -6,6 +6,7 @@ from nonebot.adapters.onebot.v11 import Message
 
 from .clean_utils import number_to, zips, get_strs_from_str
 from .. import DRIVER
+from ..types import BackItem
 from ..xiuxian_data.data.境界_data import level_data
 from ..xiuxian_data.data.灵根_data import root_data
 from ..xiuxian_database.database_connect import database
@@ -1076,7 +1077,7 @@ class XiuxianDateManage:
             async with self.pool.acquire() as db:
                 await db.execute(sql, user_id)
 
-    async def get_back_msg(self, user_id):
+    async def get_back_msg(self, user_id) -> list[BackItem]:
         """获取用户背包信息"""
         sql = f"SELECT * FROM back WHERE user_id=$1 and goods_num >= 1"
         async with self.pool.acquire() as db:
@@ -1084,7 +1085,7 @@ class XiuxianDateManage:
             result_all = [zips(**result_per) for result_per in result]
             return result_all
 
-    async def get_back_msg_all(self, user_id):
+    async def get_back_msg_all(self, user_id) -> list[BackItem]:
         """获取用户背包信息"""
         sql = f"SELECT * FROM back WHERE user_id=$1"
         async with self.pool.acquire() as db:
@@ -1092,7 +1093,7 @@ class XiuxianDateManage:
             result_all = [zips(**result_per) for result_per in result]
             return result_all
 
-    async def get_back_goal_type_msg(self, user_id, goods_type):
+    async def get_back_goal_type_msg(self, user_id, goods_type) -> list[BackItem]:
         """
         获取用户背包内指定类型物品信息
         :param user_id: 用户虚拟值
@@ -1406,7 +1407,7 @@ class XiuxianDateManage:
                          now_time, now_time, send_num * is_bind))
                 await db.executemany(sql, insert_data)
 
-    async def get_item_by_good_id_and_user_id(self, user_id, goods_id):
+    async def get_item_by_good_id_and_user_id(self, user_id, goods_id) -> BackItem:
         """根据物品id、用户id获取物品信息"""
         sql = f"select * from back WHERE user_id=$1 and goods_id=$2"
         async with self.pool.acquire() as db:

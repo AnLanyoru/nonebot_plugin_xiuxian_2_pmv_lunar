@@ -8,7 +8,7 @@ from nonebot.adapters.onebot.v11 import (
 from nonebot.params import CommandArg
 
 from .limit_database import limit_data, limit_handle
-from ..xiuxian_utils.clean_utils import get_num_from_str, simple_md
+from ..xiuxian_utils.clean_utils import get_num_from_str, simple_md, get_strs_from_str, get_args_num
 from ..xiuxian_utils.item_json import items
 from ..xiuxian_utils.lay_out import Cooldown
 from ..xiuxian_utils.utils import (
@@ -25,6 +25,81 @@ get_shop_log = on_command('坊市日志', aliases={"查询坊市日志", "查看
                           block=True)
 send_exp_accept = on_command("接受传道", aliases={"接受传法", "接受指点"}, priority=5, permission=GROUP, block=True)
 send_exp_refuse = on_command("拒绝传道", aliases={"拒绝传法", "拒绝指点"}, priority=5, permission=GROUP, block=True)
+lock_item_cmd = on_command("锁定物品", aliases={"保护物品"}, priority=5, permission=GROUP, block=True)
+break_lock_item_cmd = on_command("解锁物品",
+                                 aliases={"取消保护物品", "取消锁定物品", "解除保护物品", "解除锁定物品"},
+                                 priority=5, permission=GROUP, block=True)
+
+
+@lock_item_cmd.handle(parameterless=[Cooldown(cd_time=30)])
+async def lock_item_cmd_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
+    user_info = await check_user(event)
+
+    user_id = user_info['user_id']
+    arg_str = args.extract_plain_text()
+    arg_strs = get_strs_from_str(arg_str)
+    num = get_args_num(arg_str)
+    if not arg_strs:
+        msg = simple_md("请输入你要",
+                        "保护", "保护物品",
+                        "的物品的名称!")
+        await bot.send(event=event, message=msg)
+        await lock_item_cmd.finish()
+    item_name = arg_strs[0]
+    item_id = items.get_item_id(item_name)
+    if not item_id:
+        msg = simple_md("道友要",
+                        "保护", "保护物品",
+                        "的物品不存在!")
+        await bot.send(event=event, message=msg)
+        await lock_item_cmd.finish()
+    item_in_user_back = await sql_message.get_item_by_good_id_and_user_id(user_id, item_id)
+    had_num = item_in_user_back["goods_num"]
+    if had_num < num:
+        msg = simple_md(f"道友没有那么多{item_name}可",
+                        "保护", "保护物品",
+                        "!")
+        await bot.send(event=event, message=msg)
+        await lock_item_cmd.finish()
+    user_limit, is_pass_2 = await limit_data.get_limit_by_user_id(user_id)
+    user_limit['lock_item'][item_name] = num
+    await limit_data.update_limit_data_with_key(**user_limit, update_key='lock_item',
+                                                goal=user_limit['lock_item'])
+    msg = simple_md(f"成功为{item_name}添加了保护，数量：{num if num else '所有'},如需解除保护，发送",
+                    "解除保护物品", "解除保护物品", "!")
+    await bot.send(event=event, message=msg)
+    await lock_item_cmd.finish()
+
+
+@break_lock_item_cmd.handle(parameterless=[Cooldown(cd_time=30)])
+async def break_lock_item_cmd_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
+    user_info = await check_user(event)
+
+    user_id = user_info['user_id']
+    arg_str = args.extract_plain_text()
+    arg_strs = get_strs_from_str(arg_str)
+    if not arg_strs:
+        msg = simple_md("请输入你要",
+                        "解除保护", "解除保护物品",
+                        "的物品的名称!")
+        await bot.send(event=event, message=msg)
+        await break_lock_item_cmd.finish()
+    item_name = arg_strs[0]
+    user_limit, is_pass_2 = await limit_data.get_limit_by_user_id(user_id)
+    if item_name not in user_limit['lock_item']:
+        msg = simple_md("道友要",
+                        "解除保护", "解除保护物品",
+                        "的物品未在保护名单内!")
+        await bot.send(event=event, message=msg)
+        await break_lock_item_cmd.finish()
+    del user_limit['lock_item'][item_name]
+    await limit_data.update_limit_data_with_key(**user_limit, update_key='lock_item',
+                                                goal=user_limit['lock_item'])
+    msg = simple_md(f"成功取消了{item_name}的",
+                    "保护", "保护物品",
+                    f"!")
+    await bot.send(event=event, message=msg)
+    await break_lock_item_cmd.finish()
 
 
 @send_exp_accept.handle(parameterless=[Cooldown(cd_time=30)])

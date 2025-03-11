@@ -2,7 +2,8 @@ from .. import XiuConfig
 from ..xiuxian_utils.item_json import items
 
 
-def back_pick_tool(user_back_data: list[dict], pick_key_word: list, want_num: int = 10000) -> dict[int, int]:
+def back_pick_tool(user_back_data: list[dict], lock_item_dict: dict[str, int], pick_key_word: list,
+                   want_num: int = 10000) -> dict[int, int]:
     """
     快速筛选符合关键词的背包内物品
     """
@@ -17,6 +18,10 @@ def back_pick_tool(user_back_data: list[dict], pick_key_word: list, want_num: in
             num: int = back['goods_num'] - back['bind_num'] - back['state']
             goods_type: str = back['goods_type']
             goods_name: str = back['goods_name']
+            if goods_name in lock_item_dict:
+                if not lock_item_dict[goods_name]:
+                    break
+                num -= lock_item_dict[goods_name]
             item_info: dict = items.get_data_by_item_id(goods_id)
             item_type: str = item_info['item_type']
             buff_type: str = item_info.get('buff_type')

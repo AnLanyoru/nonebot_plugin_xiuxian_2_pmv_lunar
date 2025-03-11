@@ -28,7 +28,7 @@ class LimitData:
 
     def __init__(self):
         self.pool = None
-        self.blob_data = ["offset_get", "active_get", "state"]
+        self.blob_data = ["offset_get", "active_get", "state", "lock_item"]
         self.sql_limit = ["user_id", "stone_exp_up", "send_stone", "receive_stone",
                           "impart_pk", "two_exp_up", "rift_protect",
                           "offset_get", "active_get", "last_time", "state"]
@@ -50,6 +50,7 @@ class LimitData:
           "rift_protect" integer DEFAULT 0,
           "offset_get" bytea,
           "active_get" bytea,
+          "lock_item" bytea,
           "last_time" TEXT,
           "state" bytea
           );""")
@@ -111,7 +112,8 @@ class LimitData:
             for blob_key in self.blob_data:  # 结构化数据读取
                 if limit_dict.get(blob_key):
                     limit_dict[blob_key] = pickle.loads(limit_dict[blob_key])
-
+                else:
+                    limit_dict[blob_key] = {}
             return limit_dict, True
 
     async def get_active_idmap(self):
@@ -649,6 +651,10 @@ class LimitHandle:
         limit_dict, is_pass = await self._database.get_limit_by_user_id(user_id)
         rift_protect = limit_dict['rift_protect']
         return rift_protect
+
+    async def get_user_lock_item_dict(self, user_id) -> dict[str, int]:
+        user_limit, _ = await self._database.get_limit_by_user_id(user_id)
+        return user_limit['lock_item']
 
 
 limit_handle = LimitHandle()

@@ -305,6 +305,12 @@ async def goods_re_root_(bot: Bot, event: GroupMessageEvent, args: Message = Com
             goods_state = back['state']
             goods_num = back['goods_num']
             break
+    # 锁定物品信息
+    lock_item_dict = await limit_handle.get_user_lock_item_dict(user_id)
+    if goods_name in lock_item_dict:
+        msg = f"\r{goods_name}已锁定，无法炼金！"
+        await bot.send(event=event, message=msg)
+        await goods_re_root.finish()
     if not in_flag:
         msg = f"请检查该道具 {goods_name} 是否在背包内！"
         await bot.send(event=event, message=msg)
@@ -352,16 +358,18 @@ async def goods_re_root_(bot: Bot, event: GroupMessageEvent, args: Message = Com
         msg = "请输入要炼化的物品等阶！"
         await bot.send(event=event, message=msg)
         await goods_re_root_fast.finish()
-    msg = "快速炼金以下品阶物品：\r" + "|".join(args)
+    msg = "快速炼金结果如下：\r"
     price_sum = 0
-    for goal_level, goal_level_name in zip(real_args, args):
-        back_msg = await sql_message.get_back_msg(user_id)  # 背包sql信息,list(back)
-        msg += f"\r快速炼金【{goal_level_name}】结果如下："
-        if back_msg is None:
-            msg += "道友的背包已空！！！"
-            break
-        price_pass = 0
-        for back in back_msg:
+    back_msg = await sql_message.get_back_msg(user_id)  # 背包sql信息,list(back)
+    # 锁定物品信息
+    lock_item_dict = await limit_handle.get_user_lock_item_dict(user_id)
+    if back_msg is None:
+        msg += "道友的背包空空如也！！！"
+        await bot.send(event=event, message=msg)
+        await goods_re_root_fast.finish()
+    price_pass = 0
+    for back in back_msg:
+        for goal_level, goal_level_name in zip(real_args, args):
             goods_id = back['goods_id']
             goods_state = back['state']
             num = back['goods_num']
@@ -369,6 +377,9 @@ async def goods_re_root_(bot: Bot, event: GroupMessageEvent, args: Message = Com
             goods_name = back['goods_name']
             item_info = items.get_data_by_item_id(goods_id)
             buff_type = item_info.get('buff_type')
+            if goods_name in lock_item_dict:
+                msg += f"\r{goods_name}已锁定，无法炼金！"
+                continue
             if ((item_level := item_info.get('level') if item_info else None) == goal_level
                     or goods_name == goal_level
                     or buff_type == goal_level
@@ -376,6 +387,7 @@ async def goods_re_root_(bot: Bot, event: GroupMessageEvent, args: Message = Com
                 if goods_type == "装备" and int(goods_state) == 1:
                     msg += f"\r装备：{goods_name}已经被道友装备在身，无法炼金！"
                     price_pass = 1
+                    break
                 elif (item_rank := get_item_msg_rank(goods_id)) != 520:
                     price = int(1000000 + abs(item_rank - 55) * 100000) * num  # 复制炼金价格逻辑
                     await sql_message.update_back_j(user_id, goods_id, num=num, use_key=2)
@@ -383,8 +395,9 @@ async def goods_re_root_(bot: Bot, event: GroupMessageEvent, args: Message = Com
                     price_sum += price
                     msg += f"\r物品：{goods_name} 数量：{num} 炼金成功，凝聚{number_to(price)}|{price}枚灵石！"
                     price_pass = 1
-        if not price_pass:
-            msg += f"\r道友没有【{goal_level_name}】"
+                    break
+    if not price_pass:
+        msg += f"\r道友没有指定物品"
     msg += f"\r总计凝聚{number_to(price_sum)}|{price_sum}枚灵石"
     await bot.send(event=event, message=msg)
     await goods_re_root_fast.finish()
@@ -566,6 +579,13 @@ async def use_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg())
         msg = f"请检查该道具是否充足！！"
         await bot.send(event=event, message=msg)
         await use.finish()
+    # 锁定物品信息
+    lock_item_dict = await limit_handle.get_user_lock_item_dict(user_id)
+    if item_name in lock_item_dict:
+        if goods_type not in ['装备', '聚灵旗']:
+            msg = f"\r{item_name}已锁定，无法使用！"
+            await bot.send(event=event, message=msg)
+            await use.finish()
 
     # 使用实现
     if goods_type == "装备":
