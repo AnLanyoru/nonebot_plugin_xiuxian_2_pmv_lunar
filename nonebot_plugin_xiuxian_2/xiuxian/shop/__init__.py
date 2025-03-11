@@ -38,6 +38,8 @@ shop_goods_check = on_command("市场查看",
                               priority=5, permission=GROUP, block=True)
 shop_goods_send_many = on_command("快速市场上架", aliases={'快速坊市上架', '市场快速上架', '坊市快速上架'}, priority=5,
                                   permission=GROUP, block=True)
+shop_goods_send_many_sure = on_command("确认快速市场上架", priority=5,
+                                       permission=GROUP, block=True)
 shop_goods_buy_many = on_command("快速市场购买", aliases={'快速坊市购买', '市场快速购买', '坊市快速购买'}, priority=5,
                                  permission=GROUP, block=True)
 shop_goods_back_many = on_command("快速市场下架", aliases={'快速坊市下架', '市场快速下架', '坊市快速下架'}, priority=5,
@@ -62,10 +64,10 @@ async def shop_goods_help_(bot: Bot, event: GroupMessageEvent):
                    '\r4.我的市场\r'
                    '便捷指令：\r'
                    '1.快速市场上架\r'
-                   ' 🔹快速市场上架 物品类型 单价\r'
+                   ' 🔹快速市场上架 物品类型 单价 数量\r'
                    ' 快速上架符合对应类型的物品，可多个类型\r'
                    '2.快速市场购买\r'
-                   ' 🔹快速坊市购买 物品名称 数量\r'
+                   ' 🔹快速坊市购买 物品名称 可接受价格 数量\r'
                    ' 快速购买对应数量的物品')
     await bot.send(event=event, message=msg)
     await shop_goods_help.finish()
@@ -113,6 +115,56 @@ async def shop_goods_send_many_(bot: Bot, event: GroupMessageEvent, args: Messag
         msg = f'道友的灵石不足以支付上架物品花费的手续费{number_to(handle_price)}灵石！！'
         await bot.send(event=event, message=msg)
         await shop_goods_send_many.finish()
+    item_msg: str = items.change_id_num_dict_to_msg(all_pick_items)
+    type_args = "、".join(strs)
+    msg = f"上架以下物品：{item_msg}\r单价：{number_to(price)}灵石\r将收取道友{number_to(handle_price)}灵石手续费\r请"
+    msg = simple_md(msg, '确认上架', f'确认市场快速上架 {type_args} {price} {num}', '物品')
+    await bot.send(event=event, message=msg)
+    await shop_goods_send_many.finish()
+
+
+@shop_goods_send_many_sure.handle(parameterless=[Cooldown(stamina_cost=0)])
+async def shop_goods_send_many_sure_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
+    """市场快速上架"""
+    user_info: UserInfo = await check_user(event)
+
+    user_id = user_info['user_id']
+    user_stone = user_info['stone']
+
+    arg_str = args.extract_plain_text()
+    price = get_args_num(arg_str, 1, 500000)
+    num = get_args_num(arg_str, 2, 10000)
+    strs = get_strs_from_str(arg_str)
+    if not strs:
+        msg = '请输入要上架的物品类别！'
+        await bot.send(event=event, message=msg)
+        await shop_goods_send_many_sure.finish()
+    # 价格合理性检测
+    if price % 100000:
+        msg = '价格必须为10w的整数倍！'
+        await bot.send(event=event, message=msg)
+        await shop_goods_send_many_sure.finish()
+    if price < 500000:
+        msg = '价格最低为50w灵石！'
+        await bot.send(event=event, message=msg)
+        await shop_goods_send_many_sure.finish()
+    user_back_items: list[dict] = await sql_message.get_back_msg(user_id)
+    if not user_back_items:
+        msg = '道友的背包空空如也！！'
+        await bot.send(event=event, message=msg)
+        await shop_goods_send_many_sure.finish()
+    # 解析物品
+    all_pick_items: dict[int, int] = back_pick_tool(user_back_items, strs, num)
+    if not all_pick_items:
+        msg = '道友没有指定物品！！'
+        await bot.send(event=event, message=msg)
+        await shop_goods_send_many_sure.finish()
+    # 检查手续费
+    handle_price: int = int(price * 0.2) * sum(all_pick_items.values())
+    if user_stone < handle_price:
+        msg = f'道友的灵石不足以支付上架物品花费的手续费{number_to(handle_price)}灵石！！'
+        await bot.send(event=event, message=msg)
+        await shop_goods_send_many_sure.finish()
     await sql_message.update_ls(user_id, handle_price, 2)
     await sql_message.decrease_user_item(user_id, all_pick_items, False)
     await create_goods_many(user_id, all_pick_items, price)
@@ -120,7 +172,7 @@ async def shop_goods_send_many_(bot: Bot, event: GroupMessageEvent, args: Messag
     msg = f"成功上架：{item_msg}\r单价：{number_to(price)}灵石\r收取道友{number_to(handle_price)}灵石手续费\r"
     msg = simple_md(msg, '继续上架', '市场快速上架', '物品')
     await bot.send(event=event, message=msg)
-    await shop_goods_send_many.finish()
+    await shop_goods_send_many_sure.finish()
 
 
 @shop_goods_back.handle(parameterless=[Cooldown(stamina_cost=0)])
@@ -322,7 +374,11 @@ async def shop_goods_send_sure_(bot: Bot, event: GroupMessageEvent, args: Messag
         await bot.send(event=event, message=msg)
         await shop_goods_send_sure.finish()
     item_in_back = await sql_message.get_item_by_good_id_and_user_id(user_id, item_id)
-    own_num = item_in_back['goods_num'] - item_in_back['bind_num']
+    if not item_in_back:
+        msg = f'道友的{item_name}不足！！'
+        await bot.send(event=event, message=msg)
+        await shop_goods_send_sure.finish()
+    own_num = item_in_back['goods_num'] - item_in_back['bind_num'] - item_in_back['state']
     if own_num < 1:
         msg = f'道友的{item_name}不足！！'
         await bot.send(event=event, message=msg)
@@ -380,7 +436,7 @@ async def shop_goods_send_(bot: Bot, event: GroupMessageEvent, args: Message = C
         msg = f'道友没有{item_name}！！'
         await bot.send(event=event, message=msg)
         await shop_goods_send.finish()
-    own_num = item_in_back['goods_num'] - item_in_back['bind_num']
+    own_num = item_in_back['goods_num'] - item_in_back['bind_num'] - item_in_back['state']
     if own_num < 1:
         msg = f'道友的{item_name}不足！！'
         await bot.send(event=event, message=msg)
