@@ -19,9 +19,7 @@ def back_pick_tool(user_back_data: list[dict], lock_item_dict: dict[str, int], p
             goods_type: str = back['goods_type']
             goods_name: str = back['goods_name']
             if goods_name in lock_item_dict:
-                if not lock_item_dict[goods_name]:
-                    break
-                num -= lock_item_dict[goods_name]
+                break
             item_info: dict = items.get_data_by_item_id(goods_id)
             item_type: str = item_info['item_type']
             buff_type: str = item_info.get('buff_type')
