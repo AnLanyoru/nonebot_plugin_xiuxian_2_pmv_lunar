@@ -38,7 +38,6 @@ async def lock_item_cmd_(bot: Bot, event: GroupMessageEvent, args: Message = Com
     user_id = user_info['user_id']
     arg_str = args.extract_plain_text()
     arg_strs = get_strs_from_str(arg_str)
-    num = get_args_num(arg_str)
     if not arg_strs:
         msg = simple_md("请输入你要",
                         "保护", "保护物品",
@@ -54,18 +53,17 @@ async def lock_item_cmd_(bot: Bot, event: GroupMessageEvent, args: Message = Com
         await bot.send(event=event, message=msg)
         await lock_item_cmd.finish()
     item_in_user_back = await sql_message.get_item_by_good_id_and_user_id(user_id, item_id)
-    had_num = item_in_user_back["goods_num"]
-    if had_num < num:
-        msg = simple_md(f"道友没有那么多{item_name}可",
+    if not item_in_user_back:
+        msg = simple_md(f"道友没有{item_name}需要",
                         "保护", "保护物品",
                         "!")
         await bot.send(event=event, message=msg)
         await lock_item_cmd.finish()
     user_limit, is_pass_2 = await limit_data.get_limit_by_user_id(user_id)
-    user_limit['lock_item'][item_name] = num
+    user_limit['lock_item'][item_name] = 0
     await limit_data.update_limit_data_with_key(**user_limit, update_key='lock_item',
                                                 goal=user_limit['lock_item'])
-    msg = simple_md(f"成功为{item_name}添加了保护，数量：{num if num else '所有'},如需解除保护，发送",
+    msg = simple_md(f"成功为{item_name}添加了保护，如需解除保护，发送",
                     "解除保护物品", "解除保护物品", "!")
     await bot.send(event=event, message=msg)
     await lock_item_cmd.finish()
