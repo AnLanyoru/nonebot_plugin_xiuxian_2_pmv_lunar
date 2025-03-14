@@ -16,7 +16,7 @@ from nonebot.params import CommandArg
 from .impart_data import impart_data_json
 from .impart_uitls import impart_check, re_impart_data, get_rank_plus, join_card_check
 from .. import NICKNAME
-from ..xiuxian_utils.clean_utils import get_num_from_str, main_md
+from ..xiuxian_utils.clean_utils import get_num_from_str, main_md, simple_md
 from ..xiuxian_utils.lay_out import Cooldown
 from ..xiuxian_utils.utils import check_user
 from ..xiuxian_utils.xiuxian2_handle import xiuxian_impart
@@ -36,24 +36,29 @@ __impart_help__ = f"""
 传承帮助信息:
 指令:
 1、传承抽卡:
-> 使用思恋结晶获取一次传承卡片(抽到的卡片被动加成)
-2、传承信息:
-> 获取传承主要信息
-3、传承背包:
-> 获取传承全部信息
-4、加载传承数据:
-> 重新从卡片中加载所有传承属性(数据显示有误时可用)
-5、传承卡图:
-> 加上卡片名字获取传承卡牌详情
-6、虚神界对决:
-> 进入虚神界与{NICKNAME}进行对决
-7、虚神界闭关:
-> 进入虚神界内闭关修炼，效率是外界闭关的6倍
+ - 使用思恋结晶获取一次传承卡片(抽到的卡片被动加成)
+2、传承祈愿:
+ - 使用祈愿结晶获取一次虚神界闭关世界
+ - (与传承卡数量有关，0传承卡请勿使用)
+3、传承信息:
+ - 获取传承主要信息
+4、传承背包:
+ - 获取传承全部信息
+5、加载传承数据:
+ - 重新从卡片中加载所有传承属性(数据显示有误时可用)
+6、传承卡图:
+ - 加上卡片名字获取传承卡牌详情
+7、虚神界对决:
+ - 进入虚神界与{NICKNAME}进行对决
+8、虚神界祈愿:
+ - 进入虚神界祈愿，获得利用自身传承与虚神界内传承共鸣的机会
+9、虚神界闭关:
+ - 进入虚神界内闭关修炼，效率是外界闭关的6倍
 —————tips——————
 思恋结晶获取方式:虚神界对决
-每日有一次与{NICKNAME}进行虚神界对决
-{NICKNAME}会根据你的表现给予思恋结晶
 如果你有很多思恋结晶可以使用连续抽卡+次数进行多次抽卡哦
+祈愿结晶获取方式:虚神界祈愿
+如果传承卡过少会导致祈愿无共鸣！！！！
 """
 
 
@@ -128,6 +133,11 @@ async def impart_draw_(bot: Bot, event: GroupMessageEvent, args: Message = Comma
     cards = impart_data_draw['cards']
     user_had_cards = json.loads(cards) if cards else []
     hard_card_num = len(user_had_cards)
+    if hard_card_num < 70:
+        msg = simple_md("当前传承卡过少，无法得到传承共鸣！请先",
+                        "传承抽卡", "传承抽卡", "获得足够传承卡后再试！")
+        await bot.send(event=event, message=msg)
+        await impart_draw.finish()
     img_list = impart_data_json.data_all_keys()
     user_impart_data = await xiuxian_impart.get_user_info_with_id(user_id)
     pray_count = user_impart_data.get('pray_card_num')
