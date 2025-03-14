@@ -133,28 +133,28 @@ async def xiuxian_message_(bot: Bot, event: GroupMessageEvent, args: Message = C
     await sql_message.update_last_check_info_time(user_id)  # 更新查看修仙信息时间
     leveluprate = int(user_info['level_up_rate'])  # 用户失败次数加成
     number = main_rate_buff["number"] if main_rate_buff is not None else 0
-    DETAIL_MAP = {
-        "道号": f"{user_name}",
-        "境界": f"{user_info['level']}",
-        "修为": f"{number_to(user_info['exp'])}",
-        "灵石": f"{number_to(user_info['stone'])}",
-        "战力": f"{number_to(int(user_info['exp'] * level_rate * realm_rate))}",
-        "灵根": f"{user_info['root']}({user_info['root_type']}+{int(level_rate * 100)}%)",
-        "突破状态": f"{exp_meg}概率：{break_rate.get(user_info['level'], 1) + leveluprate + number}%",
-        "攻击力": f"{number_to(user_info['atk'])}，攻修等级{user_info['atkpractice']}级",
-        "所在宗门": sectmsg,
-        "宗门职位": sectzw,
-        "主修功法": main_buff_name,
-        "辅修功法": sub_buff_name,
-        "副修神通": sec_buff_name,
-        "法器": weapon_name,
-        "防具": armor_name,
-        "注册位数": f"道友是踏入修仙世界的第{int(user_num)}人",
-        "修为排行": f"道友的修为排在第{user_rank}位",
-        "灵石排行": f"道友的灵石排在第{user_stone}位",
-    }
 
     if args == "图片版":
+        DETAIL_MAP = {
+            "道号": f"{user_name}",
+            "境界": f"{user_info['level']}",
+            "修为": f"{number_to(user_info['exp'])}",
+            "灵石": f"{number_to(user_info['stone'])}",
+            "战力": f"{number_to(int(user_info['exp'] * level_rate * realm_rate))}",
+            "灵根": f"{user_info['root']}({user_info['root_type']}+{int(level_rate * 100)}%)",
+            "突破状态": f"{exp_meg}概率：{break_rate.get(user_info['level'], 1) + leveluprate + number}%",
+            "攻击力": f"{number_to(user_info['atk'])}，攻修等级{user_info['atkpractice']}级",
+            "所在宗门": sectmsg,
+            "宗门职位": sectzw,
+            "主修功法": main_buff_name,
+            "辅修功法": sub_buff_name,
+            "副修神通": sec_buff_name,
+            "法器": weapon_name,
+            "防具": armor_name,
+            "注册位数": f"道友是踏入修仙世界的第{int(user_num)}人",
+            "修为排行": f"道友的修为排在第{user_rank}位",
+            "灵石排行": f"道友的灵石排在第{user_stone}位",
+        }
         img_res = await draw_user_info_img(user_id, DETAIL_MAP)
         await bot.send(event=event, message=MessageSegment.image(img_res))
         await xiuxian_message.finish()
