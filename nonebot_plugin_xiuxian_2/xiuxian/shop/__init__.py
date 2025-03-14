@@ -120,7 +120,7 @@ async def shop_goods_send_many_(bot: Bot, event: GroupMessageEvent, args: Messag
     item_msg: str = items.change_id_num_dict_to_msg(all_pick_items)
     type_args = "、".join(strs)
     msg = f"上架以下物品：{item_msg}\r单价：{number_to(price)}灵石\r将收取道友{number_to(handle_price)}灵石手续费\r请"
-    msg = simple_md(msg, '确认上架', f'确认市场快速上架 {type_args} {price} {num}', '物品')
+    msg = simple_md(msg, '确认上架', f'确认快速市场上架 {type_args} {price} {num}', '物品')
     await bot.send(event=event, message=msg)
     await shop_goods_send_many.finish()
 
