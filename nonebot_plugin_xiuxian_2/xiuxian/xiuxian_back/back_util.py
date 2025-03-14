@@ -4,9 +4,12 @@ import random
 from datetime import datetime
 from pathlib import Path
 
+from nonebot.adapters.onebot.v11 import MessageSegment
+
 from ..user_data_handle import UserBuffData
 from ..xiuxian_config import convert_rank, XiuConfig
 from ..xiuxian_place import place
+from ..xiuxian_utils.clean_utils import encode_base64
 from ..xiuxian_utils.item_json import items
 from ..xiuxian_utils.xiuxian2_handle import (
     sql_message, UserBuffDate,
@@ -537,11 +540,13 @@ def get_shenwu_msg(l_msg, goods_id, goods_num):
     return l_msg
 
 
-def get_item_msg(goods_id):
+def get_item_msg(goods_id, get_image: bool = False):
     """
     获取单个物品的消息
     """
     item_info = items.get_data_by_item_id(goods_id)
+    if not item_info:
+        return "不存在的物品"
     if item_info['type'] == '丹药':
         msg = f"名字：{item_info['name']}\r"
         msg += f"效果：{item_info['desc']}"
@@ -590,10 +595,17 @@ def get_item_msg(goods_id):
         msg = f"名字：{item_info['name']}\r"
         msg += f"介绍：{item_info['desc']}\r"
         msg += f"蕴含天地精华：{item_info['buff']}\r"
-        msg += "天地奇物可用于：\r直接使用：使用后获取奇物内蕴含的天地精华，发送天地精华来获得使用帮助\r作为素材：除了直接使用外，天地奇物还可用于锻造增强武器，升级丹炉，制造武器，制作防具等等......"
-
+        msg += ("天地奇物可用于：\r"
+                "直接使用：使用后获取奇物内蕴含的天地精华，发送天地精华来获得使用帮助\r"
+                "作为素材：除了直接使用外，天地奇物还可用于锻造增强武器，升级丹炉，制造武器，制作防具等等......")
     else:
         msg = '不支持的物品'
+
+    if get_image:
+        if 'image_file' in item_info:
+            image_base64 = encode_base64(item_info['image_file'])
+            print("base64_send")
+            return MessageSegment.text(msg) + MessageSegment.image(image_base64)
     return msg
 
 

@@ -15,6 +15,8 @@ GIFT_PATH = READ_PATH / "礼包"
 XIU_LIAN_ITEM_PATH = READ_PATH / "修炼物品"
 BOSS_DROPS = READ_PATH / "boss掉落物"
 
+ITEM_IMAGE_PATH = Path() / "data" / "xiuxian" / "item_image"
+
 
 class Items:
     def __init__(self) -> None:
@@ -55,15 +57,19 @@ class Items:
         return self.items[str_item_id]
 
     def set_item_data(self, dict_data, item_type):
-        for k, v in dict_data.items():
+        for item_id, item_info in dict_data.items():
             if item_type == '功法' or item_type == '神通' or item_type == '辅修功法':  # 辅修功法7
-                v['rank'], v['level'] = v['level'], v['rank']
-                v['type'] = '技能'
-            self.items[k] = v
-            self.items[k].update({'item_type': item_type})
+                item_info['rank'], item_info['level'] = item_info['level'], item_info['rank']
+                item_info['type'] = '技能'
+            self.items[item_id] = item_info
+            self.items[item_id].update({'item_type': item_type})
+            image_path = ITEM_IMAGE_PATH / item_info['type'] / item_type / f"{item_info['name']}.jpg"
+            is_image = image_path.exists()
+            if is_image:
+                self.items[item_id].update({'image_file': image_path})
 
-            if '境界' in v:
-                self.items[k]['境界'] = v['境界']
+            if '境界' in item_info:
+                self.items[item_id]['境界'] = item_info['境界']
 
     def get_data_by_item_type(self, item_type):
         temp_dict = {}

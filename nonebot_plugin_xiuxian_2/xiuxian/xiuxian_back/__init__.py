@@ -1,3 +1,5 @@
+import time
+
 from nonebot import on_command
 from nonebot.adapters.onebot.v11 import (
     Bot,
@@ -774,13 +776,13 @@ async def check_items_(bot: Bot, event: GroupMessageEvent, args: Message = Comma
     if items_id:
         items_id = items_id[0]
         try:
-            msg = get_item_msg(items_id)
+            msg = get_item_msg(items_id, get_image=True)
         except KeyError:
             msg = "请输入正确的物品id！！！"
     elif items_name:
         items_id = items.items_map.get(items_name[0])
         if items_id:
-            msg = get_item_msg(items_id)
+            msg = get_item_msg(items_id, get_image=True)
         else:
             msg = f"不存在该物品的信息，请检查名字是否输入正确！"
     else:

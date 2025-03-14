@@ -1,3 +1,4 @@
+import base64
 import decimal
 import math
 import operator
@@ -522,3 +523,11 @@ def msg_handler(*args):
         return messages
     else:
         raise ValueError("参数数量或类型不匹配")
+
+
+def encode_base64(file_path):
+    with open(file_path, 'rb') as image_file:
+        img_data = image_file.read()
+        base64_data = base64.b64encode(img_data)
+        base64_str = 'base64://' + base64_data.decode('utf-8')
+        return base64_str
