@@ -1,8 +1,6 @@
-import json
 import operator
 import random
 from datetime import datetime
-from pathlib import Path
 
 from nonebot.adapters.onebot.v11 import MessageSegment
 
@@ -310,7 +308,7 @@ async def get_user_elixir_back_msg(user_id):
     """
     l_elixir_msg = []
     l_ldl_msg = []
-    l_msg = []
+    l_msg: list = []
     user_backs = await sql_message.get_back_msg(user_id)  # list(back)
     if user_backs is None:
         return l_msg
@@ -854,36 +852,3 @@ async def get_use_tool_msg(user_id, goods_id, use_num) -> (str, bool):
     return msg, is_pass
 
 
-def get_shop_data(place_id):
-    place_id = str(place_id)
-    try:
-        data = read_shop()
-    except:
-        data = {}
-        print("无法获取到商店文件开始创建")
-    try:
-        data[place_id]
-    except IndexError:
-        data[place_id] = {}
-        print("该地区商店为空，开始创建")
-    save_shop(data)
-    return data
-
-
-PATH = Path(__file__).parent
-FILEPATH = PATH / 'shop.json'
-
-
-def read_shop():
-    with open(FILEPATH, "r", encoding="UTF-8") as f:
-        data = f.read()
-    return json.loads(data)
-
-
-def save_shop(data):
-    data = json.dumps(data, ensure_ascii=False, indent=4)
-    savemode = "w"
-    with open(FILEPATH, mode=savemode, encoding="UTF-8") as f:
-        f.write(data)
-        f.close()
-    return True
