@@ -572,7 +572,6 @@ async def boss_fight(player1: dict, boss: dict, type_in=2):
     user1_random_buff = user1_main_buff_data['random_buff'] if user1_main_buff_data is not None else 0
     fan_buff = user1_sub_buff_data['fan'] if user1_sub_buff_data is not None else 0
     stone_buff = user1_sub_buff_data['stone'] if user1_sub_buff_data is not None else 0
-    sub_break = user1_sub_buff_data['break'] if user1_sub_buff_data is not None else 0
 
     random_buff = UserRandomBuff()
     if user1_random_buff == 1:
@@ -586,7 +585,7 @@ async def boss_fight(player1: dict, boss: dict, type_in=2):
         elif 76 <= user1_main_buff <= 100:
             random_buff.random_def = random.randint(5, 15) / 100
 
-    user1_break = random_buff.random_break + sub_break
+    user1_break = random_buff.random_break
 
     BOSSDEF = {
         "衣以候": "衣以侯布下了禁制镜花水月，",
