@@ -10,7 +10,7 @@ from nonebot.params import CommandArg, RawCommand
 from nonebot.permission import SUPERUSER
 
 from .back_util import (
-    get_user_main_back_msg, get_use_equipment_sql, get_shop_data, save_shop,
+    get_user_main_back_msg, get_use_equipment_sql,
     get_item_msg, get_item_msg_rank, check_use_elixir,
     get_use_jlq_msg, get_no_use_equipment_sql, get_use_tool_msg,
     get_user_main_back_msg_easy, get_user_back_msg)
@@ -382,13 +382,13 @@ async def goods_re_root_(bot: Bot, event: GroupMessageEvent, args: Message = Com
             goods_name = back['goods_name']
             item_info = items.get_data_by_item_id(goods_id)
             buff_type = item_info.get('buff_type')
-            if goods_name in lock_item_dict:
-                msg += f"\r{goods_name}已锁定，无法炼金！"
-                continue
             if ((item_level := item_info.get('level') if item_info else None) == goal_level
                     or goods_name == goal_level
                     or buff_type == goal_level
                     or goods_type == goal_level):
+                if goods_name in lock_item_dict:
+                    msg += f"\r{goods_name}已锁定，无法炼金！"
+                    break
                 if goods_type == "装备" and int(goods_state) == 1:
                     msg += f"\r装备：{goods_name}已经被道友装备在身，无法炼金！"
                     price_pass = 1
