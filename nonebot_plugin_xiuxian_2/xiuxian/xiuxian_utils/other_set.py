@@ -41,14 +41,14 @@ class OtherSet(XiuConfig):
         # 境界限制
         limit_level = {
             "合道境后期": 1,
-            "登仙境后期": 2,
-            "仙帝境后期": 3
+            "登仙境·九劫": 2,
+            "无上仙尊·大圆满": 3
         }
         if user_level in limit_level.keys():
             if user_world < limit_level[user_level]:
                 msg = f"道友所在世界【{world_name}】天地法则限制道友无法突破\r【{world_name}】可承载的最高境界为{user_level}"
                 return msg
-        elif user_level == "道无涯后期":
+        elif user_level == "道无涯·掌缘生灭":
             if now_root != "道之本源":
                 msg = f"道友的根基不足支持本次以突破！突破{is_updata_level}需要拥有道之本源！！！"
                 return msg
