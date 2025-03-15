@@ -339,20 +339,29 @@ async def send_exp_(bot: Bot, event: GroupMessageEvent, args: Message = CommandA
         await bot.send(event=event, message=msg)
         await send_exp.finish()
 
-    is_pass, msg = await limit_check.send_exp_limit_check(user_id_2=user_2_id, num=num)
-    if not is_pass:
-        await bot.send(event=event, message=msg)
-        await send_exp.finish()
-
     # 获取下个境界需要的修为 * 1.5为闭关上限
     max_exp_2 = (int(await OtherSet().set_closing_type(user_2['level']))
                  * XiuConfig().closing_exp_upper_limit)
     user_get_exp_max_2 = max(max_exp_2 - user_2['exp'], 0)
+    if not user_get_exp_max_2:
+        msg = "对方修为已达上限！！"
+        await bot.send(event=event, message=msg)
+        await send_exp.finish()
 
     msg = f"{user_1['user_name']}道友见{user_2['user_name']}道友颇有道缘，指点一番。"
     # 玩家2修为增加
     exp_limit_2 = min(exp, max_exp)
+
+    # 玩家2修为上限
+    if exp_limit_2 * num >= user_get_exp_max_2:
+        msg += f"{user_2['user_name']}修为将到达上限，仅可指点1次！\r"
+        num = 1
     exp_limit_2 *= num
+
+    is_pass, msg = await limit_check.send_exp_limit_check(user_id_2=user_2_id, num=num)
+    if not is_pass:
+        await bot.send(event=event, message=msg)
+        await send_exp.finish()
 
     # 玩家2修为上限
     if exp_limit_2 >= user_get_exp_max_2:
