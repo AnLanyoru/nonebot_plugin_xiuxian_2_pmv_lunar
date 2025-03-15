@@ -26,7 +26,7 @@ async def exp_up_by_time(user_info, exp_time) -> tuple[str, int, dict]:
     # 校验当当前修为超出上限的问题，不可为负数
     user_get_exp_max = max(user_get_exp_max, 0)
 
-    level_rate = await sql_message.get_root_rate(user_info['root_type'])  # 灵根倍率
+    root_rate = await sql_message.get_root_rate(user_info['root_type'])  # 灵根倍率
     realm_rate = level_data[level]["spend"]  # 境界倍率
 
     # 功法修炼加成
@@ -48,7 +48,7 @@ async def exp_up_by_time(user_info, exp_time) -> tuple[str, int, dict]:
     # 闭关获取的修为倍率
     exp = (int(
         XiuConfig().closing_exp
-        * level_rate
+        * root_rate
         * realm_rate
         * (1 + main_buff_rate_buff)
         * (1 + main_buff_clo_exp)
