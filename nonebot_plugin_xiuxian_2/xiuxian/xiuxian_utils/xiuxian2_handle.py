@@ -7,6 +7,7 @@ from nonebot.adapters.onebot.v11 import Message
 from .clean_utils import number_to, zips, get_strs_from_str
 from .. import DRIVER
 from ..types import BackItem
+from ..types.skills_info_type import SubBuff, SecBuff, MainBuff
 from ..xiuxian_data.data.境界_data import level_data
 from ..xiuxian_data.data.灵根_data import root_data
 from ..xiuxian_database.database_connect import database
@@ -1489,49 +1490,88 @@ sql_message = XiuxianDateManage()  # sql类
 async def final_user_data(**user_dict):
     """
     传入用户当前信息、buff信息,返回最终信息
-    糟糕的函数
     """
     for key, value in user_dict.items():
         if isinstance(value, decimal.Decimal):
             user_dict[key] = int(value)
     # 通过字段名称获取相应的值
+
+    # 虚神界属性
+    impart_hp_per = 0
+    impart_mp_per = 0
+    impart_atk_per = 0
+    impart_know_per = 0
+    impart_burst_per = 0
     impart_data = await xiuxian_impart.get_user_info_with_id(user_dict['user_id'])
     if not impart_data:
         await xiuxian_impart.impart_create_user(user_dict['user_id'])
         impart_data = await xiuxian_impart.get_user_info_with_id(user_dict['user_id'])
+    if impart_data:
+        impart_hp_per = impart_data['impart_hp_per']
+        impart_mp_per = impart_data['impart_mp_per']
+        impart_atk_per = impart_data['impart_atk_per']
+        impart_know_per = impart_data['impart_know_per']
+        impart_burst_per = impart_data['impart_burst_per']
 
-    impart_hp_per = impart_data['impart_hp_per'] if impart_data is not None else 0
-    impart_mp_per = impart_data['impart_mp_per'] if impart_data is not None else 0
-    impart_atk_per = impart_data['impart_atk_per'] if impart_data is not None else 0
+    user_buff = UserBuffDate(user_dict['user_id'])
+    user_buff_data = await user_buff.buff_info
 
-    user_buff_data = await UserBuffDate(user_dict['user_id']).buff_info
-
+    # 防具属性实现
     armor_atk_buff = 0
+    armor_def_buff = 0
+    armor_crit_buff = 0
     if int(user_buff_data['armor_buff']) != 0:
         armor_info = items.get_data_by_item_id(user_buff_data['armor_buff'])
         armor_atk_buff = armor_info['atk_buff']
+        armor_def_buff = armor_info['def_buff']  # 防具减伤
+        armor_crit_buff = armor_info['crit_buff']
 
+    # 法器属性实现
     weapon_atk_buff = 0
+    weapon_crit_buff = 0
+    weapon_def_buff = 0
+    weapon_burst_buff = 0
     if int(user_buff_data['faqi_buff']) != 0:
         weapon_info = items.get_data_by_item_id(user_buff_data['faqi_buff'])
         weapon_atk_buff = weapon_info['atk_buff']
+        weapon_crit_buff = weapon_info['crit_buff']
+        weapon_burst_buff = weapon_info['critatk']
+        weapon_def_buff = weapon_info['def_buff']  # 武器减伤
 
-    main_buff_data = await UserBuffDate(user_dict['user_id']).get_user_main_buff_data()
-    main_hp_buff = main_buff_data['hpbuff'] if main_buff_data is not None else 0
-    main_mp_buff = main_buff_data['mpbuff'] if main_buff_data is not None else 0
-    main_atk_buff = main_buff_data['atkbuff'] if main_buff_data is not None else 0
+    # 功法属性实现
+    main_hp_buff = 0
+    main_mp_buff = 0
+    main_atk_buff = 0
+    main_def_buff = 0
+    main_crit_buff = 0
+    main_burst_buff = 0
+    main_buff_data = await user_buff.get_user_main_buff_data()
+    if main_buff_data:
+        main_hp_buff = main_buff_data['hpbuff']
+        main_mp_buff = main_buff_data['mpbuff']
+        main_atk_buff = main_buff_data['atkbuff']
+        main_def_buff = main_buff_data['def_buff']  # 功法减伤
+        main_crit_buff = main_buff_data['crit_buff']
+        main_burst_buff = main_buff_data['critatk']
 
+    # 境界血量补正
     hp_rate = level_data[user_dict['level']]["HP"]
 
+    # 最终buff计算
     hp_final_buff = (1 + main_hp_buff + impart_hp_per) * hp_rate
     mp_final_buff = (1 + main_mp_buff + impart_mp_per)
 
-    # 改成字段名称来获取相应的值
+    # 获取面板血量加成
     user_dict['hp_buff'] = hp_final_buff
+    # 战斗中使用血量
     user_dict['fight_hp'] = int(user_dict['hp'] * hp_final_buff)
+    # 战斗中基础最大血量
     user_dict['max_hp'] = int(user_dict['exp'] * hp_final_buff / 2)
+    # 获取面板真元加成
     user_dict['mp_buff'] = mp_final_buff
+    # 战斗中使用真元
     user_dict['fight_mp'] = int(user_dict['mp'] * mp_final_buff)
+    # 战斗中基础最大真元
     user_dict['max_mp'] = int(user_dict['exp'] * mp_final_buff)
 
     user_dict['atk'] = int((user_dict['atk']
@@ -1542,6 +1582,22 @@ async def final_user_data(**user_dict):
                             * (1 + impart_atk_per))  # 传承攻击加成
                            + int(user_buff_data['atk_buff']))  # 攻击丹药加成
 
+    user_dict['crit'] = int((main_crit_buff
+                             + weapon_crit_buff
+                             + armor_crit_buff
+                             + impart_know_per)
+                            * 100)
+
+    user_dict['burst'] = (1.5
+                          + impart_burst_per
+                          + weapon_burst_buff
+                          + main_burst_buff)
+
+    user_dict['define'] = round((1 - armor_def_buff)
+                                * (1 - weapon_def_buff)
+                                * (1 - main_def_buff), 2)
+    user_dict['sub_buff_info'] = await user_buff.get_user_sub_buff_data()
+    user_dict['sec_buff_info'] = await user_buff.get_user_sec_buff_data()
     return user_dict
 
 
@@ -1944,7 +2000,7 @@ class UserBuffDate:
         """获取最新的 Buff 信息"""
         return await get_user_buff(self.user_id)
 
-    async def get_user_main_buff_data(self):
+    async def get_user_main_buff_data(self) -> MainBuff:
         main_buff_data = None
         buff_info = await self.buff_info
         main_buff_id = buff_info.get('main_buff', 0)
@@ -1952,7 +2008,7 @@ class UserBuffDate:
             main_buff_data = items.get_data_by_item_id(main_buff_id)
         return main_buff_data
 
-    async def get_user_sub_buff_data(self):
+    async def get_user_sub_buff_data(self) -> SubBuff:
         sub_buff_data = None
         buff_info = await self.buff_info
         sub_buff_id = buff_info.get('sub_buff', 0)
@@ -1960,7 +2016,7 @@ class UserBuffDate:
             sub_buff_data = items.get_data_by_item_id(sub_buff_id)
         return sub_buff_data
 
-    async def get_user_sec_buff_data(self):
+    async def get_user_sec_buff_data(self) -> SecBuff:
         sec_buff_data = None
         buff_info = await self.buff_info
         sec_buff_id = buff_info.get('sec_buff', 0)
@@ -2075,15 +2131,15 @@ def get_sub_info_msg(item_id):  # 辅修功法8
     if subbuff['buff_type'] == '9':
         submsg = f"提升{subbuff['buff']}%气血吸取,提升{subbuff['buff2']}%真元吸取"
 
-    stone_msg = "提升{}%boss战灵石获取".format(round(subbuff['stone'] * 100, 0)) if subbuff['stone'] != 0 else ''
-    integral_msg = "，提升{}点boss战积分获取".format(round(subbuff['integral'])) if subbuff['integral'] != 0 else ''
-    jin_msg = "禁止对手吸取" if subbuff['jin'] != 0 else ''
-    drop_msg = "，提升boss掉落率" if subbuff['drop'] != 0 else ''
-    fan_msg = "使对手发出的debuff失效" if subbuff['fan'] != 0 else ''
-    break_msg = "获得战斗破甲" if subbuff['break'] != 0 else ''
-    exp_msg = "，增加战斗获得的修为" if subbuff['exp'] != 0 else ''
+    # stone_msg = "提升{}%boss战灵石获取".format(round(subbuff['stone'] * 100, 0)) if subbuff['stone'] != 0 else ''
+    # integral_msg = "，提升{}点boss战积分获取".format(round(subbuff['integral'])) if subbuff['integral'] != 0 else ''
+    # jin_msg = "禁止对手吸取" if subbuff['jin'] != 0 else ''
+    # drop_msg = "，提升boss掉落率" if subbuff['drop'] != 0 else ''
+    # fan_msg = "使对手发出的debuff失效" if subbuff['fan'] != 0 else ''
+    # break_msg = "获得战斗破甲" if subbuff['break'] != 0 else ''
+    # exp_msg = "，增加战斗获得的修为" if subbuff['exp'] != 0 else ''
 
-    msg = f"{subbuff['name']}：{submsg}{stone_msg}{integral_msg}{jin_msg}{drop_msg}{fan_msg}{break_msg}{exp_msg}"
+    msg = f"{subbuff['name']}：{submsg}"
     return subbuff, msg
 
 
