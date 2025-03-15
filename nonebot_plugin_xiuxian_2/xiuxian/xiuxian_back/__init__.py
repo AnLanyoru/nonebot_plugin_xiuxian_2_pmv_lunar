@@ -1,4 +1,3 @@
-import time
 
 from nonebot import on_command
 from nonebot.adapters.onebot.v11 import (
@@ -76,6 +75,10 @@ __back_help__ = f"""
  - 将物品炼化为灵石,支持批量炼金
 6：快速炼金+目标物品品阶
  - 将指定品阶的物品全部炼金  例（快速炼金 先天品级）
+7：保护物品+物品名称
+ - 将指定物品保护，不会被误操作
+8：取消保护物品+物品名称
+ - 将保护的物品取消保护
 ——tips——
 官方群914556251
 """.strip()
