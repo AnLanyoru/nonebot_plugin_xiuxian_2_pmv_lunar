@@ -90,8 +90,11 @@ class UserInfo(TypedDict):
     """宗门职位"""
 
     hp: int
+    """记录生命值（不是战斗中实际生命值）"""
     mp: int
+    """记录真元（不是战斗中实际真元）"""
     atk: int
+    """记录攻击（用处不大）"""
 
     atkpractice: int
     """攻击修炼等级（md加个下划线会死？）"""
@@ -112,6 +115,30 @@ class UserInfo(TypedDict):
     """用户当前地图位置"""
 
 
+class UserFightInfo(UserInfo):
+    hp_buff: float
+    """获取面板血量加成"""
+    fight_hp: int
+    """战斗中使用血量"""
+    max_hp: int
+    """战斗中基础最大血量"""
+    mp_buff: float
+    """获取面板真元加成"""
+    fight_mp: int
+    """战斗中使用真元"""
+    max_mp: int
+    """战斗中基础最大真元"""
+    atk: int
+    """战斗中攻击力"""
+    crit: int
+    """基础暴击率 百分比"""
+    burst: float
+    """基础暴击伤害"""
+    defence: float
+    """基础减伤率 伤害*减伤率"""
+
+
+
 class UserMixElixirInfo(TypedDict):
     user_id: int
     farm_num: int
@@ -130,10 +157,17 @@ class UserMixElixirInfo(TypedDict):
 
 class BaseItem(TypedDict, total=False):
     name: str
-    rank: int
+    """物品名称"""
+    rank: str
+    """物品等级"""
     level: str
+    """物品等级别称，无具体作用"""
     desc: str
+    """物品介绍"""
+    type: str
+    """物品所属大类"""
     item_type: str
+    """物品所属细分类别"""
 
 
 class BackItem(TypedDict):
