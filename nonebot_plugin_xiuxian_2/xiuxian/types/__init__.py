@@ -1,6 +1,8 @@
 from enum import Enum
 from typing import TypedDict
 
+from nonebot_plugin_xiuxian_2.xiuxian.types.skills_info_type import SubBuff, SecBuff
+
 
 class UserStatusType(Enum):
     """用户状态"""
@@ -126,6 +128,8 @@ class UserFightInfo(UserInfo):
     """获取面板真元加成"""
     fight_mp: int
     """战斗中使用真元"""
+    base_mp: int
+    """基础100%真元，用于计算神通消耗"""
     max_mp: int
     """战斗中基础最大真元"""
     atk: int
@@ -136,6 +140,10 @@ class UserFightInfo(UserInfo):
     """基础暴击伤害"""
     defence: float
     """基础减伤率 伤害*减伤率"""
+    sub_buff_info: SubBuff
+    """辅修数据"""
+    sec_buff_info: SecBuff
+    """神通数据"""
 
 
 

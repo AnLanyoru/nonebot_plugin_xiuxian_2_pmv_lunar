@@ -1573,6 +1573,8 @@ async def final_user_data(**user_dict):
     user_dict['fight_mp'] = int(user_dict['mp'] * mp_final_buff)
     # 战斗中基础最大真元
     user_dict['max_mp'] = int(user_dict['exp'] * mp_final_buff)
+    # 用于计算神通消耗的真元基础值
+    user_dict['base_mp'] = int(user_dict['exp'])
 
     user_dict['atk'] = int((user_dict['atk']
                             * (user_dict['atkpractice'] * 0.04 + 1)  # 攻击修炼
