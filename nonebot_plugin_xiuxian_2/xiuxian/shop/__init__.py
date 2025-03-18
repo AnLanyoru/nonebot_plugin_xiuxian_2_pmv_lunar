@@ -12,7 +12,7 @@ from nonebot.params import CommandArg
 from .shop_database import create_goods, fetch_goal_goods_data, fetch_goods_data_by_id, mark_goods, \
     fetch_goods_min_price_type, fetch_self_goods_data, create_goods_many, fetch_self_goods_data_all, \
     fetch_self_goods_data_all_type, fetch_goal_goods_data_many
-from ..types import UserInfo
+from ..types.user_info import UserInfo
 from ..utils.shop_util import back_pick_tool
 from ..xiuxian_back.back_util import get_item_msg
 from ..xiuxian_limit.limit_database import limit_handle
