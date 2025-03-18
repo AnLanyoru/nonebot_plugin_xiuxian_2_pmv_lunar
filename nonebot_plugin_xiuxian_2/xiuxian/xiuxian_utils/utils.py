@@ -23,7 +23,7 @@ from .clean_utils import simple_md
 from .other_set import OtherSet
 from .xiuxian2_handle import sql_message
 from ..database_utils.move_database import read_move_data
-from ..types import UserInfo
+from ..types.user_info import UserInfo
 from ..xiuxian_config import XiuConfig
 from ..xiuxian_data.data.灵根_data import root_data
 from ..xiuxian_place import place
