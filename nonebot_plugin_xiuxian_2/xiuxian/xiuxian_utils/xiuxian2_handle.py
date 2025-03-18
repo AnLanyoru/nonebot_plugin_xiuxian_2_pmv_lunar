@@ -1595,7 +1595,7 @@ async def final_user_data(**user_dict):
                           + weapon_burst_buff
                           + main_burst_buff)
 
-    user_dict['define'] = round((1 - armor_def_buff)
+    user_dict['defence'] = round((1 - armor_def_buff)
                                 * (1 - weapon_def_buff)
                                 * (1 - main_def_buff), 2)
     user_dict['sub_buff_info'] = await user_buff.get_user_sub_buff_data()
