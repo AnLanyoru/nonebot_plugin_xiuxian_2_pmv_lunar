@@ -1,8 +1,9 @@
 import random
 
 from .fight_base import BaseFightMember, Increase
-from .skill_register import register_skills
-from ...types import UserFightInfo
+from .skill_register import register_skills, register_sub
+from .skills_def.buff_def import BUFF_ACHIEVE
+from ...types.user_info import UserFightInfo
 from ...xiuxian_utils.clean_utils import number_to
 
 
@@ -26,17 +27,18 @@ class PlayerFight(BaseFightMember):
         self.armour_break = 0
         self.turn_damage: int = 0
         self.sum_damage: int = 0
+        self.turn_kill = False
         self.main_skill = register_skills(user_fight_info['sec_buff_info'])
-        self.sub_skill = register_skills(user_fight_info['sub_buff_info'])
-        self.buffs = []
+        self.sub_skill = register_sub(user_fight_info['sub_buff_info'])
+        self.buffs = {}
         self.increase = Increase()
 
     @property
     def base_damage(self) -> int:
         damage = self.atk * self.increase.atk
         buff_damage_change = {'add': 0,
-                              'mul': 0}
-        for buff in self.buffs:
+                              'mul': 1}
+        for buff in self.buffs.values():
             buff.damage_change(damage, buff_damage_change)
         damage += buff_damage_change['add']
         damage *= buff_damage_change['mul']
@@ -50,16 +52,16 @@ class PlayerFight(BaseFightMember):
         """
         crit_rate = self.crit + self.increase.crit
         buff_crit_change = {'add': 0,
-                            'mul': 0}
-        for buff in self.buffs:
+                            'mul': 1}
+        for buff in self.buffs.values():
             buff.crit_change(crit_rate, buff_crit_change)
         crit_rate += buff_crit_change['add']
         crit_rate *= buff_crit_change['mul']
 
         burst = self.burst + self.increase.burst
         buff_burst_change = {'add': 0,
-                             'mul': 0}
-        for buff in self.buffs:
+                             'mul': 1}
+        for buff in self.buffs.values():
             buff.burst_change(burst, buff_burst_change)
         burst += buff_burst_change['add']
         burst *= buff_burst_change['mul']
@@ -108,32 +110,54 @@ class PlayerFight(BaseFightMember):
         :param armour_break: 受到的破甲
         :return:
         """
-        defence = self.defence
+        if real_damage is None:
+            real_damage = [0]
+        if normal_damage is None:
+            normal_damage = [0]
+        defence = self.defence + armour_break
         buff_defence_change = {'add': 0,
-                               'mul': 0}
-        for buff in self.buffs:
+                               'mul': 1}
+        for buff in self.buffs.values():
             buff.burst_change(defence, buff_defence_change)
         defence += buff_defence_change['add']
         defence *= buff_defence_change['mul']
         final_normal_damage = [int(normal_damage_per * defence) for normal_damage_per in normal_damage]
-        sum_damage = sum(real_damage) + sum(final_normal_damage)
-        self.hp -= sum_damage
+        sum_real_damage = sum(real_damage)
+        sum_final_normal_damage = sum(final_normal_damage)
+        sum_damage = sum_real_damage + sum(final_normal_damage)
+        self.hp -= sum_damage + sum_final_normal_damage
         attacker.turn_damage += sum_damage
         attacker.sum_damage += sum_damage
         normal_damage_msg = '、'.join([number_to(final_normal_damage_per)
                                       for final_normal_damage_per
-                                      in final_normal_damage]) + '伤害!' if final_normal_damage else ''
+                                      in final_normal_damage]) + '伤害，' if sum_final_normal_damage else ''
         real_damage_msg = '、'.join([number_to(real_damage_per)
                                     for real_damage_per
-                                    in real_damage]) + '真实伤害!' if real_damage else ''
-        if not (normal_damage_msg or real_damage_msg):
+                                    in real_damage]) + '真实伤害，' if sum_real_damage else ''
+        if not (sum_real_damage or sum_final_normal_damage):
             msg = f"未对{self.name}造成伤害！！"
             msg_list.append(msg)
             return
-        msg = f"对{self.name}造成了{normal_damage_msg}{real_damage_msg}，总计{number_to(sum_damage)}伤害"
+        msg = (f"对{self.name}造成了{normal_damage_msg}{real_damage_msg}总计{number_to(sum_damage)}伤害！\r"
+               f"{self.name}余剩气血{number_to(self.hp)}。")
         msg_list.append(msg)
         if self.hp < 1:
             self.status = 0
             msg = f"{self.name}失去战斗能力！"
             msg_list.append(msg)
         return
+
+    def impose_effects(
+            self,
+            enemy: BaseFightMember,
+            buff_id: int,
+            msg_list: list[str],
+            num: int = 1,
+            must_succeed: bool = False,
+            effect_rate_improve: int = 0):
+        buff_achieve = BUFF_ACHIEVE[buff_id]
+        buff_name = buff_achieve.name
+        if buff_name not in enemy.buffs:
+            enemy.buffs[buff_name] = buff_achieve(self)
+        buff_msg = enemy.buffs[buff_name].add_num(num)
+        msg_list.append(f"并为{enemy.name}{buff_msg}")

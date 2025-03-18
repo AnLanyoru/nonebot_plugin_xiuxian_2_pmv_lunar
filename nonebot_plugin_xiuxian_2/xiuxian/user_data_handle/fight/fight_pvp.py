@@ -13,12 +13,13 @@ async def player_fight(user_id_dict: dict[int, int], fight_key: int = 0):
     """
     fight_dict = {}  # 初始化战斗字典
     for user_id, team in user_id_dict.items():
-        user_fight_info = await sql_message.get_user_fight_info(user_id)
+        user_fight_info = await sql_message.get_user_real_info(user_id)
         fight_dict[user_id] = PlayerFight(user_fight_info, team)
-    winner, fight_msg, after_fight_user_info_list = get_fight(fight_dict)
+    winner, fight_msg, after_fight_user_info_list = get_fight(fight_dict, max_turn=30)
     if fight_key:
         for user_id, user_after_fight_info in after_fight_user_info_list.items():
             await sql_message.update_user_info_by_fight_obj(user_id, user_after_fight_info)
+    fight_msg = '\r'.join(fight_msg)
     return winner, fight_msg
 
 
@@ -38,6 +39,7 @@ def get_fight(
     msg_list = []
     winner = None
     for turn in range(1, max_turn + 1):
+        msg_list.append(f"\r⭐第{turn}回合⭐\r")
         for user_id, fight_player in fight_dict.items():
             enemy_list = [user_id for user_id in fight_dict
                           if fight_dict[user_id].team != fight_player.team and fight_dict[user_id].status]

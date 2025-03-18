@@ -15,7 +15,7 @@ def sub_buff_register(skill: SubBuff) -> BaseSub:
 
 def sec_buff_register(skill: SecBuff):
     sec_buff_type = skill['skill_type']
-    if sec_buff_type not in SUB_BUFF_ACHIEVE:
+    if sec_buff_type not in SEC_BUFF_ACHIEVE:
         raise UndefinedError(f"未定义的神通效果类型: {sec_buff_type}, 请在skills_def下完善定义")
     achieve = SEC_BUFF_ACHIEVE[sec_buff_type]
     return achieve(skill)
@@ -26,7 +26,7 @@ REGISTER_TYPE_DEF = {
     "神通": sec_buff_register}
 
 
-def register_skills(skills: SubBuff | SecBuff | list[SubBuff] | list[SecBuff]) -> list[BaseSub | BaseSkill]:
+def register_skills(skills: SecBuff | list[SecBuff]) -> list[BaseSkill]:
     """技能效果注册工具，统一初始化接口"""
     # 分流列表与单个对象
     registry = []
@@ -37,4 +37,20 @@ def register_skills(skills: SubBuff | SecBuff | list[SubBuff] | list[SecBuff]) -
     for skill_per in skills:
         registered_skill = REGISTER_TYPE_DEF[skill_per['item_type']](skill_per)
         registry.append(registered_skill)
+    return registry
+
+
+def register_sub(skills: SubBuff | list[SubBuff]) -> dict[str, BaseSub]:
+    """技能效果注册工具，统一初始化接口"""
+    # 分流列表与单个对象
+    registry = {}
+    if not skills:
+        return registry
+    if isinstance(skills, dict):
+        registered_skill = REGISTER_TYPE_DEF[skills['item_type']](skills)
+        registry[skills['name']] = registered_skill
+        return registry
+    for skill_per in skills:
+        registered_skill = REGISTER_TYPE_DEF[skill_per['item_type']](skill_per)
+        registry[skill_per['name']] = registered_skill
     return registry
