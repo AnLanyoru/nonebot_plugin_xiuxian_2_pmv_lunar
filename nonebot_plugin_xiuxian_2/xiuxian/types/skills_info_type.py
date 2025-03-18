@@ -1,6 +1,4 @@
-from typing import TypedDict
-
-from nonebot_plugin_xiuxian_2.xiuxian.types import BaseItem
+from . import BaseItem
 
 
 class MainBuff(BaseItem):
