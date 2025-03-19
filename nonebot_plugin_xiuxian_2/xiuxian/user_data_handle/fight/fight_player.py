@@ -118,14 +118,14 @@ class PlayerFight(BaseFightMember):
         buff_defence_change = {'add': 0,
                                'mul': 1}
         for buff in self.buffs.values():
-            buff.burst_change(defence, buff_defence_change)
-        defence += buff_defence_change['add']
+            buff.defence_change(defence, buff_defence_change)
+        defence = min(max(defence - buff_defence_change['add'], 0.1), defence)
         defence *= buff_defence_change['mul']
         final_normal_damage = [int(normal_damage_per * defence) for normal_damage_per in normal_damage]
         sum_real_damage = sum(real_damage)
         sum_final_normal_damage = sum(final_normal_damage)
         sum_damage = sum_real_damage + sum(final_normal_damage)
-        self.hp -= sum_damage + sum_final_normal_damage
+        self.hp -= sum_damage
         attacker.turn_damage += sum_damage
         attacker.sum_damage += sum_damage
         normal_damage_msg = '、'.join([number_to(final_normal_damage_per)
