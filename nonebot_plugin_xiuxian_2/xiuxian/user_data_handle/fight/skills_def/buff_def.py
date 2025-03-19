@@ -1,4 +1,32 @@
+from ....types.skills_info_type import BuffIncreaseDict
 from ..fight_base import BaseBuff, BaseFightMember
+
+
+class AtkIncrease(BaseBuff):
+    name = '攻击力提升'
+    least_turn = 0
+    buff_value: float = 0
+
+    def act(self, effect_user, now_enemy, msg_list: list[str]):
+        msg = f"{effect_user.name}的{self.buff_value * 100:.2f}%攻击力提升效果：{self.name}，余剩{self.least_turn}回合"
+        msg_list.append(msg)
+
+    def damage_change(self, damage: float, buff_damage_change: BuffIncreaseDict):
+        buff_damage_change["mul"] *= self.buff_value
+
+
+class DefenceIncrease(BaseBuff):
+    name = '减伤增加'
+    least_turn = 0
+    buff_value: float = 0
+
+    def act(self, effect_user, now_enemy, msg_list: list[str]):
+        msg = f"{effect_user.name}的{self.buff_value * 100:.2f}%减伤增加效果：{self.name}，余剩{self.least_turn}回合"
+        msg_list.append(msg)
+
+    def defence_change(self, defence: float, buff_defence_change: BuffIncreaseDict):
+        buff_defence_change["add"] += self.buff_value
+
 
 
 class ContinueDamage(BaseBuff):
@@ -32,5 +60,7 @@ class Known(BaseBuff):
         pass
 
 
-BUFF_ACHIEVE = {1: ContinueDamage,
+BUFF_ACHIEVE = {1: AtkIncrease,
+                2: DefenceIncrease,
+                3: ContinueDamage,
                 1000: Known}
