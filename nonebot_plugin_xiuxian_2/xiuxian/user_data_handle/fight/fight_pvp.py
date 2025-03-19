@@ -26,7 +26,7 @@ async def player_fight(user_id_dict: dict[int, int], fight_key: int = 0):
 def get_fight(
         pre_fight_dict: dict[int, BaseFightMember],
         max_turn: int = 20) \
-        -> tuple[int, list[str], dict[int, BaseFightMember]]:
+        -> tuple[str, list[str], dict[int, BaseFightMember]]:
     """
     进行战斗
     :param pre_fight_dict: 战斗中对象字典
@@ -39,13 +39,15 @@ def get_fight(
     msg_list = []
     winner = None
     for turn in range(1, max_turn + 1):
+        if winner:
+            break
         msg_list.append(f"\r⭐第{turn}回合⭐\r")
         for user_id, fight_player in fight_dict.items():
             enemy_list = [user_id for user_id in fight_dict
                           if fight_dict[user_id].team != fight_player.team and fight_dict[user_id].status]
             if not enemy_list:
                 msg_list.append(f"{fight_player.name}方胜利！")
-                winner = fight_player.team
+                winner = fight_player.name
                 break
             enemy_id = random.choice(enemy_list)
             enemy = fight_dict[enemy_id]
