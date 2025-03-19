@@ -1,6 +1,7 @@
 import random
 import re
 from datetime import datetime
+from time import time
 
 from nonebot import on_command
 from nonebot.adapters.onebot.v11 import (
@@ -14,6 +15,7 @@ from nonebot.permission import SUPERUSER
 
 from .limit import check_limit, reset_send_stone, reset_stone_exp_up
 from .two_exp_cd import two_exp_cd
+from ..user_data_handle.fight.fight_pvp import player_fight
 from ..world_boss.world_boss_database import get_user_world_boss_info
 from ..xiuxian_config import XiuConfig
 from ..xiuxian_data.data.境界_data import level_data
@@ -29,7 +31,7 @@ from ..xiuxian_tower import tower_handle
 from ..xiuxian_utils.clean_utils import get_datetime_from_str, date_sub, main_md, msg_handler, simple_md, get_args_num
 from ..xiuxian_utils.lay_out import Cooldown
 from ..xiuxian_utils.other_set import OtherSet
-from ..xiuxian_utils.player_fight import player_fight
+from ..xiuxian_utils.player_fight import player_fight as old_pf
 from ..xiuxian_utils.utils import (
     number_to, check_user,
     check_user_type, get_id_from_str
@@ -225,12 +227,14 @@ async def blessed_spot_rename_(bot: Bot, event: GroupMessageEvent):
 @qc.handle(parameterless=[Cooldown(cd_time=20)])
 async def qc_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """切磋，不会掉血"""
+
     args = args.extract_plain_text()
     give_qq = await get_id_from_str(args)  # 使用道号获取用户id，代替原at
 
     user_info = await check_user(event)
 
     user_id = user_info['user_id']
+    start_time = time()
 
     user1 = await sql_message.get_user_real_info(user_id)
     user2 = await sql_message.get_user_real_info(give_qq)
@@ -267,10 +271,18 @@ async def qc_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
                    'exp': user2['exp']
                    }
 
-        result, victor = await player_fight(player1, player2, 1, bot.self_id)
+        result, victor = await old_pf(player1, player2, 1, bot.self_id)
         text = msg_handler(result)
-        msg = f"获胜的是{victor}"
+        msg = f"旧战斗获胜的是{victor}"
         msg = main_md(msg, text, '切磋其他人', '切磋', '修炼', '修炼', '闭关', '闭关', '修仙帮助', '修仙帮助')
+        await bot.send(event=event, message=msg)
+
+        user_id_dict = {user_id: 1, give_qq: 2}
+        victor, fight_msg = await player_fight(user_id_dict)
+        end_time = time()
+        ping_ms = end_time - start_time
+        msg = f"新战斗，获胜的是{victor}，耗时{ping_ms * 1000} ms"
+        msg = main_md(msg, fight_msg, '切磋其他人', '切磋', '修炼', '修炼', '闭关', '闭关', '修仙帮助', '修仙帮助')
         await bot.send(event=event, message=msg)
         await qc.finish()
     else:
