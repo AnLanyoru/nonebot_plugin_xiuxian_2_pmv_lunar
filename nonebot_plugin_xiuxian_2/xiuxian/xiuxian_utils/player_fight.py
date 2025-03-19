@@ -1277,7 +1277,7 @@ async def get_turnatk(
     is_crit = False
     turnatk = int(round(random.uniform(0.95, 1.05), 2)
                   * player['攻击']
-                  * (buff + 1)
+                  * (buff + 1 - is_continue_skill)
                   * (sub_atk + 1)
                   * (1 - boss_buff.boss_jg)
                   * (1 + zwsh))  # 攻击波动,buff是攻击buff
