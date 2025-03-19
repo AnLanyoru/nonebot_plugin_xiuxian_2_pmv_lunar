@@ -1,3 +1,5 @@
+from typing import TypedDict
+
 from . import BaseItem
 
 
@@ -91,6 +93,7 @@ class SecBuff(BaseItem):
     1 直接伤害类型
     2 持续伤害类型
     3 buff类型
+    4 封印类型
     """
     atkvalue: list[float] | float
     """
@@ -98,6 +101,7 @@ class SecBuff(BaseItem):
     1 直接伤害类型 atkvalue 为列表
     2 持续伤害类型 atkvalue 为float类型
     3 buff类型时无本项
+    4 封印类型时无本项
     """
     bufftype: int
     """
@@ -119,6 +123,16 @@ class SecBuff(BaseItem):
     1 直接伤害时为休息回合
     2 持续伤害时为持续回合
     3 buff类型时为持续回合
+    4 封印类型时为封印回合
     """
     rate: int
     """释放概率"""
+    success: int
+    """命中成功率，仅封印类技能有此项"""
+
+
+class BuffIncreaseDict(TypedDict):
+    mul: float
+    """乘区倍率"""
+    add: float
+    """加区倍率"""
