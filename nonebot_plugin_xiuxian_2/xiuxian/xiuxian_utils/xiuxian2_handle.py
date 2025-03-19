@@ -103,7 +103,7 @@ class XiuxianDateManage:
       "sect_id" bigserial,
       "sect_name" TEXT NOT NULL,
       "sect_owner" bigint,
-      "sect_scale" numeric NOT NULL,
+      "sect_scale" numeric DEFAULT 0,
       "sect_used_stone" numeric DEFAULT 0,
       "sect_fairyland" json,
       "sect_materials" numeric DEFAULT 0,
