@@ -2,6 +2,7 @@ import random
 
 from .buff_def import BUFF_ACHIEVE
 from ..fight_base import BaseFightMember, BaseSkill
+from ....types.error import UndefinedError
 from ....types.skills_info_type import SecBuff
 from ....xiuxian_utils.clean_utils import number_to
 from ....xiuxian_utils.item_json import items
@@ -11,12 +12,8 @@ class DirectDamageSkill(BaseSkill):
     """直接伤害"""
 
     def __init__(self, sec_buff_info: SecBuff):
-        self.name = sec_buff_info['name']
+        super().__init__(sec_buff_info)
         self.atk_value: list[float] = sec_buff_info['atkvalue']
-        self.desc = sec_buff_info['desc']
-        self.cost_hp = sec_buff_info['hpcost']
-        self.cost_mp = sec_buff_info['mpcost']
-        self.use_rate = sec_buff_info['rate']
         self.rest_turn = sec_buff_info['turncost']
 
     def achieve(self,
@@ -35,12 +32,8 @@ class ContinueDamageSkill(BaseSkill):
     """
 
     def __init__(self, sec_buff_info: SecBuff):
-        self.name = sec_buff_info['name']
+        super().__init__(sec_buff_info)
         self.atk_value: float = sec_buff_info['atkvalue']
-        self.desc = sec_buff_info['desc']
-        self.cost_hp = sec_buff_info['hpcost']
-        self.cost_mp = sec_buff_info['mpcost']
-        self.use_rate = sec_buff_info['rate']
         self.continue_turn = sec_buff_info['turncost']
 
     @staticmethod
@@ -56,7 +49,7 @@ class ContinueDamageSkill(BaseSkill):
                 base_damage: int,
                 msg_list: list[str]):
         """行动实现"""
-        buff_obj = BUFF_ACHIEVE[1](user)
+        buff_obj = BUFF_ACHIEVE[3](user)
         buff_obj.name = self.name
         buff_obj.continue_damage = int(base_damage * self.atk_value)
         target_member.hurt(user, msg_list, normal_damage=[buff_obj.continue_damage], armour_break=0.2)
@@ -70,30 +63,90 @@ class ContinueDamageSkill(BaseSkill):
     def use_check(self, user, target_member, msg_list: list[str]) -> tuple[str, bool]:
         if self.name in target_member.buffs:
             return '', False
-        if random.randint(0, 100) > self.use_rate:  # 随机概率释放技能
+        return super().use_check(user, target_member, msg_list)
+
+
+class MakeBuffSkill(BaseSkill):
+    """
+    给自己上buff
+    """
+
+    def __init__(self, sec_buff_info: SecBuff):
+        super().__init__(sec_buff_info)
+        self.buff_type = sec_buff_info['bufftype']
+        self.buff_value: float = sec_buff_info['buffvalue']
+        self.continue_turn = sec_buff_info['turncost'] + 1
+
+    @staticmethod
+    def act_base_damage(user) -> tuple[int, str]:
+        """不检定暴击效果"""
+        return 0, ''
+
+    def achieve(self,
+                user: BaseFightMember,
+                target_member: BaseFightMember,
+                base_damage: int,
+                msg_list: list[str]):
+        """行动实现"""
+        if self.buff_type not in [1, 2]:
+            raise UndefinedError(f"未定义的神通buff类型: <buff_type {self.buff_type}>")
+        buff_obj = BUFF_ACHIEVE[self.buff_type](user)
+        buff_msg = f"{self.buff_value * 100:.2f}%{buff_obj.name}"
+        buff_obj.name = self.name
+        buff_obj.buff_value = self.buff_value
+        buff_obj.least_turn = self.continue_turn
+        user.buffs[buff_obj.name] = buff_obj
+        msg_list.append(f"{user.name}获得了{buff_msg},"
+                        f"持续{buff_obj.least_turn}回合")
+        self.normal_attack(user, target_member, msg_list)
+
+    def use_check(self, user, target_member, msg_list: list[str]) -> tuple[str, bool]:
+        if self.name in user.buffs:
             return '', False
-        mp_cost_num = user.base_mp * self.cost_mp
-        if mp_cost_num > user.mp:
+        return super().use_check(user, target_member, msg_list)
+
+
+class SealSkill(BaseSkill):
+    """
+    持续伤害
+    """
+
+    def __init__(self, sec_buff_info: SecBuff):
+        super().__init__(sec_buff_info)
+        self.success_rate = sec_buff_info['success']
+        self.seal_turn = sec_buff_info['turncost']
+
+    @staticmethod
+    def act_base_damage(user) -> tuple[int, str]:
+        """不检定暴击效果"""
+        return 0, ''
+
+    def achieve(self,
+                user: BaseFightMember,
+                target_member: BaseFightMember,
+                base_damage: int,
+                msg_list: list[str]):
+        """行动实现"""
+        if random.randint(0, 100) > self.success_rate:  # 随机概率释放技能
+            msg = f"将{target_member.name}四周空间封禁，但被其身法躲避"
+        else:
+            msg = f"将{target_member.name}四周空间封禁，将其禁锢在原地{self.seal_turn}回合无法动弹！"
+            target_member.rest_turn += self.seal_turn
+        msg_list.append(msg)
+        self.normal_attack(user, target_member, msg_list)
+
+    def use_check(self, user, target_member: BaseFightMember, msg_list: list[str]) -> tuple[str, bool]:
+        if target_member.rest_turn:
             return '', False
-        hp_cost_num = self.cost_hp * user.hp
-        user.hp -= hp_cost_num
-        user.mp -= mp_cost_num
-        hp_cost_msg = f"气血{number_to(hp_cost_num)}点，" if hp_cost_num else ''
-        mp_cost_msg = f"真元{number_to(mp_cost_num)}点，" if mp_cost_num else ''
-        cost_msg = f'消耗{hp_cost_msg}{mp_cost_msg}' if hp_cost_msg or mp_cost_msg else ''
-        return cost_msg, True
+        return super().use_check(user, target_member, msg_list)
 
 
 class OnceDirectDamageSkill(BaseSkill):
     """仅释放一次的直接伤害"""
 
     def __init__(self, sec_buff_info: SecBuff):
-        self.name = sec_buff_info['name']
+        super().__init__(sec_buff_info)
         self.atk_value: list[float] = sec_buff_info['atkvalue']
-        self.desc = sec_buff_info['desc']
-        self.cost_hp = sec_buff_info['hpcost']
-        self.cost_mp = sec_buff_info['mpcost']
-        self.use_rate = sec_buff_info['rate']
         self.rest_turn = sec_buff_info['turncost']
         self.last_use_num = 2
 
@@ -126,12 +179,8 @@ class DirectDamageSkillSendBuff(BaseSkill):
     """为敌方附加特殊效果的直接伤害"""
 
     def __init__(self, sec_buff_info: SecBuff):
-        self.name = sec_buff_info['name']
+        super().__init__(sec_buff_info)
         self.atk_value: list[float] = sec_buff_info['atkvalue']
-        self.desc = sec_buff_info['desc']
-        self.cost_hp = sec_buff_info['hpcost']
-        self.cost_mp = sec_buff_info['mpcost']
-        self.use_rate = sec_buff_info['rate']
         self.rest_turn = sec_buff_info['turncost']
 
     def achieve(self,
@@ -150,5 +199,7 @@ class DirectDamageSkillSendBuff(BaseSkill):
 
 SEC_BUFF_ACHIEVE = {1: DirectDamageSkill,
                     2: ContinueDamageSkill,
+                    3: MakeBuffSkill,
+                    4: SealSkill,
                     10: DirectDamageSkillSendBuff,
                     11: OnceDirectDamageSkill}
