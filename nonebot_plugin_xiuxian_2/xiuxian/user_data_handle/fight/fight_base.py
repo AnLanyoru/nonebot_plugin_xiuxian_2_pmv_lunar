@@ -338,6 +338,8 @@ class BaseFightMember:
                 del self.sub_skill[sub_name]
         # 重置回合伤害
         self.turn_damage = 0
+        if self.rest_turn:
+            self.rest_turn -= 1
 
     @abstractmethod
     def hurt(
