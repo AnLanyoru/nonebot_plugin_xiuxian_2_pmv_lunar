@@ -30,6 +30,8 @@ def register_skills(skills: SecBuff | list[SecBuff]) -> list[BaseSkill]:
     """技能效果注册工具，统一初始化接口"""
     # 分流列表与单个对象
     registry = []
+    if not skills:
+        return registry
     if isinstance(skills, dict):
         registered_skill = REGISTER_TYPE_DEF[skills['item_type']](skills)
         registry.append(registered_skill)
