@@ -1,6 +1,7 @@
 import random
 from abc import abstractmethod
 
+from ...types.skills_info_type import BuffIncreaseDict, SecBuff
 from ...xiuxian_utils.clean_utils import number_to
 
 
@@ -18,6 +19,13 @@ class BaseSkill:
     """消耗真元 基础值 不足时无法释放"""
     rest_turn: int = 0
     """释放神通后休息回合，-1为永久休息"""
+
+    def __init__(self, sec_buff_info: SecBuff):
+        self.name = sec_buff_info['name']
+        self.desc = sec_buff_info['desc']
+        self.cost_hp = sec_buff_info['hpcost']
+        self.cost_mp = sec_buff_info['mpcost']
+        self.use_rate = sec_buff_info['rate']
 
     def act(self,
             user,
@@ -122,7 +130,7 @@ class NormalAttack(BaseSkill):
         pass
 
 
-empty_skill = NormalAttack()
+empty_skill = NormalAttack
 
 
 class BaseSub:
@@ -176,7 +184,7 @@ class BaseBuff:
         ...
 
     @staticmethod
-    def damage_change(damage: int, buff_damage_change: dict) -> None:
+    def damage_change(damage: int, buff_damage_change: BuffIncreaseDict) -> None:
         """
         实现该方法可以增加或翻倍伤害
         :param damage: 原始伤害
@@ -185,7 +193,7 @@ class BaseBuff:
         ...
 
     @staticmethod
-    def crit_change(crit_rate, buff_crit_change):
+    def crit_change(crit_rate: int, buff_crit_change: BuffIncreaseDict):
         """
         实现该方法可以增加或翻倍暴击率
         :param crit_rate: 原始暴击率
@@ -194,11 +202,20 @@ class BaseBuff:
         ...
 
     @staticmethod
-    def burst_change(burst, buff_burst_change):
+    def burst_change(burst: float, buff_burst_change: BuffIncreaseDict):
         """
         实现该方法可以增加或翻倍暴击伤害
         :param burst: 原始暴击伤害
         :param buff_burst_change: {'add': '为暴击伤害增加一定数值', 'mul': '为暴击伤害翻倍一定数值'}
+        """
+        ...
+
+    @staticmethod
+    def defence_change(defence: float, buff_burst_change: BuffIncreaseDict):
+        """
+        实现该方法可以增加或翻倍减伤
+        :param defence: 原始减伤
+        :param buff_burst_change: {'add': '增加一定数值', 'mul': '翻倍一定数值'}
         """
         ...
 
@@ -281,8 +298,6 @@ class BaseFightMember:
             msg_list.append(msg)
         else:
             msg_list.append(f"☆ -- {self.name}的回合 -- ☆")
-        # 重置回合伤害
-        self.turn_damage = 0
         # buff生效
 
         del_buff_list: list[str] = []
@@ -321,6 +336,8 @@ class BaseFightMember:
         if del_sub_list:
             for sub_name in del_sub_list:
                 del self.sub_skill[sub_name]
+        # 重置回合伤害
+        self.turn_damage = 0
 
     @abstractmethod
     def hurt(
