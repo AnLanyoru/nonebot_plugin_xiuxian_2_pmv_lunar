@@ -71,6 +71,7 @@ markdown有了可喜可贺
 """.strip()
 
 __level_help_root__ = f"""\r
+
 --灵根帮助--
 轮回
 异界——极道——混沌
@@ -78,6 +79,7 @@ __level_help_root__ = f"""\r
 天——异——真——伪
 """.strip()
 __level_help_level__ = f"""\r
+
 --境界列表--
 无极仙尊六境—混沌仙帝六境
 无上仙君六境—罗天上仙六境
@@ -89,9 +91,10 @@ __level_help_level__ = f"""\r
 悟道三境—天人四境—踏虚三境
 通玄九重—归元九重—聚元九重
 凝气九重—引气三境—感气三境
-炼体九重—求道启程—踏入仙途
+炼体九重—求道启程—我要修仙
 """.strip()
 __level_help_skill__ = f"""\r
+
 --功法品阶--
 永恒——起源——至圣——圣人
 神级——天尊——界主——神变
@@ -102,7 +105,7 @@ __level_help_skill__ = f"""\r
 王道——神器——圣器——仙器
 灵器——玄器——宝器——符器
 --奇物品阶--
-终焉——源初
+太极——太素
 太始——太初——太易——太阳
 太阴——紫薇——离火——灵胚
 灵纹——血淬——精练——凡铁
@@ -371,6 +374,7 @@ async def level_up_(bot: Bot, event: GroupMessageEvent):
                   '修仙帮助', '修仙帮助')
     await bot.send(event=event, message=msg)
     await level_up.finish()
+
 
 @level_up_zj.handle(parameterless=[Cooldown(stamina_cost=0)])
 async def level_up_zj_(bot: Bot, event: GroupMessageEvent):
