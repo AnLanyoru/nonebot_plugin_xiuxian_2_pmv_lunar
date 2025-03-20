@@ -73,11 +73,14 @@ class BaseSkill:
         :return: 无
         """
         base_damage = user.base_damage
+        normal_attack_value = [1]
+        for buff in user.buffs.values():
+            buff.skill_value_change(normal_attack_value)
         base_damage, is_crit = user.check_crit(base_damage)
+        base_damage = [int(base_damage * atk_value_per) for atk_value_per in normal_attack_value]
         crit_msg = ''
         if is_crit:
             crit_msg = "并发生了会心一击！"
-        base_damage = [base_damage]
         msg = f"{user.name}发起攻击{crit_msg}"
         msg_list.append(msg)
         user.attack(enemy=target_member, normal_damage=base_damage, msg_list=msg_list)
@@ -216,6 +219,14 @@ class BaseBuff:
         实现该方法可以增加或翻倍减伤
         :param defence: 原始减伤
         :param buff_burst_change: {'add': '增加一定数值', 'mul': '翻倍一定数值'}
+        """
+        ...
+
+    @staticmethod
+    def skill_value_change(value: list[float]):
+        """
+        实现该方法可以增加或翻倍减伤
+        :param value: 原始数值
         """
         ...
 

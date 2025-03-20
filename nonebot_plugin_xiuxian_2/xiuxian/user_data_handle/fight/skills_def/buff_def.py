@@ -3,16 +3,16 @@ from ..fight_base import BaseBuff, BaseFightMember
 
 
 class AtkIncrease(BaseBuff):
-    name = '攻击力提升'
+    name = '攻击伤害附加'
     least_turn = 0
     buff_value: float = 0
 
     def act(self, effect_user, now_enemy, msg_list: list[str]):
-        msg = f"{effect_user.name}的{self.buff_value * 100:.2f}%攻击力提升效果：{self.name}，余剩{self.least_turn}回合"
+        msg = f"{effect_user.name}的{self.buff_value:.2f}倍攻击伤害附加效果：{self.name}，余剩{self.least_turn}回合"
         msg_list.append(msg)
 
-    def damage_change(self, damage: float, buff_damage_change: BuffIncreaseDict):
-        buff_damage_change["mul"] *= self.buff_value
+    def skill_value_change(self, attack_value: list[float]):
+        attack_value.append(self.buff_value)
 
 
 class DefenceIncrease(BaseBuff):

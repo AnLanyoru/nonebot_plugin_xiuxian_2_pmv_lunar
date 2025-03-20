@@ -22,7 +22,10 @@ class DirectDamageSkill(BaseSkill):
                 base_damage: int,
                 msg_list: list[str]):
         """行动实现"""
-        normal_damages = [int(base_damage * atk_value_per) for atk_value_per in self.atk_value]
+        temp_atk_value = self.atk_value.copy()
+        for buff in user.buffs.values():
+            buff.skill_value_change(temp_atk_value)
+        normal_damages = [int(base_damage * atk_value_per) for atk_value_per in temp_atk_value]
         user.attack(enemy=target_member, normal_damage=normal_damages, msg_list=msg_list)
 
 
@@ -91,7 +94,10 @@ class MakeBuffSkill(BaseSkill):
         if self.buff_type not in [1, 2]:
             raise UndefinedError(f"未定义的神通buff类型: <buff_type {self.buff_type}>")
         buff_obj = BUFF_ACHIEVE[self.buff_type](user)
-        buff_msg = f"{self.buff_value * 100:.2f}%{buff_obj.name}"
+        if self.buff_type == 1:
+            buff_msg = f"{self.buff_value:.2f}倍{buff_obj.name}"
+        else:
+            buff_msg = f"{self.buff_value * 100:.2f}%{buff_obj.name}"
         buff_obj.name = self.name
         buff_obj.buff_value = self.buff_value
         buff_obj.least_turn = self.continue_turn
@@ -157,6 +163,8 @@ class OnceDirectDamageSkill(BaseSkill):
                 msg_list: list[str]):
         """行动实现"""
         temp_atk_value = self.atk_value.copy()
+        for buff in user.buffs.values():
+            buff.skill_value_change(temp_atk_value)
         if "解读" in target_member.buffs:
             buff_num = target_member.buffs['解读'].num
             msg_list.append(f"{target_member.name}的解读达到{buff_num}层，"
@@ -189,7 +197,10 @@ class DirectDamageSkillSendBuff(BaseSkill):
                 base_damage: int,
                 msg_list: list[str]):
         """行动实现"""
-        normal_damages = [int(base_damage * atk_value_per) for atk_value_per in self.atk_value]
+        temp_atk_value = self.atk_value.copy()
+        for buff in user.buffs.values():
+            buff.skill_value_change(temp_atk_value)
+        normal_damages = [int(base_damage * atk_value_per) for atk_value_per in temp_atk_value]
         user.impose_effects(enemy=target_member, buff_id=1000, num=2, msg_list=msg_list)
         user.attack(enemy=target_member, normal_damage=normal_damages, msg_list=msg_list)
         if target_member.buffs['解读'].num == 42:
