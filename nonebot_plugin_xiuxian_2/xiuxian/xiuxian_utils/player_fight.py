@@ -680,7 +680,7 @@ async def boss_fight(player1: dict, boss: dict, type_in=2):
         elif 76 <= boss_st2 <= 100:
             boss_buff.boss_xl = random.randint(10, 50) / 100  # boss禁血
 
-    if convert_rank('登仙境初期')[0] > boss_rank > convert_rank('虚劫境后期')[0]:  # 羽化境
+    if convert_rank('登仙境·叩天门')[0] > boss_rank > convert_rank('虚劫境后期')[0]:  # 羽化境
         boss["减伤"] = random.randint(30, 35) / 100  # boss减伤率
         boss_st1 = random.randint(0, 100)  # boss神通1
         if 0 <= boss_st1 <= 25:
@@ -702,7 +702,7 @@ async def boss_fight(player1: dict, boss: dict, type_in=2):
         elif 76 <= boss_st2 <= 100:
             boss_buff.boss_xl = random.randint(30, 100) / 100  # boss禁血
 
-    if convert_rank('凡仙境初期')[0] > boss_rank > convert_rank('羽化境后期')[0]:  # 登仙境
+    if convert_rank('真仙境·半步')[0] > boss_rank > convert_rank('羽化境后期')[0]:  # 登仙境
         boss["减伤"] = random.randint(20, 25) / 100  # boss减伤率
         boss_st1 = random.randint(0, 100)  # boss神通1
         if 0 <= boss_st1 <= 25:
@@ -724,7 +724,7 @@ async def boss_fight(player1: dict, boss: dict, type_in=2):
         elif 76 <= boss_st2 <= 100:
             boss_buff.boss_xl = random.randint(40, 100) / 100  # boss禁血
 
-    if convert_rank('地仙境初期')[0] > boss_rank > convert_rank('登仙境后期')[0]:  # 凡仙境
+    if convert_rank('玄仙境·半步')[0] > boss_rank > convert_rank('登仙境·九劫')[0]:  # 凡仙境
         boss["减伤"] = random.randint(10, 15) / 100  # boss减伤率
         boss_st1 = random.randint(0, 100)  # boss神通1
         if 0 <= boss_st1 <= 25:
@@ -746,7 +746,7 @@ async def boss_fight(player1: dict, boss: dict, type_in=2):
         elif 76 <= boss_st2 <= 100:
             boss_buff.boss_xl = random.randint(50, 100) / 100  # boss禁血
 
-    if convert_rank('玄仙境初期')[0] > boss_rank > convert_rank('凡仙境后期')[0]:  # 地仙境
+    if convert_rank('金仙境·半步')[0] > boss_rank > convert_rank('真仙境·大圆满')[0]:  # 地仙境
         boss["减伤"] = 0.1  # boss减伤率
         boss_st1 = random.randint(0, 100)  # boss神通1
         if 0 <= boss_st1 <= 25:
@@ -768,7 +768,7 @@ async def boss_fight(player1: dict, boss: dict, type_in=2):
         elif 76 <= boss_st2 <= 100:
             boss_buff.boss_xl = random.randint(60, 100) / 100  # boss禁血
         # 金仙境boss设置
-    if convert_rank('金仙境初期')[0] > boss_rank > convert_rank('地仙境后期')[0]:  # 玄仙境
+    if convert_rank('太乙金仙·半步')[0] > boss_rank > convert_rank('玄仙境·大圆满')[0]:  # 玄仙境
         boss["减伤"] = 0.05  # boss减伤率
         boss_st1 = random.randint(0, 100)  # boss神通1
         if 0 <= boss_st1 <= 25:
@@ -789,7 +789,7 @@ async def boss_fight(player1: dict, boss: dict, type_in=2):
             boss_buff.boss_jb = 0.99  # boss降暴
         elif 76 <= boss_st2 <= 100:
             boss_buff.boss_xl = random.randint(80, 99) / 100  # boss禁血
-    if convert_rank('圣王境初期')[0] >= boss_rank > convert_rank('玄仙境后期')[0]:  # 金仙境 无上位境界，用0代替
+    if convert_rank('大罗金仙·半步')[0] >= boss_rank > convert_rank('金仙境·大圆满')[0]:  # 金仙境 无上位境界，用0代替
         boss["减伤"] = 0.03  # boss减伤率
         boss_st1 = random.randint(0, 100)  # boss神通1
         if 0 <= boss_st1 <= 25:
