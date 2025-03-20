@@ -23,6 +23,12 @@ class Items:
         self.ITEM_JSON_PATH = {
             "防具": WEAPON_PATH / "防具.json",
             "法器": WEAPON_PATH / "法器.json",
+            "本命法宝": WEAPON_PATH / "本命法宝.json",
+            "辅助法宝": WEAPON_PATH / "辅助法宝.json",
+            "内甲": WEAPON_PATH / "内甲.json",
+            "道袍": WEAPON_PATH / "道袍.json",
+            "道靴": WEAPON_PATH / "道靴.json",
+            "灵戒": WEAPON_PATH / "灵戒.json",
             "功法": SKILL_PATH / "主功法.json",
             "辅修功法": SKILL_PATH / "辅修功法.json",
             "神通": SKILL_PATH / "神通.json",
