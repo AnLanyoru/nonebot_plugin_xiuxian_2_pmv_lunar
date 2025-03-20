@@ -94,3 +94,51 @@ class BackItem(TypedDict):
     all_num: int
     action_time: str
     state: int
+
+
+class BuffInfo(TypedDict):
+    """用户buff信息"""
+    id: int
+    """唯一主键"""
+    user_id: int
+    """用户id"""
+    main_buff: int
+    """主功法"""
+    sec_buff: int
+    """神通"""
+    faqi_buff: int
+    """法器"""
+    armor_buff: int
+    """防具"""
+    fabao_weapon: int
+    """法宝（未实装）"""
+    sub_buff: int
+    """辅修功法"""
+    atk_buff: int
+    """攻击提升（丹药提升，已删除）"""
+    blessed_spot: int
+    """聚灵旗提升修炼速度"""
+    elixir_buff: dict
+    """丹药效果"""
+    blessed_spot_name: str
+    """聚灵旗名称"""
+    learned_main_buff: str
+    """学习的主功法"""
+    learned_sub_buff: str
+    """学习的辅修功法"""
+    learned_sec_buff: str
+    """学习的神通"""
+    prepare_elixir_set: str
+    """预备丹方"""
+    lifebound_treasure: int
+    """本命法宝"""
+    support_artifact: int
+    """辅助法宝"""
+    inner_armor: int
+    """内甲"""
+    daoist_robe: int
+    """道袍"""
+    daoist_boots: int
+    """道靴"""
+    spirit_ring: int
+    """灵戒"""
