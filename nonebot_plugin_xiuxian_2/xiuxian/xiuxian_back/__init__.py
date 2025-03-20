@@ -1,4 +1,3 @@
-
 from nonebot import on_command
 from nonebot.adapters.onebot.v11 import (
     Bot,
@@ -620,16 +619,11 @@ async def use_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg())
 
                 power = await limit_handle.get_user_world_power_data(user_id)
                 if int(skill_info['rank']) > 120:
-                    if power >= 2048:
-                        power -= 2048
-                        use_power = f"\r消耗天地精华2048点，余剩{power}点！！"
-                        await limit_handle.update_user_world_power_data(user_id, power)
-                        await sql_message.update_back_j(user_id, goods_id, use_key=2)
-                        await sql_message.updata_user_sec_buff(user_id, goods_id)
-                        msg = f"恭喜道友学会神通：{skill_info['name']}！" + use_power
-                        pass
-                    else:
-                        msg = f"需要拥有天地精华2048点，才可练就神通：{skill_info['name']}！"
+                    use_power = f"\r消耗天地精华2048点，余剩{power}点！！"
+                    await limit_handle.update_user_world_power_data(user_id, power)
+                    await sql_message.update_back_j(user_id, goods_id, use_key=2)
+                    await sql_message.updata_user_sec_buff(user_id, goods_id)
+                    msg = f"恭喜道友学会神通：{skill_info['name']}！" + use_power
                 else:
                     await sql_message.update_back_j(user_id, goods_id, use_key=2)
                     await sql_message.updata_user_sec_buff(user_id, goods_id)
