@@ -329,6 +329,7 @@ class XiuxianDateManage:
             if not result:
                 await self._create_user(user_id, args[0], args[1], args[2], args[3],
                                         args[4])  # root, type, power, create_time, user_name
+                await sql_message.initialize_user_buff_info(user_id)
 
                 welcome_msg = f"必死之境机逢仙缘，修仙之路波澜壮阔！\r恭喜{args[4]}踏入仙途，你的灵根为：{args[0]},类型是：{args[1]},你的战力为：{args[2]}\r当前境界：求道者，所处位置：{place_name}"
                 return True, welcome_msg
@@ -1370,6 +1371,26 @@ class XiuxianDateManage:
                 update_data.append((item_num, now_time, bind_decrease, user_id, item_id))
             await db.executemany(sql, update_data)
 
+    async def mark_item_state(self, user_id: int, item_id: int, mark_type: int):
+        """
+        标记物品装备状态
+        :param user_id: 用户id
+        :param item_id: 物品id
+        :param mark_type: 标记模式 1标记为使用中 0标记为为使用
+        """
+        now_time = datetime.now()
+        if mark_type:
+            sql = (f"update back "
+                   f"set update_time='{now_time}',action_time='{now_time}',state=1 "
+                   f"where user_id=$1 and goods_id=$2")
+        else:
+            sql = (f"update back "
+                   f"set update_time='{now_time}',action_time='{now_time}',state=0 "
+                   f"where user_id=$1 and goods_id=$2")
+        async with self.pool.acquire() as db:
+            await db.execute(sql, user_id, item_id)
+
+
     async def get_all_owner_user_id(self, item_id):
         """获取全部拥有某物品的用户id"""
         sql = "SELECT user_id FROM back where goods_id=$1"
@@ -1514,14 +1535,14 @@ async def final_user_data(**user_dict):
         impart_burst_per = impart_data['impart_burst_per']
 
     user_buff = UserBuffDate(user_dict['user_id'])
-    user_buff_data = await user_buff.buff_info
+    user_buff_data_old = await user_buff.buff_info
 
     # 防具属性实现
     armor_atk_buff = 0
     armor_def_buff = 0
     armor_crit_buff = 0
-    if int(user_buff_data['armor_buff']) != 0:
-        armor_info = items.get_data_by_item_id(user_buff_data['armor_buff'])
+    if int(user_buff_data_old['armor_buff']) != 0:
+        armor_info = items.get_data_by_item_id(user_buff_data_old['armor_buff'])
         armor_atk_buff = armor_info['atk_buff']
         armor_def_buff = armor_info['def_buff']  # 防具减伤
         armor_crit_buff = armor_info['crit_buff']
@@ -1531,8 +1552,8 @@ async def final_user_data(**user_dict):
     weapon_crit_buff = 0
     weapon_def_buff = 0
     weapon_burst_buff = 0
-    if int(user_buff_data['faqi_buff']) != 0:
-        weapon_info = items.get_data_by_item_id(user_buff_data['faqi_buff'])
+    if int(user_buff_data_old['faqi_buff']) != 0:
+        weapon_info = items.get_data_by_item_id(user_buff_data_old['faqi_buff'])
         weapon_atk_buff = weapon_info['atk_buff']
         weapon_crit_buff = weapon_info['crit_buff']
         weapon_burst_buff = weapon_info['critatk']
@@ -1582,7 +1603,7 @@ async def final_user_data(**user_dict):
                             * (1 + weapon_atk_buff)  # 武器攻击加成
                             * (1 + armor_atk_buff)  # 防具攻击加成
                             * (1 + impart_atk_per))  # 传承攻击加成
-                           + int(user_buff_data['atk_buff']))  # 攻击丹药加成
+                           + int(user_buff_data_old['atk_buff']))  # 攻击丹药加成
 
     user_dict['crit'] = int((main_crit_buff
                              + weapon_crit_buff
