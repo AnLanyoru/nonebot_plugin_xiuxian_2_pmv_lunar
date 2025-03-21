@@ -142,3 +142,31 @@ class BuffInfo(TypedDict):
     """道靴"""
     spirit_ring: int
     """灵戒"""
+
+
+class NewEquipmentBuffs(TypedDict):
+    # 面板加成
+    atk: float
+    """攻击力加成"""
+    hp: float
+    """生命值加成"""
+    crit: float
+    """暴击率增加"""
+
+    # 战斗加成
+    miss_rate: int
+    """空间穿梭（闪避率）"""
+    decrease_miss_rate: int
+    """空间封锁（减少对方闪避率）"""
+    decrease_crit: int
+    """减少对方暴击率"""
+    soul_damage_add: float
+    """灵魂伤害（真实伤害）"""
+    decrease_soul_damage: float
+    """灵魂抵抗（减少对方真实伤害）"""
+    shield: float
+    """开局护盾"""
+    back_damage: float
+    """反伤"""
+    ice_mark: float
+    """叠标记加敌方受到伤害"""

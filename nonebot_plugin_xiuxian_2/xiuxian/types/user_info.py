@@ -96,3 +96,21 @@ class UserFightInfo(UserInfo):
     """辅修数据"""
     sec_buff_info: SecBuff
     """神通数据"""
+
+    # 新装备加成
+    miss_rate: int
+    """空间穿梭（闪避率）"""
+    decrease_miss_rate: int
+    """空间封锁（减少对方闪避率）"""
+    decrease_crit: int
+    """减少对方暴击率"""
+    soul_damage_add: float
+    """灵魂伤害（真实伤害）"""
+    decrease_soul_damage: float
+    """灵魂抵抗（减少对方真实伤害）"""
+    shield: float
+    """开局护盾"""
+    back_damage: float
+    """反伤"""
+    ice_mark: float
+    """叠标记加敌方受到伤害"""
