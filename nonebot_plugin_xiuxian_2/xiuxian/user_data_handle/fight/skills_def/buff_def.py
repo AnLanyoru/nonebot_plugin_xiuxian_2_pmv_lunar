@@ -68,9 +68,8 @@ class IceMarkCount(BaseBuff):
     name = '冰之印记'
 
     def act(self, effect_user: BaseFightMember, now_enemy: BaseFightMember, msg_list: list[str]):
-        msg_list.append(f"{effect_user.name}获得了一层冰之印记，当前（{self.num}/6层）")
         self.num += 1
-        happened_msg = ''
+        msg_list.append(f"{effect_user.name}获得了一层冰之印记，当前（{self.num}/6层）")
         if self.num == 6:
             ice_mark = IceMark(effect_user)
             ice_mark.effect_value = self.effect_value

@@ -362,6 +362,8 @@ class BaseFightMember:
                 self.main_skill[0].act(self, enemy, msg_list, self.main_skill)
             else:
                 empty_skill.normal_attack(self, enemy, msg_list)
+        else:
+            self.rest_turn -= 1
 
         del_sub_list: list[str] = []
         if self.sub_skill:
@@ -375,8 +377,6 @@ class BaseFightMember:
                 del self.sub_skill[sub_name]
         # 重置回合伤害
         self.turn_damage = 0
-        if self.rest_turn:
-            self.rest_turn -= 1
 
     @abstractmethod
     def hurt(

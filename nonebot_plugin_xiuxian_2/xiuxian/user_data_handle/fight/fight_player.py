@@ -166,19 +166,22 @@ class PlayerFight(BaseFightMember):
             sum_real_damage = 0
             sum_final_normal_damage = 0
             msg_list.append(f"{self.name}催动空间法则，躲开了此次攻击")
+        shield_msg = ''
         if self.shield > 0 and sum_final_normal_damage:
-            self.shield -= sum_final_normal_damage
-            if self.shield > 0:
-                msg_list.append(f"{self.name}的护盾抵消了"
+            origin_shield = self.shield
+            origin_shield -= sum_final_normal_damage
+            if origin_shield > 0:
+                self.shield -= sum_final_normal_damage
+                shield_msg = (f"{self.name}的护盾抵消了"
                                 f"所有{number_to(sum_final_normal_damage)}普通伤害，"
-                                f"余剩护盾量{number_to(self.shield)}")
+                              f"余剩护盾量{number_to(self.shield)}\r")
                 sum_final_normal_damage = 0
             else:
                 sum_final_normal_damage -= self.shield
-                self.shield = 0
-                msg_list.append(f"{self.name}的护盾抵消了"
+                shield_msg = (f"{self.name}的护盾抵消了"
                                 f"{number_to(self.shield)}普通伤害，"
-                                f"余剩护盾量0")
+                              f"余剩护盾量0\r")
+                self.shield = 0
         if self.back_damage and sum_final_normal_damage:
             back_damage = int(sum_final_normal_damage * self.back_damage)
             attacker.be_back_damage(self, msg_list, back_damage)
@@ -198,8 +201,9 @@ class PlayerFight(BaseFightMember):
             msg_list.append(msg)
             return
         msg = (f"对{self.name}造成了"
-               f"{normal_damage_msg}{real_damage_msg}{soul_damage_msg}"
-               f"总计{number_to(sum_damage)}伤害！\r"
+               f"{normal_damage_msg}{real_damage_msg}{soul_damage_msg}\r"
+               f"{shield_msg}"
+               f"总计造成{number_to(sum_damage)}伤害！\r"
                f"{self.name}余剩气血{number_to(self.hp)}。")
         msg_list.append(msg)
         if self.hp < 1:

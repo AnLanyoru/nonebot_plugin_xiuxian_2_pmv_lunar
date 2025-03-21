@@ -165,6 +165,23 @@ class UserBuffHandle:
 
         return empty_new_equipment_buff
 
+    async def get_new_equipment_msg(self):
+        new_equipment_info = await self.__select_data(
+            ['lifebound_treasure',
+             'support_artifact',
+             'inner_armor',
+             'daoist_robe',
+             'daoist_boots',
+             'spirit_ring'])
+        for item_key, item_id in new_equipment_info.items():
+            if not item_id:
+                new_equipment_info[item_key] = '无'
+                continue
+            item_info = items.get_data_by_item_id(item_id)
+            suit_msg = f"{item_info['suits']}·" if 'suits' in item_info else ''
+            new_equipment_info[item_key] = f"{suit_msg}{item_info['name']}({item_info['level']})"
+        return new_equipment_info
+
     async def get_user_fight_info(self) -> UserFightInfo:
         user_info = await sql_message.get_user_info_with_id(self.user_id)
         user_fight_info, _ = await final_user_data(user_info)

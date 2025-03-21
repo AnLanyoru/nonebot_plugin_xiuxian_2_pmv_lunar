@@ -188,9 +188,10 @@ async def get_user_main_back_msg_easy(user_id):
                 item_type_sec = item_info.get('item_type')
                 if not l_types_sec_dict.get(item_type_sec):
                     l_types_sec_dict[item_type_sec] = []
+                suit_msg = f"{item_info['suits']}·" if 'suits' in item_info else ''
                 level = f"{item_info.get('level')} - " if item_info.get('level') else ''
                 bind_msg = f"(绑定:{item['bind_num']})" if item['bind_num'] else ""
-                l_types_sec_dict[item_type_sec].append(f"{level}{item['goods_name']} - "
+                l_types_sec_dict[item_type_sec].append(f"{level}{suit_msg}{item['goods_name']} - "
                                                        f"数量：{item['goods_num']}{bind_msg}")
             for item_type_sec, l_items_sec_msg in l_types_sec_dict.items():
                 head_msg = f"✨{item_type_sec}✨\r" if item_type_sec != item_type else ''
