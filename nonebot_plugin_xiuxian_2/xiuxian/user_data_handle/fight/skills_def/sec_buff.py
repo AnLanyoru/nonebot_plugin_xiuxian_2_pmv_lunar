@@ -40,7 +40,7 @@ class ContinueDamageSkill(BaseSkill):
         self.continue_turn = sec_buff_info['turncost']
 
     @staticmethod
-    def act_base_damage(user) -> tuple[int, str]:
+    def act_base_damage(user, target_member) -> tuple[int, str]:
         """不检定暴击效果"""
         base_damage = user.base_damage
         crit_msg = ''
@@ -81,7 +81,7 @@ class MakeBuffSkill(BaseSkill):
         self.continue_turn = sec_buff_info['turncost'] + 1
 
     @staticmethod
-    def act_base_damage(user) -> tuple[int, str]:
+    def act_base_damage(user, target_member) -> tuple[int, str]:
         """不检定暴击效果"""
         return 0, ''
 
@@ -123,7 +123,7 @@ class SealSkill(BaseSkill):
         self.seal_turn = sec_buff_info['turncost']
 
     @staticmethod
-    def act_base_damage(user) -> tuple[int, str]:
+    def act_base_damage(user, target_member) -> tuple[int, str]:
         """不检定暴击效果"""
         return 0, ''
 

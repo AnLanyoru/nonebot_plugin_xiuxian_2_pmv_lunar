@@ -29,41 +29,6 @@ YAO_CAI_INFO_MSG = {
 }
 
 
-async def get_use_equipment_sql(user_id, goods_id):
-    """
-    使用装备
-    返回sql,和法器或防具
-    """
-    sql_str = []
-    item_info = items.get_data_by_item_id(goods_id)
-    user_buff_info = await UserBuffDate(user_id).buff_info
-    now_time = datetime.now()
-    item_type = ''
-    if item_info['item_type'] == "法器":
-        item_type = "法器"
-        in_use_id = user_buff_info['faqi_buff']
-        sql_str.append(
-            f"UPDATE back set update_time='{now_time}',action_time='{now_time}',state=1 WHERE "
-            f"user_id={user_id} and goods_id={goods_id}")  # 装备
-        if in_use_id != 0:
-            sql_str.append(
-                f"UPDATE back set update_time='{now_time}',action_time='{now_time}',state=0 "
-                f"WHERE user_id={user_id} and goods_id={in_use_id}")  # 取下原有的
-
-    if item_info['item_type'] == "防具":
-        item_type = "防具"
-        in_use_id = user_buff_info['armor_buff']
-        sql_str.append(
-            f"UPDATE back set update_time='{now_time}',action_time='{now_time}',state=1 "
-            f"WHERE user_id={user_id} and goods_id={goods_id}")  # 装备
-        if in_use_id != 0:
-            sql_str.append(
-                f"UPDATE back set update_time='{now_time}',action_time='{now_time}',state=0 "
-                f"WHERE user_id={user_id} and goods_id={in_use_id}")  # 取下原有的
-
-    return sql_str, item_type
-
-
 async def get_no_use_equipment_sql(user_id, goods_id):
     """
     卸载装备
@@ -573,6 +538,16 @@ def get_item_msg(goods_id, get_image: bool = False):
 
     elif item_info['item_type'] == '法器':
         msg = get_weapon_info_msg(goods_id, item_info)
+
+    elif item_info['type'] == '装备':
+        suits_msg = f"所属套装：{item_info['suits']}\r" if 'suits' in item_info else ''
+        effect_msg = '、'.join([f"{increase_name}{'提升' if value > 0 else '降低'}{value * 100:.2f}%"
+                               for increase_name, value in item_info['buff'].items()])
+        msg = (f"名字：{item_info['name']}\r"
+               f"品阶：{item_info['level']}\r"
+               f"部位：{item_info['item_type']}\r"
+               f"{suits_msg}"
+               f"效果：{effect_msg}")
 
     elif item_info['item_type'] == "药材":
         msg = get_yaocai_info_msg(item_info)

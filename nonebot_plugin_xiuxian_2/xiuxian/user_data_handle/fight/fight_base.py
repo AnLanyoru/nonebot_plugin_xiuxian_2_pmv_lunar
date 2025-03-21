@@ -43,7 +43,7 @@ class BaseSkill:
         if self.rest_turn:
             user.rest_turn += self.rest_turn
             rest_msg = f"休息{self.rest_turn}回合！"
-        base_damage, crit_msg = self.act_base_damage(user)
+        base_damage, crit_msg = self.act_base_damage(user, target_member)
         msg = (f"{user.name}释放神通：{self.name}，"
                f"{cost_msg}"
                f"{self.desc}{rest_msg}{crit_msg}")
@@ -76,7 +76,7 @@ class BaseSkill:
         normal_attack_value = [1]
         for buff in user.buffs.values():
             buff.skill_value_change(normal_attack_value)
-        base_damage, is_crit = user.check_crit(base_damage)
+        base_damage, is_crit = user.check_crit(base_damage, target_member)
         base_damage = [int(base_damage * atk_value_per) for atk_value_per in normal_attack_value]
         crit_msg = ''
         if is_crit:
@@ -86,14 +86,15 @@ class BaseSkill:
         user.attack(enemy=target_member, normal_damage=base_damage, msg_list=msg_list)
 
     @staticmethod
-    def act_base_damage(user) -> tuple[int, str]:
+    def act_base_damage(user, target_member) -> tuple[int, str]:
         """
         获取基础伤害，若要实现无暴击技能，重写此方法
-        :param user:
+        :param target_member: 攻击目标
+        :param user: 使用技能者
         :return:
         """
         base_damage = user.base_damage
-        base_damage, is_crit = user.check_crit(base_damage)
+        base_damage, is_crit = user.check_crit(base_damage, target_member)
         crit_msg = ''
         if is_crit:
             crit_msg = "并发生了会心一击！"
@@ -196,6 +197,15 @@ class BaseBuff:
         ...
 
     @staticmethod
+    def final_hurt_change(damage: int, buff_final_hurt_change: BuffIncreaseDict) -> None:
+        """
+        实现该方法可以增加或翻倍最终受到伤害倍率
+        :param damage: 原始受到伤害倍率
+        :param buff_final_hurt_change: {'add': '增加一定数值', 'mul': '翻倍一定数值'}
+        """
+        ...
+
+    @staticmethod
     def crit_change(crit_rate: int, buff_crit_change: BuffIncreaseDict):
         """
         实现该方法可以增加或翻倍暴击率
@@ -225,8 +235,8 @@ class BaseBuff:
     @staticmethod
     def skill_value_change(value: list[float]):
         """
-        实现该方法可以增加或翻倍减伤
-        :param value: 原始数值
+        实现该方法可以增加技能倍率
+        :param value: 原始倍率列表
         """
         ...
 
@@ -299,6 +309,22 @@ class BaseFightMember:
     """特殊效果"""
     increase: Increase
     """属性提升（不变常量类）"""
+    miss_rate: int
+    """空间穿梭（闪避率）"""
+    decrease_miss_rate: int
+    """空间封锁（减少对方闪避率）"""
+    decrease_crit: int
+    """减少对方暴击率"""
+    soul_damage_add: float
+    """灵魂伤害（真实伤害）"""
+    decrease_soul_damage: float
+    """灵魂抵抗（减少对方真实伤害）"""
+    shield: int
+    """开局护盾"""
+    back_damage: float
+    """反伤"""
+    ice_mark: float
+    """叠标记加敌方受到伤害"""
 
     def active(self, enemy, msg_list: list[str]):
         if not self.status:
@@ -379,9 +405,10 @@ class BaseFightMember:
         ...
 
     @abstractmethod
-    def check_crit(self, damage: int) -> tuple[int, bool]:
+    def check_crit(self, damage: int, target_member) -> tuple[int, bool]:
         """
         检测是否暴击并输出暴击伤害
+        :param target_member: 攻击目标
         :param damage: 原伤害
         :return: 暴击后伤害，是否暴击
         """
@@ -417,4 +444,12 @@ class BaseFightMember:
         :param must_succeed: 是否是必中效果
         :return:
         """
+        ...
+
+    @abstractmethod
+    def be_back_damage(self,
+                       attacker,
+                       msg_list: list[str],
+                       back_damage: int = None,
+                       armour_break: float = 0):
         ...

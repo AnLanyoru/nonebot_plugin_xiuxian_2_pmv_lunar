@@ -2,6 +2,7 @@ import random
 
 from .fight_base import BaseFightMember
 from .fight_player import PlayerFight
+from .. import UserBuffData
 from ...xiuxian_utils.xiuxian2_handle import sql_message
 
 
@@ -13,7 +14,8 @@ async def player_fight(user_id_dict: dict[int, int], fight_key: int = 0):
     """
     fight_dict = {}  # 初始化战斗字典
     for user_id, team in user_id_dict.items():
-        user_fight_info = await sql_message.get_user_real_info(user_id)
+        user_buff_data = UserBuffData(user_id)
+        user_fight_info = await user_buff_data.get_user_fight_info()
         fight_dict[user_id] = PlayerFight(user_fight_info, team)
     winner, fight_msg, after_fight_user_info_list = get_fight(fight_dict, max_turn=30)
     if fight_key:

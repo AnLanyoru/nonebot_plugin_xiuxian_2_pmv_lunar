@@ -14,6 +14,7 @@ from nonebot.permission import SUPERUSER
 
 from .limit import check_limit, reset_send_stone, reset_stone_exp_up
 from .two_exp_cd import two_exp_cd
+from ..user_data_handle.fight.fight_pvp import player_fight
 from ..world_boss.world_boss_database import get_user_world_boss_info
 from ..xiuxian_config import XiuConfig
 from ..xiuxian_data.data.境界_data import level_data
@@ -270,7 +271,11 @@ async def qc_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
 
         result, victor = await old_pf(player1, player2, 1, bot.self_id)
         text = msg_handler(result)
-        msg = f"获胜的是{victor}"
+        msg = f"旧战斗，获胜的是{victor}"
+        msg = main_md(msg, text, '切磋其他人', '切磋', '修炼', '修炼', '闭关', '闭关', '修仙帮助', '修仙帮助')
+        await bot.send(event=event, message=msg)
+        victor, text = await player_fight({user_id: 1, give_qq: 2})
+        msg = f"新战斗，获胜的是{victor}"
         msg = main_md(msg, text, '切磋其他人', '切磋', '修炼', '修炼', '闭关', '闭关', '修仙帮助', '修仙帮助')
         await bot.send(event=event, message=msg)
         await qc.finish()

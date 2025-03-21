@@ -42,6 +42,7 @@ class Items:
             "神物": ELIXIR_PATH / "神物.json",
             "天地奇物": ELIXIR_PATH / "天地奇物.json"}
         self.items = {}
+        self.suits = {}
         self.items_map = {}
 
     @staticmethod
@@ -54,6 +55,7 @@ class Items:
         for item_type, item_data_path in self.ITEM_JSON_PATH.items():
             self.set_item_data(self.read_file(item_data_path), item_type)
         self.items_map = {self.items[item_id]['name']: int(item_id) for item_id in self.items}
+        self.suits = self.read_file(WEAPON_PATH / "套装.json")
 
     def get_data_by_item_id(self, item_id) -> BaseItem:
         if item_id is None:

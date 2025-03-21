@@ -9,7 +9,7 @@ from nonebot.params import CommandArg, RawCommand
 from nonebot.permission import SUPERUSER
 
 from .back_util import (
-    get_user_main_back_msg, get_use_equipment_sql,
+    get_user_main_back_msg,
     get_item_msg, get_item_msg_rank, check_use_elixir,
     get_use_jlq_msg, get_no_use_equipment_sql, get_use_tool_msg,
     get_user_main_back_msg_easy, get_user_back_msg)
@@ -31,15 +31,6 @@ from ..xiuxian_utils.xiuxian2_handle import (
     sql_message, get_weapon_info_msg, get_armor_info_msg,
     get_sec_msg, get_main_info_msg, get_sub_info_msg, UserBuffDate
 )
-
-auction = {}
-AUCTIONSLEEPTIME = 120  # 拍卖初始等待时间（秒）
-cache_help = {}
-auction_offer_flag = False  # 拍卖标志
-AUCTIONOFFERSLEEPTIME = 30  # 每次拍卖增加拍卖剩余的时间（秒）
-auction_offer_time_count = 0  # 计算剩余时间
-auction_offer_all_count = 0  # 控制线程等待时间
-# 定时任务
 
 goods_re_root = on_command("炼金", priority=6, permission=GROUP, block=True)
 goods_re_root_fast = on_command("快速炼金", aliases={"批量炼金"}, priority=6, permission=GROUP, block=True)
@@ -579,7 +570,7 @@ async def use_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg())
         await use.finish()
     goods_type = item_info['goods_type']
     goods_num = item_info['goods_num']
-    if not item_info['goods_num']:
+    if item_info['goods_num'] < num:
         msg = f"请检查该道具是否充足！！"
         await bot.send(event=event, message=msg)
         await use.finish()
@@ -593,21 +584,14 @@ async def use_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg())
 
     # 使用实现
     if goods_type == "装备":
+        user_buff_data = UserBuffData(user_id)
         if item_info['state']:
             msg = "该装备已被装备，请勿重复装备！"
             await bot.send(event=event, message=msg)
             await use.finish()
-        else:  # 可以装备
-            sql_str, item_type = await get_use_equipment_sql(user_id, goods_id)
-            for sql in sql_str:
-                await sql_message.update_back_equipment(sql)
-            if item_type == "法器":
-                await sql_message.updata_user_faqi_buff(user_id, goods_id)
-            if item_type == "防具":
-                await sql_message.updata_user_armor_buff(user_id, goods_id)
-            msg = f"成功装备{item_name}！"
-            await bot.send(event=event, message=msg)
-            await use.finish()
+        msg = await user_buff_data.update_new_equipment(item_info['goods_id'])
+        await bot.send(event=event, message=msg)
+        await use.finish()
     elif goods_type == "技能":
         user_buff_info = await UserBuffDate(user_id).buff_info
         skill_info = items.get_data_by_item_id(goods_id)
