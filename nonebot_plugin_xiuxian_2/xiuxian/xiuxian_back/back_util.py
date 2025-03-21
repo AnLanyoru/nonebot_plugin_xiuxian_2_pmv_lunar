@@ -446,6 +446,8 @@ def get_equipment_msg(l_msg, goods_id, goods_num, is_use):
         msg = get_armor_info_msg(goods_id, item_info)
     elif item_info['item_type'] == '法器':
         msg = get_weapon_info_msg(goods_id, item_info)
+    else:
+        msg = get_item_msg(goods_id)
     msg += f"\r拥有数量:{goods_num}"
     if is_use:
         msg += f"\r已装备"
