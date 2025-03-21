@@ -14,6 +14,7 @@ from nonebot.permission import SUPERUSER
 
 from .limit import check_limit, reset_send_stone, reset_stone_exp_up
 from .two_exp_cd import two_exp_cd
+from ..user_data_handle import UserBuffHandle
 from ..user_data_handle.fight.fight_pvp import player_fight
 from ..world_boss.world_boss_database import get_user_world_boss_info
 from ..xiuxian_config import XiuConfig
@@ -689,48 +690,12 @@ async def mind_state_(bot: Bot, event: GroupMessageEvent):
     await sql_message.update_last_check_info_time(user_id)  # 更新查看修仙信息时间
     if user_info['hp'] is None or user_info['hp'] == 0:
         await sql_message.update_user_hp(user_id)
+    user_buff_handle = UserBuffHandle(user_id)
+    user_fight_info, user_buff_info = await user_buff_handle.get_user_fight_info_with_buff_info()
+    level_rate = await sql_message.get_root_rate(user_fight_info['root_type'])  # 灵根倍率
+    realm_rate = level_data[user_fight_info['level']]["spend"]  # 境界倍率
 
-    user_info = await sql_message.get_user_real_info(user_id)
-    level_rate = await sql_message.get_root_rate(user_info['root_type'])  # 灵根倍率
-    realm_rate = level_data[user_info['level']]["spend"]  # 境界倍率
-    user_buff_data = UserBuffDate(user_id)
-    main_buff_data = await user_buff_data.get_user_main_buff_data()
-    user_armor_crit_data = await user_buff_data.get_user_armor_buff_data()  # 我的状态防具会心
-    user_weapon_data = await UserBuffDate(user_id).get_user_weapon_data()  # 我的状态武器减伤
-    user_main_crit_data = await UserBuffDate(user_id).get_user_main_buff_data()  # 我的状态功法会心
-    user_main_data = await UserBuffDate(user_id).get_user_main_buff_data()  # 我的状态功法减伤
-
-    if user_main_data is not None:
-        main_def = user_main_data['def_buff'] * 100  # 我的状态功法减伤
-    else:
-        main_def = 0
-
-    if user_armor_crit_data is not None:  # 我的状态防具会心
-        armor_crit_buff = ((user_armor_crit_data['crit_buff']) * 100)
-    else:
-        armor_crit_buff = 0
-
-    if user_weapon_data is not None:
-        crit_buff = ((user_weapon_data['crit_buff']) * 100)
-    else:
-        crit_buff = 0
-
-    user_armor_data = await user_buff_data.get_user_armor_buff_data()
-    if user_armor_data is not None:
-        def_buff = int(user_armor_data['def_buff'] * 100)  # 我的状态防具减伤
-    else:
-        def_buff = 0
-
-    if user_weapon_data is not None:
-        weapon_def = user_weapon_data['def_buff'] * 100  # 我的状态武器减伤
-    else:
-        weapon_def = 0
-
-    if user_main_crit_data is not None:  # 我的状态功法会心
-        main_crit_buff = ((user_main_crit_data['crit_buff']) * 100)
-    else:
-        main_crit_buff = 0
-
+    # 突破状态
     list_all = len(OtherSet().level) - 1
     now_index = OtherSet().level.index(user_info['level'])
     if list_all == now_index:
@@ -744,34 +709,33 @@ async def mind_state_(bot: Bot, event: GroupMessageEvent):
         else:
             exp_meg = f"可突破！"
 
-    main_buff_rate_buff = main_buff_data['ratebuff'] if main_buff_data is not None else 0
-    impart_data = await xiuxian_impart.get_user_info_with_id(user_id)
-    impart_know_per = impart_data['impart_know_per'] if impart_data is not None else 0
-    impart_burst_per = impart_data['impart_burst_per'] if impart_data is not None else 0
-    boss_atk = impart_data['boss_atk'] if impart_data is not None else 0
-    weapon_critatk_data = await UserBuffDate(user_id).get_user_weapon_data()  # 我的状态武器会心伤害
-    weapon_critatk = weapon_critatk_data['critatk'] if weapon_critatk_data is not None else 0  # 我的状态武器会心伤害
-    user_main_critatk = await UserBuffDate(user_id).get_user_main_buff_data()  # 我的状态功法会心伤害
-    main_critatk = user_main_critatk['critatk'] if user_main_critatk is not None else 0  # 我的状态功法会心伤害
+    # 主功法突破概率提升
+    user_main_buff = user_buff_info['main_buff']
+    main_buff_rate_buff = user_main_buff['ratebuff'] if user_main_buff is not None else 0
+    number = user_main_buff["number"] if user_main_buff is not None else 0
+
     leveluprate = int(user_info['level_up_rate'])  # 用户失败次数加成
-    number = user_main_critatk["number"] if user_main_critatk is not None else 0
+    # boss战攻击加成
+    impart_data = await xiuxian_impart.get_user_info_with_id(user_id)
+    boss_atk = impart_data['boss_atk'] if impart_data is not None else 0
+    # 当前位置
     now_place = place.get_place_name(await place.get_now_place_id(user_id))
 
-    msg = simple_md(f"道号：{user_info['user_name']}\r"
-                    f"气血:{number_to(user_info['fight_hp'])}/{number_to(user_info['max_hp'])}"
-                    f"({(user_info['fight_hp'] / user_info['max_hp']) * 100:.2f}%)\r"
-                    f"真元:{number_to(user_info['fight_mp'])}/{number_to(user_info['exp'])}"
-                    f"({((user_info['fight_mp'] / user_info['exp']) * 100):.2f}%)\r"
-                    f"攻击:{number_to(user_info['atk'])}\r"
+    msg = simple_md(f"道号：{user_fight_info['user_name']}\r"
+                    f"气血:{number_to(user_fight_info['fight_hp'])}/{number_to(user_fight_info['max_hp'])}"
+                    f"({(user_fight_info['fight_hp'] / user_fight_info['max_hp']) * 100:.2f}%)\r"
+                    f"真元:{number_to(user_fight_info['fight_mp'])}/{number_to(user_fight_info['exp'])}"
+                    f"({((user_fight_info['fight_mp'] / user_fight_info['exp']) * 100):.2f}%)\r"
+                    f"攻击:{number_to(user_fight_info['atk'])}\r"
                     f"突破状态: {exp_meg}\r"
                     f"(概率：{break_rate.get(user_info['level'], 1) + leveluprate + number}%)\r"
                     f"攻击修炼:{user_info['atkpractice']}级\r"
                     f"(提升攻击力{user_info['atkpractice'] * 4}%)\r"
                     f"修炼效率:{int(((level_rate * realm_rate) * (1 + main_buff_rate_buff)) * 100)}%\r"
-                    f"会心:{crit_buff + int(impart_know_per * 100) + armor_crit_buff + main_crit_buff}%\r"
-                    f"减伤率:{100 - (((100 - def_buff) * (100 - weapon_def) * (100 - main_def)) / 10000):.2f}%\r"
+                    f"会心:{user_fight_info['crit']}%\r"
+                    f"减伤率:{(1 - user_fight_info['defence']) * 100:.2f}%\r"
                     f"boss战增益:{int(boss_atk * 100)}%\r"
-                    f"会心伤害增益:{int((1.5 + impart_burst_per + weapon_critatk + main_critatk) * 100)}%\r"
+                    f"会心伤害增益:{int(user_fight_info['burst'] * 100)}%\r"
                     f"当前体力：{user_info['user_stamina']}\r"
                     f"所在位置：{now_place}\r", "日常状态", "日常中心", "查看")
     await sql_message.update_last_check_info_time(user_id)

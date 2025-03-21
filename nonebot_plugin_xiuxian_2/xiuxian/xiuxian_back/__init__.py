@@ -13,7 +13,7 @@ from .back_util import (
     get_item_msg, get_item_msg_rank, check_use_elixir,
     get_use_jlq_msg, get_no_use_equipment_sql, get_use_tool_msg,
     get_user_main_back_msg_easy, get_user_back_msg)
-from ..user_data_handle import UserBuffData
+from ..user_data_handle import UserBuffHandle
 from ..xiuxian_config import XiuConfig, convert_rank
 from ..xiuxian_limit import limit_handle
 from ..xiuxian_mixelixir.mixelixirutil import mix_user_temp, AlchemyFurnace
@@ -79,7 +79,7 @@ async def fast_elixir_use_(bot: Bot, event: GroupMessageEvent):
     """快速丹药"""
     user_info = await check_user(event)
     user_id = user_info["user_id"]
-    user_buff = UserBuffData(user_id)
+    user_buff = UserBuffHandle(user_id)
     elixir_list = await user_buff.get_fast_elixir_set()
     if not elixir_list:
         msg = simple_md("道友没有",
@@ -114,7 +114,7 @@ async def fast_elixir_use_set_(bot: Bot, event: GroupMessageEvent, args: Message
     """快速丹药设置"""
     user_info = await check_user(event)
     user_id = user_info["user_id"]
-    user_buff = UserBuffData(user_id)
+    user_buff = UserBuffHandle(user_id)
 
     strs = args.extract_plain_text()
     args = get_strs_from_str(strs)
@@ -584,7 +584,7 @@ async def use_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg())
 
     # 使用实现
     if goods_type == "装备":
-        user_buff_data = UserBuffData(user_id)
+        user_buff_data = UserBuffHandle(user_id)
         if item_info['state']:
             msg = "该装备已被装备，请勿重复装备！"
             await bot.send(event=event, message=msg)
@@ -758,17 +758,33 @@ async def check_items_(bot: Bot, event: GroupMessageEvent, args: Message = Comma
         items_id = items_id[0]
         try:
             msg = get_item_msg(items_id, get_image=True)
+            await bot.send(event=event, message=msg)
+            await check_items.finish()
         except KeyError:
             msg = "请输入正确的物品id！！！"
-    elif items_name:
-        items_id = items.items_map.get(items_name[0])
-        if items_id:
-            msg = get_item_msg(items_id, get_image=True)
-        else:
-            msg = f"不存在该物品的信息，请检查名字是否输入正确！"
-    else:
-        msg = "请输入正确的物品id！！！"
-
+            await bot.send(event=event, message=msg)
+            await check_items.finish()
+    if not items_name:
+        msg = f"请输入要查询的物品名称！！"
+        await bot.send(event=event, message=msg)
+        await check_items.finish()
+    items_name = items_name[0]
+    if items_name in items.suits:
+        msg = (f"套装名称：{items_name}\r"
+               f"套装类型：{items.suits[items_name]['套装类型']}\r")
+        for need_num, suits_buff in items.suits[items_name]['套组效果'].items():
+            effect_msg = '\r - '.join([f"{increase_name}{'提升' if value > 0 else '降低'}{value * 100:.2f}%"
+                                       for increase_name, value in suits_buff.items()])
+            msg += f"{need_num}件套:\r - {effect_msg}\r"
+        msg += "包含装备：\r - " + '\r - '.join(items.suits[items_name]['包含装备'])
+        await bot.send(event=event, message=msg)
+        await check_items.finish()
+    items_id = items.items_map.get(items_name)
+    if not items_id:
+        msg = f"不存在该物品的信息，请检查名字是否输入正确！"
+        await bot.send(event=event, message=msg)
+        await check_items.finish()
+    msg = get_item_msg(items_id, get_image=True)
     await bot.send(event=event, message=msg)
     await check_items.finish()
 

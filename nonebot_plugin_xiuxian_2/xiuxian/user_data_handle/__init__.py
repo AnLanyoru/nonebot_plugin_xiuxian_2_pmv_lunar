@@ -3,6 +3,7 @@ import pickle
 from copy import deepcopy
 
 from ..types import NewEquipmentBuffs
+from ..types.user_info import UserFightInfo
 from ..xiuxian_data.data.境界_data import level_data
 from ..xiuxian_database.database_connect import database
 from ..xiuxian_utils.clean_utils import zips
@@ -52,7 +53,7 @@ base_new_equipment_buff = {'miss_rate': 0,
                            'ice_mark': 0}
 
 
-class UserBuffData:
+class UserBuffHandle:
     def __init__(self, user_id: int):
         self.user_id: int = user_id
         self.__table = 'buff_info'
@@ -164,18 +165,23 @@ class UserBuffData:
 
         return empty_new_equipment_buff
 
-    async def get_user_fight_info(self):
+    async def get_user_fight_info(self) -> UserFightInfo:
         user_info = await sql_message.get_user_info_with_id(self.user_id)
-        user_fight_info = await final_user_data(user_info)
+        user_fight_info, _ = await final_user_data(user_info)
         return user_fight_info
 
+    async def get_user_fight_info_with_buff_info(self) -> tuple[UserFightInfo, dict]:
+        user_info = await sql_message.get_user_info_with_id(self.user_id)
+        user_fight_info, buff_info = await final_user_data(user_info)
+        return user_fight_info, buff_info
 
-async def final_user_data(user_dict):
+
+async def final_user_data(user_info):
     """
     传入用户当前信息、buff信息,返回最终信息
     """
     # 通过字段名称获取相应的值
-    user_id = user_dict['user_id']
+    user_id = user_info['user_id']
 
     # 虚神界属性
     impart_hp_per = 0
@@ -235,45 +241,45 @@ async def final_user_data(user_dict):
         main_crit_buff = main_buff_data['crit_buff']
         main_burst_buff = main_buff_data['critatk']
 
-    user_buff_data = UserBuffData(user_id)
+    user_buff_data = UserBuffHandle(user_id)
     new_equipment_buff = await user_buff_data.get_all_new_equipment_buff()
     new_equipment_hp_buff = new_equipment_buff['hp']
     new_equipment_atk_buff = new_equipment_buff['atk']
     new_equipment_crit_buff = new_equipment_buff['crit']
     # 传入加成
-    user_dict['miss_rate'] = int(new_equipment_buff['miss_rate'] * 100)
-    user_dict['decrease_miss_rate'] = int(new_equipment_buff['decrease_miss_rate'] * 100)
-    user_dict['decrease_crit'] = int(new_equipment_buff['decrease_crit'] * 100)
-    user_dict['soul_damage_add'] = new_equipment_buff['soul_damage_add']
-    user_dict['decrease_soul_damage'] = new_equipment_buff['decrease_soul_damage']
-    user_dict['shield'] = new_equipment_buff['shield']
-    user_dict['back_damage'] = new_equipment_buff['back_damage']
-    user_dict['ice_mark'] = new_equipment_buff['ice_mark']
+    user_info['miss_rate'] = int(new_equipment_buff['miss_rate'] * 100)
+    user_info['decrease_miss_rate'] = int(new_equipment_buff['decrease_miss_rate'] * 100)
+    user_info['decrease_crit'] = int(new_equipment_buff['decrease_crit'] * 100)
+    user_info['soul_damage_add'] = new_equipment_buff['soul_damage_add']
+    user_info['decrease_soul_damage'] = new_equipment_buff['decrease_soul_damage']
+    user_info['shield'] = new_equipment_buff['shield']
+    user_info['back_damage'] = new_equipment_buff['back_damage']
+    user_info['ice_mark'] = new_equipment_buff['ice_mark']
 
     # 境界血量补正
-    hp_rate = level_data[user_dict['level']]["HP"]
+    hp_rate = level_data[user_info['level']]["HP"]
 
     # 最终buff计算
     hp_final_buff = (1 + main_hp_buff + impart_hp_per) * (1 + new_equipment_hp_buff) * hp_rate
     mp_final_buff = (1 + main_mp_buff + impart_mp_per)
 
     # 获取面板血量加成
-    user_dict['hp_buff'] = hp_final_buff
+    user_info['hp_buff'] = hp_final_buff
     # 战斗中使用血量
-    user_dict['fight_hp'] = int(user_dict['hp'] * hp_final_buff)
+    user_info['fight_hp'] = int(user_info['hp'] * hp_final_buff)
     # 战斗中基础最大血量
-    user_dict['max_hp'] = int(user_dict['exp'] * hp_final_buff / 2)
+    user_info['max_hp'] = int(user_info['exp'] * hp_final_buff / 2)
     # 获取面板真元加成
-    user_dict['mp_buff'] = mp_final_buff
+    user_info['mp_buff'] = mp_final_buff
     # 战斗中使用真元
-    user_dict['fight_mp'] = int(user_dict['mp'] * mp_final_buff)
+    user_info['fight_mp'] = int(user_info['mp'] * mp_final_buff)
     # 战斗中基础最大真元
-    user_dict['max_mp'] = int(user_dict['exp'] * mp_final_buff)
+    user_info['max_mp'] = int(user_info['exp'] * mp_final_buff)
     # 用于计算神通消耗的真元基础值
-    user_dict['base_mp'] = int(user_dict['exp'])
+    user_info['base_mp'] = int(user_info['exp'])
 
-    user_dict['atk'] = int((user_dict['atk']
-                            * (user_dict['atkpractice'] * 0.04 + 1)  # 攻击修炼
+    user_info['atk'] = int((user_info['atk']
+                            * (user_info['atkpractice'] * 0.04 + 1)  # 攻击修炼
                             * (1 + main_atk_buff)  # 功法攻击加成
                             * (1 + weapon_atk_buff)  # 武器攻击加成
                             * (1 + armor_atk_buff)  # 防具攻击加成
@@ -281,21 +287,25 @@ async def final_user_data(user_dict):
                             * (1 + new_equipment_atk_buff))  # 六件套装备加成
                            + int(user_buff_data_old['atk_buff']))  # 攻击丹药加成
 
-    user_dict['crit'] = int((main_crit_buff
+    user_info['crit'] = int((main_crit_buff
                              + weapon_crit_buff
                              + armor_crit_buff
                              + impart_know_per
                              + new_equipment_crit_buff)
                             * 100)
 
-    user_dict['burst'] = (1.5
+    user_info['burst'] = (1.5
                           + impart_burst_per
                           + weapon_burst_buff
                           + main_burst_buff)
 
-    user_dict['defence'] = round((1 - armor_def_buff)
+    user_info['defence'] = round((1 - armor_def_buff)
                                  * (1 - weapon_def_buff)
                                  * (1 - main_def_buff), 2)
-    user_dict['sub_buff_info'] = await user_buff.get_user_sub_buff_data()
-    user_dict['sec_buff_info'] = await user_buff.get_user_sec_buff_data()
-    return user_dict
+    user_info['sub_buff_info'] = await user_buff.get_user_sub_buff_data()
+    user_info['sec_buff_info'] = await user_buff.get_user_sec_buff_data()
+
+    buff_info = {'main_buff': main_buff_data,
+                 'impart_data': impart_data}
+
+    return user_info, buff_info

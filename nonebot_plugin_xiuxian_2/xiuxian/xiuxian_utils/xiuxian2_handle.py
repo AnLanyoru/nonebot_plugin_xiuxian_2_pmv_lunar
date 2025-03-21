@@ -154,7 +154,13 @@ class XiuxianDateManage:
       "learned_main_buff" json,
       "learned_sub_buff" json,
       "learned_sec_buff" json,
-      "prepare_elixir_set" json
+      "prepare_elixir_set" json,
+      "lifebound_treasure" bigint DEFAULT 0,
+      "support_artifact" bigint DEFAULT 0,
+      "inner_armor" bigint DEFAULT 0,
+      "daoist_robe" bigint DEFAULT 0,
+      "daoist_boots" bigint DEFAULT 0,
+      "spirit_ring" bigint DEFAULT 0
     );""")
                 elif i == "bank_info":
                     try:

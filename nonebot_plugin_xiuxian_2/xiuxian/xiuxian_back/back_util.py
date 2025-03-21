@@ -4,7 +4,7 @@ from datetime import datetime
 
 from nonebot.adapters.onebot.v11 import MessageSegment
 
-from ..user_data_handle import UserBuffData
+from ..user_data_handle import UserBuffHandle
 from ..xiuxian_config import convert_rank, XiuConfig
 from ..xiuxian_place import place
 from ..xiuxian_utils.clean_utils import encode_base64
@@ -748,7 +748,7 @@ async def check_use_elixir(user_id, goods_id, num):
             return msg
 
         elixir_buff_info = goods_info['buff']
-        buff_msg, is_pass = await UserBuffData(user_id).add_fight_temp_buff(elixir_buff_info)
+        buff_msg, is_pass = await UserBuffHandle(user_id).add_fight_temp_buff(elixir_buff_info)
         if not is_pass:
             return buff_msg
         await sql_message.update_back_j(user_id, goods_id, num=1, use_key=1)

@@ -3,7 +3,7 @@ import random
 from .other_set import OtherSet
 from .utils import number_to
 from .xiuxian2_handle import sql_message, UserBuffDate, xiuxian_impart
-from ..user_data_handle import UserBuffData, temp_buff_def
+from ..user_data_handle import UserBuffHandle, temp_buff_def
 from ..xiuxian_config import convert_rank
 
 
@@ -549,7 +549,7 @@ async def boss_fight(player1: dict, boss: dict, type_in=2):
     {"user_id": None,"道号": None, "气血": None, "攻击": None, "真元": None, '会心':None, 'exp':None}
     """
     user1_buff_date = UserBuffDate(player1['user_id'])  # 1号的buff信息
-    user1_buff_data = UserBuffData(player1['user_id'])
+    user1_buff_data = UserBuffHandle(player1['user_id'])
 
     play_list = []
     user1_buff_date_temp = await user1_buff_data.get_fight_temp_buff()

@@ -14,7 +14,7 @@ from nonebot.permission import SUPERUSER
 
 from .tower_database import tower_handle
 from .tower_fight import get_tower_battle_info
-from ..user_data_handle import UserBuffData
+from ..user_data_handle import UserBuffHandle
 from ..xiuxian_back.back_util import check_use_elixir
 from ..xiuxian_place import place
 from ..xiuxian_utils.clean_utils import msg_handler, main_md, get_num_from_str, get_args_num, simple_md
@@ -313,7 +313,7 @@ async def tower_fight_elixir_(bot: Bot, event: GroupMessageEvent):
     if not is_type:
         await bot.send(event=event, message=msg)
         await tower_fight_elixir.finish()
-    user_buff = UserBuffData(user_id)
+    user_buff = UserBuffHandle(user_id)
     elixir_list = await user_buff.get_fast_elixir_set()
     if not elixir_list:
         msg = simple_md("道友没有",
