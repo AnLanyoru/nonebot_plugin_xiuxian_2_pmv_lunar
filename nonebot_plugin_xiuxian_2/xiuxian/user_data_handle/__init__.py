@@ -129,6 +129,19 @@ class UserBuffHandle:
         await sql_message.mark_item_state(self.user_id, item_id, 1)
         return f'{item_name}装备成功！'
 
+    async def remove_equipment(self, item_id: int) -> str:
+        item_info = items.get_data_by_item_id(item_id)
+        item_type = item_info['item_type']
+        item_name = item_info['name']
+        item_column = new_equipment_name_def[item_type]
+        wearing_item_dict = await self.__select_data([item_column])
+        wearing_item_id = wearing_item_dict[item_column] if wearing_item_dict else 0
+        if wearing_item_id != item_id:
+            return f'道友未装备{item_name}！'
+        await sql_message.mark_item_state(self.user_id, wearing_item_id, 0)
+        await self.__update_data({item_column: 0})
+        return f'{item_name}卸载成功！'
+
     async def get_all_new_equipment_buff(self) -> NewEquipmentBuffs:
         new_equipment_info = await self.__select_data(
             ['lifebound_treasure',

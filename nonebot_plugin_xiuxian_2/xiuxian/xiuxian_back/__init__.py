@@ -528,23 +528,12 @@ async def no_use_zb_(bot: Bot, event: GroupMessageEvent, args: Message = Command
         await bot.send(event=event, message=msg)
         await no_use_zb.finish()
     if goods_type == "装备":
-        if item_info['state']:
-            sql_str, item_type = await get_no_use_equipment_sql(user_id, goods_id)
-            for sql in sql_str:
-                await sql_message.update_back_equipment(sql)
-            if item_type == "法器":
-                await sql_message.updata_user_faqi_buff(user_id, 0)
-            if item_type == "防具":
-                await sql_message.updata_user_armor_buff(user_id, 0)
-            msg = f"成功卸载装备{item_name}！"
-            await bot.send(event=event, message=msg)
-            await no_use_zb.finish()
-        else:
-            msg = "装备没有被使用，无法卸载！"
-            await bot.send(event=event, message=msg)
-            await no_use_zb.finish()
+        user_buff_handle = UserBuffHandle(user_id)
+        msg = await user_buff_handle.remove_equipment(goods_id)
+        await bot.send(event=event, message=msg)
+        await no_use_zb.finish()
     else:
-        msg = "目前只支持卸载装备！"
+        msg = "只支持卸载装备！"
         await bot.send(event=event, message=msg)
         await no_use_zb.finish()
 
@@ -600,18 +589,9 @@ async def use_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg())
             if int(user_buff_info['sec_buff']) == goods_id:
                 msg = f"道友已学会该神通：{skill_info['name']}，请勿重复学习！"
             else:  # 学习sql
-
-                power = await limit_handle.get_user_world_power_data(user_id)
-                if int(skill_info['rank']) > 120:
-                    use_power = f"\r消耗天地精华2048点，余剩{power}点！！"
-                    await limit_handle.update_user_world_power_data(user_id, power)
-                    await sql_message.update_back_j(user_id, goods_id, use_key=2)
-                    await sql_message.updata_user_sec_buff(user_id, goods_id)
-                    msg = f"恭喜道友学会神通：{skill_info['name']}！" + use_power
-                else:
-                    await sql_message.update_back_j(user_id, goods_id, use_key=2)
-                    await sql_message.updata_user_sec_buff(user_id, goods_id)
-                    msg = f"恭喜道友学会神通：{skill_info['name']}！"
+                await sql_message.update_back_j(user_id, goods_id, use_key=2)
+                await sql_message.updata_user_sec_buff(user_id, goods_id)
+                msg = f"恭喜道友学会神通：{skill_info['name']}！"
         elif skill_type == "功法":
             if int(user_buff_info['main_buff']) == goods_id:
                 msg = f"道友已学会该功法：{skill_info['name']}，请勿重复学习！"
