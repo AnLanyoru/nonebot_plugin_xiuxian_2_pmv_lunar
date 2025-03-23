@@ -1,3 +1,6 @@
+from typing import Type
+
+from ..damage_data import DamageData
 from ....types.skills_info_type import BuffIncreaseDict
 from ..fight_base import BaseBuff, BaseFightMember
 
@@ -7,9 +10,9 @@ class AtkIncrease(BaseBuff):
     least_turn = 0
     buff_value: float = 0
 
-    def act(self, effect_user, now_enemy, msg_list: list[str]):
+    def act(self, effect_user, now_enemy, fight_event):
         msg = f"{effect_user.name}的{self.buff_value:.2f}倍攻击伤害附加效果：{self.name}，余剩{self.least_turn}回合"
-        msg_list.append(msg)
+        fight_event.add_msg(msg)
 
     def skill_value_change(self, attack_value: list[float]):
         attack_value.append(self.buff_value)
@@ -20,9 +23,9 @@ class DefenceIncrease(BaseBuff):
     least_turn = 0
     buff_value: float = 0
 
-    def act(self, effect_user, now_enemy, msg_list: list[str]):
+    def act(self, effect_user, now_enemy, fight_event):
         msg = f"{effect_user.name}的{self.buff_value * 100:.2f}%减伤增加效果：{self.name}，余剩{self.least_turn}回合"
-        msg_list.append(msg)
+        fight_event.add_msg(msg)
 
     def defence_change(self, defence: float, buff_defence_change: BuffIncreaseDict):
         buff_defence_change["add"] += self.buff_value
@@ -33,20 +36,21 @@ class ContinueDamage(BaseBuff):
     name = '无'
     least_turn = 0
 
-    def __init__(self, impose_member: BaseFightMember):
+    def __init__(self, impose_member: int):
         super().__init__(impose_member)
         self.continue_damage = 0
 
     def act(self,
             effect_user: BaseFightMember,
             now_enemy: BaseFightMember,
-            msg_list: list[str]):
-        msg = f"{self.impose_member.name}对{effect_user.name}施加的持续伤害{self.name}生效，余剩{self.least_turn}回合"
-        msg_list.append(msg)
+            fight_event):
+        impose_member = fight_event.find_user(self.impose_member)
+        msg = f"{impose_member.name}对{effect_user.name}施加的持续伤害{self.name}生效，余剩{self.least_turn}回合"
+        fight_event.add_msg(msg)
         effect_user.hurt(
-            self.impose_member,
-            msg_list,
-            normal_damage=[self.continue_damage],
+            impose_member,
+            fight_event,
+            damage=DamageData(normal_damage=[self.continue_damage]),
             armour_break=0.2)
 
 
@@ -56,7 +60,7 @@ class Known(BaseBuff):
     least_turn = -1
     name = '解读'
 
-    def act(self, effect_user, now_enemy, msg_list: list[str]):
+    def act(self, effect_user, now_enemy, fight_event):
         pass
 
 
@@ -67,16 +71,16 @@ class IceMarkCount(BaseBuff):
     effect_value = 0
     name = '冰之印记'
 
-    def act(self, effect_user: BaseFightMember, now_enemy: BaseFightMember, msg_list: list[str]):
+    def act(self, effect_user, now_enemy, fight_event):
         self.num += 1
-        msg_list.append(f"{effect_user.name}获得了一层冰之印记，当前（{self.num}/6层）")
+        fight_event.add_msg(f"{effect_user.name}获得了一层冰之印记，当前（{self.num}/6层）")
         if self.num == 6:
-            ice_mark = IceMark(effect_user)
+            ice_mark = IceMark(effect_user.id)
             ice_mark.effect_value = self.effect_value
             now_enemy.buffs[f'{self.name}&{effect_user.name}'] = ice_mark
             self.least_turn = 0
             happened_msg = f"冰之印记生效，使{now_enemy.name}受到伤害增加{self.effect_value * 100:.2f}%"
-            msg_list.append(happened_msg)
+            fight_event.add_msg(happened_msg)
 
 
 class IceMark(BaseBuff):
@@ -86,7 +90,7 @@ class IceMark(BaseBuff):
     name = '冰之印记'
     effect_value = 0
 
-    def act(self, effect_user, now_enemy, msg_list: list[str]):
+    def act(self, effect_user, now_enemy, fight_event):
         pass
 
     def final_hurt_change(self, damage: int, buff_final_hurt_change: BuffIncreaseDict) -> None:
@@ -104,3 +108,7 @@ BUFF_ACHIEVE = {1: AtkIncrease,
                 10: IceMarkCount,
                 11: IceMark,
                 1000: Known}
+
+
+def get_base_buff(buff_id: int, user_id: int) -> BaseBuff:
+    return BUFF_ACHIEVE[buff_id](user_id)
