@@ -3,8 +3,8 @@ from __future__ import annotations
 import random
 from .damage_data import DamageData
 from .fight_base import BaseFightMember, Increase, FightEvent
-from .skill_register import register_skills, register_sub
-from .skills_def.buff_def import BUFF_ACHIEVE, get_base_buff
+from .skill_register import register_skills, register_sub, register_buff
+from .skills_def.buff_def import BUFF_ACHIEVE
 from ...types.user_info import UserFightInfo
 from ...xiuxian_utils.clean_utils import number_to
 
@@ -48,11 +48,8 @@ class PlayerFight(BaseFightMember):
         self.main_skill = register_skills(user_fight_info['sec_buff_info'])
         self.sub_skill = register_sub(user_fight_info['sub_buff_info'])
         self.buffs = {}
+        self.buffs.update(register_buff(self.id, user_fight_info['new_equipment_buff']))
         self.increase = Increase()
-        if user_fight_info['ice_mark']:
-            ice_mark = get_base_buff(10, self.id)
-            ice_mark.effect_value = user_fight_info['ice_mark']
-            self.buffs[ice_mark.name] = ice_mark
 
     @property
     def base_damage(self) -> int:
@@ -195,6 +192,7 @@ class PlayerFight(BaseFightMember):
         fight_event.add_msg(msg)
         attacker.just_attack_act(self, fight_event)
         fight_event.add_msg(f"{self.name}余剩气血{number_to(self.hp)}。")
+        self.be_hurt_buff_act(attacker, fight_event)
         if self.hp < 1:
             self.status = 0
             msg = f"{self.name}失去战斗能力！"

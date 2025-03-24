@@ -1,5 +1,6 @@
 from typing import TypedDict
 
+from . import NewEquipmentBuffs
 from .skills_info_type import SubBuff, SecBuff
 
 
@@ -112,5 +113,4 @@ class UserFightInfo(UserInfo):
     """开局护盾"""
     back_damage: float
     """反伤"""
-    ice_mark: float
-    """叠标记加敌方受到伤害"""
+    new_equipment_buff: NewEquipmentBuffs

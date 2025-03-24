@@ -103,7 +103,7 @@ class MakeBuffSkill(BaseSkill):
         buff_obj.least_turn = self.continue_turn
         user.buffs[buff_obj.name] = buff_obj
         fight_event.add_msg(f"{user.name}获得了{buff_msg},"
-                            f"持续{buff_obj.least_turn}回合")
+                            f"持续{buff_obj.least_turn - 1}回合")
         self.normal_attack(user, target_member, fight_event)
 
     def use_check(self, user, target_member, fight_event) -> tuple[str, bool]:

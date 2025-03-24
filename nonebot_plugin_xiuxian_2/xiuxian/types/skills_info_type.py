@@ -136,3 +136,10 @@ class BuffIncreaseDict(TypedDict):
     """乘区倍率"""
     add: float
     """加区倍率"""
+
+
+class LearnedSkillData(TypedDict):
+    learned_main_buff: list[int]
+    learned_sub_buff: list[int]
+    learned_sec_buff: list[int]
+    max_learn_skill_save: int

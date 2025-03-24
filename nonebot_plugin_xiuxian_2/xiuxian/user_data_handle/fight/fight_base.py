@@ -193,7 +193,6 @@ class BaseBuff:
         """
         self.impose_member = impose_member_id
 
-    @abstractmethod
     def act(self,
             effect_user: 'BaseFightMember',
             now_enemy: 'BaseFightMember',
@@ -207,8 +206,20 @@ class BaseBuff:
         """
         ...
 
-    @staticmethod
-    def damage_change(damage: int, buff_damage_change: BuffIncreaseDict) -> None:
+    def be_hurt_act(self,
+                    effect_user: 'BaseFightMember',
+                    now_enemy: 'BaseFightMember',
+                    fight_event: 'FightEvent'):
+        """
+        受伤时触发效果
+        :param effect_user: buff生效影响目标
+        :param now_enemy: buff生效目标当前回合的敌人
+        :param fight_event: 消息列表
+        :return:
+        """
+        ...
+
+    def damage_change(self, damage: int, buff_damage_change: BuffIncreaseDict) -> None:
         """
         实现该方法可以增加或翻倍伤害
         :param damage: 原始伤害
@@ -216,8 +227,7 @@ class BaseBuff:
         """
         ...
 
-    @staticmethod
-    def final_hurt_change(damage: int, buff_final_hurt_change: BuffIncreaseDict) -> None:
+    def final_hurt_change(self, damage: int, buff_final_hurt_change: BuffIncreaseDict) -> None:
         """
         实现该方法可以增加或翻倍最终受到伤害倍率
         :param damage: 原始受到伤害倍率
@@ -225,8 +235,7 @@ class BaseBuff:
         """
         ...
 
-    @staticmethod
-    def crit_change(crit_rate: int, buff_crit_change: BuffIncreaseDict):
+    def crit_change(self, crit_rate: int, buff_crit_change: BuffIncreaseDict):
         """
         实现该方法可以增加或翻倍暴击率
         :param crit_rate: 原始暴击率
@@ -234,8 +243,7 @@ class BaseBuff:
         """
         ...
 
-    @staticmethod
-    def burst_change(burst: float, buff_burst_change: BuffIncreaseDict):
+    def burst_change(self, burst: float, buff_burst_change: BuffIncreaseDict):
         """
         实现该方法可以增加或翻倍暴击伤害
         :param burst: 原始暴击伤害
@@ -243,8 +251,7 @@ class BaseBuff:
         """
         ...
 
-    @staticmethod
-    def defence_change(defence: float, buff_burst_change: BuffIncreaseDict):
+    def defence_change(self, defence: float, buff_burst_change: BuffIncreaseDict):
         """
         实现该方法可以增加或翻倍减伤
         :param defence: 原始减伤
@@ -252,8 +259,7 @@ class BaseBuff:
         """
         ...
 
-    @staticmethod
-    def skill_value_change(value: list[float]):
+    def skill_value_change(self, value: list[float]):
         """
         实现该方法可以增加技能倍率
         :param value: 原始倍率列表
@@ -399,7 +405,9 @@ class BaseFightMember:
         # 重置回合伤害
         self.turn_damage.reset_all()
 
-    def just_attack_act(self, enemy: 'BaseFightMember', fight_event: 'FightEvent'):
+    def just_attack_act(self,
+                        enemy: 'BaseFightMember',
+                        fight_event: 'FightEvent'):
 
         del_sub_list: list[str] = []
         if self.sub_skill:
@@ -411,6 +419,13 @@ class BaseFightMember:
         if del_sub_list:
             for sub_name in del_sub_list:
                 del self.sub_skill[sub_name]
+
+    def be_hurt_buff_act(self,
+                         attacker: 'BaseFightMember',
+                         fight_event: 'FightEvent'):
+        """受伤时触发的buff"""
+        for buff_name, buff in self.buffs.items():
+            buff.be_hurt_act(self, attacker, fight_event)
 
     @abstractmethod
     def hurt(
@@ -489,6 +504,26 @@ class BaseFightMember:
                        back_damage: int,
                        armour_break: float = 0):
         ...
+
+    @property
+    def hp_percent_str(self) -> str:
+        hp_percent = self.hp / self.hp_max * 100
+        return f"{hp_percent:.2f}%"
+
+    @property
+    def hp_percent(self) -> float:
+        hp_percent = self.hp / self.hp_max
+        return hp_percent
+
+    @property
+    def mp_percent_str(self) -> str:
+        mp_percent = self.mp / self.mp_max * 100
+        return f"{mp_percent:.2f}%"
+
+    @property
+    def mp_percent(self) -> float:
+        mp_percent = self.mp / self.mp_max
+        return mp_percent
 
 
 class FightEvent:

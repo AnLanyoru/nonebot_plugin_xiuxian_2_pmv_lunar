@@ -1,6 +1,8 @@
 from .fight_base import BaseSub, BaseSkill
+from .skills_def.buff_def import get_base_buff
 from .skills_def.sec_buff import SEC_BUFF_ACHIEVE
 from .skills_def.sub_buff import SUB_BUFF_ACHIEVE
+from ...types import NewEquipmentBuffs
 from ...types.error import UndefinedError
 from ...types.skills_info_type import SecBuff, SubBuff
 
@@ -43,7 +45,7 @@ def register_skills(skills: SecBuff | list[SecBuff]) -> list[BaseSkill]:
 
 
 def register_sub(skills: SubBuff | list[SubBuff]) -> dict[str, BaseSub]:
-    """技能效果注册工具，统一初始化接口"""
+    """辅修效果注册工具，统一初始化接口"""
     # 分流列表与单个对象
     registry = {}
     if not skills:
@@ -56,3 +58,40 @@ def register_sub(skills: SubBuff | list[SubBuff]) -> dict[str, BaseSub]:
         registered_skill = REGISTER_TYPE_DEF[skill_per['item_type']](skill_per)
         registry[skill_per['name']] = registered_skill
     return registry
+
+
+def register_buff(user_id, new_equipment_buff: NewEquipmentBuffs):
+    buffs = {}
+    if '冰之印记' in new_equipment_buff:
+        ice_mark = get_base_buff(10, user_id)
+        ice_mark.effect_value = new_equipment_buff['冰之印记']
+        buffs[ice_mark.name] = ice_mark
+    if '炽焰' in new_equipment_buff:
+        buff = get_base_buff(12, user_id)
+        buff.effect_value = new_equipment_buff['炽焰']
+        buffs[buff.name] = buff
+    if '金乌' in new_equipment_buff:
+        buff = get_base_buff(13, user_id)
+        buff.effect_value = new_equipment_buff['金乌']
+        buffs[buff.name] = buff
+    if '炎魔' in new_equipment_buff:
+        ice_mark = get_base_buff(14, user_id)
+        ice_mark.effect_value = new_equipment_buff['炎魔']
+        buffs[ice_mark.name] = ice_mark
+    if '烈火焚天' in new_equipment_buff:
+        buff = get_base_buff(15, user_id)
+        buff.effect_value = new_equipment_buff['烈火焚天']
+        buffs[buff.name] = buff
+    if '雷霆' in new_equipment_buff:
+        buff = get_base_buff(16, user_id)
+        buff.effect_value = new_equipment_buff['雷霆']
+        buffs[buff.name] = buff
+    if '昊天神力' in new_equipment_buff:
+        buff = get_base_buff(17, user_id)
+        buff.effect_value = new_equipment_buff['昊天神力']
+        buffs[buff.name] = buff
+    if '星魂之力' in new_equipment_buff:
+        buff = get_base_buff(18, user_id)
+        buff.effect_value = new_equipment_buff['星魂之力']
+        buffs[buff.name] = buff
+    return buffs

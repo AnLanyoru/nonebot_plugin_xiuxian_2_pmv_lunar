@@ -2,6 +2,7 @@ import random
 
 from .riftconfig import get_rift_config
 from .skill_rate import skill_rate
+from ..user_data_handle import UserBuffHandle
 from ..xiuxian_config import convert_rank
 from ..xiuxian_utils.item_json import items
 from ..xiuxian_utils.other_set import OtherSet
@@ -127,7 +128,7 @@ STORY = {
 async def get_boss_battle_info(user_info, rift_rank):
     """获取Boss战事件的内容"""
     boss_data = STORY['战斗']['Boss战斗']["Boss数据"]
-    player = await sql_message.get_user_real_info(user_info['user_id'])
+    player = await UserBuffHandle(user_info['user_id']).get_user_fight_info()
     player['道号'] = player['user_name']
     player['气血'] = player['fight_hp']
     player['攻击'] = player['atk']
