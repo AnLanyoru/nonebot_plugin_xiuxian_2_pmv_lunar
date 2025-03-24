@@ -1,8 +1,9 @@
 import json
 import pickle
-from copy import deepcopy
+from collections import Counter
 
-from ..types import NewEquipmentBuffs
+from ..types import NewEquipmentBuffs, BaseItem
+from ..types.skills_info_type import LearnedSkillData
 from ..types.user_info import UserFightInfo
 from ..xiuxian_data.data.境界_data import level_data
 from ..xiuxian_database.database_connect import database
@@ -27,30 +28,6 @@ new_equipment_name_def = {'法器': 'faqi_buff',
                           '道袍': 'daoist_robe',
                           '道靴': 'daoist_boots',
                           '灵戒': 'spirit_ring'}
-
-new_equipment_buff_def = {'空间穿梭': 'miss_rate',
-                          '空间封锁': 'decrease_miss_rate',
-                          '攻击': 'atk',
-                          '生命': 'hp',
-                          '会心率': 'crit',
-                          '抗会心率': 'decrease_crit',
-                          '神魂伤害': 'soul_damage_add',
-                          '神魂抵抗': 'decrease_soul_damage',
-                          '护盾': 'shield',
-                          '因果转嫁': 'back_damage',
-                          '冰之印记': 'ice_mark'}
-
-base_new_equipment_buff = {'miss_rate': 0,
-                           'decrease_miss_rate': 0,
-                           'atk': 0,
-                           'hp': 0,
-                           'crit': 0,
-                           'decrease_crit': 0,
-                           'soul_damage_add': 0,
-                           'decrease_soul_damage': 0,
-                           'shield': 0,
-                           'back_damage': 0,
-                           'ice_mark': 0}
 
 
 class UserBuffHandle:
@@ -150,15 +127,13 @@ class UserBuffHandle:
              'daoist_robe',
              'daoist_boots',
              'spirit_ring'])
-        empty_new_equipment_buff = deepcopy(base_new_equipment_buff)
+        all_equipment_buff = Counter()
         all_suits_info = {}
         for equipment_id in new_equipment_info.values():
             if not equipment_id:
                 continue
             item_info = items.get_data_by_item_id(equipment_id)
-            for buff_name, buff_value in item_info['buff'].items():
-                buff_name_real = new_equipment_buff_def[buff_name]
-                empty_new_equipment_buff[buff_name_real] += buff_value
+            all_equipment_buff += Counter(item_info['buff'])
 
             # 记录套装效果
             if 'suits' in item_info:
@@ -172,11 +147,9 @@ class UserBuffHandle:
         for suits_name, suits_num in all_suits_info.items():
             for unlock_num, suits_buff in items.suits[suits_name]['套组效果'].items():
                 if suits_num >= int(unlock_num):
-                    for buff_name, buff_value in suits_buff.items():
-                        buff_name_real = new_equipment_buff_def[buff_name]
-                        empty_new_equipment_buff[buff_name_real] += buff_value
+                    all_equipment_buff += Counter(suits_buff)
 
-        return empty_new_equipment_buff
+        return dict(all_equipment_buff)
 
     async def get_new_equipment_msg(self):
         new_equipment_info = await self.__select_data(
@@ -204,6 +177,129 @@ class UserBuffHandle:
         user_info = await sql_message.get_user_info_with_id(self.user_id)
         user_fight_info, buff_info = await final_user_data(user_info)
         return user_fight_info, buff_info
+
+    async def get_learned_skill(self) -> LearnedSkillData:
+        need_column = ['max_learn_skill_save',
+                       'learned_main_buff',
+                       'learned_sub_buff',
+                       'learned_sec_buff']
+        learned_skill_data = await self.__select_data(need_column)
+        json_data_column = ['learned_main_buff',
+                            'learned_sub_buff',
+                            'learned_sec_buff']
+        for json_data_column_per in json_data_column:
+            if json_data := learned_skill_data[json_data_column_per]:
+                learned_skill_data[json_data_column_per] = json.loads(json_data)
+            else:
+                learned_skill_data[json_data_column_per] = []
+        return learned_skill_data
+
+    async def update_learned_skill_data(self, learned_skill_data):
+        json_data_column = ['learned_main_buff',
+                            'learned_sub_buff',
+                            'learned_sec_buff']
+        for json_data_column_per in json_data_column:
+            learned_skill_data[json_data_column_per] = json.dumps(learned_skill_data[json_data_column_per])
+        await self.__update_data(learned_skill_data)
+
+    async def remember_skill(self, skill_id: BaseItem) -> str:
+
+        skill_info = items.get_data_by_item_id(skill_id)
+        skill_type = skill_info['item_type']
+        learned_skill_data = await self.get_learned_skill()
+        max_save_num = learned_skill_data['max_learn_skill_save']
+        learned_main_buff = learned_skill_data['learned_main_buff']
+        learned_sec_buff = learned_skill_data['learned_sec_buff']
+        learned_sub_buff = learned_skill_data['learned_sub_buff']
+        user_buff_info = await UserBuffDate(self.user_id).buff_info
+        old_main = user_buff_info['main_buff']
+        old_sec = user_buff_info['sec_buff']
+        old_sub = user_buff_info['sub_buff']
+        if skill_type == "功法":
+            if old_main == skill_id:
+                msg = f"道友已学会该功法：{skill_info['name']}，请勿重复学习！"
+                return msg
+            if skill_id not in learned_main_buff:
+                msg = f"道友没有{skill_info['name']}的记忆!"
+                return msg
+            await sql_message.updata_user_main_buff(self.user_id, skill_id)
+            msg = f"恭喜道友学会功法：{skill_info['name']}！"
+            if old_main and old_main not in learned_main_buff:
+                if len(learned_main_buff) >= max_save_num + 2:
+                    del learned_skill_data['learned_main_buff'][0]
+                learned_skill_data['learned_main_buff'].append(old_main)
+                await self.update_learned_skill_data(learned_skill_data)
+                msg += f"旧功法已存入识海中"
+            return msg
+
+        elif skill_type == "神通":
+            if old_sec == skill_id:
+                msg = f"道友已学会该神通：{skill_info['name']}，请勿重复学习！"
+                return msg
+            if skill_id not in learned_sec_buff:
+                msg = f"道友没有{skill_info['name']}的记忆!"
+                return msg
+            await sql_message.updata_user_sec_buff(self.user_id, skill_id)
+            msg = f"恭喜道友学会神通：{skill_info['name']}！"
+            if old_sec and old_sec not in learned_sec_buff:
+                if len(learned_sec_buff) >= max_save_num + 2:
+                    del learned_skill_data['learned_sec_buff'][0]
+                learned_skill_data['learned_sec_buff'].append(old_sec)
+                await self.update_learned_skill_data(learned_skill_data)
+                msg += f"旧神通已存入识海中"
+            return msg
+
+        elif skill_type == "辅修功法":  # 辅修功法1
+            if old_sub == skill_id:
+                msg = f"道友已学会该辅修功法：{skill_info['name']}，请勿重复学习！"
+                return msg
+            if skill_id not in learned_sub_buff:
+                msg = f"道友没有{skill_info['name']}的记忆!"
+                return msg
+            await sql_message.updata_user_sub_buff(self.user_id, skill_id)
+            msg = f"恭喜道友学会辅修功法：{skill_info['name']}！"
+            if old_sub and old_sub not in learned_sub_buff:
+                if len(learned_sub_buff) >= max_save_num + 2:
+                    del learned_skill_data['learned_sub_buff'][0]
+                learned_skill_data['learned_sub_buff'].append(old_sub)
+                await self.update_learned_skill_data(learned_skill_data)
+                msg += f"旧辅修功法已存入识海中"
+            return msg
+        return '未知错误！！'
+
+    async def remove_history_skill(self, skill_id: int) -> str:
+
+        skill_info = items.get_data_by_item_id(skill_id)
+        skill_type = skill_info['item_type']
+        learned_skill_data = await self.get_learned_skill()
+        learned_main_buff = learned_skill_data['learned_main_buff']
+        learned_sec_buff = learned_skill_data['learned_sec_buff']
+        learned_sub_buff = learned_skill_data['learned_sub_buff']
+        if skill_type == "功法":
+            if skill_id not in learned_main_buff:
+                msg = f"道友没有{skill_info['name']}的记忆!"
+                return msg
+            msg = f"道友成功遗忘功法：{skill_info['name']}！"
+            learned_skill_data['learned_main_buff'].remove(skill_id)
+            await self.update_learned_skill_data(learned_skill_data)
+            return msg
+        elif skill_type == "神通":
+            if skill_id not in learned_sec_buff:
+                msg = f"道友没有{skill_info['name']}的记忆!"
+                return msg
+            msg = f"道友成功遗忘神通：{skill_info['name']}！"
+            learned_skill_data['learned_sec_buff'].remove(skill_id)
+            await self.update_learned_skill_data(learned_skill_data)
+            return msg
+        elif skill_type == "辅修功法":  # 辅修功法1
+            if skill_id not in learned_sub_buff:
+                msg = f"道友没有{skill_info['name']}的记忆!"
+                return msg
+            msg = f"道友成功遗忘辅修功法：{skill_info['name']}！"
+            learned_skill_data['learned_sub_buff'].remove(skill_id)
+            await self.update_learned_skill_data(learned_skill_data)
+            return msg
+        return '未知错误！！'
 
 
 async def final_user_data(user_info):
@@ -273,18 +369,18 @@ async def final_user_data(user_info):
 
     user_buff_data = UserBuffHandle(user_id)
     new_equipment_buff = await user_buff_data.get_all_new_equipment_buff()
-    new_equipment_hp_buff = new_equipment_buff['hp']
-    new_equipment_atk_buff = new_equipment_buff['atk']
-    new_equipment_crit_buff = new_equipment_buff['crit']
+    new_equipment_hp_buff = new_equipment_buff.get('生命', 0)
+    new_equipment_atk_buff = new_equipment_buff.get('攻击', 0)
+    new_equipment_crit_buff = new_equipment_buff.get('会心率', 0)
     # 传入加成
-    user_info['miss_rate'] = int(new_equipment_buff['miss_rate'] * 100)
-    user_info['decrease_miss_rate'] = int(new_equipment_buff['decrease_miss_rate'] * 100)
-    user_info['decrease_crit'] = int(new_equipment_buff['decrease_crit'] * 100)
-    user_info['soul_damage_add'] = new_equipment_buff['soul_damage_add']
-    user_info['decrease_soul_damage'] = new_equipment_buff['decrease_soul_damage']
-    user_info['shield'] = new_equipment_buff['shield']
-    user_info['back_damage'] = new_equipment_buff['back_damage']
-    user_info['ice_mark'] = new_equipment_buff['ice_mark']
+    user_info['miss_rate'] = int(new_equipment_buff.get('空间穿梭', 0) * 100)
+    user_info['decrease_miss_rate'] = int(new_equipment_buff.get('空间封锁', 0) * 100)
+    user_info['decrease_crit'] = int(new_equipment_buff.get('抗会心率', 0) * 100)
+    user_info['soul_damage_add'] = new_equipment_buff.get('神魂伤害', 0)
+    user_info['decrease_soul_damage'] = new_equipment_buff.get('神魂抵抗', 0)
+    user_info['shield'] = new_equipment_buff.get('护盾', 0)
+    user_info['back_damage'] = new_equipment_buff.get('因果转嫁', 0)
+    user_info['new_equipment_buff'] = new_equipment_buff
 
     # 境界血量补正
     hp_rate = level_data[user_info['level']]["HP"]

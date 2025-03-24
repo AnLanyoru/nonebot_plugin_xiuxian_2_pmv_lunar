@@ -28,10 +28,11 @@ from ..xiuxian_limit.limit_util import limit_check
 from ..xiuxian_mixelixir.mix_elixir_database import get_user_mix_elixir_info
 from ..xiuxian_place import place
 from ..xiuxian_tower import tower_handle
-from ..xiuxian_utils.clean_utils import get_datetime_from_str, date_sub, main_md, msg_handler, simple_md, get_args_num
+from ..xiuxian_utils.clean_utils import (get_datetime_from_str,
+                                         date_sub, main_md,
+                                         simple_md, get_args_num)
 from ..xiuxian_utils.lay_out import Cooldown
 from ..xiuxian_utils.other_set import OtherSet
-from ..xiuxian_utils.player_fight import player_fight as old_pf
 from ..xiuxian_utils.utils import (
     number_to, check_user,
     check_user_type, get_id_from_str
@@ -244,39 +245,8 @@ async def qc_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
             await qc.finish()
 
     if user1 and user2:
-        player1 = {'user_id': user1['user_id'],
-                   '道号': user1['user_name'],
-                   '气血': user1['fight_hp'],
-                   'max_hp': user1['max_hp'],
-                   'hp_buff': user1['hp_buff'],
-                   '攻击': user1['atk'],
-                   '真元': user1['fight_mp'],
-                   'max_mp': user1['max_mp'],
-                   'mp_buff': user1['mp_buff'],
-                   'level': user1['level'],
-                   'exp': user1['exp']
-                   }
-
-        player2 = {'user_id': user2['user_id'],
-                   '道号': user2['user_name'],
-                   '气血': user2['fight_hp'],
-                   'max_hp': user2['max_hp'],
-                   'hp_buff': user2['hp_buff'],
-                   '攻击': user2['atk'],
-                   '真元': user2['fight_mp'],
-                   'max_mp': user2['max_mp'],
-                   'mp_buff': user2['mp_buff'],
-                   'level': user2['level'],
-                   'exp': user2['exp']
-                   }
-
-        result, victor = await old_pf(player1, player2, 1, bot.self_id)
-        text = msg_handler(result)
-        msg = f"旧战斗，获胜的是{victor}"
-        msg = main_md(msg, text, '切磋其他人', '切磋', '修炼', '修炼', '闭关', '闭关', '修仙帮助', '修仙帮助')
-        await bot.send(event=event, message=msg)
         victor, text = await player_fight({user_id: 1, give_qq: 2})
-        msg = f"新战斗，获胜的是{victor}"
+        msg = f"新战斗测试中，获胜的是{victor}"
         msg = main_md(msg, text, '切磋其他人', '切磋', '修炼', '修炼', '闭关', '闭关', '修仙帮助', '修仙帮助')
         await bot.send(event=event, message=msg)
         await qc.finish()
@@ -365,9 +335,9 @@ async def send_exp_(bot: Bot, event: GroupMessageEvent, args: Message = CommandA
         num = 1
     exp_limit_2 *= num
 
-    is_pass, msg = await limit_check.send_exp_limit_check(user_id_2=user_2_id, num=num)
+    is_pass, is_pass_msg = await limit_check.send_exp_limit_check(user_id_2=user_2_id, num=num)
     if not is_pass:
-        await bot.send(event=event, message=msg)
+        await bot.send(event=event, message=is_pass_msg)
         await send_exp.finish()
 
     # 玩家2修为上限
