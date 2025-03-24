@@ -17,6 +17,7 @@ from nonebot.permission import SUPERUSER
 
 from .world_boss_database import update_user_world_boss_info, get_user_world_boss_info
 from .. import DRIVER
+from ..user_data_handle import UserBuffHandle
 from ..xiuxian_config import convert_rank
 from ..xiuxian_database.database_connect import database
 from ..xiuxian_impart.impart_uitls import impart_check
@@ -78,7 +79,7 @@ async def world_boss_prepare():
 
 async def get_world_boss_battle_info(user_id):
     """获取Boss战事件的内容"""
-    player = await sql_message.get_user_real_info(user_id)
+    player = await UserBuffHandle(user_id).get_user_fight_info()
     impart_data_draw = await impart_check(user_id)
     player['道号'] = player['user_name']
     player['气血'] = player['fight_hp']
