@@ -75,17 +75,25 @@ yuan_xiao_gift_list = {'思恋结晶': yuan_xiao_send_impart_stone,
                        '汤圆': yuan_xiao_send_jiao_zi}
 
 yuan_xiao_daily_gift_list = {1: {'msg':
-                                     '汤圆十个，团团圆圆！\r福包 1个\r',
+                                     '复元水3个，出货！\r刷新令 3个\r',
                                  'items':
-                                     {25011: 10, 700002: 1}},
+                                     {640001: 3, 610004: 3}},
                              2: {'msg':
-                                     '汤圆十个，团团圆圆！\r福包 1个\r',
+                                     '复元水3个，出货！\r刷新令 3个\r',
                                  'items':
-                                     {25011: 10, 700002: 1}},
+                                     {640001: 3, 610004: 3}},
                              3: {'msg':
-                                     '幻境宵灯一盏。\r汤圆十个，团团圆圆！\r福包 1个\r',
+                                     '无敌的聚灵阵一盏。\r复元水3个，出货！\r刷新令 3个\r',
                                  'items':
-                                     {2506: 1, 25011: 10, 700002: 1}}}
+                                     {2507: 1, 640001: 3, 610004: 3}},
+                             4: {'msg':
+                                     '王道神兵一把。\r复元水3个，出货！\r刷新令 3个\r',
+                                 'items':
+                                     {444001: 1, 640001: 3, 610004: 3}},
+                             5: {'msg':
+                                     '王道神兵一把。\r复元水3个，出货！\r刷新令 3个\r',
+                                 'items':
+                                     {443001: 1, 640001: 3, 610004: 3}}}
 
 
 # 创建一个临时活动数据库
@@ -147,12 +155,12 @@ async def get_yuan_xiao_top():
 # 活动日常刷新
 @active_daily_reset.scheduled_job("cron", hour=0, minute=0)
 async def active_daily_reset_():
-    await database.sql_execute("update yuan_xiao_temp set daily_sign=0, today_answered=0")
+    await database.sql_execute("update yuan_xiao_temp set daily_sign=0")
 
 
 new_active_menu = on_command("元宵", priority=9, permission=GROUP, block=True)
 yuan_xiao_gift_get = on_command("拆福袋", aliases={'使用二零二五元宵福包'}, priority=1, permission=GROUP, block=True)
-yuan_xiao_daily_gift_get = on_command("元宵签到", priority=8, permission=GROUP, block=True)
+active_daily_gift_get = on_command("愚人节签到", priority=8, permission=GROUP, block=True)
 time_set_new_active = on_command('活动刷新', priority=15, permission=SUPERUSER, block=True)
 yuan_xiao_problem_get = on_command("获取灯谜", priority=8, permission=GROUP, block=True)
 yuan_xiao_problem_answer = on_command("答题", priority=8, permission=GROUP, block=True)
@@ -413,20 +421,20 @@ async def time_set_new_year_(bot: Bot, event: GroupMessageEvent):
     await time_set_new_active.finish()
 
 
-@yuan_xiao_daily_gift_get.handle(parameterless=[Cooldown(cd_time=5)])
+@active_daily_gift_get.handle(parameterless=[Cooldown(cd_time=5)])
 async def yuan_xiao_daily_gift_get_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """元宵签到"""
 
     now_day = datetime.date.today()
-    if not (YUAN_XIAO_START_TIME < now_day):
+    if not (datetime.date(year=2025, month=3, day=25) < now_day):
         msg = "活动尚未开始！！"
         await bot.send(event=event, message=msg)
-        await yuan_xiao_daily_gift_get.finish()
+        await active_daily_gift_get.finish()
 
-    if not (datetime.date(year=2025, month=2, day=21) > now_day):
+    if not (datetime.date(year=2025, month=4, day=8) > now_day):
         msg = "活动已结束！！"
         await bot.send(event=event, message=msg)
-        await yuan_xiao_daily_gift_get.finish()
+        await active_daily_gift_get.finish()
 
     user_info = await check_user(event)
     user_id = user_info['user_id']
@@ -434,21 +442,17 @@ async def yuan_xiao_daily_gift_get_(bot: Bot, event: GroupMessageEvent, args: Me
     user_yuan_xiao_info = await get_user_yuan_xiao_info(user_id)
     is_sign = user_yuan_xiao_info['daily_sign']
     if is_sign:
-        msg = f"道友今天已经签到过啦，快去参与其他元宵活动吧！！\r"
-        msg = three_md(msg, "查看福包奖励", "查二零二五元宵福包", "\r —— 查看所有福包内含奖励！！\r",
-                       "主菜单", "元宵", "\r —— 查看全部元宵活动！！\r",
-                       "拆福袋", "拆福袋", "\r —— 打开福袋获取奖励！！")
+        msg = simple_md(f"道友今天已经",
+                        "签到", "愚人节签到", "过啦！！")
         await bot.send(event=event, message=msg)
-        await yuan_xiao_daily_gift_get.finish()
+        await active_daily_gift_get.finish()
 
     all_sign_num = user_yuan_xiao_info['all_sign_num']
-    if all_sign_num > 2:
-        msg = f"道友已经完成全部签到啦，元宵快乐！！\r"
-        msg = three_md(msg, "查看福包奖励", "查二零二五元宵福包", "\r —— 查看所有福包内含奖励！！\r",
-                       "主菜单", "元宵", "\r —— 查看全部元宵活动！！\r",
-                       "拆福袋", "拆福袋", "\r —— 打开福袋获取奖励！！")
+    if all_sign_num > 4:
+        msg = simple_md(f"道友已经完成了所有",
+                        "签到", "愚人节签到", "啦！！")
         await bot.send(event=event, message=msg)
-        await yuan_xiao_daily_gift_get.finish()
+        await active_daily_gift_get.finish()
     user_yuan_xiao_info['all_sign_num'] += 1
     user_yuan_xiao_info['daily_sign'] = 1
     gift_today = yuan_xiao_daily_gift_list[user_yuan_xiao_info['all_sign_num']]
@@ -456,12 +460,11 @@ async def yuan_xiao_daily_gift_get_(bot: Bot, event: GroupMessageEvent, args: Me
     item_msg = gift_today['msg']
     await sql_message.send_item(user_id, item_send, 1)
     await update_user_yuan_xiao_info(user_id, user_yuan_xiao_info)
-    msg = f"{user_name}道友元宵快乐！！\r今天是道友第{all_sign_num + 1}次元宵签到\r获取了以下奖励：\r" + item_msg
-    msg = three_md(msg, "去猜灯谜", "元宵灯谜", "\r —— 猜灯谜获取奖励！！\r",
-                   "主菜单", "元宵", "\r —— 查看全部元宵活动！！\r",
-                   f"去拆福袋", "拆福袋", "\r —— 打开福袋获取奖励！！")
+    msg = simple_md(f"@{user_name}道友\r今天是道友第{all_sign_num + 1}次",
+                    "愚人节签到", "愚人节签到",
+                    f"\r获取了以下奖励：\r" + item_msg)
     await bot.send(event=event, message=msg)
-    await yuan_xiao_daily_gift_get.finish()
+    await active_daily_gift_get.finish()
 
 
 @new_active_menu.handle(parameterless=[Cooldown(cd_time=5)])
