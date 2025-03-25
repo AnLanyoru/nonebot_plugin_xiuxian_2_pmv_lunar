@@ -413,12 +413,12 @@ async def final_user_data(user_info):
                             * (1 + new_equipment_atk_buff))  # 六件套装备加成
                            + int(user_buff_data_old['atk_buff']))  # 攻击丹药加成
 
-    user_info['crit'] = int((main_crit_buff
-                             + weapon_crit_buff
-                             + armor_crit_buff
-                             + impart_know_per
-                             + new_equipment_crit_buff)
-                            * 100)
+    user_info['crit'] = int(round((main_crit_buff
+                                   + weapon_crit_buff
+                                   + armor_crit_buff
+                                   + impart_know_per
+                                   + new_equipment_crit_buff)
+                                  * 100), 2)
 
     user_info['burst'] = (1.5
                           + impart_burst_per
