@@ -28,7 +28,7 @@ from ..xiuxian_utils.other_set import OtherSet
 from ..xiuxian_utils.utils import (
     check_user,
     get_msg_pic, number_to,
-    send_msg_handler, get_id_from_str, linggen_get
+    send_msg_handler, get_id_from_str, linggen_get, check_user_type
 )
 from ..xiuxian_utils.xiuxian2_handle import (
     sql_message, UserBuffDate, xiuxian_impart, leave_harm_time
@@ -382,6 +382,10 @@ async def level_up_zj_(bot: Bot, event: GroupMessageEvent):
     # 这里曾经是风控模块，但是已经不再需要了
     user_info = await check_user(event)
     user_id = user_info['user_id']
+    is_type, msg = await check_user_type(user_id, 0)
+    if not is_type:
+        await bot.send(event=event, message=msg)
+        await level_up_zj.finish()
     if user_info['hp'] is None:
         # 判断用户气血是否为空
         await sql_message.update_user_hp(user_id)
@@ -438,6 +442,10 @@ async def level_up_zj_all_(bot: Bot, event: GroupMessageEvent):
     user_info = await check_user(event)
     run = 0
     user_id = user_info['user_id']
+    is_type, msg = await check_user_type(user_id, 0)
+    if not is_type:
+        await bot.send(event=event, message=msg)
+        await level_up_zj_all.finish()
     lost_exp = 0
     if user_info['hp'] is None:
         # 判断用户气血是否为空
@@ -509,6 +517,10 @@ async def level_up_dr_(bot: Bot, event: GroupMessageEvent):
     # 这里曾经是风控模块，但是已经不再需要了
     user_info = await check_user(event)
     user_id = user_info['user_id']
+    is_type, msg = await check_user_type(user_id, 0)
+    if not is_type:
+        await bot.send(event=event, message=msg)
+        await level_up_dr.finish()
     if user_info['hp'] is None:
         # 判断用户气血是否为空
         await sql_message.update_user_hp(user_id)
@@ -583,6 +595,10 @@ async def level_up_dr_fast_(bot: Bot, event: GroupMessageEvent):
     # 这里曾经是风控模块，但是已经不再需要了
     user_info = await check_user(event)
     user_id = user_info['user_id']
+    is_type, msg = await check_user_type(user_id, 0)
+    if not is_type:
+        await bot.send(event=event, message=msg)
+        await level_up_dr_fast.finish()
     elixir_name = "渡厄丹"
     user_backs = await sql_message.get_item_by_good_id_and_user_id(user_id=user_id, goods_id=1999)
     elixir_num = int(user_backs['goods_num'])
