@@ -55,8 +55,10 @@ my_history_skill = on_command("我的识海",
                               priority=14, permission=GROUP, block=True)
 learn_history_skill = on_command("回忆功法",
                                  priority=4, permission=GROUP, block=True)
-remove_history_skill = on_command("忘记功法",
+remove_history_skill = on_command("忘记功法", aliases={'遗忘功法'},
                                   priority=4, permission=GROUP, block=True)
+remove_history_skill_sure = on_command("确认忘记功法", aliases={'确认遗忘功法'},
+                                       priority=4, permission=GROUP, block=True)
 add_history_skill_max = on_command("拓展识海", aliases={'识海拓展'},
                                    priority=4, permission=GROUP, block=True)
 
@@ -81,6 +83,57 @@ __back_help__ = f"""
 ——tips——
 官方群914556251
 """.strip()
+
+
+@remove_history_skill_sure.handle(parameterless=[Cooldown()])
+async def remove_history_skill_sure_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
+    """快速丹药"""
+    user_info = await check_user(event)
+    user_id = user_info["user_id"]
+    user_name = user_info["user_name"]
+    arg_str = args.extract_plain_text()
+    arg_strs = get_strs_from_str(arg_str)
+    if not arg_strs:
+        msg = three_md(f'@{user_name}道友\r'
+                       f'请输入正确的功法名称！！\r',
+                       "我的识海", "我的识海",
+                       "\r 🔹 查看识海中的过往功法记忆\r",
+                       "回忆功法 功法名", "回忆功法",
+                       "\r 🔹 将记录在识海中的过往功法回忆\r",
+                       "忘记功法 功法名", "忘记功法",
+                       "\r 🔹 将记录在识海中的过往功法忘记", )
+
+        await bot.send(event=event, message=msg)
+        await remove_history_skill_sure.finish()
+
+    item_name = arg_strs[0]
+    item_id = items.get_item_id(item_name)
+    skill_info = items.get_data_by_item_id(item_id)
+    item_type = skill_info['type']
+    if item_type != '技能':
+        msg = three_md(f'@{user_name}道友\r'
+                       f'请输入正确的功法名称！！\r',
+                       "我的识海", "我的识海",
+                       "\r 🔹 查看识海中的过往功法记忆\r",
+                       "回忆功法 功法名", "回忆功法",
+                       "\r 🔹 将记录在识海中的过往功法回忆\r",
+                       "忘记功法 功法名", "忘记功法",
+                       "\r 🔹 将记录在识海中的过往功法忘记", )
+        await bot.send(event=event, message=msg)
+        await remove_history_skill_sure.finish()
+
+    user_buff_handle = UserBuffHandle(user_id)
+    msg = await user_buff_handle.remove_history_skill(item_id)
+    msg = three_md(f'@{user_name}道友\r'
+                   f'{msg}\r',
+                   "我的识海", "我的识海",
+                   "\r 🔹 查看识海中的过往功法记忆\r",
+                   "回忆功法 功法名", "回忆功法",
+                   "\r 🔹 将记录在识海中的过往功法回忆\r",
+                   "忘记功法 功法名", "忘记功法",
+                   "\r 🔹 将记录在识海中的过往功法忘记", )
+    await bot.send(event=event, message=msg)
+    await remove_history_skill_sure.finish()
 
 
 @add_history_skill_max.handle(parameterless=[Cooldown()])
@@ -166,17 +219,11 @@ async def remove_history_skill_(bot: Bot, event: GroupMessageEvent, args: Messag
                        "\r 🔹 将记录在识海中的过往功法忘记", )
         await bot.send(event=event, message=msg)
         await remove_history_skill.finish()
-
-    user_buff_handle = UserBuffHandle(user_id)
-    msg = await user_buff_handle.remove_history_skill(item_id)
-    msg = three_md(f'@{user_name}道友\r'
+    msg = f"将尝试遗忘功法{item_name}请确认！"
+    msg = simple_md(f'@{user_name}道友\r'
                    f'{msg}\r',
-                   "我的识海", "我的识海",
-                   "\r 🔹 查看识海中的过往功法记忆\r",
-                   "回忆功法 功法名", "回忆功法",
-                   "\r 🔹 将记录在识海中的过往功法回忆\r",
-                   "忘记功法 功法名", "忘记功法",
-                   "\r 🔹 将记录在识海中的过往功法忘记", )
+                    "确认遗忘", f"确认遗忘功法 {item_name}",
+                    "\r 🔹 遗忘后将不可恢复！！！")
     await bot.send(event=event, message=msg)
     await remove_history_skill.finish()
 
@@ -186,6 +233,10 @@ async def learn_history_skill_(bot: Bot, event: GroupMessageEvent, args: Message
     """快速丹药"""
     user_info = await check_user(event)
     user_id = user_info["user_id"]
+    is_type, msg = await check_user_type(user_id, 0)
+    if not is_type:
+        await bot.send(event=event, message=msg)
+        await learn_history_skill.finish()
     user_name = user_info["user_name"]
     arg_str = args.extract_plain_text()
     arg_strs = get_strs_from_str(arg_str)
@@ -982,7 +1033,8 @@ async def check_items_(bot: Bot, event: GroupMessageEvent, args: Message = Comma
     items_name = items_name[0]
     if items_name in items.suits:
         msg = (f"套装名称：{items_name}\r"
-               f"套装类型：{items.suits[items_name]['套装类型']}\r")
+               f"套装类型：{items.suits[items_name]['套装类型']}\r"
+               f"套装介绍：{items.suits[items_name].get('套装介绍', '无')}")
         for need_num, suits_buff in items.suits[items_name]['套组效果'].items():
             effect_msg = '\r - '.join([f"{increase_name}{'提升' if value > 0 else '降低'}{value * 100:.2f}%"
                                        for increase_name, value in suits_buff.items()])
