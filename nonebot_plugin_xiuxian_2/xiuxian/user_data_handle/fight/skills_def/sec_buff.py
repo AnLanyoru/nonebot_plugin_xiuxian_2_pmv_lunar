@@ -38,7 +38,7 @@ class ContinueDamageSkill(BaseSkill):
     def __init__(self, sec_buff_info: SecBuff):
         super().__init__(sec_buff_info)
         self.atk_value: float = sec_buff_info['atkvalue']
-        self.continue_turn = sec_buff_info['turncost']
+        self.continue_turn = sec_buff_info['turncost'] + 1
 
     @staticmethod
     def act_base_damage(user, target_member) -> tuple[int, str]:
@@ -60,7 +60,7 @@ class ContinueDamageSkill(BaseSkill):
         target_member.buffs[buff_obj.name] = buff_obj
         fight_event.add_msg(f"使{target_member.name}"
                             f"每回合受到{number_to(buff_obj.continue_damage)}点伤害，"
-                            f"持续{buff_obj.least_turn}回合")
+                            f"持续{buff_obj.least_turn - 1}回合")
         self.normal_attack(user, target_member, fight_event)
 
     def use_check(self, user, target_member, fight_event) -> tuple[str, bool]:

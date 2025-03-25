@@ -88,6 +88,8 @@ class HpMpStealSub(BaseSub):
             return
         steal_hp = self.hp_steal / 100 * sum_normal_damage
         steal_mp = self.mp_steal / 100 * sum_normal_damage
+        steal_hp = steal_hp if steal_hp + user.hp < user.hp_max else max(user.hp_max - user.hp, 0)
+        steal_mp = steal_mp if steal_mp + user.mp < user.mp_max else max(user.mp_max - user.mp, 0)
         user.hp += steal_hp
         user.mp += steal_mp
         steal_msg = []
@@ -101,9 +103,45 @@ class HpMpStealSub(BaseSub):
         return
 
 
+class HPMPRecoverBuff(BaseSub):
+    """攻击提升辅修效果"""
+    is_after_attack_act: bool = True
+    """是否有攻击后生效的效果"""
+    hp_steal: float = 0
+    mp_steal: float = 0
+
+    def __init__(self, sub_buff_info: SubBuff):
+        buff_type = sub_buff_info['buff_type']
+        if buff_type == '4':
+            self.hp_steal: float = float(sub_buff_info['buff'])
+        elif buff_type == '5':
+            self.mp_steal: float = float(sub_buff_info['buff'])
+
+        self.name: str = sub_buff_info['name']
+
+    def after_attack_act(self, user: BaseFightMember, target_member: BaseFightMember, fight_event) -> None:
+        steal_hp = self.hp_steal / 100 * user.hp_max
+        steal_mp = self.mp_steal / 100 * user.mp_max
+        steal_hp = steal_hp if steal_hp + user.hp < user.hp_max else max(user.hp_max - user.hp, 0)
+        steal_mp = steal_mp if steal_mp + user.mp < user.mp_max else max(user.mp_max - user.mp, 0)
+        user.hp += steal_hp
+        user.mp += steal_mp
+        steal_msg = []
+        if self.hp_steal:
+            steal_msg.append(f"恢复气血：{number_to(steal_hp)}")
+        if self.mp_steal:
+            steal_msg.append(f"恢复真元：{number_to(steal_mp)}")
+        steal_msg = '、'.join(steal_msg)
+        msg = f"{user.name}通过功法{self.name}:{steal_msg}"
+        fight_event.add_msg(msg)
+        return
+
+
 SUB_BUFF_ACHIEVE = {'1': AtkIncreaseBuff,
                     '2': CritIncreaseBuff,
                     '3': BurstIncreaseBuff,
+                    '4': HPMPRecoverBuff,
+                    '5': HPMPRecoverBuff,
                     '6': HpMpStealSub,
                     '7': HpMpStealSub,
                     '9': HpMpStealSub}
