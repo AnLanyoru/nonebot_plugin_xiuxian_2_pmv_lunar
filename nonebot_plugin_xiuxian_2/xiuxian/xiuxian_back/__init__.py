@@ -109,6 +109,17 @@ async def remove_history_skill_sure_(bot: Bot, event: GroupMessageEvent, args: M
     item_name = arg_strs[0]
     item_id = items.get_item_id(item_name)
     skill_info = items.get_data_by_item_id(item_id)
+    if not skill_info:
+        msg = three_md(f'@{user_name}道友\r'
+                       f'请输入正确的功法名称！！\r',
+                       "我的识海", "我的识海",
+                       "\r 🔹 查看识海中的过往功法记忆\r",
+                       "回忆功法 功法名", "回忆功法",
+                       "\r 🔹 将记录在识海中的过往功法回忆\r",
+                       "忘记功法 功法名", "忘记功法",
+                       "\r 🔹 将记录在识海中的过往功法忘记", )
+        await bot.send(event=event, message=msg)
+        await remove_history_skill.finish()
     item_type = skill_info['type']
     if item_type != '技能':
         msg = three_md(f'@{user_name}道友\r'
@@ -187,7 +198,6 @@ async def add_history_skill_max_(bot: Bot, event: GroupMessageEvent):
 async def remove_history_skill_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """快速丹药"""
     user_info = await check_user(event)
-    user_id = user_info["user_id"]
     user_name = user_info["user_name"]
     arg_str = args.extract_plain_text()
     arg_strs = get_strs_from_str(arg_str)
@@ -207,6 +217,17 @@ async def remove_history_skill_(bot: Bot, event: GroupMessageEvent, args: Messag
     item_name = arg_strs[0]
     item_id = items.get_item_id(item_name)
     skill_info = items.get_data_by_item_id(item_id)
+    if not skill_info:
+        msg = three_md(f'@{user_name}道友\r'
+                       f'请输入正确的功法名称！！\r',
+                       "我的识海", "我的识海",
+                       "\r 🔹 查看识海中的过往功法记忆\r",
+                       "回忆功法 功法名", "回忆功法",
+                       "\r 🔹 将记录在识海中的过往功法回忆\r",
+                       "忘记功法 功法名", "忘记功法",
+                       "\r 🔹 将记录在识海中的过往功法忘记", )
+        await bot.send(event=event, message=msg)
+        await remove_history_skill.finish()
     item_type = skill_info['type']
     if item_type != '技能':
         msg = three_md(f'@{user_name}道友\r'
@@ -256,6 +277,17 @@ async def learn_history_skill_(bot: Bot, event: GroupMessageEvent, args: Message
     item_name = arg_strs[0]
     item_id = items.get_item_id(item_name)
     skill_info = items.get_data_by_item_id(item_id)
+    if not skill_info:
+        msg = three_md(f'@{user_name}道友\r'
+                       f'请输入正确的功法名称！！\r',
+                       "我的识海", "我的识海",
+                       "\r 🔹 查看识海中的过往功法记忆\r",
+                       "回忆功法 功法名", "回忆功法",
+                       "\r 🔹 将记录在识海中的过往功法回忆\r",
+                       "忘记功法 功法名", "忘记功法",
+                       "\r 🔹 将记录在识海中的过往功法忘记", )
+        await bot.send(event=event, message=msg)
+        await remove_history_skill.finish()
     item_type = skill_info['type']
     if item_type != '技能':
         msg = three_md(f'@{user_name}道友\r'
@@ -1034,12 +1066,15 @@ async def check_items_(bot: Bot, event: GroupMessageEvent, args: Message = Comma
     if items_name in items.suits:
         msg = (f"套装名称：{items_name}\r"
                f"套装类型：{items.suits[items_name]['套装类型']}\r"
-               f"套装介绍：{items.suits[items_name].get('套装介绍', '无')}")
+               f"套装介绍：{items.suits[items_name].get('套装介绍', '无')}\r")
         for need_num, suits_buff in items.suits[items_name]['套组效果'].items():
             effect_msg = '\r - '.join([f"{increase_name}{'提升' if value > 0 else '降低'}{value * 100:.2f}%"
                                        for increase_name, value in suits_buff.items()])
             msg += f"{need_num}件套:\r - {effect_msg}\r"
-        msg += "包含装备：\r - " + '\r - '.join(items.suits[items_name]['包含装备'])
+        include_equipment = [(f"{items.get_data_by_item_id(include_item_id)['item_type']}: "
+                              f"{items.get_data_by_item_id(include_item_id)['name']}")
+                             for include_item_id in items.suits[items_name]['包含装备']]
+        msg += "包含装备：\r - " + '\r - '.join(include_equipment)
         await bot.send(event=event, message=msg)
         await check_items.finish()
     items_id = items.items_map.get(items_name)

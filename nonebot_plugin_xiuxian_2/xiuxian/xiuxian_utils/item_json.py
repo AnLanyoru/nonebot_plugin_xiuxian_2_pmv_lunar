@@ -74,7 +74,7 @@ class Items:
             if item_info['type'] == '装备':
                 if 'suits' in item_info:
                     if item_info['suits'] in self.suits:
-                        self.suits[item_info['suits']]['包含装备'].append(item_info['name'])
+                        self.suits[item_info['suits']]['包含装备'].append(item_id)
             self.items[item_id] = item_info
             self.items[item_id].update({'item_type': item_type})
             image_path = ITEM_IMAGE_PATH / item_info['type'] / item_type / f"{item_info['name']}.jpg"
