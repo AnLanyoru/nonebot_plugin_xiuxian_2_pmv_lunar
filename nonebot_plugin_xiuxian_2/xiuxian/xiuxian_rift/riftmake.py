@@ -227,7 +227,7 @@ async def get_treasure_info(user_info, rift_rank):
 
     elif rift_type == "新装备":
         armor_info = get_new_equipment(user_info, rift_rank)
-        temp_msg = f"{armor_info[1]['level']}装备：{armor_info[1]['name']}!"
+        temp_msg = f"{armor_info[1]['level']}{armor_info[1]['item_type']}：{armor_info[1]['name']}!"
         msg = random.choice(TREASUREMSG_1).format(temp_msg)
         await sql_message.send_back(
             user_info['user_id'],
