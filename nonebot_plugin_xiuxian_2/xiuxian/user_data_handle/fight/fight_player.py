@@ -3,7 +3,7 @@ from __future__ import annotations
 import random
 from .damage_data import DamageData
 from .fight_base import BaseFightMember, Increase, FightEvent
-from .skill_register import register_skills, register_sub, register_buff
+from .skill_register import register_skills, register_sub, register_suits_buff, register_suits_sub
 from .skills_def.buff_def import BUFF_ACHIEVE
 from ...types.user_info import UserFightInfo
 from ...xiuxian_utils.clean_utils import number_to
@@ -48,7 +48,8 @@ class PlayerFight(BaseFightMember):
         self.main_skill = register_skills(user_fight_info['sec_buff_info'])
         self.sub_skill = register_sub(user_fight_info['sub_buff_info'])
         self.buffs = {}
-        self.buffs.update(register_buff(self.id, user_fight_info['new_equipment_buff']))
+        self.buffs.update(register_suits_buff(self.id, user_fight_info['new_equipment_buff']))
+        self.sub_skill.update(register_suits_sub(user_fight_info['new_equipment_buff']))
         self.increase = Increase()
 
     @property

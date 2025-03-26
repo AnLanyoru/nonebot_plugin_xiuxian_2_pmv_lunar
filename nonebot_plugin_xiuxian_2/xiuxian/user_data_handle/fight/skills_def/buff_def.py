@@ -283,15 +283,15 @@ class StarSoul(BaseBuff):
 BUFF_ACHIEVE = {1: AtkIncrease,
                 2: DefenceIncrease,
                 3: ContinueDamage,
-                10: IceMarkCount,
+                '冰之印记': IceMarkCount,
                 11: IceMark,
-                12: FireDotCount,
-                13: SolarCrowPower,
-                14: FireRebirth,
-                15: FireDamageIncrease,
-                16: LightPower,
-                17: HaoTianPower,
-                18: StarSoul,
+                '炽焰': FireDotCount,
+                '金乌': SolarCrowPower,
+                '炎魔': FireRebirth,
+                '烈火焚天': FireDamageIncrease,
+                '雷霆': LightPower,
+                '昊天神力': HaoTianPower,
+                '星魂之力': StarSoul,
                 1000: Known}
 
 

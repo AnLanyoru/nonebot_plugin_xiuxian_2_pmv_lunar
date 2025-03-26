@@ -145,3 +145,5 @@ SUB_BUFF_ACHIEVE = {'1': AtkIncreaseBuff,
                     '6': HpMpStealSub,
                     '7': HpMpStealSub,
                     '9': HpMpStealSub}
+
+SUITS_BUFF_ACHIEVE = {}

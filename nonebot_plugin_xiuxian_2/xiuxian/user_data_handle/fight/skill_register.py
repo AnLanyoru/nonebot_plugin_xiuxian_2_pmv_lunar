@@ -1,8 +1,7 @@
 from .fight_base import BaseSub, BaseSkill
-from .skills_def.buff_def import get_base_buff
+from .skills_def.buff_def import get_base_buff, BUFF_ACHIEVE
 from .skills_def.sec_buff import SEC_BUFF_ACHIEVE
-from .skills_def.sub_buff import SUB_BUFF_ACHIEVE
-from ...types import NewEquipmentBuffs
+from .skills_def.sub_buff import SUB_BUFF_ACHIEVE, SUITS_BUFF_ACHIEVE
 from ...types.error import UndefinedError
 from ...types.skills_info_type import SecBuff, SubBuff
 
@@ -21,6 +20,12 @@ def sec_buff_register(skill: SecBuff):
         raise UndefinedError(f"未定义的神通效果类型: {sec_buff_type}, 请在skills_def下完善定义")
     achieve = SEC_BUFF_ACHIEVE[sec_buff_type]
     return achieve(skill)
+
+
+def get_suits_buff_sub_type(suits_name: str, suits_value):
+    achieve = SUB_BUFF_ACHIEVE[suits_name]
+    return achieve(suits_value)
+    
 
 
 REGISTER_TYPE_DEF = {
@@ -60,38 +65,20 @@ def register_sub(skills: SubBuff | list[SubBuff]) -> dict[str, BaseSub]:
     return registry
 
 
-def register_buff(user_id, new_equipment_buff: NewEquipmentBuffs):
+def register_suits_buff(user_id, new_equipment_buff):
     buffs = {}
-    if '冰之印记' in new_equipment_buff:
-        ice_mark = get_base_buff(10, user_id)
-        ice_mark.effect_value = new_equipment_buff['冰之印记']
-        buffs[ice_mark.name] = ice_mark
-    if '炽焰' in new_equipment_buff:
-        buff = get_base_buff(12, user_id)
-        buff.effect_value = new_equipment_buff['炽焰']
-        buffs[buff.name] = buff
-    if '金乌' in new_equipment_buff:
-        buff = get_base_buff(13, user_id)
-        buff.effect_value = new_equipment_buff['金乌']
-        buffs[buff.name] = buff
-    if '炎魔' in new_equipment_buff:
-        ice_mark = get_base_buff(14, user_id)
-        ice_mark.effect_value = new_equipment_buff['炎魔']
-        buffs[ice_mark.name] = ice_mark
-    if '烈火焚天' in new_equipment_buff:
-        buff = get_base_buff(15, user_id)
-        buff.effect_value = new_equipment_buff['烈火焚天']
-        buffs[buff.name] = buff
-    if '雷霆' in new_equipment_buff:
-        buff = get_base_buff(16, user_id)
-        buff.effect_value = new_equipment_buff['雷霆']
-        buffs[buff.name] = buff
-    if '昊天神力' in new_equipment_buff:
-        buff = get_base_buff(17, user_id)
-        buff.effect_value = new_equipment_buff['昊天神力']
-        buffs[buff.name] = buff
-    if '星魂之力' in new_equipment_buff:
-        buff = get_base_buff(18, user_id)
-        buff.effect_value = new_equipment_buff['星魂之力']
-        buffs[buff.name] = buff
+    for new_equipment_buff_type in new_equipment_buff:
+        if new_equipment_buff_type in BUFF_ACHIEVE:
+            buff = get_base_buff(new_equipment_buff_type, user_id)
+            buff.effect_value = new_equipment_buff[new_equipment_buff_type]
+            buffs[buff.name] = buff
     return buffs
+
+
+def register_suits_sub(new_equipment_buff):
+    suits_sub = {}
+    for new_equipment_buff_type in new_equipment_buff:
+        if new_equipment_buff_type in SUITS_BUFF_ACHIEVE:
+            sub = get_suits_buff_sub_type(new_equipment_buff_type, new_equipment_buff[new_equipment_buff_type])
+            suits_sub[new_equipment_buff_type] = sub
+    return suits_sub
