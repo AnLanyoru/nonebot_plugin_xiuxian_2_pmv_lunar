@@ -404,7 +404,7 @@ async def final_user_data(user_info):
     # 用于计算神通消耗的真元基础值
     user_info['base_mp'] = int(user_info['exp'])
 
-    user_info['atk'] = int((user_info['atk']
+    user_info['atk'] = int((user_info['exp'] / 10
                             * (user_info['atkpractice'] * 0.04 + 1)  # 攻击修炼
                             * (1 + main_atk_buff)  # 功法攻击加成
                             * (1 + weapon_atk_buff)  # 武器攻击加成
@@ -418,7 +418,7 @@ async def final_user_data(user_info):
                                    + armor_crit_buff
                                    + impart_know_per
                                    + new_equipment_crit_buff)
-                                  * 100), 2)
+                                  * 100, 2))
 
     user_info['burst'] = (1.5
                           + impart_burst_per
