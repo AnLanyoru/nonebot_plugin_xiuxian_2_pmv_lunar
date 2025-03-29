@@ -150,6 +150,8 @@ class NewEquipmentBuffs(TypedDict):
     """攻击力加成"""
     生命: float
     """生命值加成"""
+    真元: float
+    """真元加成"""
     会心率: float
     """暴击率增加"""
 

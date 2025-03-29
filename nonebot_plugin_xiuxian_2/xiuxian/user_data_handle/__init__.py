@@ -370,6 +370,7 @@ async def final_user_data(user_info):
     user_buff_data = UserBuffHandle(user_id)
     new_equipment_buff = await user_buff_data.get_all_new_equipment_buff()
     new_equipment_hp_buff = new_equipment_buff.get('生命', 0)
+    new_equipment_mp_buff = new_equipment_buff.get('真元', 0)
     new_equipment_atk_buff = new_equipment_buff.get('攻击', 0)
     new_equipment_crit_buff = new_equipment_buff.get('会心率', 0)
     # 传入加成
@@ -387,7 +388,7 @@ async def final_user_data(user_info):
 
     # 最终buff计算
     hp_final_buff = (1 + main_hp_buff + impart_hp_per) * (1 + new_equipment_hp_buff) * hp_rate
-    mp_final_buff = (1 + main_mp_buff + impart_mp_per)
+    mp_final_buff = (1 + main_mp_buff + impart_mp_per) * (1 + new_equipment_mp_buff)
 
     # 获取面板血量加成
     user_info['hp_buff'] = hp_final_buff
