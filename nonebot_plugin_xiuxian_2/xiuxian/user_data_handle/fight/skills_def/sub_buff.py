@@ -84,7 +84,7 @@ class HpMpStealSub(BaseSub):
         fight_event.add_msg(f"使用功法{self.name}, 获得{steal_msg}")
 
     def just_attack_act(self, user: BaseFightMember, target_member: BaseFightMember, fight_event) -> None:
-        if not (sum_normal_damage := user.turn_damage.normal_sum):
+        if not (sum_normal_damage := user.just_damage.normal_sum):
             return
         steal_hp = self.hp_steal / 100 * sum_normal_damage
         steal_mp = self.mp_steal / 100 * sum_normal_damage
