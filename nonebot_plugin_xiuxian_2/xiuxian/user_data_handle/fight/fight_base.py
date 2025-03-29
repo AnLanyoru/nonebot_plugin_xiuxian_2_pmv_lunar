@@ -296,7 +296,7 @@ class BaseFightMember:
     """战斗中序列"""
     team: int
     """所属阵营，pve中怪物阵营恒定为0"""
-    status: int
+    status: int = 1
     """当前状态 1活0死"""
     name: str
     """对象名称"""
@@ -312,46 +312,46 @@ class BaseFightMember:
     """最大真元"""
     atk: int
     """攻击力"""
-    crit: int
+    crit: int = 5
     """暴击率（百分比）"""
-    burst: float
+    burst: float = 1.5
     """暴击伤害（倍率）"""
-    defence: float
+    defence: float = 0
     """减伤数值 伤害*本数值"""
-    armour_break: float
+    armour_break: float = 0
     """破甲效果对方的减伤减去此值"""
-    rest_turn: int
+    rest_turn: int = 0
     """休息回合，跳过主动行动"""
-    turn_damage: DamageData
+    just_damage: DamageData = DamageData()
+    """刚造成的伤害"""
+    turn_damage: DamageData = DamageData()
     """本回合造成伤害"""
-    sum_damage: DamageData
+    sum_damage: DamageData = DamageData()
     """整场战斗造成的总伤害"""
-    turn_kill: bool
+    turn_kill: bool = False
     """本回合是否有击杀事件发生"""
-    main_skill: list[BaseSkill]
+    main_skill: list[BaseSkill] = {}
     """神通"""
-    sub_skill: dict[str, BaseSub]
+    sub_skill: dict[str, BaseSub] = {}
     """辅修功法"""
-    buffs: dict[str, BaseBuff]
+    buffs: dict[str, BaseBuff] = {}
     """特殊效果"""
-    increase: Increase
+    increase: Increase = Increase()
     """属性提升（不变常量类）"""
-    miss_rate: int
+    miss_rate: int = 0
     """空间穿梭（闪避率）"""
-    decrease_miss_rate: int
+    decrease_miss_rate: int = 0
     """空间封锁（减少对方闪避率）"""
-    decrease_crit: int
+    decrease_crit: int = 0
     """减少对方暴击率"""
-    soul_damage_add: float
+    soul_damage_add: float = 0
     """灵魂伤害（真实伤害）"""
-    decrease_soul_damage: float
+    decrease_soul_damage: float = 0
     """灵魂抵抗（减少对方真实伤害）"""
-    shield: int
+    shield: int = 0
     """开局护盾"""
-    back_damage: float
+    back_damage: float = 0
     """反伤"""
-    ice_mark: float
-    """叠标记加敌方受到伤害"""
 
     def active(self, enemy: 'BaseFightMember', fight_event: 'FightEvent'):
         if not self.status:

@@ -14,7 +14,6 @@ class PlayerFight(BaseFightMember):
     def __init__(self, user_fight_info: UserFightInfo, team):
         """实例化"""
         self.team = team
-        self.status = 1
         self.id = user_fight_info['user_id']
         self.name = user_fight_info['user_name']
         self.hp = user_fight_info['fight_hp']
@@ -40,14 +39,8 @@ class PlayerFight(BaseFightMember):
         """开局护盾"""
         self.back_damage: float = user_fight_info['back_damage']
         """反伤"""
-        self.rest_turn = 0
-        self.armour_break = 0
-        self.turn_damage: DamageData = DamageData()
-        self.sum_damage: DamageData = DamageData()
-        self.turn_kill = False
         self.main_skill = register_skills(user_fight_info['sec_buff_info'])
         self.sub_skill = register_sub(user_fight_info['sub_buff_info'])
-        self.buffs = {}
         self.buffs.update(register_suits_buff(self.id, user_fight_info['new_equipment_buff']))
         self.sub_skill.update(register_suits_sub(user_fight_info['new_equipment_buff']))
         self.increase = Increase()
@@ -181,6 +174,7 @@ class PlayerFight(BaseFightMember):
             back_damage = int(damage.normal_sum * self.back_damage)
             attacker.be_back_damage(self, fight_event, back_damage)
         self.hp -= damage.all_sum
+        attacker.just_damage = damage
         attacker.turn_damage += damage
         attacker.sum_damage += damage
         if not damage.all_sum:
@@ -192,7 +186,7 @@ class PlayerFight(BaseFightMember):
                f"总计造成{number_to(damage.all_sum)}伤害！")
         fight_event.add_msg(msg)
         attacker.just_attack_act(self, fight_event)
-        fight_event.add_msg(f"{self.name}余剩气血{number_to(self.hp)}。")
+        fight_event.add_msg(f"{self.name}余剩气血{number_to(self.hp)}({self.hp_percent_str})。")
         self.be_hurt_buff_act(attacker, fight_event)
         if self.hp < 1:
             self.status = 0
