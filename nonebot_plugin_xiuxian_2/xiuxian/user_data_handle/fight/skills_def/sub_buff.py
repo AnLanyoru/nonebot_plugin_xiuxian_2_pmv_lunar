@@ -1,3 +1,5 @@
+import copy
+
 from ..fight_base import BaseSub, BaseFightMember
 from ....types.skills_info_type import SubBuff
 from ....xiuxian_utils.clean_utils import number_to
@@ -137,6 +139,28 @@ class HPMPRecoverBuff(BaseSub):
         return
 
 
+class EchoSelf(BaseSub):
+    is_before_attack_act: bool = True
+    """是否有战斗前生效的效果"""
+
+    def __init__(self, name: str, sub_value: float):
+        self.buff: float = sub_value
+        self.name: str = name
+
+    def before_attack_act(self, user: BaseFightMember, target_member: BaseFightMember, fight_event) -> None:
+        user_echo = copy.deepcopy(user)
+        user_echo.id += '的分身'
+        user_echo.name += '的分身'
+        user_echo.hp *= self.buff
+        user_echo.atk *= self.buff
+        del user_echo.sub_skill['分身']
+        fight_event.user_list[f'{user.name}的分身'] = user_echo
+        msg = f"使用功法{self.name}, 攻击力提升{self.buff:.2f}%"
+        fight_event.add_msg(msg)
+        self.is_final_act = True
+        return
+
+
 SUB_BUFF_ACHIEVE = {'1': AtkIncreaseBuff,
                     '2': CritIncreaseBuff,
                     '3': BurstIncreaseBuff,
@@ -146,4 +170,4 @@ SUB_BUFF_ACHIEVE = {'1': AtkIncreaseBuff,
                     '7': HpMpStealSub,
                     '9': HpMpStealSub}
 
-SUITS_BUFF_ACHIEVE = {}
+SUITS_BUFF_ACHIEVE = {'分身': EchoSelf}
