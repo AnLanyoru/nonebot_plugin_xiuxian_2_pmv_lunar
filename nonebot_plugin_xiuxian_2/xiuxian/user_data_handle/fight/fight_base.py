@@ -180,17 +180,17 @@ class BaseBuff:
     """特殊效果名称"""
     least_turn: int
     """效果余剩回合 初始设置-1则持续时间无限"""
-    impose_member: int = None
+    impose_member: str = None
     """施加者"""
-    num: int = 1
-    """层数"""
-    max_num: int = 1
-    """最大层数"""
 
-    def __init__(self, impose_member_id: int):
+    def __init__(self, impose_member_id: str):
         """
         :param impose_member_id: 施加该buff的对象
         """
+        self.num: int = 1
+        """层数"""
+        self.max_num: int = 1
+        """最大层数"""
         self.impose_member = impose_member_id
 
     def act(self,
@@ -292,12 +292,10 @@ class Increase:
 
 
 class BaseFightMember:
-    id: int
+    id: str
     """战斗中序列"""
     team: int
     """所属阵营，pve中怪物阵营恒定为0"""
-    status: int = 1
-    """当前状态 1活0死"""
     name: str
     """对象名称"""
     hp: int
@@ -312,46 +310,52 @@ class BaseFightMember:
     """最大真元"""
     atk: int
     """攻击力"""
-    crit: int = 5
-    """暴击率（百分比）"""
-    burst: float = 1.5
-    """暴击伤害（倍率）"""
-    defence: float = 0
-    """减伤数值 伤害*本数值"""
-    armour_break: float = 0
-    """破甲效果对方的减伤减去此值"""
-    rest_turn: int = 0
-    """休息回合，跳过主动行动"""
-    just_damage: DamageData = DamageData()
-    """刚造成的伤害"""
-    turn_damage: DamageData = DamageData()
-    """本回合造成伤害"""
-    sum_damage: DamageData = DamageData()
-    """整场战斗造成的总伤害"""
-    turn_kill: bool = False
-    """本回合是否有击杀事件发生"""
-    main_skill: list[BaseSkill] = {}
-    """神通"""
-    sub_skill: dict[str, BaseSub] = {}
-    """辅修功法"""
-    buffs: dict[str, BaseBuff] = {}
-    """特殊效果"""
-    increase: Increase = Increase()
-    """属性提升（不变常量类）"""
-    miss_rate: int = 0
-    """空间穿梭（闪避率）"""
-    decrease_miss_rate: int = 0
-    """空间封锁（减少对方闪避率）"""
-    decrease_crit: int = 0
-    """减少对方暴击率"""
-    soul_damage_add: float = 0
-    """灵魂伤害（真实伤害）"""
-    decrease_soul_damage: float = 0
-    """灵魂抵抗（减少对方真实伤害）"""
-    shield: int = 0
-    """开局护盾"""
-    back_damage: float = 0
-    """反伤"""
+
+    def __init__(self):
+        self.status: int = 1
+        """当前状态 1活0死"""
+        self.crit: int = 5
+        """暴击率（百分比）"""
+        self.burst: float = 1.5
+        """暴击伤害（倍率）"""
+        self.defence: float = 1
+        """减伤数值 伤害*本数值"""
+        self.armour_break: float = 0
+        """破甲效果对方的减伤减去此值"""
+        self.rest_turn: int = 0
+        """休息回合，跳过主动行动"""
+        self.just_damage: DamageData = DamageData()
+        """刚造成的伤害"""
+        self.turn_damage: DamageData = DamageData()
+        """本回合造成伤害"""
+        self.sum_damage: DamageData = DamageData()
+        """整场战斗造成的总伤害"""
+        self.turn_kill: str = ''
+        """本回合击杀对象"""
+        self.main_skill: list[BaseSkill] = []
+        """神通"""
+        self.sub_skill: dict[str, BaseSub] = {}
+        """辅修功法"""
+        self.buffs: dict[str, BaseBuff] = {}
+        """特殊效果"""
+        self.increase: Increase = Increase()
+        """属性提升（不变常量类）"""
+        self.miss_rate: int = 0
+        """空间穿梭（闪避率）"""
+        self.decrease_miss_rate: int = 0
+        """空间封锁（减少对方闪避率）"""
+        self.decrease_crit: int = 0
+        """减少对方暴击率"""
+        self.soul_damage_add: float = 0
+        """灵魂伤害（真实伤害）"""
+        self.decrease_soul_damage: float = 0
+        """灵魂抵抗（减少对方真实伤害）"""
+        self.shield: int = 0
+        """开局护盾"""
+        self.back_damage: float = 0
+        """反伤"""
+        self.chaos = 0
+        """混乱"""
 
     def active(self, enemy: 'BaseFightMember', fight_event: 'FightEvent'):
         if not self.status:
@@ -359,10 +363,16 @@ class BaseFightMember:
             return
         if self.rest_turn:
             msg = f"☆ -- {self.name}动弹不得！-- ☆"
-            fight_event.msg_list.append(msg)
+            fight_event.add_msg(msg)
         else:
-            fight_event.msg_list.append(f"☆ -- {self.name}的回合 -- ☆")
+            fight_event.add_msg(f"☆ -- {self.name}的回合 -- ☆")
         # buff生效
+        if self.chaos:
+            enemy = random.choice(list(fight_event.user_list.values()))
+            self.chaos -= 1
+            fight_event.add_msg(f"{self.name}陷入了混乱中！！"
+                                f"随机选取了{enemy.name}为本回合的攻击目标！"
+                                f"余剩混乱回合：{self.chaos if self.chaos >= 0 else '无限！'}")
 
         del_buff_list: list[str] = []
         for buff_name, buff in self.buffs.items():
@@ -527,13 +537,14 @@ class BaseFightMember:
 
 
 class FightEvent:
-    user_list: dict[int, BaseFightMember] = {}
+    user_list: dict[str, BaseFightMember] = {}
     msg_list: list[str] = []
-    turn_owner: int = 0
-    turn_owner_enemy: int = 0
-    turn_owner_enemy_all: list[int] = []
+    now_turn: int = 0
+    turn_owner: str = ''
+    turn_owner_enemy: str = ''
+    turn_owner_enemy_all: list[str] = []
 
-    def __init__(self, user_list: dict[int, BaseFightMember]):
+    def __init__(self, user_list: dict[str, BaseFightMember]):
         self.user_list = user_list
 
     def __str__(self):
@@ -542,5 +553,5 @@ class FightEvent:
     def add_msg(self, msg):
         self.msg_list.append(msg)
 
-    def find_user(self, user_id: int):
+    def find_user(self, user_id: str):
         return self.user_list[user_id]

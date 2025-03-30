@@ -15,7 +15,7 @@ async def player_fight(user_id_dict: dict[int, int], fight_key: int = 0):
     for user_id, team in user_id_dict.items():
         user_buff_data = UserBuffHandle(user_id)
         user_fight_info = await user_buff_data.get_user_fight_info()
-        fight_dict[user_id] = PlayerFight(user_fight_info, team)
+        fight_dict[str(user_id)] = PlayerFight(user_fight_info, team)
     winner, fight_msg, after_fight_user_info_list = get_fight(fight_dict, max_turn=15)
     if fight_key:
         for user_id, user_after_fight_info in after_fight_user_info_list.user_list.items():
@@ -25,7 +25,7 @@ async def player_fight(user_id_dict: dict[int, int], fight_key: int = 0):
 
 
 def get_fight(
-        pre_fight_dict: dict[int, BaseFightMember],
+        pre_fight_dict: dict[str, BaseFightMember],
         max_turn: int = 20) \
         -> tuple[str | None, list[str], FightEvent]:
     """
@@ -43,8 +43,9 @@ def get_fight(
     for turn in range(1, max_turn + 1):
         if winner:
             break
+        fight_event.now_turn = turn
         msg_list.append(f"\r⭐第{turn}回合⭐\r")
-        act_list = fight_event.user_list.values()
+        act_list = list(fight_event.user_list.values())
         for fight_player in act_list:
             enemy_list = [user_id for user_id in fight_event.user_list
                           if fight_event.user_list[user_id].team != fight_player.team

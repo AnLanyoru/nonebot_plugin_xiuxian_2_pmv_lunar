@@ -147,70 +147,8 @@ class SealSkill(BaseSkill):
         return super().use_check(user, target_member, fight_event)
 
 
-class OnceDirectDamageSkill(BaseSkill):
-    """仅释放一次的直接伤害"""
-
-    def __init__(self, sec_buff_info: SecBuff):
-        super().__init__(sec_buff_info)
-        self.atk_value: list[float] = sec_buff_info['atkvalue']
-        self.rest_turn = sec_buff_info['turncost']
-        self.last_use_num = 2
-
-    def achieve(self,
-                user: BaseFightMember,
-                target_member: BaseFightMember,
-                base_damage: int,
-                fight_event):
-        """行动实现"""
-        temp_atk_value = self.atk_value.copy()
-        for buff in user.buffs.values():
-            buff.skill_value_change(temp_atk_value)
-        if "解读" in target_member.buffs:
-            buff_num = target_member.buffs['解读'].num
-            fight_event.add_msg(f"{target_member.name}的解读达到{buff_num}层，"
-                                f"本次{self.name}伤害增加{buff_num * 10}%，"
-                                f"并重置目标解读为15层")
-            target_member.buffs['解读'].num = 15
-            temp_atk_value = [atk_value_per * (1 + (buff_num * 0.1)) for atk_value_per in self.atk_value]
-        damage = DamageData(normal_damage=[int(base_damage * atk_value_per) for atk_value_per in temp_atk_value])
-        user.attack(enemy=target_member, fight_event=fight_event, damage=damage)
-
-    def back_skill_list(self, user_skill_list: list):
-        """不将自身重新排入技能释放轴中"""
-        self.last_use_num -= 1
-        if self.last_use_num > 0:
-            user_skill_list.append(self)
-        user_skill_list.pop(0)
-
-
-class DirectDamageSkillSendBuff(BaseSkill):
-    """为敌方附加特殊效果的直接伤害"""
-
-    def __init__(self, sec_buff_info: SecBuff):
-        super().__init__(sec_buff_info)
-        self.atk_value: list[float] = sec_buff_info['atkvalue']
-        self.rest_turn = sec_buff_info['turncost']
-
-    def achieve(self,
-                user: BaseFightMember,
-                target_member: BaseFightMember,
-                base_damage: int,
-                fight_event):
-        """行动实现"""
-        temp_atk_value = self.atk_value.copy()
-        for buff in user.buffs.values():
-            buff.skill_value_change(temp_atk_value)
-        damage = DamageData(normal_damage=[int(base_damage * atk_value_per) for atk_value_per in temp_atk_value])
-        user.impose_effects(enemy=target_member, buff_id=1000, num=2, fight_event=fight_event)
-        user.attack(enemy=target_member, fight_event=fight_event, damage=damage)
-        if target_member.buffs['解读'].num == 42:
-            fight_event.add_msg(f"目标解读层数达到42层，下两次神通被强化为我有一个大胆的想法")
-            user.main_skill.append(OnceDirectDamageSkill(items.get_data_by_item_id(1940097)))
-
-
 SEC_BUFF_ACHIEVE = {1: DirectDamageSkill,
                     2: ContinueDamageSkill,
                     3: MakeBuffSkill,
                     4: SealSkill,
-                    10: DirectDamageSkillSendBuff,
-                    11: OnceDirectDamageSkill}
+                    }

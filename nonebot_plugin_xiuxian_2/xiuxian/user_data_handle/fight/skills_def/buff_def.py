@@ -30,11 +30,27 @@ class DefenceIncrease(BaseBuff):
         buff_defence_change["add"] += self.buff_value
 
 
+class FinalDamageIncrease(BaseBuff):
+    name = '最终伤害增加'
+    least_turn = 0
+    buff_value: float = 0
+    tips = 1
+
+    def act(self, effect_user, now_enemy, fight_event):
+        if self.tips:
+            msg = f"{effect_user.name}获得了{self.buff_value * 100:.2f}%{self.name}效果"
+            fight_event.add_msg(msg)
+            self.tips = 0
+
+    def damage_change(self, damage: int, buff_damage_change: BuffIncreaseDict) -> None:
+        buff_damage_change["mul"] *= self.buff_value
+
+
 class ContinueDamage(BaseBuff):
     name = '无'
     least_turn = 0
 
-    def __init__(self, impose_member: int):
+    def __init__(self, impose_member: str):
         super().__init__(impose_member)
         self.continue_damage = 0
 
@@ -51,16 +67,6 @@ class ContinueDamage(BaseBuff):
             fight_event,
             damage=DamageData(normal_damage=[self.continue_damage]),
             armour_break=0.2)
-
-
-class Known(BaseBuff):
-    num = 0
-    max_num = 42
-    least_turn = -1
-    name = '解读'
-
-    def act(self, effect_user, now_enemy, fight_event):
-        pass
 
 
 class IceMarkCount(BaseBuff):
@@ -283,6 +289,7 @@ class StarSoul(BaseBuff):
 BUFF_ACHIEVE = {1: AtkIncrease,
                 2: DefenceIncrease,
                 3: ContinueDamage,
+                '增伤': FinalDamageIncrease,
                 '冰之印记': IceMarkCount,
                 11: IceMark,
                 '炽焰': FireDotCount,
@@ -292,8 +299,8 @@ BUFF_ACHIEVE = {1: AtkIncrease,
                 '雷霆': LightPower,
                 '昊天神力': HaoTianPower,
                 '星魂之力': StarSoul,
-                1000: Known}
+                }
 
 
-def get_base_buff(buff_id: int, user_id: int) -> BaseBuff:
+def get_base_buff(buff_id: int, user_id: str) -> BaseBuff:
     return BUFF_ACHIEVE[buff_id](user_id)

@@ -1,6 +1,7 @@
-import copy
+import random
 
 from ..fight_base import BaseSub, BaseFightMember
+from ..fight_member import NormalFight
 from ....types.skills_info_type import SubBuff
 from ....xiuxian_utils.clean_utils import number_to
 
@@ -148,17 +149,31 @@ class EchoSelf(BaseSub):
         self.name: str = name
 
     def before_attack_act(self, user: BaseFightMember, target_member: BaseFightMember, fight_event) -> None:
-        user_echo = copy.deepcopy(user)
-        user_echo.id += '的分身'
-        user_echo.name += '的分身'
-        user_echo.hp *= self.buff
-        user_echo.atk *= self.buff
-        del user_echo.sub_skill['分身']
-        fight_event.user_list[f'{user.name}的分身'] = user_echo
-        msg = f"使用功法{self.name}, 攻击力提升{self.buff:.2f}%"
+        echo_dict = {'id': user.id + '的分身',
+                     'name': user.name + '的分身',
+                     'hp': user.hp * self.buff,
+                     'atk': user.atk * self.buff,
+                     'crit': user.crit,
+                     'burst': user.burst}
+        fight_event.user_list[f'{user.name}的分身'] = NormalFight(echo_dict, user.team)
+        msg = f"使用功法{self.name}, 演化太极八卦，一生二，召唤继承{self.buff * 100:.2f}%自身百分比生命以及攻击的分身协同自身战斗"
         fight_event.add_msg(msg)
         self.is_final_act = True
         return
+
+
+class ChaosGive(BaseSub):
+    """攻击提升辅修效果"""
+    is_just_attack_act: bool = True
+
+    def __init__(self, name: str, sub_value: float):
+        self.buff: float = int(sub_value * 100)
+        self.name: str = name
+
+    def just_attack_act(self, user: BaseFightMember, target_member: BaseFightMember, fight_event) -> None:
+        if random.randint(1, 100) < self.buff:
+            fight_event.add_msg(f"{user.name}的攻击使{target_member.name}陷入了纷乱中")
+            target_member.chaos += 1
 
 
 SUB_BUFF_ACHIEVE = {'1': AtkIncreaseBuff,
@@ -170,4 +185,5 @@ SUB_BUFF_ACHIEVE = {'1': AtkIncreaseBuff,
                     '7': HpMpStealSub,
                     '9': HpMpStealSub}
 
-SUITS_BUFF_ACHIEVE = {'分身': EchoSelf}
+SUITS_BUFF_ACHIEVE = {'分身': EchoSelf,
+                      '纷乱': ChaosGive}

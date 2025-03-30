@@ -23,8 +23,8 @@ def sec_buff_register(skill: SecBuff):
 
 
 def get_suits_buff_sub_type(suits_name: str, suits_value):
-    achieve = SUB_BUFF_ACHIEVE[suits_name]
-    return achieve(suits_value)
+    achieve = SUITS_BUFF_ACHIEVE[suits_name]
+    return achieve(suits_name, suits_value)
     
 
 
