@@ -585,6 +585,24 @@ def get_item_msg(goods_id, get_image: bool = False):
     return msg
 
 
+def get_suits_effect(items_name):
+    suits_effect_def = {"分身": "召唤继承自身{:.2f}%生命以及攻击的分身协同自身战斗，同类效果数值叠加"}
+    msg = (f"套装名称：{items_name}\r"
+           f"套装类型：{items.suits[items_name]['套装类型']}\r"
+           f"套装介绍：{items.suits[items_name].get('套装介绍', '无')}\r")
+    for need_num, suits_buff in items.suits[items_name]['套组效果'].items():
+        effect_msg = '\r - '.join([f"{increase_name}{'提升' if value > 0 else '降低'}{value * 100:.2f}%"
+                                   if increase_name not in suits_effect_def
+                                   else suits_effect_def[increase_name].format(value * 100)
+                                   for increase_name, value in suits_buff.items()])
+        msg += f"{need_num}件套:\r - {effect_msg}\r"
+    include_equipment = [(f"{items.get_data_by_item_id(include_item_id)['item_type']}: "
+                          f"{items.get_data_by_item_id(include_item_id)['name']}")
+                         for include_item_id in items.suits[items_name]['包含装备']]
+    msg += "包含装备：\r - " + '\r - '.join(include_equipment)
+    return msg
+
+
 def get_item_msg_rank(goods_id):
     """
     获取单个物品的rank
@@ -828,5 +846,3 @@ async def get_use_tool_msg(user_id, goods_id, use_num) -> (str, bool):
     else:
         msg = f"{item_info['name']}使用失败！！可能暂未开放使用！！！"
     return msg, is_pass
-
-

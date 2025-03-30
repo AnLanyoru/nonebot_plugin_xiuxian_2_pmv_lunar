@@ -12,7 +12,7 @@ from .back_util import (
     get_user_main_back_msg,
     get_item_msg, get_item_msg_rank, check_use_elixir,
     get_use_jlq_msg, get_no_use_equipment_sql, get_use_tool_msg,
-    get_user_main_back_msg_easy, get_user_back_msg)
+    get_user_main_back_msg_easy, get_user_back_msg, get_suits_effect)
 from ..user_data_handle import UserBuffHandle
 from ..xiuxian_config import XiuConfig, convert_rank
 from ..xiuxian_limit import limit_handle
@@ -38,6 +38,7 @@ main_back = on_command('我的背包', aliases={'我的物品', '背包'}, prior
 skill_back = on_command('功法背包', priority=2, permission=GROUP, block=True)
 check_back = on_command('别人的背包', aliases={'检查背包'}, priority=2, permission=SUPERUSER, block=True)
 use = on_command("使用", priority=15, permission=GROUP, block=True)
+use_suits = on_command("套装使用", priority=15, permission=GROUP, block=True)
 fast_elixir_use_set = on_command("快速丹药设置", aliases={'设置快速丹药'}, priority=3, permission=GROUP, block=True)
 fast_elixir_use = on_command("快速丹药", aliases={'磕'}, priority=15, permission=GROUP, block=True)
 no_use_zb = on_command("换装", aliases={"卸载"}, priority=5, permission=GROUP, block=True)
@@ -824,6 +825,49 @@ async def no_use_zb_(bot: Bot, event: GroupMessageEvent, args: Message = Command
         await no_use_zb.finish()
 
 
+@use_suits.handle(parameterless=[Cooldown()])
+async def use_suits_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
+    """使用物品
+    ["user_id", "goods_id", "goods_name", "goods_type", "goods_num", "create_time", "update_time",
+    "remake", "day_num", "all_num", "action_time", "state"]
+    """
+    user_info = await check_user(event)
+    user_id = user_info['user_id']
+    args = args.extract_plain_text()
+    msg_info = get_strs_from_str(args)
+    item_name = msg_info[0] if msg_info else None  # 获取第一个名称
+    if item_name not in items.suits:
+        msg = f"请检查该套装是否存在！"
+        await bot.send(event=event, message=msg)
+        await use_suits.finish()
+    suits_items = items.suits[item_name]['包含装备']
+    msg = ''
+    for goods_id in suits_items:
+        goods_id = int(goods_id)
+        item_back_info = await sql_message.get_item_by_good_id_and_user_id(user_id, goods_id)
+        item_info = items.get_data_by_item_id(goods_id)
+        goods_name = item_info['name']
+        if not item_back_info:
+            msg = f"请检查{goods_name}是否在背包内！"
+            continue
+        goods_type = item_back_info['goods_type']
+        if goods_type != '装备':
+            msg = f"类型发送错误！请联系管理解决！"
+            await bot.send(event=event, message=msg)
+            await use_suits.finish()
+        goods_num = item_back_info['goods_num']
+        if goods_num < 1:
+            msg = f"{goods_name}不足！！"
+            continue
+        user_buff_data = UserBuffHandle(user_id)
+        if item_back_info['state']:
+            msg = f"{goods_name}已被装备，请勿重复装备！"
+            continue
+        msg += await user_buff_data.update_new_equipment(item_back_info['goods_id']) + '\r'
+    await bot.send(event=event, message=msg)
+    await use_suits.finish()
+
+
 @use.handle(parameterless=[Cooldown()])
 async def use_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """使用物品
@@ -1064,17 +1108,7 @@ async def check_items_(bot: Bot, event: GroupMessageEvent, args: Message = Comma
         await check_items.finish()
     items_name = items_name[0]
     if items_name in items.suits:
-        msg = (f"套装名称：{items_name}\r"
-               f"套装类型：{items.suits[items_name]['套装类型']}\r"
-               f"套装介绍：{items.suits[items_name].get('套装介绍', '无')}\r")
-        for need_num, suits_buff in items.suits[items_name]['套组效果'].items():
-            effect_msg = '\r - '.join([f"{increase_name}{'提升' if value > 0 else '降低'}{value * 100:.2f}%"
-                                       for increase_name, value in suits_buff.items()])
-            msg += f"{need_num}件套:\r - {effect_msg}\r"
-        include_equipment = [(f"{items.get_data_by_item_id(include_item_id)['item_type']}: "
-                              f"{items.get_data_by_item_id(include_item_id)['name']}")
-                             for include_item_id in items.suits[items_name]['包含装备']]
-        msg += "包含装备：\r - " + '\r - '.join(include_equipment)
+        msg = get_suits_effect(items_name)
         await bot.send(event=event, message=msg)
         await check_items.finish()
     items_id = items.items_map.get(items_name)
