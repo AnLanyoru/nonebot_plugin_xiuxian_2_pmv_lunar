@@ -6,7 +6,6 @@ from ..fight_base import BaseFightMember, BaseSkill
 from ....types.error import UndefinedError
 from ....types.skills_info_type import SecBuff
 from ....xiuxian_utils.clean_utils import number_to
-from ....xiuxian_utils.item_json import items
 
 
 class DirectDamageSkill(BaseSkill):

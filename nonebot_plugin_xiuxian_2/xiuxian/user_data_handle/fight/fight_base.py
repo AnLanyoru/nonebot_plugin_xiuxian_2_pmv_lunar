@@ -542,7 +542,6 @@ class FightEvent:
     now_turn: int = 0
     turn_owner: str = ''
     turn_owner_enemy: str = ''
-    turn_owner_enemy_all: list[str] = []
 
     def __init__(self, user_list: dict[str, BaseFightMember]):
         self.user_list = user_list
