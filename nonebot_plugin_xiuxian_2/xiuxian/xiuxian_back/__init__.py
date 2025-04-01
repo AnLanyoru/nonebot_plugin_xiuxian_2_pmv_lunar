@@ -848,20 +848,20 @@ async def use_suits_(bot: Bot, event: GroupMessageEvent, args: Message = Command
         item_info = items.get_data_by_item_id(goods_id)
         goods_name = item_info['name']
         if not item_back_info:
-            msg = f"请检查{goods_name}是否在背包内！"
+            msg += f"请检查{goods_name}是否在背包内！"
             continue
         goods_type = item_back_info['goods_type']
         if goods_type != '装备':
-            msg = f"类型发送错误！请联系管理解决！"
+            msg += f"类型发送错误！请联系管理解决！"
             await bot.send(event=event, message=msg)
             await use_suits.finish()
         goods_num = item_back_info['goods_num']
         if goods_num < 1:
-            msg = f"{goods_name}不足！！"
+            msg += f"{goods_name}不足！！"
             continue
         user_buff_data = UserBuffHandle(user_id)
         if item_back_info['state']:
-            msg = f"{goods_name}已被装备，请勿重复装备！"
+            msg += f"{goods_name}已被装备，请勿重复装备！"
             continue
         msg += await user_buff_data.update_new_equipment(item_back_info['goods_id']) + '\r'
     await bot.send(event=event, message=msg)
