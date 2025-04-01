@@ -412,11 +412,6 @@ async def two_exp_(bot: Bot, event: GroupMessageEvent, args: Message = CommandAr
         await bot.send(event=event, message=msg)
         await two_exp.finish()
 
-    is_pass, msg = await limit_check.two_exp_limit_check(user_id_1=user_1_id, user_id_2=user_2_id, num=num)
-    if not is_pass:
-        await bot.send(event=event, message=msg)
-        await two_exp.finish()
-
     # 获取下个境界需要的修为 * 1.5为闭关上限
     max_exp_1 = (int(await OtherSet().set_closing_type(user_1['level']))
                  * XiuConfig().closing_exp_upper_limit)
@@ -424,46 +419,42 @@ async def two_exp_(bot: Bot, event: GroupMessageEvent, args: Message = CommandAr
                  * XiuConfig().closing_exp_upper_limit)
     user_get_exp_max_1 = max(max_exp_1 - user_1['exp'], 0)
     user_get_exp_max_2 = max(max_exp_2 - user_2['exp'], 0)
+    if (not user_get_exp_max_2) and user_2['user_name'] not in ['凌云', '凌云三']:
+        msg = "对方修为已达上限！！"
+        await bot.send(event=event, message=msg)
+        await send_exp.finish()
 
     msg = f"{user_1['user_name']}与{user_2['user_name']}情投意合，于某地一起修炼了一晚。"
     exp = int((exp_1 + exp_2) * 0.0055)
     max_exp = XiuConfig().two_exp  # 双修上限罪魁祸首
     # 玩家1修为增加
     if exp >= max_exp:
-        user_1_get_exp_full = True
         if user_1['root_type'] not in ['源宇道根', '道之本源']:
             exp_limit_1 = max_exp
         else:
             exp_limit_1 = max_exp * 10
     else:
-        user_1_get_exp_full = False
         exp_limit_1 = exp
     # 玩家2修为增加
     if exp >= max_exp:
-        user_2_get_exp_full = True
         if user_2['root_type'] not in ['源宇道根', '道之本源']:
             exp_limit_2 = max_exp
         else:
             exp_limit_2 = max_exp * 10
     else:
-        user_2_get_exp_full = False
         exp_limit_2 = exp
-
-    if not user_1_get_exp_full & user_2_get_exp_full:
-        if cmd == "确认快速双修":
-            pass
-        else:
-            tip_msg = "道友与对方有一方无法达到最大双修收益，若不想看到本提示，在指令前加上确定"
-            tip_msg = main_md(
-                "提示", tip_msg,
-                '查看日常', "日常中心",
-                '双修', '双修',
-                '修炼', '修炼',
-                '确认快速双修', f"确认快速双修{user_2['user_name']} {num}")
-            await bot.send(event=event, message=tip_msg)
+    # 玩家2修为上限
+    if (exp_limit_2 * num >= user_get_exp_max_2) and user_2['user_name'] not in ['凌云', '凌云三']:
+        msg += f"{user_2['user_name']}修为将到达上限，仅可双修1次！\r"
+        num = 1
 
     exp_limit_1 *= num
     exp_limit_2 *= num
+
+    is_pass, pass_msg = await limit_check.two_exp_limit_check(user_id_1=user_1_id, user_id_2=user_2_id, num=num)
+    if not is_pass:
+        await bot.send(event=event, message=pass_msg)
+        await two_exp.finish()
 
     # 玩家1修为上限
     if exp_limit_1 >= user_get_exp_max_1:
