@@ -133,7 +133,8 @@ class UserBuffHandle:
             if not equipment_id:
                 continue
             item_info = items.get_data_by_item_id(equipment_id)
-            all_equipment_buff += Counter(item_info['buff'])
+            if 'buff' in item_info:
+                all_equipment_buff += Counter(item_info['buff'])
 
             # 记录套装效果
             if 'suits' in item_info:
