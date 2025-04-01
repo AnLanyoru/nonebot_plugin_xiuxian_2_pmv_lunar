@@ -33,17 +33,17 @@ class DefenceIncrease(BaseBuff):
 class FinalDamageIncrease(BaseBuff):
     name = '最终伤害增加'
     least_turn = 0
-    buff_value: float = 0
+    effect_value: float = 0
     tips = 1
 
     def act(self, effect_user, now_enemy, fight_event):
         if self.tips:
-            msg = f"{effect_user.name}获得了{self.buff_value * 100:.2f}%{self.name}效果"
+            msg = f"{effect_user.name}获得了{self.effect_value * 100:.2f}%{self.name}效果"
             fight_event.add_msg(msg)
             self.tips = 0
 
     def damage_change(self, damage: int, buff_damage_change: BuffIncreaseDict) -> None:
-        buff_damage_change["mul"] *= self.buff_value
+        buff_damage_change["mul"] *= self.effect_value + 1
 
 
 class ContinueDamage(BaseBuff):
