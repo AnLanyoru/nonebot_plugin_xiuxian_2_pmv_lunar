@@ -614,15 +614,13 @@ def get_item_msg_rank(goods_id):
         return 520
     if item_info['type'] == '丹药':
         msg = item_info['rank']
+    elif item_info['type'] == '装备':
+        msg = item_info['rank']
     elif item_info['item_type'] == '神通':
         msg = item_info['rank']
     elif item_info['item_type'] == '功法':
         msg = item_info['rank']
     elif item_info['item_type'] == '辅修功法':
-        msg = item_info['rank']
-    elif item_info['item_type'] == '防具':
-        msg = item_info['rank']
-    elif item_info['item_type'] == '法器':
         msg = item_info['rank']
     elif item_info['item_type'] == "药材":
         msg = item_info['rank']

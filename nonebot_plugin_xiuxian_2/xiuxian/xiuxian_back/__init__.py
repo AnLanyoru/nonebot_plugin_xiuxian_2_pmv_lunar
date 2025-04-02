@@ -659,10 +659,13 @@ async def goods_re_root_(bot: Bot, event: GroupMessageEvent, args: Message = Com
             goods_name = back['goods_name']
             item_info = items.get_data_by_item_id(goods_id)
             buff_type = item_info.get('buff_type')
-            if ((item_level := item_info.get('level') if item_info else None) == goal_level
+            item_level = item_info.get('level')
+            item_type = item_info.get('item_type')
+            if (item_level == goal_level
                     or goods_name == goal_level
                     or buff_type == goal_level
-                    or goods_type == goal_level):
+                    or goods_type == goal_level
+                    or item_type == goal_level):
                 if goods_name in lock_item_dict:
                     msg += f"\r{goods_name}已锁定，无法炼金！"
                     break
