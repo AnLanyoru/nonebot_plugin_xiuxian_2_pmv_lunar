@@ -8,13 +8,12 @@ from nonebot.adapters.onebot.v11 import (
 )
 from nonebot.permission import SUPERUSER
 
-from ..user_data_handle.fight.fight_pvp import player_fight
 from ..xiuxian_config import XiuConfig
 from ..xiuxian_data.data.宗门玩法配置_data import sect_config_data
 from ..xiuxian_database.database_connect import database
 from ..xiuxian_sect import sect_config
 from ..xiuxian_store import STORE_BUTTON
-from ..xiuxian_utils.clean_utils import help_md, simple_md, main_md
+from ..xiuxian_utils.clean_utils import help_md, simple_md
 from ..xiuxian_utils.item_json import items
 from ..xiuxian_utils.lay_out import Cooldown
 
@@ -38,22 +37,12 @@ store_help = on_command("灵宝楼帮助", aliases={"灵宝楼", "个人摊位",
 tower_help = on_command("位面挑战帮助", aliases={'挑战'}, priority=21, permission=GROUP, block=True)
 items_reload = on_command("重载物品", priority=21, permission=SUPERUSER, block=True)
 db_ping = on_command("ping", priority=21, permission=SUPERUSER, block=True)
-get_test_data = on_command("测试", priority=21, permission=SUPERUSER, block=True)
+get_test_data = on_command("测", priority=21, permission=SUPERUSER, block=True)
 
 
 @get_test_data.handle()
 async def get_test_data_(bot: Bot, event: GroupMessageEvent):
-    start_time = time()
-    user_id_dict = {992551767: 2, 109260638: 3, 81910561: 2, 675732336: 4, 957177472: 5}
-    json_data, fight_msg = await player_fight(user_id_dict)
-    end_time = time()
-    ping_ms = end_time - start_time
-    ping_ms = float(ping_ms)
-    msg = main_md(f"战斗信息，耗时{ping_ms * 1000} ms", fight_msg,
-                  '测试', '测试',
-                  '测试', '测试',
-                  '测试', '测试',
-                  '测试', '测试')
+    msg = simple_md('我是很过分的测试信息\r\r***\r>测试文本\r***\r\r```测试文本\r***\r', '测试蓝字', '测测试试', "```.")
     await bot.send(event=event, message=msg)
     await get_test_data.finish()
 
@@ -208,7 +197,7 @@ __tower_help__ = simple_md(
 @help_in.handle(parameterless=[Cooldown()])
 async def help_in_(bot: Bot, event: GroupMessageEvent):
     """修仙帮助"""
-    msg = help_md("102368631_1740931741", "测试中", "102368631_1740931181")
+    msg = help_md("102368631_1740931741", "\r小月官服唯一群914556251", "102368631_1740931181")
     await bot.send(event=event, message=msg)
     await help_in.finish()
 
@@ -216,7 +205,7 @@ async def help_in_(bot: Bot, event: GroupMessageEvent):
 @help_newer.handle(parameterless=[Cooldown()])
 async def help_in_(bot: Bot, event: GroupMessageEvent):
     """修仙新手帮助"""
-    msg = help_md("102368631_1733157618", "测试中", "102368631_1740930682")
+    msg = help_md("102368631_1743000897", "小月官服唯一群914556251", "102368631_1740930682")
     await bot.send(event=event, message=msg)
     await help_newer.finish()
 

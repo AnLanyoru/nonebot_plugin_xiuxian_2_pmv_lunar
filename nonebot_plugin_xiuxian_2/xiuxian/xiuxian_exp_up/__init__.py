@@ -31,22 +31,6 @@ exp_up_end = on_command("结束修炼", aliases={"重置修炼状态", "停止�
 all_end = on_command("重置状态", aliases={"重置闭关状态", "重置悬赏令状态"}, priority=12,
                      permission=GROUP, block=True)
 active_gift = on_command("神州大地齐欢腾，祝福祖国永太平", priority=12, permission=GROUP, block=True)
-hp_set = on_command("设置血量", priority=1, permission=GROUP, block=True)
-
-
-@hp_set.handle(parameterless=[Cooldown(cd_time=60)])
-async def hp_set_(bot: Bot, event: GroupMessageEvent):
-    """修炼"""
-
-    user_info = await check_user(event)
-
-    user_id = user_info['user_id']
-    mp = user_info['mp']
-    atk = user_info['atk']
-    await sql_message.update_user_attribute(user_id, 1000, mp, atk)
-    msg = f"已将请求传递至数据库, 传递值hp:1000,mp:{mp},atk:{atk}"
-    await bot.send(event=event, message=msg)
-    await hp_set.finish()
 
 
 @exp_up.handle(parameterless=[Cooldown(cd_time=60)])
