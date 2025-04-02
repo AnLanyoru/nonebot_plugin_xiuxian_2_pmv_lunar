@@ -18,7 +18,7 @@ from ..database_utils.move_database import read_move_data
 from ..xiuxian_config import convert_rank, XiuConfig
 from ..xiuxian_limit import limit_handle
 from ..xiuxian_place import place
-from ..xiuxian_utils.clean_utils import get_datetime_from_str, simple_md, number_to, three_md
+from ..xiuxian_utils.clean_utils import get_datetime_from_str, simple_md, number_to, three_md, main_md
 from ..xiuxian_utils.item_json import items
 from ..xiuxian_utils.lay_out import Cooldown, UserCmdLock
 from ..xiuxian_utils.other_set import OtherSet
@@ -374,9 +374,6 @@ async def do_work_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = R
                 msg = simple_md(msg + "请待完成后", "结算", "悬赏令结算", "！")
             except IndexError:
                 msg = "没有这样的任务"
-            await bot.send(event=event, message=msg)
-            await do_work.finish()
-
             await bot.send(event=event, message=msg)
             await do_work.finish()
 
