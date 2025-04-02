@@ -8,12 +8,13 @@ from nonebot.adapters.onebot.v11 import (
 )
 from nonebot.permission import SUPERUSER
 
+from ..user_data_handle.fight.fight_pvp import player_fight
 from ..xiuxian_config import XiuConfig
 from ..xiuxian_data.data.宗门玩法配置_data import sect_config_data
 from ..xiuxian_database.database_connect import database
 from ..xiuxian_sect import sect_config
 from ..xiuxian_store import STORE_BUTTON
-from ..xiuxian_utils.clean_utils import help_md, simple_md
+from ..xiuxian_utils.clean_utils import help_md, simple_md, main_md
 from ..xiuxian_utils.item_json import items
 from ..xiuxian_utils.lay_out import Cooldown
 
@@ -37,12 +38,22 @@ store_help = on_command("灵宝楼帮助", aliases={"灵宝楼", "个人摊位",
 tower_help = on_command("位面挑战帮助", aliases={'挑战'}, priority=21, permission=GROUP, block=True)
 items_reload = on_command("重载物品", priority=21, permission=SUPERUSER, block=True)
 db_ping = on_command("ping", priority=21, permission=SUPERUSER, block=True)
-get_test_data = on_command("测", priority=21, permission=SUPERUSER, block=True)
+get_test_data = on_command("测试", priority=21, permission=SUPERUSER, block=True)
 
 
 @get_test_data.handle()
 async def get_test_data_(bot: Bot, event: GroupMessageEvent):
-    msg = simple_md('我是很过分的测试信息\r\r***\r>测试文本\r***\r\r```测试文本\r***\r', '测试蓝字', '测测试试', "```.")
+    start_time = time()
+    user_id_dict = {992551767: 2, 109260638: 3, 81910561: 2, 675732336: 4, 957177472: 5}
+    json_data, fight_msg = await player_fight(user_id_dict)
+    end_time = time()
+    ping_ms = end_time - start_time
+    ping_ms = float(ping_ms)
+    msg = main_md(f"战斗信息，耗时{ping_ms * 1000} ms", fight_msg,
+                  '测试', '测试',
+                  '测试', '测试',
+                  '测试', '测试',
+                  '测试', '测试')
     await bot.send(event=event, message=msg)
     await get_test_data.finish()
 
@@ -97,101 +108,82 @@ __xiuxian_notes__ = f"""
 官方群914556251
 """.strip()
 
-__sect_help__ = simple_md(
-    f"\r"
-    f"————宗门帮助————\r"
-    f"1：", "我的宗门", "我的宗门",
-    ".\r"
-    f" - 查看当前所处宗门信息\r"
-    f"2：宗门列表\r"
-    f" - 查看所有宗门列表\r"
-    f"3：创建宗门\r"
-    f" - 创建宗门，需求：{XiuConfig().sect_create_cost}灵石，需求境界{XiuConfig().sect_min_level}\r"
-    f"4：加入宗门\r"
-    f" - 加入一个宗门,需要带上宗门id\r"
-    f"5：管理宗门\r"
-    f" - 获取所有宗门管理指令\r"
-    f"6：宗门指令\r"
-    f" - 查看所有宗门普通成员指令\r"
-    f"7：宗主指令\r"
-    f" - 查看所有宗主指令\r"
-    f"——tips——\r"
-    f"官方群914556251\r")
+__sect_help__ = (f"\r"
+                  f"————宗门帮助————\r"
+                  f"1：我的宗门\r"
+                  f" 🔹 查看当前所处宗门信息\r"
+                  f"2：宗门列表\r"
+                  f" 🔹 查看所有宗门列表\r"
+                  f"3：创建宗门\r"
+                  f" 🔹 创建宗门，需求：{XiuConfig().sect_create_cost}灵石，需求境界{XiuConfig().sect_min_level}\r"
+                  f"4：加入宗门\r"
+                  f" 🔹 加入一个宗门,需要带上宗门id\r"
+                  f"5：管理宗门\r"
+                  f" 🔹 获取所有宗门管理指令\r"
+                  f"6：宗门指令\r"
+                  f" 🔹 查看所有宗门普通成员指令\r"
+                  f"7：宗主指令\r"
+                  f" 🔹 查看所有宗主指令\r").strip()
 
-__buff_help__ = f"""
-——功法帮助——
-1：我的功法:
- - 查看自身功法以及背包内的所有功法信息
-2：切磋:
- - at对应人员,不会消耗气血
-3：抑制黑暗动乱:
- - 清除修为浮点数
-4：我的双修次数:
- - 查看剩余双修次数
-——tips——
-官方群914556251
-""".strip()
+__buff_help__ = (f"\r"
+                  f"——功法帮助——\r"
+                  f"1：我的功法:\r"
+                  f" 🔹 查看自身功法详情\r"
+                  f"2：切磋:\r"
+                  f" 🔹 切磋加玩家名称,不会消耗气血\r"
+                  f"3：抑制黑暗动乱:\r"
+                  f" 🔹 清除修为浮点数\r"
+                  f"4：我的双修次数:\r"
+                  f" 🔹 查看剩余双修次数\r").strip()
 
-__home_help__ = f"""
-——洞天福地帮助——
-1：洞天福地购买
- - 购买洞天福地
-2：洞天福地查看
- - 查看自己的洞天福地
-3：洞天福地改名
- - 随机修改自己洞天福地的名字
-4：灵田开垦
- - 提升灵田的等级,提高灵田结算的药材数量
-5：灵田收取
- - 收取灵田内生长的药材
-——tips——
-灵田基础成长时间为27小时
-""".strip()
+__home_help__ = (f"\r"
+                  f"——洞天福地帮助——\r"
+                  f"1：洞天福地购买\r"
+                  f" 🔹 购买洞天福地\r"
+                  f"2：洞天福地查看\r"
+                  f" 🔹 查看自己的洞天福地\r"
+                  f"3：洞天福地改名\r"
+                  f" 🔹 随机修改自己洞天福地的名字\r"
+                  f"4：灵田开垦\r"
+                  f" 🔹 提升灵田的等级,提高灵田药材数量\r"
+                  f"5：灵田收取\r"
+                  f" 🔹 收取灵田内生长的药材\r").strip()
 
-__store_help__ = (
-    f"\r"
-    f"——灵宝楼帮助——\r"
-    f"灵宝楼指令大全\r"
-    f"1：灵宝楼求购 物品 价格 数量\r"
-    f" 🔹 向灵宝楼提交求购物品申请\r"
-    f"2：灵宝楼出售 物品 道号\r"
-    f" 🔹 向有求购的玩家出售对应物品\r"
-    f" 🔹 不输 道号 会按市场最高价出售\r"
-    f"3：灵宝楼求购查看 物品\r"
-    f" 🔹 查看对应物品的最高求购价\r"
-    f"4：我的灵宝楼求购\r"
-    f" 🔹 查看自身灵宝楼求购\r"
-    f"5：灵宝楼取灵石 数量\r"
-    f" 🔹 从灵宝楼中取出灵石，收取20%手续费\r"
-    f"6：取消求购 物品名称\r"
-    f" 🔹 下架你的求购物品\r"
-    f"——tips——\r"
-    f"官方群914556251\r").strip()
+__store_help__ = (f"\r"
+                  f"——灵宝楼指令大全——\r"
+                  f"1：灵宝楼求购 物品 价格 数量\r"
+                  f" 🔹 向灵宝楼提交求购物品申请\r"
+                  f"2：灵宝楼出售 物品 道号\r"
+                  f" 🔹 向有求购的玩家出售对应物品\r"
+                  f" 🔹 不输 道号 会按市场最高价出售\r"
+                  f"3：灵宝楼求购查看 物品\r"
+                  f" 🔹 查看对应物品的最高求购价\r"
+                  f"4：我的灵宝楼求购\r"
+                  f" 🔹 查看自身灵宝楼求购\r"
+                  f"5：灵宝楼取灵石 数量\r"
+                  f" 🔹 从灵宝楼中取出灵石，收取20%手续费\r"
+                  f"6：取消求购 物品名称\r"
+                  f" 🔹 下架你的求购物品\r"
+                  f"——tips——\r"
+                  f"官方群914556251\r").strip()
 
-__tower_help__ = simple_md(
-    f"\r"
-    f"——位面挑战指令帮助——\r"
-    f"1：", "进入挑战之地", "进入挑战",
-    ".\r"
-    f" - 在存在挑战副本的位置使用\r"
-    f"   可以进入挑战之地开始挑战\r"
-    f"   凡界：灵虚古境(前往3)\r"
-    f"   灵界：紫霄神渊(前往19)\r"
-    f"2：查看挑战\r"
-    f" - 查看当前挑战信息\r"
-    f"3：开始挑战\r"
-    f" - 进行本层次挑战\r"
-    f"4：离开挑战之地\r"
-    f" - 停止对挑战之地的探索\r"
-    f"5：挑战商店\r"
-    f" - 消耗挑战积分兑换物品\r"
-    f"6：挑战之地规则详情\r"
-    f" - 获取位面挑战的详情规则\r"
-    f"7：本周挑战积分\r"
-    f" - 查看本周抵达最高层的对应积分\r"
-    f"——tips——\r"
-    f"官方群914556251",
-    "102368631_1739371981")
+__tower_help__ = (f"\r"
+                  f"——位面挑战指令帮助——\r"
+                  f"1：进入挑战之地\r"
+                  f" 🔹 凡界：灵虚古境(前往3)\r"
+                  f" 🔹 灵界：紫霄神渊(前往19)\r"
+                  f" 🔹 仙界：域外试炼(前往33)\r"
+                  f"2：查看挑战\r"
+                  f" 🔹 查看当前挑战信息\r"
+                  f"3：开始挑战\r"
+                  f" 🔹 进行本层次挑战\r"
+                  f"4：离开挑战之地\r"
+                  f" 🔹 停止对挑战之地的探索\r"
+                  f"5：挑战商店\r"
+                  f" 🔹 消耗挑战积分兑换物品\r"
+                  f"6：挑战之地规则详情\r"
+                  f" 🔹 获取位面挑战的详情规则\r"
+                      ).strip()
 
 
 @help_in.handle(parameterless=[Cooldown()])
@@ -213,7 +205,14 @@ async def help_in_(bot: Bot, event: GroupMessageEvent):
 @sect_help.handle(parameterless=[Cooldown()])
 async def sect_help_(bot: Bot, event: GroupMessageEvent):
     """宗门帮助"""
-    msg = __sect_help__
+    msg = main_md(__sect_help__,
+                  f"小月唯一官方群914556251"
+                  f"",
+                  "创建宗门", "创建宗门",
+                  "加入宗门", "加入宗门",
+                  "宗门排行", "宗门排行榜",
+                  "我的宗门", "我的宗门",
+                  "102368631_1742751063")
     await bot.send(event=event, message=msg)
     await sect_help.finish()
 
@@ -221,19 +220,13 @@ async def sect_help_(bot: Bot, event: GroupMessageEvent):
 @sect_help_control.handle(parameterless=[Cooldown()])
 async def sect_help_control_(bot: Bot, event: GroupMessageEvent):
     """宗门管理帮助"""
-    msg = f"""\r———宗门管理菜单———
-1：宗门职位变更
- - 长老以上职位可以改变宗门成员的职位等级
- - 【0 1 2 3 4】分别对应【宗主 长老 亲传 内门 外门】
- - (外门弟子无法获得宗门修炼资源)
-2：踢出宗门
- - 踢出对应宗门成员,需要输入正确的道号
-3：宗门周贡检查
-检查宗门成员周贡
-———tips———
-官方群914556251
-每日{config["发放宗门资材"]["时间"]}点发放{config["发放宗门资材"]["倍率"]}倍对应宗门建设度的资材
-"""
+    msg = main_md("""宗门管理帮助""",
+                  f"1：宗门职位变更\r  🔹 长老以上职位可以改变宗门成员的职位等级\r  🔹 (外门弟子无法获得宗门修炼资源)\r "
+                  f"2：踢出宗门\r  🔹 踢出对应宗门成员,需要输入正确的道号\r",
+                  "职位变更", "宗门职位变更",
+                  "踢出宗门", "踢出宗门",
+                  "虚神闭关", "虚神界闭关",
+                  "检查周贡", "宗门周贡检查" )
     await bot.send(event=event, message=msg)
     await sect_help_control.finish()
 
@@ -241,29 +234,13 @@ async def sect_help_control_(bot: Bot, event: GroupMessageEvent):
 @sect_help_owner.handle(parameterless=[Cooldown()])
 async def sect_help_owner_(bot: Bot, event: GroupMessageEvent):
     """宗主帮助"""
-    msg = f"""\r———宗主菜单———
-1：宗门职位变更
- - 宗主可以改变宗门成员的职位等级
- - 【0 1 2 3 4】分别对应【宗主 长老 亲传 内门 外门】
- - (外门弟子无法获得宗门修炼资源)
-2：踢出宗门
- - 踢出对应宗门成员,需要输入正确的道号
-3：建设宗门丹房
- - 建设宗门丹房，可以让每个宗门成员每日领取丹药
-4：宗门搜寻功法|神通:
- - 宗主可消耗宗门资材和宗门灵石来搜寻10次功法或者神通
-5：宗门成员查看
- - 查看所在宗门的成员信息
-6：宗主传位
- - 宗主可以传位宗门成员
-7：宗门改名
- - 宗主可以消耗宗门资源改变宗门名称
-8：宗门周贡检查
-检查宗门成员周贡
-———tips———
-官方群914556251
-每日{config["发放宗门资材"]["时间"]}点发放{config["发放宗门资材"]["倍率"]}倍对应宗门建设度的资材
-"""
+    msg = main_md("""宗主菜单""",
+                  f"1：宗门职位变更\r  🔹 长老以上职位可以改变宗门成员的职位等级\r  🔹 【0 1 2 3 4】分别对应【宗主 长老 亲传 内门 外门】\r2：踢出宗门\r  🔹 踢出对应宗门成员,需要输入正确的道号\r3：建设宗门丹房\r  🔹 建设宗门丹房每日领取丹药\r"
+                  f"4：宗门搜寻功法|神通\r  🔹 宗主消耗宗门资材和宗门灵石搜寻100次功法或者神通\r5：宗门成员查看\r  🔹 查看所在宗门的成员信息\r6：宗主传位\r  🔹 宗主可以传位宗门成员\r7：宗门改名\r  🔹 宗主可以消耗宗门资源改变宗门名称\r8：宗门周贡检查\r  🔹 检查宗门成员周贡",
+                  "职位变更", "宗门职位变更",
+                  "踢出宗门", "踢出宗门",
+                  "宗门成员", "宗门成员查看",
+                  "检查周贡", "宗门周贡检查" )
     await bot.send(event=event, message=msg)
     await sect_help_owner.finish()
 
@@ -271,40 +248,13 @@ async def sect_help_owner_(bot: Bot, event: GroupMessageEvent):
 @sect_help_member.handle(parameterless=[Cooldown()])
 async def sect_help_member_(bot: Bot, event: GroupMessageEvent):
     """宗门管理帮助"""
-    msg = f"""\r————宗门指令帮助————
-1：我的宗门
- - 查看当前所处宗门信息
-2：宗门捐献
- - 建设宗门，提高宗门建设度
- - 每{config["等级建设度"]}建设度会提高1级攻击修炼等级上限
-3：升级攻击修炼
- - 升级道友的攻击修炼等级
- - 每级修炼等级提升4%攻击力,后可以接升级等级
- - 需要亲传弟子
-4：宗门任务接取
- - 接取宗门任务，可以增加宗门建设度和资材
- - 每日上限：{config["每日宗门任务次上限"]}次
-5：宗门任务完成
- - 完成所接取的宗门任务
- - 完成间隔时间：{config["宗门任务完成cd"]}秒
-6：宗门任务刷新
- - 刷新当前所接取的宗门任务
- - 刷新间隔时间：{config["宗门任务刷新cd"]}秒
-7：学习宗门功法|神通
- - 宗门亲传弟子可消耗宗门资材来学习宗门功法或者神通，后接功法名称
-8：宗门功法查看
- - 查看当前宗门已有的功法
-9：宗门成员查看
- - 查看所在宗门的成员信息
-10：宗门丹药领取
- - 领取宗门丹药，需要内门弟子且1000万宗门贡献
-11：退出宗门
- - 退出当前宗门
-——tips——
-宗主|长老|亲传弟子|内门弟子|外门弟子
-宗门任务获得修为上限分别为：
-{sect_config_data[str(0)]["max_exp"]}|{sect_config_data[str(1)]["max_exp"]}|{sect_config_data[str(2)]["max_exp"]}|{sect_config_data[str(3)]["max_exp"]}|{sect_config_data[str(4)]["max_exp"]}
-"""
+    msg = main_md("""宗门管理帮助""",
+                  f"1：我的宗门\r  🔹 查看当前所处宗门信息\r2：升级攻击修炼\r  🔹 每级提升4%攻击力,后可以接升级等级\r3：宗门捐献\r  🔹 建设宗门，提高宗门建设度\r4：学习宗门功法|神通\r  🔹 亲传弟子消耗宗门资材来学习宗门功法或者神通\r"
+                  f"5：宗门功法查看\r  🔹 查看当前宗门已有的功法\r6：宗门成员查看\r  🔹 查看所在宗门的成员信息\r7：宗门丹药领取\r  🔹 领取宗门丹药，需内门弟子且1000万宗门贡献\r8：退出宗门\r  🔹 退出当前宗门\r9：宗门BOSS\r  🔹 集体挑战宗门BOSS\r",
+                  "退出宗门", "退出宗门",
+                  "宗门排行", "宗门排行榜",
+                  "宗门丹药", "宗门丹药领取",
+                  "宗门任务接取", "宗门任务接取" )
     await bot.send(event=event, message=msg)
     await sect_help_member.finish()
 
@@ -312,7 +262,13 @@ async def sect_help_member_(bot: Bot, event: GroupMessageEvent):
 @buff_help.handle(parameterless=[Cooldown()])
 async def buff_help_(bot: Bot, event: GroupMessageEvent):
     """功法帮助"""
-    msg = __buff_help__
+    msg =  main_md(__buff_help__,
+                  f"小月唯一官方群914556251"
+                  f"",
+                  "我的功法", "我的功法",
+                  "双修次数", "我的双修次数",
+                  "黑暗动乱", "抑制黑暗动乱",
+                  "切磋", "切磋" )
     await bot.send(event=event, message=msg)
     await buff_help.finish()
 
@@ -320,7 +276,13 @@ async def buff_help_(bot: Bot, event: GroupMessageEvent):
 @buff_home.handle(parameterless=[Cooldown()])
 async def buff_home_(bot: Bot, event: GroupMessageEvent):
     """灵田帮助"""
-    msg = __home_help__
+    msg = main_md(__home_help__,
+                  f"小月唯一官方群914556251"
+                  f"",
+                  "灵田收取", "灵田收取",
+                  "灵田开垦", "灵田开垦",
+                  "洞天福地查看", "洞天福地查看",
+                  "洞天福地购买", "洞天福地购买" )
     await bot.send(event=event, message=msg)
     await buff_home.finish()
 
@@ -329,8 +291,8 @@ async def buff_home_(bot: Bot, event: GroupMessageEvent):
 async def store_help_(bot: Bot, event: GroupMessageEvent):
     """帮助"""
     msg = simple_md(__store_help__,
-                    "查看日常", "日常", "！",
-                    STORE_BUTTON)
+                  "查看日常", "日常", "！",
+                  STORE_BUTTON)
     await bot.send(event=event, message=msg)
     await store_help.finish()
 
@@ -338,6 +300,12 @@ async def store_help_(bot: Bot, event: GroupMessageEvent):
 @tower_help.handle(parameterless=[Cooldown()])
 async def tower_help_(bot: Bot, event: GroupMessageEvent):
     """帮助"""
-    msg = __tower_help__
+    msg = main_md(__tower_help__,
+                  f"小月唯一官方群914556251"
+                  f"",
+                  "修仙帮助", "修仙帮助",
+                  "挑战商店", "挑战商店",
+                  "挑战排行", "挑战排行榜",
+                  "进入挑战之地", "进入挑战之地" )
     await bot.send(event=event, message=msg)
     await tower_help.finish()

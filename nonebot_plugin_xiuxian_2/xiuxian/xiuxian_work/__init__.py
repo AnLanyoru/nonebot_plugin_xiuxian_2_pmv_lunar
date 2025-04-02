@@ -195,7 +195,7 @@ async def do_work_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = R
                     '2、', '悬赏令接取2', work_msg_f[1],
                     '3、', '悬赏令接取3', work_msg_f[2],
                     WORK_BUTTON)
-            else:
+            else:                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
                 msg = simple_md("没有查到你的悬赏令信息呢，请", "刷新", "悬赏令刷新", "！")
             await bot.send(event=event, message=msg)
             await do_work.finish()
@@ -377,8 +377,17 @@ async def do_work_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = R
             await bot.send(event=event, message=msg)
             await do_work.finish()
 
+            await bot.send(event=event, message=msg)
+            await do_work.finish()
+
         elif mode == "帮助":
-            msg = __work_help__
+            msg = main_md(__work_help__,
+                  f"小月唯一官方群914556251"
+                  f"",
+                  "秘境帮助", "秘境帮助",
+                  "灵田帮助", "灵田帮助",
+                  "悬赏令刷新", "悬赏令刷新",
+                  "最后的悬赏令", "最后的悬赏令" )
             await bot.send(event=event, message=msg)
             await do_work.finish()
 
