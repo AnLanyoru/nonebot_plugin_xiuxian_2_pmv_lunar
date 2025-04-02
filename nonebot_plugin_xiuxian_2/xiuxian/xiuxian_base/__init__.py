@@ -28,7 +28,7 @@ from ..xiuxian_utils.other_set import OtherSet
 from ..xiuxian_utils.utils import (
     check_user,
     get_msg_pic, number_to,
-    send_msg_handler, get_id_from_str, linggen_get
+    send_msg_handler, get_id_from_str, linggen_get, check_user_type
 )
 from ..xiuxian_utils.xiuxian2_handle import (
     sql_message, UserBuffDate, xiuxian_impart, leave_harm_time
@@ -71,6 +71,7 @@ markdown有了可喜可贺
 """.strip()
 
 __level_help_root__ = f"""\r
+
 --灵根帮助--
 轮回
 异界——极道——混沌
@@ -78,15 +79,22 @@ __level_help_root__ = f"""\r
 天——异——真——伪
 """.strip()
 __level_help_level__ = f"""\r
+
 --境界列表--
-圣王三境——准圣九境——仙帝三境——金仙三境
-玄仙三境——地仙三境——凡仙三境——登仙三境
-羽化三境——虚劫三境——合道三境——逆虚三境
-炼神三境——悟道三境——天人四境——踏虚三境
-通玄九重——归元九重——聚元九重——凝气九重
-引气三境——感气三境——炼体九重——求道启程
+无极仙尊六境—混沌仙帝六境
+无上仙君六境—罗天上仙六境
+混元大罗六境—九天玄仙六境
+大罗金仙六境—太乙金仙六境
+金仙六境—玄仙六境—真仙六境
+登仙九劫—羽化三境—虚劫三境
+合道三境—逆虚三境—炼神三境
+悟道三境—天人四境—踏虚三境
+通玄九重—归元九重—聚元九重
+凝气九重—引气三境—感气三境
+炼体九重—求道启程—我要修仙
 """.strip()
 __level_help_skill__ = f"""\r
+
 --功法品阶--
 永恒——起源——至圣——圣人
 神级——天尊——界主——神变
@@ -96,6 +104,11 @@ __level_help_skill__ = f"""\r
 天命——造化
 王道——神器——圣器——仙器
 灵器——玄器——宝器——符器
+--奇物品阶--
+太极——太素
+太始——太初——太易——太阳
+太阴——紫薇——离火——灵胚
+灵纹——血淬——精练——凡铁
 """.strip()
 
 
@@ -362,12 +375,17 @@ async def level_up_(bot: Bot, event: GroupMessageEvent):
     await bot.send(event=event, message=msg)
     await level_up.finish()
 
+
 @level_up_zj.handle(parameterless=[Cooldown(stamina_cost=0)])
 async def level_up_zj_(bot: Bot, event: GroupMessageEvent):
     """直接突破"""
     # 这里曾经是风控模块，但是已经不再需要了
     user_info = await check_user(event)
     user_id = user_info['user_id']
+    is_type, msg = await check_user_type(user_id, 0)
+    if not is_type:
+        await bot.send(event=event, message=msg)
+        await level_up_zj.finish()
     if user_info['hp'] is None:
         # 判断用户气血是否为空
         await sql_message.update_user_hp(user_id)
@@ -424,6 +442,10 @@ async def level_up_zj_all_(bot: Bot, event: GroupMessageEvent):
     user_info = await check_user(event)
     run = 0
     user_id = user_info['user_id']
+    is_type, msg = await check_user_type(user_id, 0)
+    if not is_type:
+        await bot.send(event=event, message=msg)
+        await level_up_zj_all.finish()
     lost_exp = 0
     if user_info['hp'] is None:
         # 判断用户气血是否为空
@@ -495,6 +517,10 @@ async def level_up_dr_(bot: Bot, event: GroupMessageEvent):
     # 这里曾经是风控模块，但是已经不再需要了
     user_info = await check_user(event)
     user_id = user_info['user_id']
+    is_type, msg = await check_user_type(user_id, 0)
+    if not is_type:
+        await bot.send(event=event, message=msg)
+        await level_up_dr.finish()
     if user_info['hp'] is None:
         # 判断用户气血是否为空
         await sql_message.update_user_hp(user_id)
@@ -569,6 +595,10 @@ async def level_up_dr_fast_(bot: Bot, event: GroupMessageEvent):
     # 这里曾经是风控模块，但是已经不再需要了
     user_info = await check_user(event)
     user_id = user_info['user_id']
+    is_type, msg = await check_user_type(user_id, 0)
+    if not is_type:
+        await bot.send(event=event, message=msg)
+        await level_up_dr_fast.finish()
     elixir_name = "渡厄丹"
     user_backs = await sql_message.get_item_by_good_id_and_user_id(user_id=user_id, goods_id=1999)
     elixir_num = int(user_backs['goods_num'])

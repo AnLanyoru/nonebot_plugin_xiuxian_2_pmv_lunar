@@ -137,7 +137,8 @@ async def do_work_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = R
         if int(user_info['exp']) >= int(
                 await OtherSet().set_closing_type(user_level)) * XiuConfig().closing_exp_upper_limit:
             # 获取下个境界需要的修为 * 1.5为闭关上限
-            msg = "道友的修为已经到达上限，悬赏令已无法再获得经验！"
+            msg = simple_md("道友的修为已经到达上限，悬赏令已无法再获得经验！"
+                            "如若卡住，使用指令：", "最后的悬赏令", "最后的悬赏令", "!")
             await bot.send(event=event, message=msg)
             await do_work.finish()
         user_cd_info = await sql_message.get_user_cd(user_id)

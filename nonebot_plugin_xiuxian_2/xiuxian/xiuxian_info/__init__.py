@@ -17,6 +17,7 @@ from nonebot.permission import SUPERUSER
 
 from .draw_user_info import draw_user_info_img
 from .send_image_tool import convert_img
+from ..user_data_handle import UserBuffHandle
 from ..xiuxian_data.data.境界_data import level_data
 from ..xiuxian_data.data.宗门玩法配置_data import sect_config_data
 from ..xiuxian_data.data.突破概率_data import break_rate
@@ -129,6 +130,10 @@ async def xiuxian_message_(bot: Bot, event: GroupMessageEvent, args: Message = C
         weapon_name = f"{user_weapon_data['name']}({user_weapon_data['level']})"
     if user_armor_data is not None:
         armor_name = f"{user_armor_data['name']}({user_armor_data['level']})"
+
+    user_buff_handle = UserBuffHandle(user_id)
+    user_new_equipment_msg = await user_buff_handle.get_new_equipment_msg()
+
     main_rate_buff = await UserBuffDate(user_id).get_user_main_buff_data()  # 功法突破概率提升
     await sql_message.update_last_check_info_time(user_id)  # 更新查看修仙信息时间
     leveluprate = int(user_info['level_up_rate'])  # 用户失败次数加成
@@ -164,17 +169,21 @@ async def xiuxian_message_(bot: Bot, event: GroupMessageEvent, args: Message = C
                f"境界: {user_info['level']}\r"
                f"修为: {number_to(user_info['exp'])}\r"
                f"灵石: {number_to(user_info['stone'])}|{user_info['stone']}\r"
-               f"战力: {number_to(int(user_info['exp'] * level_rate * realm_rate))}\r"
                f"灵根: {user_info['root']}\r"
                f"({user_info['root_type']}+{int(level_rate * 100)}%)\r"
                f"突破状态: {exp_meg} (概率：{break_rate.get(user_info['level'], 1) + leveluprate + number}%)\r"
-               f"攻击力: {number_to(user_info['atk'])} (攻修等级{user_info['atkpractice']}级)\r"
-               f"所在宗门: {sectmsg} (职位: {sectzw})\r"
-               f"主修功法: {main_buff_name}\r"
-               f"辅修功法: {sub_buff_name}\r"
-               f"副修神通: {sec_buff_name}\r"
+               f"宗门: {sectmsg} (职位: {sectzw})\r"
+               f"功法: {main_buff_name}\r"
+               f"辅修: {sub_buff_name}\r"
+               f"神通: {sec_buff_name}\r"
                f"法器: {weapon_name}\r"
-               f"防具: {armor_name}\r")
+               f"防具: {armor_name}\r"
+               f"法宝: {user_new_equipment_msg['lifebound_treasure']}\r"
+               f"秘宝: {user_new_equipment_msg['support_artifact']}\r"
+               f"道袍: {user_new_equipment_msg['daoist_robe']}\r"
+               f"道靴: {user_new_equipment_msg['daoist_boots']}\r"
+               f"内甲: {user_new_equipment_msg['inner_armor']}\r"
+               f"灵戒: {user_new_equipment_msg['spirit_ring']}\r")
         msg = simple_md(msg, "查看图片版", "我的修仙信息图片版", "!")
         await bot.send(event=event, message=msg)
         await xiuxian_message.finish()

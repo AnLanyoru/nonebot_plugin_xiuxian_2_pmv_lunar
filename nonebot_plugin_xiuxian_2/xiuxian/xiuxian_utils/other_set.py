@@ -42,7 +42,7 @@ class OtherSet(XiuConfig):
         limit_level = {
             "合道境后期": 1,
             "登仙境·九劫": 2,
-            "无上仙尊·大圆满": 3
+            "无极仙尊·大圆满": 3
         }
         if user_level in limit_level.keys():
             if user_world < limit_level[user_level]:

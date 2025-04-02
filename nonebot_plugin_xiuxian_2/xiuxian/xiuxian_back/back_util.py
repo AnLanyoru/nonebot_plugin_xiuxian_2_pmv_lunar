@@ -4,7 +4,7 @@ from datetime import datetime
 
 from nonebot.adapters.onebot.v11 import MessageSegment
 
-from ..user_data_handle import UserBuffData
+from ..user_data_handle import UserBuffHandle
 from ..xiuxian_config import convert_rank, XiuConfig
 from ..xiuxian_place import place
 from ..xiuxian_utils.clean_utils import encode_base64
@@ -27,41 +27,6 @@ YAO_CAI_INFO_MSG = {
     "5": "聚元",
     "6": "凝神",
 }
-
-
-async def get_use_equipment_sql(user_id, goods_id):
-    """
-    使用装备
-    返回sql,和法器或防具
-    """
-    sql_str = []
-    item_info = items.get_data_by_item_id(goods_id)
-    user_buff_info = await UserBuffDate(user_id).buff_info
-    now_time = datetime.now()
-    item_type = ''
-    if item_info['item_type'] == "法器":
-        item_type = "法器"
-        in_use_id = user_buff_info['faqi_buff']
-        sql_str.append(
-            f"UPDATE back set update_time='{now_time}',action_time='{now_time}',state=1 WHERE "
-            f"user_id={user_id} and goods_id={goods_id}")  # 装备
-        if in_use_id != 0:
-            sql_str.append(
-                f"UPDATE back set update_time='{now_time}',action_time='{now_time}',state=0 "
-                f"WHERE user_id={user_id} and goods_id={in_use_id}")  # 取下原有的
-
-    if item_info['item_type'] == "防具":
-        item_type = "防具"
-        in_use_id = user_buff_info['armor_buff']
-        sql_str.append(
-            f"UPDATE back set update_time='{now_time}',action_time='{now_time}',state=1 "
-            f"WHERE user_id={user_id} and goods_id={goods_id}")  # 装备
-        if in_use_id != 0:
-            sql_str.append(
-                f"UPDATE back set update_time='{now_time}',action_time='{now_time}',state=0 "
-                f"WHERE user_id={user_id} and goods_id={in_use_id}")  # 取下原有的
-
-    return sql_str, item_type
 
 
 async def get_no_use_equipment_sql(user_id, goods_id):
@@ -223,9 +188,10 @@ async def get_user_main_back_msg_easy(user_id):
                 item_type_sec = item_info.get('item_type')
                 if not l_types_sec_dict.get(item_type_sec):
                     l_types_sec_dict[item_type_sec] = []
+                suit_msg = f"{item_info['suits']}·" if 'suits' in item_info else ''
                 level = f"{item_info.get('level')} - " if item_info.get('level') else ''
                 bind_msg = f"(绑定:{item['bind_num']})" if item['bind_num'] else ""
-                l_types_sec_dict[item_type_sec].append(f"{level}{item['goods_name']} - "
+                l_types_sec_dict[item_type_sec].append(f"{level}{suit_msg}{item['goods_name']} - "
                                                        f"数量：{item['goods_num']}{bind_msg}")
             for item_type_sec, l_items_sec_msg in l_types_sec_dict.items():
                 head_msg = f"✨{item_type_sec}✨\r" if item_type_sec != item_type else ''
@@ -480,6 +446,8 @@ def get_equipment_msg(l_msg, goods_id, goods_num, is_use):
         msg = get_armor_info_msg(goods_id, item_info)
     elif item_info['item_type'] == '法器':
         msg = get_weapon_info_msg(goods_id, item_info)
+    else:
+        msg = get_item_msg(goods_id)
     msg += f"\r拥有数量:{goods_num}"
     if is_use:
         msg += f"\r已装备"
@@ -574,6 +542,16 @@ def get_item_msg(goods_id, get_image: bool = False):
     elif item_info['item_type'] == '法器':
         msg = get_weapon_info_msg(goods_id, item_info)
 
+    elif item_info['type'] == '装备':
+        suits_msg = f"所属套装：{item_info['suits']}\r" if 'suits' in item_info else ''
+        effect_msg = '、'.join([f"{increase_name}{'提升' if value > 0 else '降低'}{value * 100:.2f}%"
+                               for increase_name, value in item_info['buff'].items()])
+        msg = (f"名字：{item_info['name']}\r"
+               f"品阶：{item_info['level']}\r"
+               f"部位：{item_info['item_type']}\r"
+               f"{suits_msg}"
+               f"效果：{effect_msg}")
+
     elif item_info['item_type'] == "药材":
         msg = get_yaocai_info_msg(item_info)
 
@@ -607,6 +585,24 @@ def get_item_msg(goods_id, get_image: bool = False):
     return msg
 
 
+def get_suits_effect(items_name):
+    suits_effect_def = {"分身": "召唤继承自身{:.2f}%生命以及攻击的分身协同自身战斗，同类效果数值叠加"}
+    msg = (f"套装名称：{items_name}\r"
+           f"套装类型：{items.suits[items_name]['套装类型']}\r"
+           f"套装介绍：{items.suits[items_name].get('套装介绍', '无')}\r")
+    for need_num, suits_buff in items.suits[items_name]['套组效果'].items():
+        effect_msg = '\r - '.join([f"{increase_name}{'提升' if value > 0 else '降低'}{value * 100:.2f}%"
+                                   if increase_name not in suits_effect_def
+                                   else suits_effect_def[increase_name].format(value * 100)
+                                   for increase_name, value in suits_buff.items()])
+        msg += f"{need_num}件套:\r - {effect_msg}\r"
+    include_equipment = [(f"{items.get_data_by_item_id(include_item_id)['item_type']}: "
+                          f"{items.get_data_by_item_id(include_item_id)['name']}")
+                         for include_item_id in items.suits[items_name]['包含装备']]
+    msg += "包含装备：\r - " + '\r - '.join(include_equipment)
+    return msg
+
+
 def get_item_msg_rank(goods_id):
     """
     获取单个物品的rank
@@ -618,15 +614,13 @@ def get_item_msg_rank(goods_id):
         return 520
     if item_info['type'] == '丹药':
         msg = item_info['rank']
+    elif item_info['type'] == '装备':
+        msg = item_info['rank']
     elif item_info['item_type'] == '神通':
         msg = item_info['rank']
     elif item_info['item_type'] == '功法':
         msg = item_info['rank']
     elif item_info['item_type'] == '辅修功法':
-        msg = item_info['rank']
-    elif item_info['item_type'] == '防具':
-        msg = item_info['rank']
-    elif item_info['item_type'] == '法器':
         msg = item_info['rank']
     elif item_info['item_type'] == "药材":
         msg = item_info['rank']
@@ -773,7 +767,7 @@ async def check_use_elixir(user_id, goods_id, num):
             return msg
 
         elixir_buff_info = goods_info['buff']
-        buff_msg, is_pass = await UserBuffData(user_id).add_fight_temp_buff(elixir_buff_info)
+        buff_msg, is_pass = await UserBuffHandle(user_id).add_fight_temp_buff(elixir_buff_info)
         if not is_pass:
             return buff_msg
         await sql_message.update_back_j(user_id, goods_id, num=1, use_key=1)
@@ -850,5 +844,3 @@ async def get_use_tool_msg(user_id, goods_id, use_num) -> (str, bool):
     else:
         msg = f"{item_info['name']}使用失败！！可能暂未开放使用！！！"
     return msg, is_pass
-
-

@@ -37,6 +37,14 @@ store_help = on_command("灵宝楼帮助", aliases={"灵宝楼", "个人摊位",
 tower_help = on_command("位面挑战帮助", aliases={'挑战'}, priority=21, permission=GROUP, block=True)
 items_reload = on_command("重载物品", priority=21, permission=SUPERUSER, block=True)
 db_ping = on_command("ping", priority=21, permission=SUPERUSER, block=True)
+get_test_data = on_command("测", priority=21, permission=SUPERUSER, block=True)
+
+
+@get_test_data.handle()
+async def get_test_data_(bot: Bot, event: GroupMessageEvent):
+    msg = simple_md('我是很过分的测试信息\r\r***\r>测试文本\r***\r\r```测试文本\r***\r', '测试蓝字', '测测试试', "```.")
+    await bot.send(event=event, message=msg)
+    await get_test_data.finish()
 
 
 @items_reload.handle()
@@ -89,26 +97,26 @@ __xiuxian_notes__ = f"""
 官方群914556251
 """.strip()
 
-__sect_help__ = f"""
-\r————宗门帮助————
-1：我的宗门
- - 查看当前所处宗门信息
-2：宗门列表
- - 查看所有宗门列表
-3：创建宗门
- - 创建宗门，需求：{XiuConfig().sect_create_cost}灵石，需求境界{XiuConfig().sect_min_level}
-4：加入宗门
- - 加入一个宗门,需要带上宗门id
-5：管理宗门
- - 获取所有宗门管理指令
-6：宗门指令
- - 查看所有宗门普通成员指令
-7：宗主指令
- - 查看所有宗主指令
-——tips——
-官方群914556251
-
-""".strip()
+__sect_help__ = simple_md(
+    f"\r"
+    f"————宗门帮助————\r"
+    f"1：", "我的宗门", "我的宗门",
+    ".\r"
+    f" - 查看当前所处宗门信息\r"
+    f"2：宗门列表\r"
+    f" - 查看所有宗门列表\r"
+    f"3：创建宗门\r"
+    f" - 创建宗门，需求：{XiuConfig().sect_create_cost}灵石，需求境界{XiuConfig().sect_min_level}\r"
+    f"4：加入宗门\r"
+    f" - 加入一个宗门,需要带上宗门id\r"
+    f"5：管理宗门\r"
+    f" - 获取所有宗门管理指令\r"
+    f"6：宗门指令\r"
+    f" - 查看所有宗门普通成员指令\r"
+    f"7：宗主指令\r"
+    f" - 查看所有宗主指令\r"
+    f"——tips——\r"
+    f"官方群914556251\r")
 
 __buff_help__ = f"""
 ——功法帮助——
@@ -140,53 +148,56 @@ __home_help__ = f"""
 灵田基础成长时间为27小时
 """.strip()
 
-__store_help__ = (f"\r"
-                  f"——灵宝楼帮助——\r"
-                  f"灵宝楼指令大全\r"
-                  f"1：灵宝楼求购 物品 价格 数量\r"
-                  f" 🔹 向灵宝楼提交求购物品申请\r"
-                  f"2：灵宝楼出售 物品 道号\r"
-                  f" 🔹 向有求购的玩家出售对应物品\r"
-                  f" 🔹 不输 道号 会按市场最高价出售\r"
-                  f"3：灵宝楼求购查看 物品\r"
-                  f" 🔹 查看对应物品的最高求购价\r"
-                  f"4：我的灵宝楼求购\r"
-                  f" 🔹 查看自身灵宝楼求购\r"
-                  f"5：灵宝楼取灵石 数量\r"
-                  f" 🔹 从灵宝楼中取出灵石，收取20%手续费\r"
-                  f"6：取消求购 物品名称\r"
-                  f" 🔹 下架你的求购物品\r"
-                  f"——tips——\r"
-                  f"官方群914556251\r").strip()
+__store_help__ = (
+    f"\r"
+    f"——灵宝楼帮助——\r"
+    f"灵宝楼指令大全\r"
+    f"1：灵宝楼求购 物品 价格 数量\r"
+    f" 🔹 向灵宝楼提交求购物品申请\r"
+    f"2：灵宝楼出售 物品 道号\r"
+    f" 🔹 向有求购的玩家出售对应物品\r"
+    f" 🔹 不输 道号 会按市场最高价出售\r"
+    f"3：灵宝楼求购查看 物品\r"
+    f" 🔹 查看对应物品的最高求购价\r"
+    f"4：我的灵宝楼求购\r"
+    f" 🔹 查看自身灵宝楼求购\r"
+    f"5：灵宝楼取灵石 数量\r"
+    f" 🔹 从灵宝楼中取出灵石，收取20%手续费\r"
+    f"6：取消求购 物品名称\r"
+    f" 🔹 下架你的求购物品\r"
+    f"——tips——\r"
+    f"官方群914556251\r").strip()
 
-__tower_help__ = f"""
-——位面挑战指令帮助——
-1：进入挑战之地
- - 在存在挑战副本的位置使用
-   可以进入挑战之地开始挑战
-   凡界：灵虚古境(前往3)
-   灵界：紫霄神渊(前往19)
-2：查看挑战
- - 查看当前挑战信息
-3：开始挑战
- - 进行本层次挑战
-4：离开挑战之地
- - 停止对挑战之地的探索
-5：挑战商店
- - 消耗挑战积分兑换物品
-6：挑战之地规则详情
- - 获取位面挑战的详情规则
-7：结算挑战积分
- - 获取本周抵达最高层的对应积分
-——tips——
-官方群914556251
-""".strip()
+__tower_help__ = simple_md(
+    f"\r"
+    f"——位面挑战指令帮助——\r"
+    f"1：", "进入挑战之地", "进入挑战",
+    ".\r"
+    f" - 在存在挑战副本的位置使用\r"
+    f"   可以进入挑战之地开始挑战\r"
+    f"   凡界：灵虚古境(前往3)\r"
+    f"   灵界：紫霄神渊(前往19)\r"
+    f"2：查看挑战\r"
+    f" - 查看当前挑战信息\r"
+    f"3：开始挑战\r"
+    f" - 进行本层次挑战\r"
+    f"4：离开挑战之地\r"
+    f" - 停止对挑战之地的探索\r"
+    f"5：挑战商店\r"
+    f" - 消耗挑战积分兑换物品\r"
+    f"6：挑战之地规则详情\r"
+    f" - 获取位面挑战的详情规则\r"
+    f"7：本周挑战积分\r"
+    f" - 查看本周抵达最高层的对应积分\r"
+    f"——tips——\r"
+    f"官方群914556251",
+    "102368631_1739371981")
 
 
 @help_in.handle(parameterless=[Cooldown()])
 async def help_in_(bot: Bot, event: GroupMessageEvent):
     """修仙帮助"""
-    msg = help_md("102368631_1740931741", "测试中", "102368631_1740931181")
+    msg = help_md("102368631_1740931741", "\r小月官服唯一群914556251", "102368631_1740931181")
     await bot.send(event=event, message=msg)
     await help_in.finish()
 
@@ -194,7 +205,7 @@ async def help_in_(bot: Bot, event: GroupMessageEvent):
 @help_newer.handle(parameterless=[Cooldown()])
 async def help_in_(bot: Bot, event: GroupMessageEvent):
     """修仙新手帮助"""
-    msg = help_md("102368631_1733157618", "测试中", "102368631_1740930682")
+    msg = help_md("102368631_1743000897", "小月官服唯一群914556251", "102368631_1740930682")
     await bot.send(event=event, message=msg)
     await help_newer.finish()
 

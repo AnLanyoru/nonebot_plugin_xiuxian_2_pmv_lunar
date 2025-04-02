@@ -2,6 +2,7 @@ import random
 
 from .riftconfig import get_rift_config
 from .skill_rate import skill_rate
+from ..user_data_handle import UserBuffHandle
 from ..xiuxian_config import convert_rank
 from ..xiuxian_utils.item_json import items
 from ..xiuxian_utils.other_set import OtherSet
@@ -62,6 +63,9 @@ STORY = {
             "type_rate": 15,
         },
         "防具": {
+            "type_rate": 20,
+        },
+        "新装备": {
             "type_rate": 20,
         },
         "灵石": {
@@ -127,7 +131,7 @@ STORY = {
 async def get_boss_battle_info(user_info, rift_rank):
     """获取Boss战事件的内容"""
     boss_data = STORY['战斗']['Boss战斗']["Boss数据"]
-    player = await sql_message.get_user_real_info(user_info['user_id'])
+    player = await UserBuffHandle(user_info['user_id']).get_user_fight_info()
     player['道号'] = player['user_name']
     player['气血'] = player['fight_hp']
     player['攻击'] = player['atk']
@@ -202,7 +206,9 @@ async def get_treasure_info(user_info, rift_rank):
         weapon_info = get_weapon(user_info, rift_rank)
         temp_msg = f"{weapon_info[1]['level']}:{weapon_info[1]['name']}!"
         msg = random.choice(TREASUREMSG).format(temp_msg)
-        await sql_message.send_back(user_info['user_id'], weapon_info[0], weapon_info[1]['name'],
+        await sql_message.send_back(user_info['user_id'],
+                                    weapon_info[0],
+                                    weapon_info[1]['name'],
                                     weapon_info[1]['type'], 1,
                                     0)
         # 背包sql
@@ -211,9 +217,24 @@ async def get_treasure_info(user_info, rift_rank):
         armor_info = get_armor(user_info, rift_rank)
         temp_msg = f"{armor_info[1]['level']}防具：{armor_info[1]['name']}!"
         msg = random.choice(TREASUREMSG_1).format(temp_msg)
-        await sql_message.send_back(user_info['user_id'], armor_info[0], armor_info[1]['name'], armor_info[1]['type'],
-                                    1, 0)
+        await sql_message.send_back(
+            user_info['user_id'],
+            armor_info[0],
+            armor_info[1]['name'],
+            armor_info[1]['type'],
+            1, 0)
         # 背包sql
+
+    elif rift_type == "新装备":
+        armor_info = get_new_equipment(user_info, rift_rank)
+        temp_msg = f"{armor_info[1]['level']}{armor_info[1]['item_type']}：{armor_info[1]['name']}!"
+        msg = random.choice(TREASUREMSG_1).format(temp_msg)
+        await sql_message.send_back(
+            user_info['user_id'],
+            armor_info[0],
+            armor_info[1]['name'],
+            armor_info[1]['type'],
+            1, 0)
 
     elif rift_type == "功法":
         give_main_info = get_main_info(user_info['level'], rift_rank)
@@ -331,6 +352,24 @@ def get_armor(user_info, rift_rank=0):
     :return 防具ID, 防具信息json
     """
     armor_data = items.get_data_by_item_type(['防具'])
+    armor_id = get_id_by_rank(armor_data, user_info['level'], rift_rank)
+    armor_info = items.get_data_by_item_id(armor_id)
+    return armor_id, armor_info
+
+
+def get_new_equipment(user_info, rift_rank=0):
+    """
+    随机获取一个防具
+    :param user_info:用户信息类
+    :param rift_rank:秘境等级
+    :return 防具ID, 防具信息json
+    """
+    armor_data = items.get_data_by_item_type(["本命法宝",
+                                              "辅助法宝",
+                                              "内甲",
+                                              "道袍",
+                                              "道靴",
+                                              "灵戒"])
     armor_id = get_id_by_rank(armor_data, user_info['level'], rift_rank)
     armor_info = items.get_data_by_item_id(armor_id)
     return armor_id, armor_info

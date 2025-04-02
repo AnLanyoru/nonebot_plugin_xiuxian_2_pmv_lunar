@@ -57,7 +57,7 @@ __rift_help__ = (f"———秘境帮助———\r"
                  f"——————\r"
                  f"tips：每天早八各位面将会生成一个随机等级的秘境供各位道友探索\r").strip()
 
-normal_refresh = 1
+normal_refresh = 0
 
 
 @DRIVER.on_startup

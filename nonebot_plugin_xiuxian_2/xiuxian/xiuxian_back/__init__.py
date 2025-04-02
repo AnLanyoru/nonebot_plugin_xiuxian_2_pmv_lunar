@@ -1,4 +1,3 @@
-
 from nonebot import on_command
 from nonebot.adapters.onebot.v11 import (
     Bot,
@@ -10,11 +9,11 @@ from nonebot.params import CommandArg, RawCommand
 from nonebot.permission import SUPERUSER
 
 from .back_util import (
-    get_user_main_back_msg, get_use_equipment_sql,
+    get_user_main_back_msg,
     get_item_msg, get_item_msg_rank, check_use_elixir,
     get_use_jlq_msg, get_no_use_equipment_sql, get_use_tool_msg,
-    get_user_main_back_msg_easy, get_user_back_msg)
-from ..user_data_handle import UserBuffData
+    get_user_main_back_msg_easy, get_user_back_msg, get_suits_effect)
+from ..user_data_handle import UserBuffHandle
 from ..xiuxian_config import XiuConfig, convert_rank
 from ..xiuxian_limit import limit_handle
 from ..xiuxian_mixelixir.mixelixirutil import mix_user_temp, AlchemyFurnace
@@ -33,21 +32,13 @@ from ..xiuxian_utils.xiuxian2_handle import (
     get_sec_msg, get_main_info_msg, get_sub_info_msg, UserBuffDate
 )
 
-auction = {}
-AUCTIONSLEEPTIME = 120  # 拍卖初始等待时间（秒）
-cache_help = {}
-auction_offer_flag = False  # 拍卖标志
-AUCTIONOFFERSLEEPTIME = 30  # 每次拍卖增加拍卖剩余的时间（秒）
-auction_offer_time_count = 0  # 计算剩余时间
-auction_offer_all_count = 0  # 控制线程等待时间
-# 定时任务
-
 goods_re_root = on_command("炼金", priority=6, permission=GROUP, block=True)
 goods_re_root_fast = on_command("快速炼金", aliases={"批量炼金"}, priority=6, permission=GROUP, block=True)
 main_back = on_command('我的背包', aliases={'我的物品', '背包'}, priority=3, permission=GROUP, block=True)
 skill_back = on_command('功法背包', priority=2, permission=GROUP, block=True)
 check_back = on_command('别人的背包', aliases={'检查背包'}, priority=2, permission=SUPERUSER, block=True)
 use = on_command("使用", priority=15, permission=GROUP, block=True)
+use_suits = on_command("套装使用", priority=15, permission=GROUP, block=True)
 fast_elixir_use_set = on_command("快速丹药设置", aliases={'设置快速丹药'}, priority=3, permission=GROUP, block=True)
 fast_elixir_use = on_command("快速丹药", aliases={'磕'}, priority=15, permission=GROUP, block=True)
 no_use_zb = on_command("换装", aliases={"卸载"}, priority=5, permission=GROUP, block=True)
@@ -60,6 +51,17 @@ back_fix = on_command("背包修复", priority=2, permission=GROUP, block=True)
 test_md = on_command("测试模板", priority=25, permission=SUPERUSER, block=True)
 check_item_json = on_command("物品结构", aliases={"json"}, priority=25, permission=SUPERUSER, block=True)
 gm_goods_delete = on_command("回收", aliases={"没收"}, priority=6, permission=SUPERUSER, block=True)
+my_history_skill = on_command("我的识海",
+                              aliases={'识海', '历史功法', '历史技能', '历史神通', '历史辅修'},
+                              priority=14, permission=GROUP, block=True)
+learn_history_skill = on_command("回忆功法",
+                                 priority=4, permission=GROUP, block=True)
+remove_history_skill = on_command("忘记功法", aliases={'遗忘功法'},
+                                  priority=4, permission=GROUP, block=True)
+remove_history_skill_sure = on_command("确认忘记功法", aliases={'确认遗忘功法'},
+                                       priority=4, permission=GROUP, block=True)
+add_history_skill_max = on_command("拓展识海", aliases={'识海拓展'},
+                                   priority=4, permission=GROUP, block=True)
 
 __back_help__ = f"""
 指令：
@@ -84,12 +86,287 @@ __back_help__ = f"""
 """.strip()
 
 
+@remove_history_skill_sure.handle(parameterless=[Cooldown()])
+async def remove_history_skill_sure_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
+    """快速丹药"""
+    user_info = await check_user(event)
+    user_id = user_info["user_id"]
+    user_name = user_info["user_name"]
+    arg_str = args.extract_plain_text()
+    arg_strs = get_strs_from_str(arg_str)
+    if not arg_strs:
+        msg = three_md(f'@{user_name}道友\r'
+                       f'请输入正确的功法名称！！\r',
+                       "我的识海", "我的识海",
+                       "\r 🔹 查看识海中的过往功法记忆\r",
+                       "回忆功法 功法名", "回忆功法",
+                       "\r 🔹 将记录在识海中的过往功法回忆\r",
+                       "忘记功法 功法名", "忘记功法",
+                       "\r 🔹 将记录在识海中的过往功法忘记", )
+
+        await bot.send(event=event, message=msg)
+        await remove_history_skill_sure.finish()
+
+    item_name = arg_strs[0]
+    item_id = items.get_item_id(item_name)
+    skill_info = items.get_data_by_item_id(item_id)
+    if not skill_info:
+        msg = three_md(f'@{user_name}道友\r'
+                       f'请输入正确的功法名称！！\r',
+                       "我的识海", "我的识海",
+                       "\r 🔹 查看识海中的过往功法记忆\r",
+                       "回忆功法 功法名", "回忆功法",
+                       "\r 🔹 将记录在识海中的过往功法回忆\r",
+                       "忘记功法 功法名", "忘记功法",
+                       "\r 🔹 将记录在识海中的过往功法忘记", )
+        await bot.send(event=event, message=msg)
+        await remove_history_skill.finish()
+    item_type = skill_info['type']
+    if item_type != '技能':
+        msg = three_md(f'@{user_name}道友\r'
+                       f'请输入正确的功法名称！！\r',
+                       "我的识海", "我的识海",
+                       "\r 🔹 查看识海中的过往功法记忆\r",
+                       "回忆功法 功法名", "回忆功法",
+                       "\r 🔹 将记录在识海中的过往功法回忆\r",
+                       "忘记功法 功法名", "忘记功法",
+                       "\r 🔹 将记录在识海中的过往功法忘记", )
+        await bot.send(event=event, message=msg)
+        await remove_history_skill_sure.finish()
+
+    user_buff_handle = UserBuffHandle(user_id)
+    msg = await user_buff_handle.remove_history_skill(item_id)
+    msg = three_md(f'@{user_name}道友\r'
+                   f'{msg}\r',
+                   "我的识海", "我的识海",
+                   "\r 🔹 查看识海中的过往功法记忆\r",
+                   "回忆功法 功法名", "回忆功法",
+                   "\r 🔹 将记录在识海中的过往功法回忆\r",
+                   "忘记功法 功法名", "忘记功法",
+                   "\r 🔹 将记录在识海中的过往功法忘记", )
+    await bot.send(event=event, message=msg)
+    await remove_history_skill_sure.finish()
+
+
+@add_history_skill_max.handle(parameterless=[Cooldown()])
+async def add_history_skill_max_(bot: Bot, event: GroupMessageEvent):
+    """快速丹药"""
+    user_info = await check_user(event)
+    user_id = user_info["user_id"]
+    user_name = user_info["user_name"]
+    tool_info = await sql_message.get_item_by_good_id_and_user_id(user_id, 670001)
+    if not tool_info:
+        msg = simple_md(f'@{user_name}道友\r道友没有',
+                        '识海拓展', '识海拓展',
+                        '道具！！\r')
+        await bot.send(event=event, message=msg)
+        await add_history_skill_max.finish()
+    tool_num = tool_info['goods_num']
+    user_buff_handle = UserBuffHandle(user_id)
+    learned_skill_data = await user_buff_handle.get_learned_skill()
+    now_remember_level = learned_skill_data['max_learn_skill_save'] + 1
+    if now_remember_level > 8:
+        msg = simple_md(f'@{user_name}道友\r'
+                        f'道友的', '识海', '我的识海', '已经拓展的足够大了！！')
+        await bot.send(event=event, message=msg)
+        await add_history_skill_max.finish()
+    if tool_num < now_remember_level:
+        msg = simple_md(f'@{user_name}道友\r'
+                        f'道友的神魂石不足！！本次',
+                        '识海拓展', '识海拓展',
+                        f'需要{now_remember_level}个神魂石！！', )
+        await bot.send(event=event, message=msg)
+        await add_history_skill_max.finish()
+    await sql_message.decrease_user_item(
+        user_id,
+        {670001: now_remember_level},
+        use_bind=True)
+    learned_skill_data['max_learn_skill_save'] += 1
+    await user_buff_handle.update_learned_skill_data(learned_skill_data)
+    msg = three_md(f'@{user_name}道友\r'
+                   f'识海拓展成功，当前识海容量{now_remember_level + 2}\r',
+                   "我的识海", "我的识海",
+                   "\r 🔹 查看识海中的过往功法记忆\r",
+                   "回忆功法 功法名", "回忆功法",
+                   "\r 🔹 将记录在识海中的过往功法回忆\r",
+                   "忘记功法 功法名", "忘记功法",
+                   "\r 🔹 将记录在识海中的过往功法忘记", )
+    await bot.send(event=event, message=msg)
+    await add_history_skill_max.finish()
+
+
+@remove_history_skill.handle(parameterless=[Cooldown()])
+async def remove_history_skill_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
+    """快速丹药"""
+    user_info = await check_user(event)
+    user_name = user_info["user_name"]
+    arg_str = args.extract_plain_text()
+    arg_strs = get_strs_from_str(arg_str)
+    if not arg_strs:
+        msg = three_md(f'@{user_name}道友\r'
+                       f'请输入正确的功法名称！！\r',
+                       "我的识海", "我的识海",
+                       "\r 🔹 查看识海中的过往功法记忆\r",
+                       "回忆功法 功法名", "回忆功法",
+                       "\r 🔹 将记录在识海中的过往功法回忆\r",
+                       "忘记功法 功法名", "忘记功法",
+                       "\r 🔹 将记录在识海中的过往功法忘记", )
+
+        await bot.send(event=event, message=msg)
+        await remove_history_skill.finish()
+
+    item_name = arg_strs[0]
+    item_id = items.get_item_id(item_name)
+    skill_info = items.get_data_by_item_id(item_id)
+    if not skill_info:
+        msg = three_md(f'@{user_name}道友\r'
+                       f'请输入正确的功法名称！！\r',
+                       "我的识海", "我的识海",
+                       "\r 🔹 查看识海中的过往功法记忆\r",
+                       "回忆功法 功法名", "回忆功法",
+                       "\r 🔹 将记录在识海中的过往功法回忆\r",
+                       "忘记功法 功法名", "忘记功法",
+                       "\r 🔹 将记录在识海中的过往功法忘记", )
+        await bot.send(event=event, message=msg)
+        await remove_history_skill.finish()
+    item_type = skill_info['type']
+    if item_type != '技能':
+        msg = three_md(f'@{user_name}道友\r'
+                       f'请输入正确的功法名称！！\r',
+                       "我的识海", "我的识海",
+                       "\r 🔹 查看识海中的过往功法记忆\r",
+                       "回忆功法 功法名", "回忆功法",
+                       "\r 🔹 将记录在识海中的过往功法回忆\r",
+                       "忘记功法 功法名", "忘记功法",
+                       "\r 🔹 将记录在识海中的过往功法忘记", )
+        await bot.send(event=event, message=msg)
+        await remove_history_skill.finish()
+    msg = f"将尝试遗忘功法{item_name}请确认！"
+    msg = simple_md(f'@{user_name}道友\r'
+                   f'{msg}\r',
+                    "确认遗忘", f"确认遗忘功法 {item_name}",
+                    "\r 🔹 遗忘后将不可恢复！！！")
+    await bot.send(event=event, message=msg)
+    await remove_history_skill.finish()
+
+
+@learn_history_skill.handle(parameterless=[Cooldown(cd_time=60)])
+async def learn_history_skill_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
+    """快速丹药"""
+    user_info = await check_user(event)
+    user_id = user_info["user_id"]
+    is_type, msg = await check_user_type(user_id, 0)
+    if not is_type:
+        await bot.send(event=event, message=msg)
+        await learn_history_skill.finish()
+    user_name = user_info["user_name"]
+    arg_str = args.extract_plain_text()
+    arg_strs = get_strs_from_str(arg_str)
+    if not arg_strs:
+        msg = three_md(f'@{user_name}道友\r'
+                       f'请输入正确的功法名称！！\r',
+                       "我的识海", "我的识海",
+                       "\r 🔹 查看识海中的过往功法记忆\r",
+                       "忘记功法 功法名", "忘记功法",
+                       "\r 🔹 将记录在识海中的过往功法忘记\r",
+                       "回忆功法 功法名", "回忆功法",
+                       "\r 🔹 将记录在识海中的过往功法回忆", )
+
+        await bot.send(event=event, message=msg)
+        await learn_history_skill.finish()
+
+    item_name = arg_strs[0]
+    item_id = items.get_item_id(item_name)
+    skill_info = items.get_data_by_item_id(item_id)
+    if not skill_info:
+        msg = three_md(f'@{user_name}道友\r'
+                       f'请输入正确的功法名称！！\r',
+                       "我的识海", "我的识海",
+                       "\r 🔹 查看识海中的过往功法记忆\r",
+                       "回忆功法 功法名", "回忆功法",
+                       "\r 🔹 将记录在识海中的过往功法回忆\r",
+                       "忘记功法 功法名", "忘记功法",
+                       "\r 🔹 将记录在识海中的过往功法忘记", )
+        await bot.send(event=event, message=msg)
+        await remove_history_skill.finish()
+    item_type = skill_info['type']
+    if item_type != '技能':
+        msg = three_md(f'@{user_name}道友\r'
+                       f'请输入正确的功法名称！！\r',
+                       "我的识海", "我的识海",
+                       "\r 🔹 查看识海中的过往功法记忆\r",
+                       "忘记功法 功法名", "忘记功法",
+                       "\r 🔹 将记录在识海中的过往功法忘记\r",
+                       "回忆功法 功法名", "回忆功法",
+                       "\r 🔹 将记录在识海中的过往功法回忆", )
+        await bot.send(event=event, message=msg)
+        await learn_history_skill.finish()
+
+    user_buff_handle = UserBuffHandle(user_id)
+    msg = await user_buff_handle.remember_skill(item_id)
+    msg = three_md(f'@{user_name}道友\r'
+                   f'{msg}\r',
+                   "我的识海", "我的识海",
+                   "\r 🔹 查看识海中的过往功法记忆\r",
+                   "忘记功法 功法名", "忘记功法",
+                   "\r 🔹 将记录在识海中的过往功法忘记\r",
+                   "回忆功法 功法名", "回忆功法",
+                   "\r 🔹 将记录在识海中的过往功法回忆", )
+    await bot.send(event=event, message=msg)
+    await learn_history_skill.finish()
+
+
+@my_history_skill.handle(parameterless=[Cooldown()])
+async def my_history_skill_(bot: Bot, event: GroupMessageEvent):
+    """快速丹药"""
+    user_info = await check_user(event)
+    user_id = user_info["user_id"]
+    user_name = user_info["user_name"]
+    user_buff_handle = UserBuffHandle(user_id)
+    learned_skill_data = await user_buff_handle.get_learned_skill()
+    main_buff = '\r - '.join(
+        [items.get_data_by_item_id(item_id)['name']
+         for item_id in learned_skill_data['learned_main_buff']]) \
+        if learned_skill_data['learned_main_buff'] else '无'
+    sec_buff = '\r - '.join(
+        [items.get_data_by_item_id(item_id)['name']
+         for item_id in learned_skill_data['learned_sec_buff']]) \
+        if learned_skill_data['learned_sec_buff'] else '无'
+    sub_buff = '\r - '.join(
+        [items.get_data_by_item_id(item_id)['name']
+         for item_id in learned_skill_data['learned_sub_buff']]) \
+        if learned_skill_data['learned_sub_buff'] else '无'
+    max_save_num = learned_skill_data['max_learn_skill_save'] + 2
+    learned_main_buff_num = len(learned_skill_data['learned_main_buff'])
+    learned_sec_buff_num = len(learned_skill_data['learned_sec_buff'])
+    learned_sub_buff_num = len(learned_skill_data['learned_sub_buff'])
+    skill_msg = (f"@{user_name}\r"
+                 f"道友的识海:\r"
+                 f"过往功法({learned_main_buff_num}/{max_save_num})：\r"
+                 f" - {main_buff}\r\r"
+                 f"过往神通({learned_sec_buff_num}/{max_save_num})：\r"
+                 f" - {sec_buff}\r\r"
+                 f"过往辅修({learned_sub_buff_num}/{max_save_num})：\r"
+                 f" - {sub_buff}\r\r"
+                 f"可用指令：\r")
+    msg = three_md(skill_msg,
+                   "回忆功法 功法名", "回忆功法",
+                   "\r 🔹 将记录在识海中的过往功法回忆\r",
+                   "忘记功法 功法名", "忘记功法",
+                   "\r 🔹 将记录在识海中的过往功法忘记\r",
+                   "拓展识海", "拓展识海",
+                   "\r 🔹 提升识海容量，可以记忆更多过往功法\r")
+
+    await bot.send(event=event, message=msg)
+    await my_history_skill.finish()
+
+
 @fast_elixir_use.handle(parameterless=[Cooldown()])
 async def fast_elixir_use_(bot: Bot, event: GroupMessageEvent):
     """快速丹药"""
     user_info = await check_user(event)
     user_id = user_info["user_id"]
-    user_buff = UserBuffData(user_id)
+    user_buff = UserBuffHandle(user_id)
     elixir_list = await user_buff.get_fast_elixir_set()
     if not elixir_list:
         msg = simple_md("道友没有",
@@ -124,7 +401,7 @@ async def fast_elixir_use_set_(bot: Bot, event: GroupMessageEvent, args: Message
     """快速丹药设置"""
     user_info = await check_user(event)
     user_id = user_info["user_id"]
-    user_buff = UserBuffData(user_id)
+    user_buff = UserBuffHandle(user_id)
 
     strs = args.extract_plain_text()
     args = get_strs_from_str(strs)
@@ -382,10 +659,13 @@ async def goods_re_root_(bot: Bot, event: GroupMessageEvent, args: Message = Com
             goods_name = back['goods_name']
             item_info = items.get_data_by_item_id(goods_id)
             buff_type = item_info.get('buff_type')
-            if ((item_level := item_info.get('level') if item_info else None) == goal_level
+            item_level = item_info.get('level')
+            item_type = item_info.get('item_type')
+            if (item_level == goal_level
                     or goods_name == goal_level
                     or buff_type == goal_level
-                    or goods_type == goal_level):
+                    or goods_type == goal_level
+                    or item_type == goal_level):
                 if goods_name in lock_item_dict:
                     msg += f"\r{goods_name}已锁定，无法炼金！"
                     break
@@ -538,25 +818,57 @@ async def no_use_zb_(bot: Bot, event: GroupMessageEvent, args: Message = Command
         await bot.send(event=event, message=msg)
         await no_use_zb.finish()
     if goods_type == "装备":
-        if item_info['state']:
-            sql_str, item_type = await get_no_use_equipment_sql(user_id, goods_id)
-            for sql in sql_str:
-                await sql_message.update_back_equipment(sql)
-            if item_type == "法器":
-                await sql_message.updata_user_faqi_buff(user_id, 0)
-            if item_type == "防具":
-                await sql_message.updata_user_armor_buff(user_id, 0)
-            msg = f"成功卸载装备{item_name}！"
-            await bot.send(event=event, message=msg)
-            await no_use_zb.finish()
-        else:
-            msg = "装备没有被使用，无法卸载！"
-            await bot.send(event=event, message=msg)
-            await no_use_zb.finish()
-    else:
-        msg = "目前只支持卸载装备！"
+        user_buff_handle = UserBuffHandle(user_id)
+        msg = await user_buff_handle.remove_equipment(goods_id)
         await bot.send(event=event, message=msg)
         await no_use_zb.finish()
+    else:
+        msg = "只支持卸载装备！"
+        await bot.send(event=event, message=msg)
+        await no_use_zb.finish()
+
+
+@use_suits.handle(parameterless=[Cooldown()])
+async def use_suits_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
+    """使用物品
+    ["user_id", "goods_id", "goods_name", "goods_type", "goods_num", "create_time", "update_time",
+    "remake", "day_num", "all_num", "action_time", "state"]
+    """
+    user_info = await check_user(event)
+    user_id = user_info['user_id']
+    args = args.extract_plain_text()
+    msg_info = get_strs_from_str(args)
+    item_name = msg_info[0] if msg_info else None  # 获取第一个名称
+    if item_name not in items.suits:
+        msg = f"请检查该套装是否存在！"
+        await bot.send(event=event, message=msg)
+        await use_suits.finish()
+    suits_items = items.suits[item_name]['包含装备']
+    msg = ''
+    for goods_id in suits_items:
+        goods_id = int(goods_id)
+        item_back_info = await sql_message.get_item_by_good_id_and_user_id(user_id, goods_id)
+        item_info = items.get_data_by_item_id(goods_id)
+        goods_name = item_info['name']
+        if not item_back_info:
+            msg += f"请检查{goods_name}是否在背包内！"
+            continue
+        goods_type = item_back_info['goods_type']
+        if goods_type != '装备':
+            msg += f"类型发送错误！请联系管理解决！"
+            await bot.send(event=event, message=msg)
+            await use_suits.finish()
+        goods_num = item_back_info['goods_num']
+        if goods_num < 1:
+            msg += f"{goods_name}不足！！"
+            continue
+        user_buff_data = UserBuffHandle(user_id)
+        if item_back_info['state']:
+            msg += f"{goods_name}已被装备，请勿重复装备！"
+            continue
+        msg += await user_buff_data.update_new_equipment(item_back_info['goods_id']) + '\r'
+    await bot.send(event=event, message=msg)
+    await use_suits.finish()
 
 
 @use.handle(parameterless=[Cooldown()])
@@ -580,7 +892,7 @@ async def use_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg())
         await use.finish()
     goods_type = item_info['goods_type']
     goods_num = item_info['goods_num']
-    if not item_info['goods_num']:
+    if item_info['goods_num'] < num:
         msg = f"请检查该道具是否充足！！"
         await bot.send(event=event, message=msg)
         await use.finish()
@@ -594,60 +906,67 @@ async def use_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg())
 
     # 使用实现
     if goods_type == "装备":
+        user_buff_data = UserBuffHandle(user_id)
         if item_info['state']:
             msg = "该装备已被装备，请勿重复装备！"
             await bot.send(event=event, message=msg)
             await use.finish()
-        else:  # 可以装备
-            sql_str, item_type = await get_use_equipment_sql(user_id, goods_id)
-            for sql in sql_str:
-                await sql_message.update_back_equipment(sql)
-            if item_type == "法器":
-                await sql_message.updata_user_faqi_buff(user_id, goods_id)
-            if item_type == "防具":
-                await sql_message.updata_user_armor_buff(user_id, goods_id)
-            msg = f"成功装备{item_name}！"
-            await bot.send(event=event, message=msg)
-            await use.finish()
+        msg = await user_buff_data.update_new_equipment(item_info['goods_id'])
+        await bot.send(event=event, message=msg)
+        await use.finish()
     elif goods_type == "技能":
         user_buff_info = await UserBuffDate(user_id).buff_info
         skill_info = items.get_data_by_item_id(goods_id)
         skill_type = skill_info['item_type']
+        user_buff_handle = UserBuffHandle(user_id)
+        learned_skill_data = await user_buff_handle.get_learned_skill()
+        max_save_num = learned_skill_data['max_learn_skill_save']
+        learned_main_buff = learned_skill_data['learned_main_buff']
+        learned_sec_buff = learned_skill_data['learned_sec_buff']
+        learned_sub_buff = learned_skill_data['learned_sub_buff']
+        old_main = user_buff_info['main_buff']
+        old_sec = user_buff_info['sec_buff']
+        old_sub = user_buff_info['sub_buff']
         if skill_type == "神通":
-            if int(user_buff_info['sec_buff']) == goods_id:
+            if old_sec == goods_id:
                 msg = f"道友已学会该神通：{skill_info['name']}，请勿重复学习！"
             else:  # 学习sql
-
-                power = await limit_handle.get_user_world_power_data(user_id)
-                if int(skill_info['rank']) > 120:
-                    if power >= 2048:
-                        power -= 2048
-                        use_power = f"\r消耗天地精华2048点，余剩{power}点！！"
-                        await limit_handle.update_user_world_power_data(user_id, power)
-                        await sql_message.update_back_j(user_id, goods_id, use_key=2)
-                        await sql_message.updata_user_sec_buff(user_id, goods_id)
-                        msg = f"恭喜道友学会神通：{skill_info['name']}！" + use_power
-                        pass
-                    else:
-                        msg = f"需要拥有天地精华2048点，才可练就神通：{skill_info['name']}！"
-                else:
-                    await sql_message.update_back_j(user_id, goods_id, use_key=2)
-                    await sql_message.updata_user_sec_buff(user_id, goods_id)
-                    msg = f"恭喜道友学会神通：{skill_info['name']}！"
+                await sql_message.update_back_j(user_id, goods_id, use_key=2)
+                await sql_message.updata_user_sec_buff(user_id, goods_id)
+                msg = f"恭喜道友学会神通：{skill_info['name']}！"
+            if old_sec and old_sec not in learned_sec_buff:
+                if len(learned_sec_buff) >= max_save_num + 2:
+                    del learned_skill_data['learned_sec_buff'][0]
+                learned_skill_data['learned_sec_buff'].append(old_sec)
+                await user_buff_handle.update_learned_skill_data(learned_skill_data)
+                msg += f"旧神通已存入识海中"
         elif skill_type == "功法":
-            if int(user_buff_info['main_buff']) == goods_id:
+            if old_main == goods_id:
                 msg = f"道友已学会该功法：{skill_info['name']}，请勿重复学习！"
             else:  # 学习sql
                 await sql_message.update_back_j(user_id, goods_id, use_key=2)
                 await sql_message.updata_user_main_buff(user_id, goods_id)
                 msg = f"恭喜道友学会功法：{skill_info['name']}！"
+            if old_main and old_main not in learned_main_buff:
+                if len(learned_main_buff) >= max_save_num + 2:
+                    del learned_skill_data['learned_main_buff'][0]
+                learned_skill_data['learned_main_buff'].append(old_main)
+                await user_buff_handle.update_learned_skill_data(learned_skill_data)
+                msg += f"旧功法已存入识海中"
+
         elif skill_type == "辅修功法":  # 辅修功法1
-            if int(user_buff_info['sub_buff']) == goods_id:
+            if old_sub == goods_id:
                 msg = f"道友已学会该辅修功法：{skill_info['name']}，请勿重复学习！"
             else:  # 学习sql
                 await sql_message.update_back_j(user_id, goods_id, use_key=2)
                 await sql_message.updata_user_sub_buff(user_id, goods_id)
                 msg = f"恭喜道友学会辅修功法：{skill_info['name']}！"
+            if old_sub and old_sub not in learned_sub_buff:
+                if len(learned_sub_buff) >= max_save_num + 2:
+                    del learned_skill_data['learned_sub_buff'][0]
+                learned_skill_data['learned_sub_buff'].append(old_sub)
+                await user_buff_handle.update_learned_skill_data(learned_skill_data)
+                msg += f"旧辅修功法已存入识海中"
         else:
             msg = "发生未知错误！"
         await bot.send(event=event, message=msg)
@@ -780,17 +1099,27 @@ async def check_items_(bot: Bot, event: GroupMessageEvent, args: Message = Comma
         items_id = items_id[0]
         try:
             msg = get_item_msg(items_id, get_image=True)
+            await bot.send(event=event, message=msg)
+            await check_items.finish()
         except KeyError:
             msg = "请输入正确的物品id！！！"
-    elif items_name:
-        items_id = items.items_map.get(items_name[0])
-        if items_id:
-            msg = get_item_msg(items_id, get_image=True)
-        else:
-            msg = f"不存在该物品的信息，请检查名字是否输入正确！"
-    else:
-        msg = "请输入正确的物品id！！！"
-
+            await bot.send(event=event, message=msg)
+            await check_items.finish()
+    if not items_name:
+        msg = f"请输入要查询的物品名称！！"
+        await bot.send(event=event, message=msg)
+        await check_items.finish()
+    items_name = items_name[0]
+    if items_name in items.suits:
+        msg = get_suits_effect(items_name)
+        await bot.send(event=event, message=msg)
+        await check_items.finish()
+    items_id = items.items_map.get(items_name)
+    if not items_id:
+        msg = f"不存在该物品的信息，请检查名字是否输入正确！"
+        await bot.send(event=event, message=msg)
+        await check_items.finish()
+    msg = get_item_msg(items_id, get_image=True)
     await bot.send(event=event, message=msg)
     await check_items.finish()
 

@@ -14,6 +14,8 @@ from nonebot.permission import SUPERUSER
 
 from .limit import check_limit, reset_send_stone, reset_stone_exp_up
 from .two_exp_cd import two_exp_cd
+from ..user_data_handle import UserBuffHandle
+from ..user_data_handle.fight.fight_pvp import player_fight
 from ..world_boss.world_boss_database import get_user_world_boss_info
 from ..xiuxian_config import XiuConfig
 from ..xiuxian_data.data.境界_data import level_data
@@ -26,10 +28,11 @@ from ..xiuxian_limit.limit_util import limit_check
 from ..xiuxian_mixelixir.mix_elixir_database import get_user_mix_elixir_info
 from ..xiuxian_place import place
 from ..xiuxian_tower import tower_handle
-from ..xiuxian_utils.clean_utils import get_datetime_from_str, date_sub, main_md, msg_handler, simple_md, get_args_num
+from ..xiuxian_utils.clean_utils import (get_datetime_from_str,
+                                         date_sub, main_md,
+                                         simple_md, get_args_num)
 from ..xiuxian_utils.lay_out import Cooldown
 from ..xiuxian_utils.other_set import OtherSet
-from ..xiuxian_utils.player_fight import player_fight
 from ..xiuxian_utils.utils import (
     number_to, check_user,
     check_user_type, get_id_from_str
@@ -225,6 +228,7 @@ async def blessed_spot_rename_(bot: Bot, event: GroupMessageEvent):
 @qc.handle(parameterless=[Cooldown(cd_time=20)])
 async def qc_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """切磋，不会掉血"""
+
     args = args.extract_plain_text()
     give_qq = await get_id_from_str(args)  # 使用道号获取用户id，代替原at
 
@@ -241,35 +245,8 @@ async def qc_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
             await qc.finish()
 
     if user1 and user2:
-        player1 = {'user_id': user1['user_id'],
-                   '道号': user1['user_name'],
-                   '气血': user1['fight_hp'],
-                   'max_hp': user1['max_hp'],
-                   'hp_buff': user1['hp_buff'],
-                   '攻击': user1['atk'],
-                   '真元': user1['fight_mp'],
-                   'max_mp': user1['max_mp'],
-                   'mp_buff': user1['mp_buff'],
-                   'level': user1['level'],
-                   'exp': user1['exp']
-                   }
-
-        player2 = {'user_id': user2['user_id'],
-                   '道号': user2['user_name'],
-                   '气血': user2['fight_hp'],
-                   'max_hp': user2['max_hp'],
-                   'hp_buff': user2['hp_buff'],
-                   '攻击': user2['atk'],
-                   '真元': user2['fight_mp'],
-                   'max_mp': user2['max_mp'],
-                   'mp_buff': user2['mp_buff'],
-                   'level': user2['level'],
-                   'exp': user2['exp']
-                   }
-
-        result, victor = await player_fight(player1, player2, 1, bot.self_id)
-        text = msg_handler(result)
-        msg = f"获胜的是{victor}"
+        victor, text = await player_fight({user_id: 1, give_qq: 2})
+        msg = f"新战斗测试中，获胜的是{victor}"
         msg = main_md(msg, text, '切磋其他人', '切磋', '修炼', '修炼', '闭关', '闭关', '修仙帮助', '修仙帮助')
         await bot.send(event=event, message=msg)
         await qc.finish()
@@ -358,9 +335,9 @@ async def send_exp_(bot: Bot, event: GroupMessageEvent, args: Message = CommandA
         num = 1
     exp_limit_2 *= num
 
-    is_pass, msg = await limit_check.send_exp_limit_check(user_id_2=user_2_id, num=num)
+    is_pass, is_pass_msg = await limit_check.send_exp_limit_check(user_id_2=user_2_id, num=num)
     if not is_pass:
-        await bot.send(event=event, message=msg)
+        await bot.send(event=event, message=is_pass_msg)
         await send_exp.finish()
 
     # 玩家2修为上限
@@ -435,11 +412,6 @@ async def two_exp_(bot: Bot, event: GroupMessageEvent, args: Message = CommandAr
         await bot.send(event=event, message=msg)
         await two_exp.finish()
 
-    is_pass, msg = await limit_check.two_exp_limit_check(user_id_1=user_1_id, user_id_2=user_2_id, num=num)
-    if not is_pass:
-        await bot.send(event=event, message=msg)
-        await two_exp.finish()
-
     # 获取下个境界需要的修为 * 1.5为闭关上限
     max_exp_1 = (int(await OtherSet().set_closing_type(user_1['level']))
                  * XiuConfig().closing_exp_upper_limit)
@@ -447,46 +419,42 @@ async def two_exp_(bot: Bot, event: GroupMessageEvent, args: Message = CommandAr
                  * XiuConfig().closing_exp_upper_limit)
     user_get_exp_max_1 = max(max_exp_1 - user_1['exp'], 0)
     user_get_exp_max_2 = max(max_exp_2 - user_2['exp'], 0)
+    if (not user_get_exp_max_2) and user_2['user_name'] not in ['凌云', '凌云三']:
+        msg = "对方修为已达上限！！"
+        await bot.send(event=event, message=msg)
+        await send_exp.finish()
 
     msg = f"{user_1['user_name']}与{user_2['user_name']}情投意合，于某地一起修炼了一晚。"
     exp = int((exp_1 + exp_2) * 0.0055)
     max_exp = XiuConfig().two_exp  # 双修上限罪魁祸首
     # 玩家1修为增加
     if exp >= max_exp:
-        user_1_get_exp_full = True
         if user_1['root_type'] not in ['源宇道根', '道之本源']:
             exp_limit_1 = max_exp
         else:
             exp_limit_1 = max_exp * 10
     else:
-        user_1_get_exp_full = False
         exp_limit_1 = exp
     # 玩家2修为增加
     if exp >= max_exp:
-        user_2_get_exp_full = True
         if user_2['root_type'] not in ['源宇道根', '道之本源']:
             exp_limit_2 = max_exp
         else:
             exp_limit_2 = max_exp * 10
     else:
-        user_2_get_exp_full = False
         exp_limit_2 = exp
-
-    if not user_1_get_exp_full & user_2_get_exp_full:
-        if cmd == "确认快速双修":
-            pass
-        else:
-            tip_msg = "道友与对方有一方无法达到最大双修收益，若不想看到本提示，在指令前加上确定"
-            tip_msg = main_md(
-                "提示", tip_msg,
-                '查看日常', "日常中心",
-                '双修', '双修',
-                '修炼', '修炼',
-                '确认快速双修', f"确认快速双修{user_2['user_name']} {num}")
-            await bot.send(event=event, message=tip_msg)
+    # 玩家2修为上限
+    if (exp_limit_2 * num >= user_get_exp_max_2) and user_2['user_name'] not in ['凌云', '凌云三']:
+        msg += f"{user_2['user_name']}修为将到达上限，仅可双修1次！\r"
+        num = 1
 
     exp_limit_1 *= num
     exp_limit_2 *= num
+
+    is_pass, pass_msg = await limit_check.two_exp_limit_check(user_id_1=user_1_id, user_id_2=user_2_id, num=num)
+    if not is_pass:
+        await bot.send(event=event, message=pass_msg)
+        await two_exp.finish()
 
     # 玩家1修为上限
     if exp_limit_1 >= user_get_exp_max_1:
@@ -683,48 +651,12 @@ async def mind_state_(bot: Bot, event: GroupMessageEvent):
     await sql_message.update_last_check_info_time(user_id)  # 更新查看修仙信息时间
     if user_info['hp'] is None or user_info['hp'] == 0:
         await sql_message.update_user_hp(user_id)
+    user_buff_handle = UserBuffHandle(user_id)
+    user_fight_info, user_buff_info = await user_buff_handle.get_user_fight_info_with_buff_info()
+    level_rate = await sql_message.get_root_rate(user_fight_info['root_type'])  # 灵根倍率
+    realm_rate = level_data[user_fight_info['level']]["spend"]  # 境界倍率
 
-    user_info = await sql_message.get_user_real_info(user_id)
-    level_rate = await sql_message.get_root_rate(user_info['root_type'])  # 灵根倍率
-    realm_rate = level_data[user_info['level']]["spend"]  # 境界倍率
-    user_buff_data = UserBuffDate(user_id)
-    main_buff_data = await user_buff_data.get_user_main_buff_data()
-    user_armor_crit_data = await user_buff_data.get_user_armor_buff_data()  # 我的状态防具会心
-    user_weapon_data = await UserBuffDate(user_id).get_user_weapon_data()  # 我的状态武器减伤
-    user_main_crit_data = await UserBuffDate(user_id).get_user_main_buff_data()  # 我的状态功法会心
-    user_main_data = await UserBuffDate(user_id).get_user_main_buff_data()  # 我的状态功法减伤
-
-    if user_main_data is not None:
-        main_def = user_main_data['def_buff'] * 100  # 我的状态功法减伤
-    else:
-        main_def = 0
-
-    if user_armor_crit_data is not None:  # 我的状态防具会心
-        armor_crit_buff = ((user_armor_crit_data['crit_buff']) * 100)
-    else:
-        armor_crit_buff = 0
-
-    if user_weapon_data is not None:
-        crit_buff = ((user_weapon_data['crit_buff']) * 100)
-    else:
-        crit_buff = 0
-
-    user_armor_data = await user_buff_data.get_user_armor_buff_data()
-    if user_armor_data is not None:
-        def_buff = int(user_armor_data['def_buff'] * 100)  # 我的状态防具减伤
-    else:
-        def_buff = 0
-
-    if user_weapon_data is not None:
-        weapon_def = user_weapon_data['def_buff'] * 100  # 我的状态武器减伤
-    else:
-        weapon_def = 0
-
-    if user_main_crit_data is not None:  # 我的状态功法会心
-        main_crit_buff = ((user_main_crit_data['crit_buff']) * 100)
-    else:
-        main_crit_buff = 0
-
+    # 突破状态
     list_all = len(OtherSet().level) - 1
     now_index = OtherSet().level.index(user_info['level'])
     if list_all == now_index:
@@ -738,34 +670,33 @@ async def mind_state_(bot: Bot, event: GroupMessageEvent):
         else:
             exp_meg = f"可突破！"
 
-    main_buff_rate_buff = main_buff_data['ratebuff'] if main_buff_data is not None else 0
-    impart_data = await xiuxian_impart.get_user_info_with_id(user_id)
-    impart_know_per = impart_data['impart_know_per'] if impart_data is not None else 0
-    impart_burst_per = impart_data['impart_burst_per'] if impart_data is not None else 0
-    boss_atk = impart_data['boss_atk'] if impart_data is not None else 0
-    weapon_critatk_data = await UserBuffDate(user_id).get_user_weapon_data()  # 我的状态武器会心伤害
-    weapon_critatk = weapon_critatk_data['critatk'] if weapon_critatk_data is not None else 0  # 我的状态武器会心伤害
-    user_main_critatk = await UserBuffDate(user_id).get_user_main_buff_data()  # 我的状态功法会心伤害
-    main_critatk = user_main_critatk['critatk'] if user_main_critatk is not None else 0  # 我的状态功法会心伤害
+    # 主功法突破概率提升
+    user_main_buff = user_buff_info['main_buff']
+    main_buff_rate_buff = user_main_buff['ratebuff'] if user_main_buff is not None else 0
+    number = user_main_buff["number"] if user_main_buff is not None else 0
+
     leveluprate = int(user_info['level_up_rate'])  # 用户失败次数加成
-    number = user_main_critatk["number"] if user_main_critatk is not None else 0
+    # boss战攻击加成
+    impart_data = await xiuxian_impart.get_user_info_with_id(user_id)
+    boss_atk = impart_data['boss_atk'] if impart_data is not None else 0
+    # 当前位置
     now_place = place.get_place_name(await place.get_now_place_id(user_id))
 
-    msg = simple_md(f"道号：{user_info['user_name']}\r"
-                    f"气血:{number_to(user_info['fight_hp'])}/{number_to(user_info['max_hp'])}"
-                    f"({(user_info['fight_hp'] / user_info['max_hp']) * 100:.2f}%)\r"
-                    f"真元:{number_to(user_info['fight_mp'])}/{number_to(user_info['exp'])}"
-                    f"({((user_info['fight_mp'] / user_info['exp']) * 100):.2f}%)\r"
-                    f"攻击:{number_to(user_info['atk'])}\r"
+    msg = simple_md(f"道号：{user_fight_info['user_name']}\r"
+                    f"气血:{number_to(user_fight_info['fight_hp'])}/{number_to(user_fight_info['max_hp'])}"
+                    f"({(user_fight_info['fight_hp'] / user_fight_info['max_hp']) * 100:.2f}%)\r"
+                    f"真元:{number_to(user_fight_info['fight_mp'])}/{number_to(user_fight_info['exp'])}"
+                    f"({((user_fight_info['fight_mp'] / user_fight_info['exp']) * 100):.2f}%)\r"
+                    f"攻击:{number_to(user_fight_info['atk'])}\r"
                     f"突破状态: {exp_meg}\r"
                     f"(概率：{break_rate.get(user_info['level'], 1) + leveluprate + number}%)\r"
                     f"攻击修炼:{user_info['atkpractice']}级\r"
                     f"(提升攻击力{user_info['atkpractice'] * 4}%)\r"
                     f"修炼效率:{int(((level_rate * realm_rate) * (1 + main_buff_rate_buff)) * 100)}%\r"
-                    f"会心:{crit_buff + int(impart_know_per * 100) + armor_crit_buff + main_crit_buff}%\r"
-                    f"减伤率:{100 - (((100 - def_buff) * (100 - weapon_def) * (100 - main_def)) / 10000):.2f}%\r"
+                    f"会心:{user_fight_info['crit']}%\r"
+                    f"减伤率:{(1 - user_fight_info['defence']) * 100:.2f}%\r"
                     f"boss战增益:{int(boss_atk * 100)}%\r"
-                    f"会心伤害增益:{int((1.5 + impart_burst_per + weapon_critatk + main_critatk) * 100)}%\r"
+                    f"会心伤害增益:{int(user_fight_info['burst'] * 100)}%\r"
                     f"当前体力：{user_info['user_stamina']}\r"
                     f"所在位置：{now_place}\r", "日常状态", "日常中心", "查看")
     await sql_message.update_last_check_info_time(user_id)

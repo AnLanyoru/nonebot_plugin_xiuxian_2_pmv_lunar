@@ -58,9 +58,6 @@ async def exp_up_by_time(user_info, exp_time) -> tuple[str, int, dict]:
 
     await sql_message.update_power2(user_id)  # 更新战力
 
-    result_msg, result_hp_mp = await OtherSet().send_hp_mp(user_id, exp_time)
-    await sql_message.update_user_attribute(user_id, result_hp_mp[0], result_hp_mp[1], int(result_hp_mp[2] / 10))
-
     # 用户获取的修为是否到达上限
     if exp >= user_get_exp_max:
         exp = user_get_exp_max
@@ -69,4 +66,7 @@ async def exp_up_by_time(user_info, exp_time) -> tuple[str, int, dict]:
     else:
         await sql_message.update_exp(user_id, exp)
         is_full = ''
+
+    result_msg, result_hp_mp = await OtherSet().send_hp_mp(user_id, exp_time)
+    await sql_message.update_user_attribute(user_id, result_hp_mp[0], result_hp_mp[1], int(result_hp_mp[2] / 10))
     return is_full, exp, result_msg

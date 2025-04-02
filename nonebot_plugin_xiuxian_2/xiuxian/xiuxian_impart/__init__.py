@@ -289,7 +289,7 @@ async def impart_back_(bot: Bot, event: GroupMessageEvent):
             f"灵田收取数量提升：{impart_data_draw['impart_reap_per']}颗\r"
             f"每日双修次数提升：{impart_data_draw['impart_two_exp']}次\r"
             f"boss战攻击提升:{int(impart_data_draw['boss_atk'] * 100)}%\r"
-            f"道友拥有的传承卡片如下:")
+            f"道友拥有的传承卡片如下:\r")
 
     text += "\r".join(user_had_cards)
     msg = main_md(msg, text, '传承卡图 【卡图名称】', '传承卡图', '传承抽卡', '传承抽卡', '虚神界对决', '虚神界对决',

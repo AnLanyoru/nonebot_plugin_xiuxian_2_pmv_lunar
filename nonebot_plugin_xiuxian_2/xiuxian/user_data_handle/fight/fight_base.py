@@ -1,6 +1,8 @@
 import random
 from abc import abstractmethod
 
+from .damage_data import DamageData
+from ...types.skills_info_type import BuffIncreaseDict, SecBuff
 from ...xiuxian_utils.clean_utils import number_to
 
 
@@ -19,81 +21,93 @@ class BaseSkill:
     rest_turn: int = 0
     """释放神通后休息回合，-1为永久休息"""
 
+    def __init__(self, sec_buff_info: SecBuff):
+        self.name = sec_buff_info['name']
+        self.desc = sec_buff_info['desc']
+        self.cost_hp = sec_buff_info['hpcost']
+        self.cost_mp = sec_buff_info['mpcost']
+        self.use_rate = sec_buff_info['rate']
+
     def act(self,
             user,
             target_member,
-            msg_list: list[str],
+            fight_event: 'FightEvent',
             user_skill_list: list):
         """行动实现"""
         # 基础伤害
-        cost_msg, is_use = self.use_check(user, target_member, msg_list)
+        cost_msg, is_use = self.use_check(user, target_member, fight_event)
         if not is_use:
             # 不使用则普通攻击
-            self.normal_attack(user, target_member, msg_list)
+            self.normal_attack(user, target_member, fight_event)
             return
         rest_msg = ''
         if self.rest_turn:
             user.rest_turn += self.rest_turn
             rest_msg = f"休息{self.rest_turn}回合！"
-        base_damage, crit_msg = self.act_base_damage(user)
+        base_damage, crit_msg = self.act_base_damage(user, target_member)
         msg = (f"{user.name}释放神通：{self.name}，"
                f"{cost_msg}"
                f"{self.desc}{rest_msg}{crit_msg}")
-        msg_list.append(msg)
-        self.achieve(user, target_member, base_damage, msg_list)
+        fight_event.add_msg(msg)
+        self.achieve(user, target_member, base_damage, fight_event)
         self.back_skill_list(user_skill_list)
 
     @abstractmethod
-    def achieve(self, user, target_member, base_damage: int, msg_list: list[str]):
+    def achieve(self, user, target_member, base_damage: int, fight_event: 'FightEvent'):
         """
         技能基础实现
         :param user: 使用该技能的对象
         :param target_member: 该技能的目标
         :param base_damage: 该技能的基础数值
-        :param msg_list: 消息列表
+        :param fight_event: 消息列表
         :return:
         """
         ...
 
     @staticmethod
-    def normal_attack(user, target_member, msg_list: list[str]):
+    def normal_attack(user, target_member, fight_event: 'FightEvent'):
         """
         未释放技能，普通攻击
         :param user: 使用者
         :param target_member:攻击目标
-        :param msg_list: 消息列表
+        :param fight_event: 消息列表
         :return: 无
         """
         base_damage = user.base_damage
-        base_damage, is_crit = user.check_crit(base_damage)
+        normal_attack_value = [1]
+        for buff in user.buffs.values():
+            buff.skill_value_change(normal_attack_value)
+        base_damage, is_crit = user.check_crit(base_damage, target_member)
+        damage = DamageData(
+            normal_damage=[int(base_damage * atk_value_per) for atk_value_per in normal_attack_value])
         crit_msg = ''
         if is_crit:
             crit_msg = "并发生了会心一击！"
-        base_damage = [base_damage]
         msg = f"{user.name}发起攻击{crit_msg}"
-        msg_list.append(msg)
-        user.attack(enemy=target_member, normal_damage=base_damage, msg_list=msg_list)
+        fight_event.add_msg(msg)
+        user.attack(enemy=target_member, fight_event=fight_event, damage=damage)
 
     @staticmethod
-    def act_base_damage(user) -> tuple[int, str]:
+    def act_base_damage(user, target_member) -> tuple[int, str]:
         """
         获取基础伤害，若要实现无暴击技能，重写此方法
-        :param user:
+        :param target_member: 攻击目标
+        :param user: 使用技能者
         :return:
         """
         base_damage = user.base_damage
-        base_damage, is_crit = user.check_crit(base_damage)
+        base_damage, is_crit = user.check_crit(base_damage, target_member)
         crit_msg = ''
         if is_crit:
             crit_msg = "并发生了会心一击！"
         return base_damage, crit_msg
 
-    def use_check(self, user, target_member, msg_list: list[str]) -> tuple[str, bool]:
+    def use_check(self, user, target_member, fight_event: 'FightEvent') -> tuple[str, bool]:
         """
         释放检查，重写此方法可实现特殊释放模式
         :param user: 使用者
         :param target_member: 目标
-        :param msg_list: 消息列表
+        :param fight_event: 消息列表
         :return:
         """
         if random.randint(0, 100) > self.use_rate:  # 随机概率释放技能
@@ -118,11 +132,11 @@ class BaseSkill:
 class NormalAttack(BaseSkill):
     """未释放神通时的普通攻击"""
 
-    def achieve(self, user, target_member, base_damage, msg_list: list[str]):
+    def achieve(self, user, target_member, base_damage, fight_event: 'FightEvent'):
         pass
 
 
-empty_skill = NormalAttack()
+empty_skill = NormalAttack
 
 
 class BaseSub:
@@ -133,15 +147,30 @@ class BaseSub:
     """是否有战斗后生效的效果"""
     is_after_attack_act: bool = False
     """是否有战斗前生效的效果"""
+    is_just_attack_act: bool = False
+    """是否有造成伤害后即时生效的效果"""
     is_final_act: bool = False
     """是否是最后一次生效"""
 
-    def before_attack_act(self, user, target_member, msg_list: list[str]):
+    def before_attack_act(self,
+                          user: 'BaseFightMember',
+                          target_member: 'BaseFightMember',
+                          fight_event: 'FightEvent'):
         """战斗前生效的效果"""
         ...
 
-    def after_attack_act(self, user, target_member, msg_list: list[str]):
+    def after_attack_act(self,
+                         user: 'BaseFightMember',
+                         target_member: 'BaseFightMember',
+                         fight_event: 'FightEvent'):
         """战斗后生效的效果"""
+        ...
+
+    def just_attack_act(self,
+                        user: 'BaseFightMember',
+                        target_member: 'BaseFightMember',
+                        fight_event: 'FightEvent'):
+        """造成伤害后即时生效的效果"""
         ...
 
 
@@ -151,32 +180,46 @@ class BaseBuff:
     """特殊效果名称"""
     least_turn: int
     """效果余剩回合 初始设置-1则持续时间无限"""
-    impose_member = None
+    impose_member: str = None
     """施加者"""
-    num: int = 1
-    """层数"""
-    max_num: int = 1
-    """最大层数"""
 
-    def __init__(self, impose_member):
+    def __init__(self, impose_member_id: str):
         """
-        :param impose_member: 施加该buff的对象
+        :param impose_member_id: 施加该buff的对象
         """
-        self.impose_member = impose_member
+        self.num: int = 1
+        """层数"""
+        self.max_num: int = 1
+        """最大层数"""
+        self.impose_member = impose_member_id
 
-    @abstractmethod
-    def act(self, effect_user, now_enemy, msg_list: list[str]):
+    def act(self,
+            effect_user: 'BaseFightMember',
+            now_enemy: 'BaseFightMember',
+            fight_event: 'FightEvent'):
         """
         特殊效果主动效果
         :param effect_user: buff生效影响目标
         :param now_enemy: buff生效目标当前回合的敌人
-        :param msg_list: 消息列表
+        :param fight_event: 消息列表
         :return:
         """
         ...
 
-    @staticmethod
-    def damage_change(damage: int, buff_damage_change: dict) -> None:
+    def be_hurt_act(self,
+                    effect_user: 'BaseFightMember',
+                    now_enemy: 'BaseFightMember',
+                    fight_event: 'FightEvent'):
+        """
+        受伤时触发效果
+        :param effect_user: buff生效影响目标
+        :param now_enemy: buff生效目标当前回合的敌人
+        :param fight_event: 消息列表
+        :return:
+        """
+        ...
+
+    def damage_change(self, damage: int, buff_damage_change: BuffIncreaseDict) -> None:
         """
         实现该方法可以增加或翻倍伤害
         :param damage: 原始伤害
@@ -184,8 +227,15 @@ class BaseBuff:
         """
         ...
 
-    @staticmethod
-    def crit_change(crit_rate, buff_crit_change):
+    def final_hurt_change(self, damage: int, buff_final_hurt_change: BuffIncreaseDict) -> None:
+        """
+        实现该方法可以增加或翻倍最终受到伤害倍率
+        :param damage: 原始受到伤害倍率
+        :param buff_final_hurt_change: {'add': '增加一定数值', 'mul': '翻倍一定数值'}
+        """
+        ...
+
+    def crit_change(self, crit_rate: int, buff_crit_change: BuffIncreaseDict):
         """
         实现该方法可以增加或翻倍暴击率
         :param crit_rate: 原始暴击率
@@ -193,12 +243,26 @@ class BaseBuff:
         """
         ...
 
-    @staticmethod
-    def burst_change(burst, buff_burst_change):
+    def burst_change(self, burst: float, buff_burst_change: BuffIncreaseDict):
         """
         实现该方法可以增加或翻倍暴击伤害
         :param burst: 原始暴击伤害
         :param buff_burst_change: {'add': '为暴击伤害增加一定数值', 'mul': '为暴击伤害翻倍一定数值'}
+        """
+        ...
+
+    def defence_change(self, defence: float, buff_burst_change: BuffIncreaseDict):
+        """
+        实现该方法可以增加或翻倍减伤
+        :param defence: 原始减伤
+        :param buff_burst_change: {'add': '增加一定数值', 'mul': '翻倍一定数值'}
+        """
+        ...
+
+    def skill_value_change(self, value: list[float]):
+        """
+        实现该方法可以增加技能倍率
+        :param value: 原始倍率列表
         """
         ...
 
@@ -215,7 +279,6 @@ class BaseBuff:
         return f"叠加了{need_add_num}层{self.name}（当前{self.num}层）"
 
 
-
 class Increase:
     def __init__(self):
         """
@@ -229,10 +292,10 @@ class Increase:
 
 
 class BaseFightMember:
+    id: str
+    """战斗中序列"""
     team: int
     """所属阵营，pve中怪物阵营恒定为0"""
-    status: int
-    """当前状态 1活0死"""
     name: str
     """对象名称"""
     hp: int
@@ -247,48 +310,74 @@ class BaseFightMember:
     """最大真元"""
     atk: int
     """攻击力"""
-    crit: int
-    """暴击率（百分比）"""
-    burst: float
-    """暴击伤害（倍率）"""
-    defence: float
-    """减伤数值 伤害*本数值"""
-    armour_break: float
-    """破甲效果对方的减伤减去此值"""
-    rest_turn: int
-    """休息回合，跳过主动行动"""
-    turn_damage: int
-    """本回合造成伤害"""
-    sum_damage: int
-    """整场战斗造成的总伤害"""
-    turn_kill: bool
-    """本回合是否有击杀事件发生"""
-    main_skill: list[BaseSkill]
-    """神通"""
-    sub_skill: dict[str, BaseSub]
-    """辅修功法"""
-    buffs: dict[str, BaseBuff]
-    """特殊效果"""
-    increase: Increase
-    """属性提升（不变常量类）"""
 
-    def active(self, enemy, msg_list: list[str]):
+    def __init__(self):
+        self.status: int = 1
+        """当前状态 1活0死"""
+        self.crit: int = 5
+        """暴击率（百分比）"""
+        self.burst: float = 1.5
+        """暴击伤害（倍率）"""
+        self.defence: float = 1
+        """减伤数值 伤害*本数值"""
+        self.armour_break: float = 0
+        """破甲效果对方的减伤减去此值"""
+        self.rest_turn: int = 0
+        """休息回合，跳过主动行动"""
+        self.just_damage: DamageData = DamageData()
+        """刚造成的伤害"""
+        self.turn_damage: DamageData = DamageData()
+        """本回合造成伤害"""
+        self.sum_damage: DamageData = DamageData()
+        """整场战斗造成的总伤害"""
+        self.turn_kill: str = ''
+        """本回合击杀对象"""
+        self.main_skill: list[BaseSkill] = []
+        """神通"""
+        self.sub_skill: dict[str, BaseSub] = {}
+        """辅修功法"""
+        self.buffs: dict[str, BaseBuff] = {}
+        """特殊效果"""
+        self.increase: Increase = Increase()
+        """属性提升（不变常量类）"""
+        self.miss_rate: int = 0
+        """空间穿梭（闪避率）"""
+        self.decrease_miss_rate: int = 0
+        """空间封锁（减少对方闪避率）"""
+        self.decrease_crit: int = 0
+        """减少对方暴击率"""
+        self.soul_damage_add: float = 0
+        """灵魂伤害（真实伤害）"""
+        self.decrease_soul_damage: float = 0
+        """灵魂抵抗（减少对方真实伤害）"""
+        self.shield: int = 0
+        """开局护盾"""
+        self.back_damage: float = 0
+        """反伤"""
+        self.chaos = 0
+        """混乱"""
+
+    def active(self, enemy: 'BaseFightMember', fight_event: 'FightEvent'):
         if not self.status:
             """寄了"""
             return
         if self.rest_turn:
             msg = f"☆ -- {self.name}动弹不得！-- ☆"
-            msg_list.append(msg)
+            fight_event.add_msg(msg)
         else:
-            msg_list.append(f"☆ -- {self.name}的回合 -- ☆")
-        # 重置回合伤害
-        self.turn_damage = 0
+            fight_event.add_msg(f"☆ -- {self.name}的回合 -- ☆")
         # buff生效
+        if self.chaos:
+            enemy = random.choice(list(fight_event.user_list.values()))
+            self.chaos -= 1
+            fight_event.add_msg(f"{self.name}陷入了混乱中！！"
+                                f"随机选取了{enemy.name}为本回合的攻击目标！"
+                                f"余剩混乱回合：{self.chaos if self.chaos >= 0 else '无限！'}")
 
         del_buff_list: list[str] = []
         for buff_name, buff in self.buffs.items():
             buff.least_turn -= 1
-            buff.act(self, enemy, msg_list)
+            buff.act(self, enemy, fight_event)
             if not buff.least_turn:
                 del_buff_list.append(buff_name)
         if del_buff_list:
@@ -299,7 +388,7 @@ class BaseFightMember:
         if self.sub_skill:
             for sub_name, sub in self.sub_skill.items():
                 if sub.is_before_attack_act:
-                    sub.before_attack_act(self, enemy, msg_list)
+                    sub.before_attack_act(self, enemy, fight_event)
                     if sub.is_final_act:
                         del_sub_list.append(sub_name)
         if del_sub_list:
@@ -307,35 +396,59 @@ class BaseFightMember:
                 del self.sub_skill[sub_name]
         if not self.rest_turn:
             if self.main_skill:
-                self.main_skill[0].act(self, enemy, msg_list, self.main_skill)
+                self.main_skill[0].act(self, enemy, fight_event, self.main_skill)
             else:
-                empty_skill.normal_attack(self, enemy, msg_list)
+                empty_skill.normal_attack(self, enemy, fight_event)
+        else:
+            self.rest_turn -= 1
 
         del_sub_list: list[str] = []
         if self.sub_skill:
             for sub_name, sub in self.sub_skill.items():
                 if sub.is_after_attack_act:
-                    sub.after_attack_act(self, enemy, msg_list)
+                    sub.after_attack_act(self, enemy, fight_event)
+                    if sub.is_final_act:
+                        del_sub_list.append(sub_name)
+        if del_sub_list:
+            for sub_name in del_sub_list:
+                del self.sub_skill[sub_name]
+        # 重置回合伤害
+        self.turn_damage.reset_all()
+
+    def just_attack_act(self,
+                        enemy: 'BaseFightMember',
+                        fight_event: 'FightEvent'):
+
+        del_sub_list: list[str] = []
+        if self.sub_skill:
+            for sub_name, sub in self.sub_skill.items():
+                if sub.is_just_attack_act:
+                    sub.just_attack_act(self, enemy, fight_event)
                     if sub.is_final_act:
                         del_sub_list.append(sub_name)
         if del_sub_list:
             for sub_name in del_sub_list:
                 del self.sub_skill[sub_name]
 
+    def be_hurt_buff_act(self,
+                         attacker: 'BaseFightMember',
+                         fight_event: 'FightEvent'):
+        """受伤时触发的buff"""
+        for buff_name, buff in self.buffs.items():
+            buff.be_hurt_act(self, attacker, fight_event)
+
     @abstractmethod
     def hurt(
             self,
-            attacker,
-            msg_list: list[str],
-            normal_damage: list[int] = None,
-            real_damage: list[int] = None,
+            attacker: 'BaseFightMember',
+            fight_event: 'FightEvent',
+            damage: DamageData,
             armour_break: float = 0):
         """
         受伤接口
         :param attacker: 攻击者
-        :param msg_list: 消息列表
-        :param normal_damage: 普通伤害
-        :param real_damage: 真实伤害
+        :param fight_event: 'FightEvent': 消息列表
+        :param damage: 伤害
         :param armour_break: 破甲，减伤减少
         """
         ...
@@ -349,9 +462,10 @@ class BaseFightMember:
         ...
 
     @abstractmethod
-    def check_crit(self, damage: int) -> tuple[int, bool]:
+    def check_crit(self, damage: int, target_member) -> tuple[int, bool]:
         """
         检测是否暴击并输出暴击伤害
+        :param target_member: 攻击目标
         :param damage: 原伤害
         :return: 暴击后伤害，是否暴击
         """
@@ -361,11 +475,15 @@ class BaseFightMember:
     def attack(
             self,
             enemy,
-            msg_list: list[str],
-            normal_damage: list[int] = None,
-            real_damage: list[int] = None,
+            fight_event: 'FightEvent',
+            damage: DamageData,
             armour_break: float = 0):
-        """造成伤害事件"""
+        """造成伤害事件
+        :param enemy:
+        :param armour_break:
+        :param fight_event: 'FightEvent':
+        :param damage:
+        """
         ...
 
     @abstractmethod
@@ -373,7 +491,7 @@ class BaseFightMember:
             self,
             enemy,
             buff_id: int,
-            msg_list: list[str],
+            fight_event: 'FightEvent',
             num: int = 1,
             must_succeed: bool = False,
             effect_rate_improve: int = 0):
@@ -382,9 +500,57 @@ class BaseFightMember:
         :param enemy: 施加目标
         :param buff_id: 效果id
         :param effect_rate_improve: 额外效果命中
-        :param msg_list: 消息列表
+        :param fight_event: 'FightEvent': 消息列表
         :param num: 层数
         :param must_succeed: 是否是必中效果
         :return:
         """
         ...
+
+    @abstractmethod
+    def be_back_damage(self,
+                       attacker: 'BaseFightMember',
+                       fight_event: 'FightEvent',
+                       back_damage: int,
+                       armour_break: float = 0):
+        ...
+
+    @property
+    def hp_percent_str(self) -> str:
+        hp_percent = self.hp / self.hp_max * 100
+        return f"{hp_percent:.2f}%"
+
+    @property
+    def hp_percent(self) -> float:
+        hp_percent = self.hp / self.hp_max
+        return hp_percent
+
+    @property
+    def mp_percent_str(self) -> str:
+        mp_percent = self.mp / self.mp_max * 100
+        return f"{mp_percent:.2f}%"
+
+    @property
+    def mp_percent(self) -> float:
+        mp_percent = self.mp / self.mp_max
+        return mp_percent
+
+
+class FightEvent:
+    user_list: dict[str, BaseFightMember] = {}
+    msg_list: list[str] = []
+    now_turn: int = 0
+    turn_owner: str = ''
+    turn_owner_enemy: str = ''
+
+    def __init__(self, user_list: dict[str, BaseFightMember]):
+        self.user_list = user_list
+
+    def __str__(self):
+        return '\r'.join(self.msg_list)
+
+    def add_msg(self, msg):
+        self.msg_list.append(msg)
+
+    def find_user(self, user_id: str):
+        return self.user_list[user_id]

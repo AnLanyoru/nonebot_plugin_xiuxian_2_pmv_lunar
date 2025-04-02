@@ -23,6 +23,12 @@ class Items:
         self.ITEM_JSON_PATH = {
             "防具": WEAPON_PATH / "防具.json",
             "法器": WEAPON_PATH / "法器.json",
+            "本命法宝": WEAPON_PATH / "本命法宝.json",
+            "辅助法宝": WEAPON_PATH / "辅助法宝.json",
+            "内甲": WEAPON_PATH / "内甲.json",
+            "道袍": WEAPON_PATH / "道袍.json",
+            "道靴": WEAPON_PATH / "道靴.json",
+            "灵戒": WEAPON_PATH / "灵戒.json",
             "功法": SKILL_PATH / "主功法.json",
             "辅修功法": SKILL_PATH / "辅修功法.json",
             "神通": SKILL_PATH / "神通.json",
@@ -36,6 +42,7 @@ class Items:
             "神物": ELIXIR_PATH / "神物.json",
             "天地奇物": ELIXIR_PATH / "天地奇物.json"}
         self.items = {}
+        self.suits = {}
         self.items_map = {}
 
     @staticmethod
@@ -45,6 +52,9 @@ class Items:
         return json.loads(data)
 
     def load_items(self):
+        self.suits = self.read_file(WEAPON_PATH / "套装.json")
+        for suits_name, suits_data in self.suits.items():
+            suits_data['包含装备'] = []
         for item_type, item_data_path in self.ITEM_JSON_PATH.items():
             self.set_item_data(self.read_file(item_data_path), item_type)
         self.items_map = {self.items[item_id]['name']: int(item_id) for item_id in self.items}
@@ -61,6 +71,10 @@ class Items:
             if item_type == '功法' or item_type == '神通' or item_type == '辅修功法':  # 辅修功法7
                 item_info['rank'], item_info['level'] = item_info['level'], item_info['rank']
                 item_info['type'] = '技能'
+            if item_info['type'] == '装备':
+                if 'suits' in item_info:
+                    if item_info['suits'] in self.suits:
+                        self.suits[item_info['suits']]['包含装备'].append(item_id)
             self.items[item_id] = item_info
             self.items[item_id].update({'item_type': item_type})
             image_path = ITEM_IMAGE_PATH / item_info['type'] / item_type / f"{item_info['name']}.jpg"
