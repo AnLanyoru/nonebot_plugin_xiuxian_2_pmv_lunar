@@ -509,6 +509,59 @@ def three_md(text_1,
     return msg
 
 
+def many_md(title,
+            cmd_1, cmd_2, cmd_3, cmd_4, cmd_5,
+            cmd_6, cmd_7, cmd_8, cmd_9,
+            button_id: str = None):
+    param = [
+        {
+            "key": "title",
+            "values": [f"{title}"]
+        },
+        {
+            "key": "cmd1",
+            "values": [f"{cmd_1}"]
+        },
+        {
+            "key": "cmd2",
+            "values": [f"{cmd_2}"]
+        },
+        {
+            "key": "cmd3",
+            "values": [f"{cmd_3}"]
+        },
+        {
+            "key": "cmd4",
+            "values": [f"{cmd_4}"]
+        },
+        {
+            "key": "cmd5",
+            "values": [f"{cmd_5}"]
+        },
+        {
+            "key": "cmd6",
+            "values": [f"{cmd_6}"]
+        },
+        {
+            "key": "cmd7",
+            "values": [f"{cmd_7}"]
+        },
+        {
+            "key": "cmd8",
+            "values": [f"{cmd_8}"]
+        },
+        {
+            "key": "cmd9",
+            "values": [f"{cmd_9}"]
+        }
+    ]
+    if not button_id:
+        msg = MessageSegmentPlus.markdown_template("102368631_1743567636", param)
+    else:
+        msg = MessageSegmentPlus.markdown_template_with_button("102368631_1743567636", param, button_id)
+    return msg
+
+
 def msg_handler(*args):
     if len(args) == 3:
         name, uin, msgs = args

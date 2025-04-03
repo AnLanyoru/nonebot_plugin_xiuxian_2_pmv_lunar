@@ -199,8 +199,8 @@ async def tower_shop_buy_(
             '挑战积分兑换 物品编号 数量', '挑战积分兑换',
             '挑战商店', '挑战商店',
             '积分规则详情', '挑战之地规则详情',
-            '挑战排行', '挑战排行',
-            "102368631_1739371981")
+            '挑战排行', '挑战排行'
+            )
         await bot.send(event=event, message=msg)
         await tower_shop_buy.finish()
 
@@ -238,8 +238,8 @@ async def tower_point_get_(bot: Bot, event: GroupMessageEvent):
         '进入挑战', '进入挑战',
         '挑战商店', '挑战商店',
         '积分规则详情', '挑战之地规则详情',
-        '挑战排行', '挑战排行',
-        "102368631_1739371981")
+        '挑战排行', '挑战排行'
+        )
     await bot.send(event=event, message=msg)
     await tower_point_get.finish()
 
@@ -289,8 +289,8 @@ async def tower_shop_(
         '挑战积分兑换 物品编号 数量', '挑战积分兑换',
         '查看本周积分', '本周挑战积分',
         '积分规则详情', '挑战之地规则详情',
-        '挑战帮助', '挑战帮助',
-        "102368631_1739371981")
+        '挑战帮助', '挑战帮助'
+        )
     await bot.send(event=event, message=msg)
     await tower_shop.finish()
 
@@ -373,8 +373,8 @@ async def tower_fight_elixir_(bot: Bot, event: GroupMessageEvent):
         '继续丹药挑战', '丹药挑战',
         '查看下层', '查看挑战',
         '终止挑战', '离开挑战',
-        '挑战帮助', '挑战帮助',
-        "102368631_1739371981")
+        '挑战帮助', '挑战帮助'
+      )
     await bot.send(event=event, message=msg)
     await tower_fight_elixir.finish()
 
@@ -431,8 +431,8 @@ async def tower_fight_(bot: Bot, event: GroupMessageEvent):
         '继续挑战', '开始挑战',
         '查看下层', '查看挑战',
         '终止挑战', '离开挑战',
-        '挑战帮助', '挑战帮助',
-        "102368631_1739371981")
+        '挑战帮助', '挑战帮助'
+        )
     await bot.send(event=event, message=msg)
     await tower_fight.finish()
 
@@ -482,8 +482,8 @@ async def tower_start_(bot: Bot, event: GroupMessageEvent):
             '开始挑战', '开始挑战',
             '查看挑战', '查看挑战',
             '终止挑战', '离开挑战',
-            '挑战帮助', '挑战帮助',
-            "102368631_1739371981")
+            '挑战帮助', '挑战帮助'
+            )
         await bot.send(event=event, message=msg)
         await tower_start.finish()
     else:
@@ -497,8 +497,8 @@ async def tower_start_(bot: Bot, event: GroupMessageEvent):
             f'前往 {to_place}', f'前往 {to_place}',
             '进入挑战', '进入挑战',
             '挑战商店', '挑战商店',
-            '挑战帮助', '挑战帮助',
-            "102368631_1739371981")
+            '挑战帮助', '挑战帮助'
+            )
         await bot.send(event=event, message=msg)
         await tower_start.finish()
 
@@ -528,8 +528,8 @@ async def tower_info_(bot: Bot, event: GroupMessageEvent):
             '开始挑战', '开始挑战',
             '挑战商店', '挑战商店',
             '终止挑战', '离开挑战',
-            '挑战帮助', '挑战帮助',
-            "102368631_1739371981")
+            '挑战帮助', '挑战帮助'
+            )
         await bot.send(event=event, message=msg)
         await tower_info.finish()
 
@@ -571,7 +571,7 @@ async def tower_end_(bot: Bot, event: GroupMessageEvent):
             '再次挑战', '进入挑战',
             '挑战商店', '挑战商店',
             '本周积分查看', '本周挑战积分',
-            '挑战帮助', '挑战帮助',
-            "102368631_1739371981")
+            '挑战帮助', '挑战帮助'
+            )
         await bot.send(event=event, message=msg)
         await tower_end.finish()
