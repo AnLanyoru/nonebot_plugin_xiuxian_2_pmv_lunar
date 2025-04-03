@@ -3,13 +3,13 @@ import math
 from datetime import datetime
 from typing import Any, Tuple
 
-from nonebot import on_regex, on_command
-from nonebot.adapters.onebot.v11 import (
+from nonebot import on_regex, on_command # type: ignore
+from nonebot.adapters.onebot.v11 import ( # type: ignore
     Bot,
     GROUP,
     GroupMessageEvent
 )
-from nonebot.params import RegexGroup
+from nonebot.params import RegexGroup # type: ignore
 
 from .work_database import PLAYERSDATA, save_work_info
 from .work_handle import work_handle, change_data_to_msg
@@ -36,15 +36,12 @@ do_work = on_regex(
     block=True
 )
 __work_help__ = (f"\r"
-                 f"悬赏令帮助信息:\r"
-                 f"指令：\r"
-                 f"1、悬赏令:获取对应实力的悬赏令\r"
-                 f"2、悬赏令刷新:刷新当前悬赏令,每日{count}次\r"
-                 f"实力支持：{convert_rank()[1][0][:3]}~{convert_rank()[1][76][:3]}\r"
-                 f"3、悬赏令终止:终止当前悬赏令任务\r"
-                 f"4、悬赏令结算:结算悬赏奖励\r"
-                 f"5、悬赏令接取+编号：接取对应的悬赏令\r"
-                 f"6、最后的悬赏令:用于接了悬赏令却境界突破导致卡住的道友使用")
+                 f"1：悬赏令:获取对应实力的悬赏令\r"
+                 f"2：悬赏令刷新:刷新当前悬赏令,每日{count}次\r"
+                 f"3：悬赏令终止:终止当前悬赏令任务\r"
+                 f"4：悬赏令结算:结算悬赏奖励\r"
+                 f"5：悬赏令接取+编号：接取对应的悬赏令\r"
+                 f"6：最后的悬赏令:用于接了悬赏令却境界突破导致卡住的道友使用")
 
 
 @last_work.handle(parameterless=[Cooldown(stamina_cost=0)])
