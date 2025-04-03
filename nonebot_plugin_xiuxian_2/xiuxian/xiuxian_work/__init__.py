@@ -3,13 +3,13 @@ import math
 from datetime import datetime
 from typing import Any, Tuple
 
-from nonebot import on_regex, on_command # type: ignore
-from nonebot.adapters.onebot.v11 import ( # type: ignore
+from nonebot import on_regex, on_command
+from nonebot.adapters.onebot.v11 import (
     Bot,
     GROUP,
     GroupMessageEvent
 )
-from nonebot.params import RegexGroup # type: ignore
+from nonebot.params import RegexGroup
 
 from .work_database import PLAYERSDATA, save_work_info
 from .work_handle import work_handle, change_data_to_msg

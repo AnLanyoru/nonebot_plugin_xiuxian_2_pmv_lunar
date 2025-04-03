@@ -1,14 +1,14 @@
 from datetime import datetime
 from typing import Any, Tuple
 
-from nonebot import on_regex # type: ignore
-from nonebot.adapters.onebot.v11 import ( # type: ignore
+from nonebot import on_regex
+from nonebot.adapters.onebot.v11 import (
     Bot,
     GroupMessageEvent,
     GROUP,
 )
-from nonebot.params import RegexGroup # type: ignore
-from ..xiuxian_utils.clean_utils import help_md, simple_md, main_md, many_md
+from nonebot.params import RegexGroup
+from ..xiuxian_utils.clean_utils import main_md
 
 from .bank_config import CONFIG as BANK_CONFIG
 from ..xiuxian_database.database_connect import database
