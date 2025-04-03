@@ -190,7 +190,7 @@ async def help_in_(bot: Bot, event: GroupMessageEvent):
 @help_newer.handle(parameterless=[Cooldown()])
 async def help_in_(bot: Bot, event: GroupMessageEvent):
     """修仙新手帮助"""
-    msg = help_md("102368631_1743000897", "小月官服唯一群914556251", "102368631_1740930682")
+    msg = help_md("102368631_1743534743", "小月官服唯一群914556251", "102368631_1740930682")
     await bot.send(event=event, message=msg)
     await help_newer.finish()
 

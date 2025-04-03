@@ -1,13 +1,14 @@
 from datetime import datetime
 from typing import Any, Tuple
 
-from nonebot import on_regex
-from nonebot.adapters.onebot.v11 import (
+from nonebot import on_regex # type: ignore
+from nonebot.adapters.onebot.v11 import ( # type: ignore
     Bot,
     GroupMessageEvent,
     GROUP,
 )
-from nonebot.params import RegexGroup
+from nonebot.params import RegexGroup # type: ignore
+from ..xiuxian_utils.clean_utils import help_md, simple_md, main_md, many_md
 
 from .bank_config import CONFIG as BANK_CONFIG
 from ..xiuxian_database.database_connect import database
@@ -22,24 +23,19 @@ bank = on_regex(
     block=True
 )
 
-__bank_help__ = f"""
-灵庄帮助信息:
-指令：
-1：灵庄
- - 查看灵庄帮助信息
-2：灵庄存灵石
- - 指令后加存入的金额,获取利息
-3：灵庄取灵石
- - 指令后加取出的金额,会先结算利息,再取出灵石
-4：灵庄升级会员
- - 灵庄利息倍率与灵庄会员等级有关,升级会员会提升利息倍率
-5：灵庄信息
- - 查询自己当前的灵庄信息
-6：灵庄结算
- - 结算利息
-——tips——
-官方群914556251
-""".strip()
+__bank_help__ =  (f"\r"
+                 f"1：灵庄\r"
+                 f" 🔹 查看灵庄帮助信息\r"
+                 f"2：灵庄存灵石\r"
+                 f" 🔹 指令后加存入的金额,获取利息\r"
+                 f"3：灵庄取灵石\r"
+                 f" 🔹 指令后加取出的金额,会先结算利息,再取出灵石\r"
+                 f"4：灵庄升级会员\r"
+                 f" 🔹 灵庄利息倍率与灵庄会员等级有关,升级会员会提升利息倍率\r"
+                 f"5：灵庄信息\r"
+                 f" 🔹 查询自己当前的灵庄信息\r"
+                 f"6：灵庄结算\r"
+                 f" 🔹 结算利息\r")
 
 
 @bank.handle(parameterless=[Cooldown()])
@@ -49,7 +45,13 @@ async def bank_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = Rege
     mode = args[0]  # 存灵石、取灵石、升级会员、信息查看
     num = args[1]  # 数值
     if mode is None:
-        msg = __bank_help__
+        msg = main_md (__bank_help__,
+                  f"小月唯一官方群914556251"
+                  f"",
+                  "灵庄存灵石", "灵庄存灵石",
+                  "灵庄取灵石", "灵庄取灵石",
+                  "灵庄结算", "灵庄结算",
+                  "灵庄升级会员", "灵庄升级会员" )
         await bot.send(event=event, message=msg)
         await bank.finish()
 
