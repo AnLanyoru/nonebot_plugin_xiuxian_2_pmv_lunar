@@ -46,8 +46,7 @@ async def bank_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = Rege
     num = args[1]  # 数值
     if mode is None:
         msg = main_md (__bank_help__,
-                  f"小月唯一官方群914556251"
-                  f"",
+                  f"小月唯一官方群914556251",
                   "灵庄存灵石", "灵庄存灵石",
                   "灵庄取灵石", "灵庄取灵石",
                   "灵庄结算", "灵庄结算",
