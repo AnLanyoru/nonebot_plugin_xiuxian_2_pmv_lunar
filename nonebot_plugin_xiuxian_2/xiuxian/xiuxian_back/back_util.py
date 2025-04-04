@@ -7,7 +7,7 @@ from nonebot.adapters.onebot.v11 import MessageSegment
 from ..user_data_handle import UserBuffHandle
 from ..xiuxian_config import convert_rank, XiuConfig
 from ..xiuxian_place import place
-from ..xiuxian_utils.clean_utils import encode_base64
+from ..xiuxian_utils.clean_utils import encode_base64, many_md
 from ..xiuxian_utils.item_json import items
 from ..xiuxian_utils.xiuxian2_handle import (
     sql_message, UserBuffDate,
@@ -28,6 +28,28 @@ YAO_CAI_INFO_MSG = {
     "6": "凝神",
 }
 
+
+def md_back(back_data: list[list[str]]):
+    if len(back_data) < 10:
+        less_item_num = 10 - len(back_data)
+        for _ in range(less_item_num):
+            back_data.append(['.',
+                              '.',
+                              '.',
+                              '.',
+                              '.'])
+    msg = many_md('qqbot-cmd-input text="{}" show="{}" />'
+                  '{}<qqbot-cmd-input text="{}" show="{}" /'.format(*back_data[0]),
+                  '{}" show="{}" />{}<qqbot-cmd-input text="{}" show="{}'.format(*back_data[1]),
+                  '{}" show="{}" />{}<qqbot-cmd-input text="{}" show="{}'.format(*back_data[2]),
+                  '{}" show="{}" />{}<qqbot-cmd-input text="{}" show="{}'.format(*back_data[3]),
+                  '{}" show="{}" />{}<qqbot-cmd-input text="{}" show="{}'.format(*back_data[4]),
+                  '{}" show="{}" />{}<qqbot-cmd-input text="{}" show="{}'.format(*back_data[5]),
+                  '{}" show="{}" />{}<qqbot-cmd-input text="{}" show="{}'.format(*back_data[6]),
+                  '{}" show="{}" />{}<qqbot-cmd-input text="{}" show="{}'.format(*back_data[7]),
+                  '{}" show="{}" />{}<qqbot-cmd-input text="{}" show="{}'.format(*back_data[8]),
+                  '{}" show="{}" />{}<qqbot-cmd-input text="{}" show="{}'.format(*back_data[9]), )
+    return msg
 
 async def get_no_use_equipment_sql(user_id, goods_id):
     """
@@ -203,6 +225,51 @@ async def get_user_main_back_msg_easy(user_id):
         top_msg = f"☆------{item_type}------☆\r" + l_items_msg[0]
         l_msg.append(top_msg)
         l_msg = operator.add(l_msg, l_items_msg[1:])
+    return l_msg
+
+
+async def get_user_main_back_msg_md(user_id):
+    """
+    获取背包内的指定物品信息
+    """
+    l_msg = []
+    item_types = ["装备", "技能", "神物", "聚灵旗", "礼包", "天地奇物", "道具"]
+    user_backs = await sql_message.get_back_msg(user_id)  # list(back)
+    if user_backs is None:
+        return l_msg
+    l_types_dict = {}
+    for user_back in user_backs:
+        goods_type = user_back.get('goods_type')
+        if not l_types_dict.get(goods_type):
+            l_types_dict[goods_type] = []
+        l_types_dict[goods_type].append(user_back)
+    l_types_msg_dict = {}
+    for item_type in item_types:
+        if l_items := l_types_dict.get(item_type):
+            l_items.sort(key=lambda k: int(items.get_data_by_item_id(k.get('goods_id')).get('rank')))
+            l_items_msg = []
+            l_types_sec_dict = {}
+            for item in l_items:
+                item_info = items.get_data_by_item_id(item['goods_id'])
+                item_type_sec = item_info.get('item_type')
+                if not l_types_sec_dict.get(item_type_sec):
+                    l_types_sec_dict[item_type_sec] = []
+                suit_msg = f"{item_info['suits']}·" if 'suits' in item_info else ''
+                level = f" - {item_info.get('level')}" if item_info.get('level') else ''
+                bind_msg = f"(绑定:{item['bind_num']})" if item['bind_num'] else ""
+                l_types_sec_dict[item_type_sec].append([f"使用 {item['goods_name']}", f"{suit_msg}{item['goods_name']}",
+                                                        f"{level}\r数量：{item['goods_num']}{bind_msg}--",
+                                                        f"炼金 {item['goods_name']}", f"炼金"])
+            for item_type_sec, l_items_sec_msg in l_types_sec_dict.items():
+                if item_type_sec != item_type:
+                    top_msg = [f"小类背包{item_type_sec}", f"✨{item_type_sec}✨", ".", ".", "."]
+                    l_items_msg.append(top_msg)
+                l_items_msg.extend(l_items_sec_msg)
+            l_types_msg_dict[item_type] = l_items_msg
+    for item_type, l_items_msg in l_types_msg_dict.items():
+        top_msg = [f"大类背包{item_type}", f"☆------{item_type}------☆", ".", ".", "."]
+        l_msg.append(top_msg)
+        l_msg.extend(l_items_msg)
     return l_msg
 
 

@@ -12,7 +12,7 @@ from .back_util import (
     get_user_main_back_msg,
     get_item_msg, get_item_msg_rank, check_use_elixir,
     get_use_jlq_msg, get_no_use_equipment_sql, get_use_tool_msg,
-    get_user_main_back_msg_easy, get_user_back_msg, get_suits_effect)
+    get_user_main_back_msg_easy, get_user_back_msg, get_suits_effect, md_back)
 from ..user_data_handle import UserBuffHandle
 from ..xiuxian_config import XiuConfig, convert_rank
 from ..xiuxian_limit import limit_handle
@@ -20,7 +20,7 @@ from ..xiuxian_mixelixir.mixelixirutil import mix_user_temp, AlchemyFurnace
 from ..xiuxian_utils.clean_utils import (
     get_args_num, get_num_from_str,
     get_strs_from_str, get_paged_msg, main_md,
-    msg_handler, three_md, simple_md)
+    msg_handler, three_md, simple_md, get_paged_item)
 from ..xiuxian_utils.item_json import items
 from ..xiuxian_utils.lay_out import Cooldown, CooldownIsolateLevel
 from ..xiuxian_utils.utils import (
@@ -700,18 +700,13 @@ async def main_back_(bot: Bot, event: GroupMessageEvent, args: Message = Command
     args = args.extract_plain_text()
     arg = get_strs_from_str(args)
     desc_on = True if "详情" in arg else False
+    test_on = True if "测试" in arg else False
     page = get_args_num(args, 1)  # 背包页数
     page = page if page else 1
     if desc_on:
         msg = await get_user_main_back_msg(user_id)
         page_all = 12
         argp = '详情'
-    else:
-        msg = await get_user_main_back_msg_easy(user_id)
-        page_all = 30
-        argp = ''
-
-    if msg:
         text = get_paged_msg(msg_list=msg, page=page, cmd=cmd, per_page_item=page_all)
         text = msg_handler(text)
         msg = f"\r{user_info['user_name']}的背包，持有灵石：{number_to(user_info['stone'])}枚"
@@ -721,6 +716,27 @@ async def main_back_(bot: Bot, event: GroupMessageEvent, args: Message = Command
             '丹药背包', '丹药背包',
             '药材背包', '药材背包',
             '背包帮助', '背包帮助')
+    elif test_on:
+        msg = await get_user_main_back_msg_easy(user_id)
+        page_all = 10
+        items_list = get_paged_item(msg, page, page_all)
+        msg = md_back(items_list)
+    else:
+        msg = await get_user_main_back_msg_easy(user_id)
+        page_all = 30
+        argp = ''
+        text = get_paged_msg(msg_list=msg, page=page, cmd=cmd, per_page_item=page_all)
+        text = msg_handler(text)
+        msg = f"\r{user_info['user_name']}的背包，持有灵石：{number_to(user_info['stone'])}枚"
+        msg = main_md(
+            msg, text,
+            '下一页', f'我的背包{argp} {page + 1}',
+            '丹药背包', '丹药背包',
+            '药材背包', '药材背包',
+            '背包帮助', '背包帮助')
+
+    if msg:
+        pass
     else:
         msg = "道友的背包空空如也！"
     await bot.send(event, msg)
