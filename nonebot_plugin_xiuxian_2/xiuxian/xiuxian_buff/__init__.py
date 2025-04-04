@@ -31,7 +31,7 @@ from ..xiuxian_tower import tower_handle
 from ..xiuxian_utils.clean_utils import (get_datetime_from_str,
                                          date_sub, main_md,
                                          simple_md, get_args_num)
-from ..xiuxian_utils.lay_out import Cooldown
+from ..xiuxian_utils.lay_out import Cooldown, check_lock
 from ..xiuxian_utils.other_set import OtherSet
 from ..xiuxian_utils.utils import (
     number_to, check_user,
@@ -266,6 +266,10 @@ async def send_exp_(bot: Bot, event: GroupMessageEvent, args: Message = CommandA
 
     user_1_id = user_1['user_id']
     user_2_id = await get_id_from_str(args)  # 使用道号获取用户id，代替原at
+    if not check_lock(user_2_id):
+        msg = "对方忙碌中！"
+        await bot.send(event=event, message=msg)
+        await two_exp.finish()
 
     user_2 = await sql_message.get_user_info_with_id(user_2_id)
 
@@ -379,6 +383,11 @@ async def two_exp_(bot: Bot, event: GroupMessageEvent, args: Message = CommandAr
 
     user_1_id = user_1['user_id']
     user_2_id = await get_id_from_str(args)  # 使用道号获取用户id，代替原at
+    if not check_lock(user_2_id):
+        msg = "对方忙碌中！"
+        await bot.send(event=event, message=msg)
+        await two_exp.finish()
+
 
     user_2 = await sql_message.get_user_info_with_id(user_2_id)
 

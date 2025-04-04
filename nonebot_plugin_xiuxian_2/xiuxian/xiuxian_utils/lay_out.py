@@ -49,6 +49,15 @@ def set_cmd_lock(user_id, lock_time: float | int):
     cmd_lock[int(user_id)] = lock_time
 
 
+def check_lock(user_id):
+    if lock_time := cmd_lock.get(user_id):
+        if time.time() < (lock_time + 4):
+            return True
+    lock_time = time.time()
+    set_cmd_lock(user_id, lock_time)
+    return False
+
+
 @limit_all_message.scheduled_job('interval', seconds=limit_message_time)
 def limit_all_message_():
     # 重置消息字典
@@ -206,12 +215,10 @@ def Cooldown(
             await matcher.finish()
         else:
             pass
-        if lock_time := cmd_lock.get(user_id):
-            if time.time() < (lock_time + 3):
-                too_fast_notice = f"道友的指令还在执行中！！"
-                await bot.send(event=event, message=too_fast_notice)
-                await matcher.finish()
-            set_cmd_lock(user_id, 0)
+        if check_lock(user_id):
+            too_fast_notice = f"道友的指令还在执行中！！"
+            await bot.send(event=event, message=too_fast_notice)
+            await matcher.finish()
 
         # 消息长度限制
         message = event.raw_message

@@ -41,12 +41,19 @@ get_test_data = on_command("ts", priority=21, permission=SUPERUSER, block=True)
 
 @get_test_data.handle()
 async def get_test_data_(bot: Bot, event: GroupMessageEvent):
-    msg = many_md(f"测试信息",
-                  "测试",
-                  '测试', '测试',
-                  '测试', '测试',
-                  '测试', '测试',
-                  '测试', '测试')
+    real_user_id = event.real_user_id
+    msg = many_md(f'qqbot-at-user id="{real_user_id}" />\r***\r>'
+                  f'测试数据\r'
+                  f'<qqbot-cmd-input text="ts测试" show="测试按钮" /',
+                  'ts测试" show="测试按钮" />\r<qqbot-cmd-input text="ts测试" show="测试按钮',
+                  'ts测试" show="测试按钮" />\r<qqbot-cmd-input text="ts测试" show="测试按钮',
+                  'ts测试" show="测试按钮" />\r<qqbot-cmd-input text="ts测试" show="测试按钮',
+                  'ts测试" show="测试按钮" />\r<qqbot-cmd-input text="ts测试" show="测试按钮',
+                  'ts测试" show="测试按钮" />\r<qqbot-cmd-input text="ts测试" show="测试按钮',
+                  'ts测试" show="测试按钮" />\r<qqbot-cmd-input text="ts测试" show="测试按钮',
+                  'ts测试" show="测试按钮" />\r<qqbot-cmd-input text="ts测试" show="测试按钮',
+                  'ts测试" show="测试按钮" />\r<qqbot-cmd-input text="ts测试" show="测试按钮',
+                  'ts测试" show="测试按钮" />\r<qqbot-cmd-input text="ts测试" show="测试按钮', )
     await bot.send(event=event, message=msg)
     await get_test_data.finish()
 
