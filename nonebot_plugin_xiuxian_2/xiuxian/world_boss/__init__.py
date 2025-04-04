@@ -27,7 +27,7 @@ from ..xiuxian_utils.clean_utils import three_md, msg_handler, number_to, main_m
 from ..xiuxian_utils.item_json import items
 from ..xiuxian_utils.lay_out import Cooldown, UserCmdLock
 from ..xiuxian_utils.player_fight import boss_fight
-from ..xiuxian_utils.utils import check_user
+from ..xiuxian_utils.utils import check_user, check_user_type
 from ..xiuxian_utils.xiuxian2_handle import sql_message
 
 boss_daily_reset = require("nonebot_plugin_apscheduler").scheduler
@@ -296,6 +296,10 @@ async def world_boss_fight_(bot: Bot, event: GroupMessageEvent):
 
     user_info = await check_user(event)
     user_id = user_info['user_id']
+    is_type, msg = await check_user_type(user_id, 0)
+    if not is_type:
+        await bot.send(event=event, message=msg)
+        await world_boss_fight.finish()
     user_cmd_lock = UserCmdLock(user_id)
     with user_cmd_lock:
         user_world_boss_info = await get_user_world_boss_info(user_id)
