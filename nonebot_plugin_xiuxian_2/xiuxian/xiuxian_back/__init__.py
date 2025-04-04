@@ -12,7 +12,7 @@ from .back_util import (
     get_user_main_back_msg,
     get_item_msg, get_item_msg_rank, check_use_elixir,
     get_use_jlq_msg, get_no_use_equipment_sql, get_use_tool_msg,
-    get_user_main_back_msg_easy, get_user_back_msg, get_suits_effect, md_back)
+    get_user_main_back_msg_easy, get_user_back_msg, get_suits_effect, md_back, get_user_main_back_msg_md)
 from ..user_data_handle import UserBuffHandle
 from ..xiuxian_config import XiuConfig, convert_rank
 from ..xiuxian_limit import limit_handle
@@ -717,7 +717,7 @@ async def main_back_(bot: Bot, event: GroupMessageEvent, args: Message = Command
             '药材背包', '药材背包',
             '背包帮助', '背包帮助')
     elif test_on:
-        msg = await get_user_main_back_msg_easy(user_id)
+        msg = await get_user_main_back_msg_md(user_id)
         page_all = 10
         items_list = get_paged_item(msg, page, page_all)
         msg = md_back(items_list)
