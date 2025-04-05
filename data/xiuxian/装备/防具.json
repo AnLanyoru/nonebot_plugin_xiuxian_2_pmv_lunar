@@ -1,345 +1,984 @@
 {
-  "6001": {
-    "name": "修士道袍",
-    "def_buff": 0.08,
-    "atk_buff": 0,
-    "crit_buff": 0,
-    "rank": 54,
-    "level": "下品符器",
-    "type": "装备",
-    "desc": "随处可见的长袍，能略微抵挡真元冲击"
-  },
-  "6011": {
-    "name": "化尘道袍",
-    "def_buff": 0.1,
-    "atk_buff": 0,
-    "crit_buff": 0,
-    "rank": 51,
-    "level": "上品符器",
-    "type": "装备"
-  },
-  "6021": {
-    "name": "阴磷甲",
-    "def_buff": 0.12,
-    "atk_buff": 0,
-    "crit_buff": 0,
-    "rank": 48,
-    "level": "下品玄器",
-    "type": "装备"
-  },
-  "6031": {
-    "name": "御灵盾",
-    "def_buff": 0.14,
-    "atk_buff": 0,
-    "crit_buff": 0,
-    "rank": 45,
-    "level": "上品玄器",
-    "type": "装备"
-  },
-  "6041": {
-    "name": "凤血魔袍",
-    "def_buff": 0.16,
-    "atk_buff": 0,
-    "crit_buff": 0,
-    "rank": 42,
-    "level": "下品纯阳",
-    "type": "装备"
-  },
-  "6051": {
-    "name": "避水法袍",
-    "def_buff": 0.18,
-    "atk_buff": 0,
-    "crit_buff": 0,
-    "rank": 39,
-    "level": "上品纯阳",
-    "type": "装备"
-  },
-  "6061": {
-    "name": "青溪法袍",
-    "def_buff": 0.2,
-    "atk_buff": 0,
-    "crit_buff": 0,
-    "rank": 36,
-    "level": "下品通天",
-    "type": "装备"
-  },
-  "6071": {
-    "name": "驱厄灵袍",
-    "def_buff": 0.22,
-    "atk_buff": 0,
-    "crit_buff": 0,
-    "rank": 33,
-    "level": "上品通天",
-    "type": "装备"
-  },
-  "6081": {
-    "name": "三阳道袍",
-    "def_buff": 0.24,
-    "atk_buff": 0,
-    "crit_buff": 0,
-    "rank": 30,
-    "level": "下品仙器",
-    "type": "装备"
-  },
-  "6091": {
-    "name": "皇鳞甲",
-    "def_buff": 0.26,
-    "atk_buff": 0,
-    "crit_buff": 0,
-    "rank": 27,
-    "level": "上品仙器",
-    "type": "装备"
-  },
-  "6092": {
-    "name": "鱼鬣宝衣",
-    "def_buff": 0.3,
-    "atk_buff": 0.06,
-    "crit_buff": 0.06,
-    "rank": -5,
-    "level": "极品仙器",
-    "type": "装备"
-  },
-  "6093": {
-    "name": "天蚕战甲",
-    "def_buff": 0.28,
-    "atk_buff": 0.12,
-    "crit_buff": 0,
-    "rank": -5,
-    "level": "极品仙器",
-    "type": "装备"
-  },
-  "6094": {
-    "name": "血海魔铠",
-    "def_buff": 0.2,
-    "atk_buff": 0.2,
-    "crit_buff": 0.15,
-    "rank": 13,
-    "level": "极品仙器",
-    "type": "装备"
-  },
-  "11051": {
-    "name": "女武神的叹息之壁",
-    "def_buff": 0.32,
-    "atk_buff": 0,
-    "crit_buff": 0,
-    "rank": -5,
-    "level": "极品仙器",
-    "type": "装备"
-  },
-  "11052": {
-    "name": "黑太岁",
-    "def_buff": 0.4,
-    "atk_buff": 0,
-    "crit_buff": 0,
-    "rank": -5,
-    "level": "极品仙器",
-    "type": "装备"
-  },
-  "11053": {
-    "name": "海姆达尔",
-    "def_buff": 0.3,
-    "atk_buff": 0.15,
-    "crit_buff": 0.2,
-    "rank": -5,
-    "level": "极品仙器",
-    "type": "装备"
-  },
-  "11054": {
-    "name": "企鹅",
-    "def_buff": 0.4,
-    "atk_buff": 0,
-    "crit_buff": 0,
-    "rank": -5,
-    "level": "极品仙器",
-    "type": "装备"
-  },
-  "11055": {
-    "name": "猫咪玩偶服",
-    "def_buff": 0.4,
-    "atk_buff": 0,
-    "crit_buff": 0,
-    "rank": -5,
-    "level": "极品仙器",
-    "type": "装备"
-  },
-  "12001": {
-    "name": "父亲甲",
-    "def_buff": 0.35,
-    "atk_buff": 0.15,
-    "crit_buff": 0.15,
-    "rank": -5,
-    "level": "无上仙器",
-    "type": "装备"
-  },
-  "12002": {
-    "name": "轮回魔铠",
-    "def_buff": 0.35,
-    "atk_buff": 0.1,
-    "crit_buff": 0.2,
-    "rank": -5,
-    "level": "无上仙器",
-    "type": "装备"
-  },
-  "12003": {
-    "name": "归墟甲",
-    "def_buff": 0.35,
-    "atk_buff": 0.1,
-    "crit_buff": 0.2,
-    "rank": -5,
-    "level": "无上仙器",
-    "type": "装备"
-  },
-  "12004": {
-    "name": "爆杀龟龟甲",
-    "def_buff": 0.35,
-    "atk_buff": 0.1,
-    "crit_buff": 0.2,
-    "rank": -5,
-    "level": "无上仙器",
-    "type": "装备"
-  },
-  "12005": {
-    "name": "断仙",
-    "def_buff": 0.35,
-    "atk_buff": 0.15,
-    "crit_buff": 0.15,
-    "rank": -5,
-    "level": "无上仙器",
-    "type": "装备"
-  },
-  "12006": {
-    "name": "银月忘川之铠甲",
-    "def_buff": 0.35,
-    "atk_buff": 0,
-    "crit_buff": 0.3,
-    "rank": -5,
-    "level": "无上仙器",
-    "type": "装备"
-  },
-  "12007": {
-    "name": "破天之铠",
-    "def_buff": 0.15,
-    "atk_buff": 0.5,
-    "crit_buff": 0.1,
-    "rank": -5,
-    "level": "无上仙器",
-    "type": "装备"
-  },
-  "12008": {
-    "name": "龙皇天衍甲",
-    "def_buff": 0.15,
-    "atk_buff": 0.5,
-    "crit_buff": 0.1,
-    "rank": -5,
-    "level": "无上仙器",
-    "type": "装备"
-  },
-  "6099": {
-    "name": "炎魔焦热斗铠",
-    "def_buff": 0.35,
-    "atk_buff": 0.2,
-    "crit_buff": 0.1,
-    "rank": -5,
-    "level": "无上仙器",
-    "type": "装备"
-  },
-  "15500": {
-    "name": "霸王战铠",
-    "def_buff": 0.35,
-    "atk_buff": 0.2,
-    "crit_buff": 0.1,
-    "rank": -5,
-    "level": "无上仙器",
-    "type": "装备"
-  },
-  "15501": {
-    "name": "风神袍",
-    "def_buff": 0.35,
-    "atk_buff": 0.2,
-    "crit_buff": 0.1,
-    "rank": -5,
-    "level": "无上仙器",
-    "type": "装备"
-  },
-  "15502": {
-    "name": "踏云天衣",
-    "def_buff": 0.35,
-    "atk_buff": 0.2,
-    "crit_buff": 0.1,
-    "rank": -5,
-    "level": "无上仙器",
-    "type": "装备"
-  },
-  "15503": {
-    "name": "鹤羽宝衣",
-    "def_buff": 0.35,
-    "atk_buff": 0.2,
-    "crit_buff": 0.1,
-    "rank": -5,
-    "level": "无上仙器",
-    "type": "装备"
-  },
-  "15504": {
-    "name": "天师道袍",
-    "def_buff": 0.35,
-    "atk_buff": 0.2,
-    "crit_buff": 0.1,
-    "rank": -5,
-    "level": "无上仙器",
-    "type": "装备"
-  },
-  "15505": {
-    "name": "湮灭仙衣",
-    "def_buff": 0.35,
-    "atk_buff": 0.2,
-    "crit_buff": 0.1,
-    "rank": -5,
-    "level": "无上仙器",
-    "type": "装备"
-  },
-  "15506": {
-    "name": "遥远的理想乡",
-    "def_buff": 0.45,
-    "atk_buff": 0,
-    "crit_buff": 0.15,
-    "rank": -5,
-    "level": "无上仙器",
-    "type": "装备"
-  },
-  "15507": {
-    "name": "危险兔坦娘",
-    "def_buff": 0.5,
-    "atk_buff": 0,
-    "crit_buff": 0,
-    "rank": -5,
-    "level": "无上仙器",
-    "type": "装备"
-  },
-  "15508": {
-    "name": "虚灵衣",
-    "def_buff": 0.15,
-    "atk_buff": 0.2,
-    "crit_buff": 0.3,
-    "rank": -5,
-    "level": "无上仙器",
-    "type": "装备"
-  },
-  "15509": {
-    "name": "铁布衫",
-    "def_buff": 0.5,
-    "atk_buff": 0,
-    "crit_buff": 0,
-    "rank": -5,
-    "level": "无上仙器",
-    "type": "装备"
-  },
-  "6095": {
-    "name": "伽域封界",
-    "def_buff": 0.5,
-    "atk_buff": -0.5,
-    "crit_buff": 0,
-    "rank": -5,
-    "level": "无上仙器",
-    "type": "装备"
-  }
+   "6001": {
+        "name": "布衣",
+        "def_buff": 0.12,
+        "atk_buff": 0,
+        "crit_buff": 0,
+        "rank": 55,
+        "level": "符器",
+        "type": "装备",
+        "desc": "随处可见的长袍，能略微抵挡真元冲击"
+   },
+   "6011": {
+        "name": "铁衣",
+        "def_buff": 0.25,
+        "atk_buff": -0.1,
+        "crit_buff": 0,
+        "rank": 58,
+        "level": "符器",
+        "type": "装备"
+   },
+   "6021": {
+        "name": "铁甲",
+        "def_buff": 0.1,
+        "atk_buff": 0,
+        "crit_buff": 0.1,
+        "rank": 58,
+        "level": "符器",
+        "type": "装备"
+   },
+   "6031": {
+        "name": "金刚盾",
+        "def_buff": 0.15,
+        "atk_buff": 0,
+        "crit_buff": 0,
+        "rank": 58,
+        "level": "符器",
+        "type": "装备"
+   },
+   "6041": {
+        "name": "守护者护甲",
+        "def_buff": 0.2,
+        "atk_buff": 0,
+        "crit_buff": 0,
+        "rank": 58,
+        "level": "符器",
+        "type": "装备"
+   },
+   "6051": {
+        "name": "清风袍",
+        "def_buff": 0.18,
+        "atk_buff": 0.05,
+        "crit_buff": 0,
+        "rank": 59,
+        "level": "符器",
+        "type": "装备"
+   },
+   "6061": {
+        "name": "修士道袍",
+        "def_buff": 0.2,
+        "atk_buff": 0,
+        "crit_buff": 0.1,
+        "rank": 64,
+        "level": "符器",
+        "type": "装备"
+   },
+   "6071": {
+        "name": "道士袍",
+        "def_buff": 0.12,
+        "atk_buff": 0.1,
+        "crit_buff": 0.1,
+        "rank": 64,
+        "level": "符器",
+        "type": "装备"
+   },
+   "6081": {
+        "name": "灵丝衣",
+        "def_buff": 0.25,
+        "atk_buff": 0.05,
+        "crit_buff": 0,
+        "rank": 64,
+        "level": "符器",
+        "type": "装备"
+   },
+   "6091": {
+        "name": "皇鳞甲",
+        "def_buff": 0.2,
+        "atk_buff": 0,
+        "crit_buff": 0.1,
+        "rank": 64,
+        "level": "符器",
+        "type": "装备"
+   },
+   "6092": {
+        "name": "灵狐甲",
+        "def_buff": 0,
+        "atk_buff": 0.2,
+        "crit_buff": 0.2,
+        "rank": 71,
+        "level": "宝器",
+        "type": "装备"
+   },
+   "6093": {
+        "name": "天蚕战甲",
+        "def_buff": 0.2,
+        "atk_buff": 0.2,
+        "crit_buff": 0,
+        "rank": 71,
+        "level": "宝器",
+        "type": "装备"
+   },
+   "6094": {
+        "name": "星空保甲",
+        "def_buff": 0.2,
+        "atk_buff": 0.2,
+        "crit_buff": 0,
+        "rank": 77,
+        "level": "宝器",
+        "type": "装备"
+   },
+   "6095": {
+        "name": "磐石宝甲",
+        "def_buff": 0.4,
+        "atk_buff": -0.25,
+        "crit_buff": 0,
+        "rank": 78,
+        "level": "宝器",
+        "type": "装备"
+   },
+   "6096": {
+        "name": "无畏甲",
+        "def_buff": 0.1,
+        "atk_buff": 0.1,
+        "crit_buff": 0.15,
+        "rank": 79,
+        "level": "宝器",
+        "type": "装备"
+    },
+   "6097": {
+        "name": "极光宝甲",
+        "def_buff": 0.3,
+        "atk_buff": 0.1,
+        "crit_buff": 0,
+        "rank": 79,
+        "level": "宝器",
+        "type": "装备"
+   },
+   "6099": {
+        "name": "炎魔铠",
+        "def_buff": 0.1,
+        "atk_buff": 0.2,
+        "crit_buff": 0.1,
+        "rank": 79,
+        "level": "宝器",
+        "type": "装备"
+   },
+   "11051": {
+        "name": "龙骑护甲",
+        "def_buff": 0.35,
+        "atk_buff": 0,
+        "crit_buff": 0,
+        "rank": 80,
+        "level": "宝器",
+        "type": "装备"
+   },
+   "11052": {
+        "name": "炽焰甲",
+        "def_buff": 0.4,
+        "atk_buff": 0,
+        "crit_buff": 0,
+        "rank": 80,
+        "level": "宝器",
+        "type": "装备"
+   },
+   "11053": {
+        "name": "铁血宝甲",
+        "def_buff": 0.3,
+        "atk_buff": 0,
+        "crit_buff": 0.15,
+        "rank": 80,
+        "level": "宝器",
+        "type": "装备"
+   },
+   "11054": {
+        "name": "乌金铠",
+        "def_buff": 0.45,
+        "atk_buff": 0,
+        "crit_buff": 0,
+        "rank": 98,
+        "level": "玄器",
+        "type": "装备"
+   },
+   "11055": {
+        "name": "玄铁甲",
+        "def_buff": 0.25,
+        "atk_buff": 0.2,
+        "crit_buff": 0,
+        "rank": 98,
+        "level": "玄器",
+        "type": "装备"
+   },
+   "12001": {
+        "name": "玄丝衣",
+        "def_buff": 0.35,
+        "atk_buff": 0,
+        "crit_buff": 0.1,
+        "rank": 101,
+        "level": "玄器",
+        "type": "装备"
+   },
+   "12002": {
+        "name": "战铠",
+        "def_buff": 0,
+        "atk_buff": 0.2,
+        "crit_buff": 0.25,
+        "rank": 102,
+        "level": "玄器",
+        "type": "装备"
+   },
+   "12003": {
+        "name": "将军甲",
+        "def_buff": 0.25,
+        "atk_buff": 0,
+        "crit_buff": 0.2,
+        "rank": 103,
+        "level": "玄器",
+        "type": "装备"
+   },
+   "12004": {
+        "name": "玄武盾",
+        "def_buff": 0.35,
+        "atk_buff": 0.15,
+        "crit_buff": 0,
+        "rank": 106,
+        "level": "玄器",
+        "type": "装备"
+   },
+   "12005": {
+        "name": "天荒盾",
+        "def_buff": 0.35,
+        "atk_buff": 0.05,
+        "crit_buff": 0.1,
+        "rank": 106,
+        "level": "玄器",
+        "type": "装备"
+   },
+   "12006": {
+        "name": "龙麟甲",
+        "def_buff": 0.3,
+        "atk_buff": 0.2,
+        "crit_buff": 0,
+        "rank": 106,
+        "level": "玄器",
+        "type": "装备"
+   },
+   "12007": {
+        "name": "破天铠",
+        "def_buff": 0.15,
+        "atk_buff": 0.3,
+        "crit_buff": 0.1,
+        "rank": 107,
+        "level": "灵器",
+        "type": "装备"
+   },
+   "12008": {
+        "name": "天衍甲",
+        "def_buff": 0.25,
+        "atk_buff": 0.3,
+        "crit_buff": 0,
+        "rank": 107,
+        "level": "灵器",
+        "type": "装备"
+   },
+   "15500": {
+        "name": "人皇铠",
+        "def_buff": 0.25,
+        "atk_buff": 0.25,
+        "crit_buff": 0.05,
+        "rank": 108,
+        "level": "灵器",
+        "type": "装备"
+   },
+   "15501": {
+        "name": "战神袍",
+        "def_buff": 0.3,
+        "atk_buff": 0.25,
+        "crit_buff": 0,
+        "rank": 108,
+        "level": "灵器",
+        "type": "装备"
+   },
+   "15502": {
+        "name": "踏云天衣",
+        "def_buff": 0.25,
+        "atk_buff": 0.25,
+        "crit_buff": 0,
+        "rank": 108,
+        "level": "灵器",
+        "type": "装备"
+   },
+   "15503": {
+        "name": "清规",
+        "def_buff": 0.15,
+        "atk_buff": 0.25,
+        "crit_buff": 0.15,
+        "rank": 109,
+        "level": "灵器",
+        "type": "装备"
+   },
+   "15504": {
+        "name": "玄天甲",
+        "def_buff": 0.05,
+        "atk_buff": 0.25,
+        "crit_buff": 0.25,
+        "rank": 113,
+        "level": "灵器",
+        "type": "装备"
+   },
+   "15505": {
+        "name": "流星梦",
+        "def_buff": 0.25,
+        "atk_buff": 0.3,
+        "crit_buff": 0,
+        "rank": 113,
+        "level": "灵器",
+        "type": "装备"
+   },
+   "15506": {
+        "name": "凝血战衣",
+        "def_buff": 0.35,
+        "atk_buff": 0,
+        "crit_buff": 0.25,
+        "rank": 121,
+        "level": "仙器",
+        "type": "装备"
+   },
+   "15507": {
+        "name": "万兽铠",
+        "def_buff": 0.4,
+        "atk_buff": 0.1,
+        "crit_buff": 0,
+        "rank": 121,
+        "level": "仙器",
+        "type": "装备"
+   },
+   "15508": {
+        "name": "破天图",
+        "def_buff": 0.1,
+        "atk_buff": 0.2,
+        "crit_buff": 0.3,
+        "rank": 121,
+        "level": "仙器",
+        "type": "装备"
+   },
+   "15509": {
+        "name": "葡葡焦糖布丁",
+        "def_buff": 0.12,
+        "atk_buff": 0.25,
+        "crit_buff": 0.2,
+        "rank": 121,
+        "level": "仙器",
+        "type": "装备"
+   },
+   "15510": {
+        "name": "敕鸣天地弑魂甲",
+        "def_buff": 0,
+        "atk_buff": 0.26,
+        "crit_buff": 0.2,
+        "rank": 1000,
+        "level": "仙器",
+        "type": "装备"
+   },
+   "13539": {
+        "name": "流星泪",
+        "def_buff": 0.1,
+        "atk_buff": 0.3,
+        "crit_buff": 0.3,
+        "rank": 125,
+        "level": "仙器",
+        "type": "装备"
+   },
+   "13543": {
+        "name": "业火红莲",
+        "def_buff": 0.2,
+        "atk_buff": 0.2,
+        "crit_buff": 0,
+        "rank": 1000,
+        "level": "仙器",
+        "type": "装备"
+   },
+   "13544": {
+        "name": "戮仙甲",
+        "def_buff": 0.35,
+        "atk_buff": 0,
+        "crit_buff": 0.15,
+        "rank": 121,
+        "level": "仙器",
+        "type": "装备"
+   },
+   "13540": {
+        "name": "木心",
+        "def_buff": 0.3,
+        "atk_buff": 0.2,
+        "crit_buff": 0.2,
+        "rank": 1000,
+        "level": "圣器",
+        "type": "装备"
+   },
+   "13541": {
+        "name": "往者难谏",
+        "def_buff": 0.2,
+        "atk_buff": 0.2,
+        "crit_buff": 0.3,
+        "rank": 132,
+        "level": "圣器",
+        "type": "装备"
+   },
+   "13542": {
+        "name": "天凤软甲",
+        "def_buff": 0.25,
+        "atk_buff": 0.25,
+        "crit_buff": 0.2,
+        "rank": 132,
+        "level": "圣器",
+        "type": "装备"
+         },
+   "13545": {
+        "name": "雪月",
+        "def_buff": 0.13,
+        "atk_buff": 0.3,
+        "crit_buff": 0.25,
+        "rank": 132,
+        "level": "圣器",
+        "type": "装备"
+   },
+   "13546": {
+        "name": "紫绶仙衣",
+        "def_buff": 0.25,
+        "atk_buff": 0.25,
+        "crit_buff": 0.2,
+        "rank": 132,
+        "level": "圣器",
+        "type": "装备"
+        },
+   "13547": {
+        "name": "长生战衣",
+        "def_buff": 0.13,
+        "atk_buff": 0.3,
+        "crit_buff": 0.25,
+        "rank": 132,
+        "level": "圣器",
+        "type": "装备"
+             },
+   "13548": {
+        "name": "幻胧月冕甲",
+        "def_buff": 0.25,
+        "atk_buff": 0.25,
+        "crit_buff": 0.2,
+        "rank": 132,
+        "level": "圣器",
+        "type": "装备"
+    },
+   "24701": {
+        "name": "木子",
+        "def_buff": 0.3,
+        "atk_buff": 0.35,
+        "crit_buff": 0,
+        "rank": 1000,
+        "level": "圣器",
+        "type": "装备"
+    },
+   "24702": {
+        "name": "世界的夹缝",
+        "def_buff": 0.12,
+        "atk_buff": 0.1,
+        "crit_buff": 0.50,
+        "rank": 1000,
+        "level": "圣器",
+        "type": "装备"
+    },
+   "24703": {
+        "name": "伴君行",
+        "def_buff": 0.25,
+        "atk_buff": 0,
+        "crit_buff": 0.5,
+        "rank": 1000,
+        "level": "圣器",
+        "type": "装备"
+    },
+   "24704": {
+        "name": "逍遥长袍",
+        "def_buff": 0.2,
+        "atk_buff": 0.3,
+        "crit_buff": 0.2,
+        "rank": 1000,
+        "level": "圣器",
+        "type": "装备"
+    },
+   "24705": {
+        "name": "冬雪融化之日",
+        "def_buff": 0.1,
+        "atk_buff": 0.1,
+        "crit_buff": 0.5,
+        "rank": 1000,
+        "level": "圣器",
+        "type": "装备"
+    },
+   "24706": {
+        "name": "滅血长袍",
+        "def_buff": 0.35,
+        "atk_buff": 0.3,
+        "crit_buff": 0,
+        "rank": 1000,
+        "level": "圣器",
+        "type": "装备"
+         },
+   "24707": {
+        "name": "至尊骨",
+        "def_buff": 0.4,
+        "atk_buff": 0.02,
+        "crit_buff": 0.2,
+        "rank": 132,
+        "level": "圣器",
+        "type": "装备"
+   },
+   "24708": {
+        "name": "希尔维嘉",
+        "def_buff": 0.23,
+        "atk_buff": 0.26,
+        "crit_buff": 0.15,
+        "rank": 132,
+        "level": "圣器",
+        "type": "装备"
+    },
+   "24711": {
+        "name": "耳听怒",
+        "def_buff": 0.3,
+        "atk_buff": 0.24,
+        "crit_buff": 0.3,
+        "rank": 1000,
+        "level": "神器",
+        "type": "装备"
+    },
+   "24712": {
+        "name": "黑龙战衣",
+        "def_buff": 0.4,
+        "atk_buff": 0.3,
+        "crit_buff": 0.075,
+        "rank": 1000,
+        "level": "神器",
+        "type": "装备"
+    },
+   "24713": {
+        "name": "冰幻屏障",
+        "def_buff": 0.4,
+        "atk_buff": 0.12,
+        "crit_buff": 0.3,
+        "rank": 1000,
+        "level": "神器",
+        "type": "装备"
+    },
+   "24714": {
+        "name": "衣服",
+        "def_buff": 0.1,
+        "atk_buff": 0.4,
+        "crit_buff": 0.4,
+        "rank": 1000,
+        "level": "神器",
+        "type": "装备"
+    },
+   "24715": {
+        "name": "新手法袍",
+        "def_buff": 0.4,
+        "atk_buff": 0.32,
+        "crit_buff": 0.05,
+        "rank": 1000,
+        "level": "神器",
+        "type": "装备"
+   },
+   "31101": {
+        "name": "东皇钟",
+        "def_buff": 0.4,
+        "atk_buff": 0.36,
+        "crit_buff": 0,
+        "rank": 135,
+        "level": "神器",
+        "type": "装备"
+   },
+   "31102": {
+        "name": "盘古幡",
+        "def_buff": 0.4,
+        "atk_buff": 0.2,
+        "crit_buff": 0.2,
+        "rank": 139,
+        "level": "神器",
+        "type": "装备"
+        },
+   "31103": {
+        "name": "素影",
+        "def_buff": 0.35,
+        "atk_buff": 0.18,
+        "crit_buff": 0.3,
+        "rank": 135,
+        "level": "神器",
+        "type": "装备"
+   },
+   "31104": {
+        "name": "雷帝甲胄",
+        "def_buff": 0.25,
+        "atk_buff": 0.42,
+        "crit_buff": 0.15,
+        "rank": 139,
+        "level": "神器",
+        "type": "装备"
+        },
+   "31105": {
+        "name": "道非孤此意同",
+        "def_buff": 0.4,
+        "atk_buff": 0.2,
+        "crit_buff": 0.2,
+        "rank": 149,
+        "level": "神器",
+        "type": "装备"
+   },
+   "31106": {
+        "name": "碧灵元镜",
+        "def_buff": 0.25,
+        "atk_buff": 0.38,
+        "crit_buff": 0.2,
+        "rank": 149,
+        "level": "神器",
+        "type": "装备"
+        },
+   "31107": {
+        "name": "虚空之泪",
+        "def_buff": 0.05,
+        "atk_buff": 0.46,
+        "crit_buff": 0.4,
+        "rank": 139,
+        "level": "神器",
+        "type": "装备"
+     },
+     "444001": {
+          "name": "三角裤",
+          "def_buff": -0.5,
+          "atk_buff": -0.9,
+          "crit_buff": 2,
+          "rank": 300,
+          "level": "王道神兵",
+          "type": "装备"
+        },
+   "901005": {
+        "name": "苍穹霸龙铠",
+        "def_buff": 0.35,
+        "atk_buff": 0.15,
+        "crit_buff": 0.25,
+        "rank": 1000,
+        "level": "龙年限定",
+        "type": "装备"
+        },
+   "901015": {
+        "name": "相柳蛇皇圣甲",
+        "def_buff": 0.11,
+        "atk_buff": 0.35,
+        "crit_buff": 0.35,
+        "rank": 1000,
+        "level": "蛇年限定",
+        "type": "装备"
+        },
+   "920001": {
+        "name": "圆环之理",
+        "def_buff": 0.4,
+        "atk_buff": 0.36,
+        "crit_buff": 0,
+        "rank": 1000,
+        "level": "神器唯一",
+        "type": "装备"
+        },
+   "920002": {
+        "name": "北陆",
+        "def_buff": 0.25,
+        "atk_buff": 0.38,
+        "crit_buff": 0.2,
+        "rank": 1000,
+        "level": "神器唯一",
+        "type": "装备"
+        },
+   "920003": {
+        "name": "天狐落月百花弓",
+        "def_buff": 0.47,
+        "atk_buff": 0.5,
+        "crit_buff": 0,
+        "rank": 1000,
+        "level": "天命神兵",
+        "type": "装备"
+        },
+   "920004": {
+        "name": "阿赖耶识",
+        "def_buff": 0.4,
+        "atk_buff": 0.2,
+        "crit_buff": 0.2,
+        "rank": 1000,
+        "level": "神器唯一",
+        "type": "装备"
+        },
+   "920005": {
+        "name": "羽织",
+        "def_buff": 0.4,
+        "atk_buff": 0.2,
+        "crit_buff": 0.2,
+        "rank": 1000,
+        "level": "神器唯一",
+        "type": "装备"
+        },
+   "920006": {
+        "name": "墨隐衣",
+        "def_buff": 0.4,
+        "atk_buff": 0.2,
+        "crit_buff": 0.2,
+        "rank": 1000,
+        "level": "神器唯一",
+        "type": "装备"
+        },
+   "920007": {
+        "name": "冰与火之歌",
+        "def_buff": 0.05,
+        "atk_buff": 0.46,
+        "crit_buff": 0.4,
+        "rank": 1000,
+        "level": "神器唯一",
+        "type": "装备"
+        },
+   "920008": {
+        "name": "帝皇之御",
+        "def_buff": 0.05,
+        "atk_buff": 0.46,
+        "crit_buff": 0.4,
+        "rank": 1000,
+        "level": "神器唯一",
+        "type": "装备"
+        },
+   "920009": {
+        "name": "残梦",
+        "def_buff": 0.05,
+        "atk_buff": 0.46,
+        "crit_buff": 0.4,
+        "rank": 1000,
+        "level": "神器唯一",
+        "type": "装备"
+        },
+   "920010": {
+        "name": "救命毫毛",
+        "def_buff": 0.35,
+        "atk_buff": 0.18,
+        "crit_buff": 0.3,
+        "rank": 1000,
+        "level": "神器唯一",
+        "type": "装备"
+   },
+   "920011": {
+        "name": "白色蝴蝶结长筒袜",
+        "def_buff": 0.25,
+        "atk_buff": 0.42,
+        "crit_buff": 0.15,
+        "rank": 1000,
+        "level": "神器唯一",
+        "type": "装备"
+        },
+   "920012": {
+        "name": "问界",
+        "def_buff": 0.4,
+        "atk_buff": 0.2,
+        "crit_buff": 0.2,
+        "rank": 1000,
+        "level": "神器唯一",
+        "type": "装备"
+        },
+   "920013": {
+        "name": "紫金葫芦",
+        "def_buff": 0.05,
+        "atk_buff": 0.46,
+        "crit_buff": 0.4,
+        "rank": 1000,
+        "level": "神器唯一",
+        "type": "装备"
+        },
+   "920014": {
+        "name": "玄火鉴",
+        "def_buff": 0.1,
+        "atk_buff": 0.63,
+        "crit_buff": 0.4,
+        "rank": 1000,
+        "level": "天命神兵",
+        "type": "装备"
+        },
+   "920015": {
+        "name": "鸿蒙琉璃甲",
+        "def_buff": 0.35,
+        "atk_buff": 0.18,
+        "crit_buff": 0.3,
+        "rank": 1000,
+        "level": "神器唯一",
+        "type": "装备"
+   },
+   "920016": {
+        "name": "千雪",
+        "def_buff": 0.4,
+        "atk_buff": 0.2,
+        "crit_buff": 0.2,
+        "rank": 1000,
+        "level": "神器唯一",
+        "type": "装备"
+        },          
+   "920017": {
+        "name": "幻灵咒域环",
+        "def_buff": 0.1,
+        "atk_buff": 0.63,
+        "crit_buff": 0.4,
+        "rank": 1000,
+        "level": "天命神兵",
+        "type": "装备"
+        },
+   "920018": {
+        "name": "云镜醉夜清霜",
+        "def_buff": 0.4,
+        "atk_buff": 0.2,
+        "crit_buff": 0.2,
+        "rank": 1000,
+        "level": "神器唯一",
+        "type": "装备"
+        },
+   "920019": {
+        "name": "七七猫娘女仆装",
+        "def_buff": 0.35,
+        "atk_buff": 0.18,
+        "crit_buff": 0.3,
+        "rank": 1000,
+        "level": "神器唯一",
+        "type": "装备"
+   },
+   "920020": {
+        "name": "三生石",
+        "def_buff": 0.05,
+        "atk_buff": 0.46,
+        "crit_buff": 0.4,
+        "rank": 1000,
+        "level": "神器唯一",
+        "type": "装备"
+        },
+   "920021": {
+        "name": "往世的星空",
+        "def_buff": 0.4,
+        "atk_buff": 0.2,
+        "crit_buff": 0.2,
+        "rank": 1000,
+        "level": "神器唯一",
+        "type": "装备"
+        },
+   "920022": {
+        "name": "无我唯识",
+        "def_buff": 0.05,
+        "atk_buff": 0.46,
+        "crit_buff": 0.4,
+        "rank": 1000,
+        "level": "神器唯一",
+        "type": "装备"
+        },
+   "920023": {
+        "name": "绝缘之爪",
+        "def_buff": 0.4,
+        "atk_buff": 0.2,
+        "crit_buff": 0.2,
+        "rank": 1000,
+        "level": "神器唯一",
+        "type": "装备"
+     },
+     "920024": {
+          "name": "天堂陨落长弓",
+          "def_buff": 0.05,
+          "atk_buff": 0.46,
+          "crit_buff": 0.4,
+          "rank": 1000,
+          "level": "神器唯一",
+          "type": "装备" 
+        },
+   "920025": {
+        "name": "新八唧的眼镜",
+        "def_buff": 0.05,
+        "atk_buff": 0.46,
+        "crit_buff": 0.4,
+        "rank": 1000,
+        "level": "神器唯一",
+        "type": "装备"
+        },
+   "990001": {
+        "name": "金元宝",
+        "def_buff": 0,
+        "atk_buff": 0,
+        "crit_buff": 0,
+        "rank": 200,
+        "level": "炼金获取大量灵石",
+        "type": "装备"
+        },
+   "920026": {
+        "name": "垂天平澜",
+        "def_buff": 0.1,
+        "atk_buff": 0.63,
+        "crit_buff": 0.4,
+        "rank": 1000,
+        "level": "天命神兵",
+        "type": "装备"
+        },
+   "920027": {
+        "name": "逝水年华",
+        "def_buff": 0.1,
+        "atk_buff": 0.63,
+        "crit_buff": 0.4,
+        "rank": 1000,
+        "level": "天命神兵",
+        "type": "装备"
+        },
+   "920028": {
+        "name": "草鞋",
+        "def_buff": 0.47,
+        "atk_buff": 0.5,
+        "crit_buff": 0,
+        "rank": 1000,
+        "level": "天命神兵",
+        "type": "装备"
+        },
+   "920029": {
+        "name": "九尾之魂",
+        "def_buff": 0.42,
+        "atk_buff": 0.27,
+        "crit_buff": 0.35,
+        "rank": 1000,
+        "level": "天命神兵",
+        "type": "装备"
+     },
+     "920030": {
+          "name": "鲜红法袍",
+          "def_buff": 0.1,
+          "atk_buff": 0.63,
+          "crit_buff": 0.4,
+          "rank": 1000,
+          "level": "天命神兵",
+          "type": "装备"
+     },
+     "920031": {
+          "name": "后土印",
+          "def_buff": 0.47,
+          "atk_buff": 0.5,
+          "crit_buff": 0,
+          "rank": 1000,
+          "level": "天命神兵",
+          "type": "装备"
+     },
+     "920032": {
+          "name": "伏龙鼎",
+          "def_buff": 0.47,
+          "atk_buff": 0.5,
+          "crit_buff": 0,
+          "rank": 1000,
+          "level": "天命神兵",
+          "type": "装备"
+     },
+     "920033": {
+          "name": "模拟创星图天之赤道",
+          "def_buff": 0.1,
+          "atk_buff": 0.63,
+          "crit_buff": 0.4,
+          "rank": 1000,
+          "level": "天命神兵",
+          "type": "装备"
+     },
+     "920034": {
+          "name": "碎花胸针",
+          "def_buff": 0.1,
+          "atk_buff": 0.63,
+          "crit_buff": 0.4,
+          "rank": 1000,
+          "level": "天命神兵",
+          "type": "装备"
+        }              
 }
