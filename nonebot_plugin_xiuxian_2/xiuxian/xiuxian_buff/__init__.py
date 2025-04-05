@@ -383,7 +383,7 @@ async def two_exp_(bot: Bot, event: GroupMessageEvent, args: Message = CommandAr
 
     user_1_id = user_1['user_id']
     user_2_id = await get_id_from_str(args)  # 使用道号获取用户id，代替原at
-    if not check_lock(user_2_id):
+    if check_lock(user_2_id):
         msg = "对方忙碌中！"
         await bot.send(event=event, message=msg)
         await two_exp.finish()
