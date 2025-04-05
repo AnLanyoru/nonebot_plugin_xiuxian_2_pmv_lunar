@@ -139,8 +139,6 @@ world_boss_fight_top = on_command("世界boss伤害排行",
 time_set_world_boss = on_command('重置世界BOSS', priority=15, permission=SUPERUSER, block=True)
 world_boss_shop_reload = on_command('重载世界BOSS商店', priority=15, permission=SUPERUSER, block=True)
 
-WORLD_BOSS_BUTTON = "102368631_1740930289"
-
 
 @time_set_world_boss.handle(parameterless=[Cooldown(cd_time=5)])
 async def time_set_world_boss_(bot: Bot, event: GroupMessageEvent):
@@ -211,8 +209,7 @@ async def world_boss_shop_buy_(
             '世界boss商店兑换 物品编号 数量', '世界boss商店兑换',
             '世界boss排行', '世界boss排行',
             '世界boss菜单', '世界boss',
-            '挑战世界boss', '挑战世界boss',
-            WORLD_BOSS_BUTTON)
+            '挑战世界boss', '挑战世界boss')
         await bot.send(event=event, message=msg)
         await world_boss_shop_buy.finish()
 
@@ -243,8 +240,7 @@ async def world_boss_shop_menu_(
         '世界boss商店兑换 物品编号 数量', '世界boss商店兑换',
         '世界boss排行', '世界boss排行',
         '世界boss菜单', '世界boss',
-        '挑战世界boss', '挑战世界boss',
-        WORLD_BOSS_BUTTON)
+        '挑战世界boss', '挑战世界boss')
     await bot.send(event=event, message=msg)
     await world_boss_shop_menu.finish()
 
@@ -279,11 +275,10 @@ async def world_boss_fight_top_(bot: Bot, event: GroupMessageEvent, args: Messag
             msg += f"第{num}位 {i[0]} 总计造成:{number_to(i[1])}伤害\r"
         msg += f"第 {page}/{page_all} 页"
         msg = main_md(top_msg, msg,
-                      '挑战之地排行', '挑战排行',
+                      '下一页', f'世界boss排行 {page + 1}',
                       '世界boss商店', '世界boss商店',
                       '世界boss菜单', '世界boss',
-                      '前往挑战世界boss', '挑战世界boss',
-                      WORLD_BOSS_BUTTON)
+                      '前往挑战世界boss', '挑战世界boss')
     else:
         msg = f"该排行榜空空如也！"
     await bot.send(event=event, message=msg)
@@ -328,8 +323,7 @@ async def world_boss_fight_(bot: Bot, event: GroupMessageEvent):
             '世界boss排行', '世界boss排行',
             '世界boss商店', '世界boss商店',
             '世界boss菜单', '世界boss',
-            '继续挑战世界boss', '挑战世界boss',
-            WORLD_BOSS_BUTTON)
+            '继续挑战世界boss', '挑战世界boss')
         await bot.send(event=event, message=msg)
         await world_boss_fight.finish()
 
@@ -354,10 +348,9 @@ async def world_boss_active_menu_(bot: Bot, event: GroupMessageEvent):
            f"当前累计造成{number_to(user_world_boss_info['fight_damage'])}点伤害\r")
     msg = three_md(
         msg, '挑战世界boss', '挑战世界boss',
-        f"\r🔹今日余剩次数{user_world_boss_info['fight_num']}/3\r",
+        f"\r🔹今日已挑战次数{user_world_boss_info['fight_num']}/3\r",
         '世界boss商店', '世界boss商店',
         f"\r🔹当前积分{user_world_boss_info['world_point']}\r",
-        '世界boss排行', '世界boss伤害排行', '。',
-        WORLD_BOSS_BUTTON)
+        '世界boss排行', '世界boss伤害排行', '。')
     await bot.send(event=event, message=msg)
     await world_boss_active_menu.finish()
