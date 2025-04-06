@@ -32,41 +32,39 @@ impart_info = on_command("传承信息", aliases={"我的传承信息", "我的�
 impart_help = on_command("传承帮助", aliases={"虚神界帮助"}, priority=8, permission=GROUP, block=True)
 re_impart_load = on_command("加载传承数据", priority=45, permission=GROUP, block=True)
 impart_img = on_command("传承卡图", aliases={"传承卡片"}, priority=50, permission=GROUP, block=True)
-__impart_help__ = f"""
-传承帮助信息:
-指令:
-1、传承抽卡:
- - 使用思恋结晶获取一次传承卡片(抽到的卡片被动加成)
-2、传承祈愿:
- - 使用祈愿结晶获取一次虚神界闭关时间
- - (与传承卡数量有关，0传承卡请勿使用)
-3、传承信息:
- - 获取传承主要信息
-4、传承背包:
- - 获取传承全部信息
-5、加载传承数据:
- - 重新从卡片中加载所有传承属性(数据显示有误时可用)
-6、传承卡图:
- - 加上卡片名字获取传承卡牌详情
-7、虚神界对决:
- - 进入虚神界与{NICKNAME}进行对决
-8、虚神界祈愿:
- - 进入虚神界祈愿，获得利用自身传承与虚神界内传承共鸣的机会
-9、虚神界闭关:
- - 进入虚神界内闭关修炼，效率是外界闭关的6倍
-—————tips——————
-思恋结晶获取方式:虚神界对决
-如果你有很多思恋结晶可以使用连续抽卡+次数进行多次抽卡哦
-祈愿结晶获取方式:虚神界祈愿
-如果传承卡过少会导致祈愿无共鸣！！！！
-"""
+__impart_help__ = (f"✨虚神界介绍✨\r"
+)
 
 
 @impart_help.handle(parameterless=[Cooldown()])
 async def impart_help_(bot: Bot, event: GroupMessageEvent):
     """传承帮助"""
     # 这里曾经是风控模块，但是已经不再需要了
-    msg = __impart_help__
+    msg = main_md (__impart_help__,
+                 f"1：传承抽卡\r"
+                 f" 🔹 使用思恋结晶获取一次传承卡片\r"
+                 f"2：传承祈愿\r"
+                 f" 🔹 使用祈愿结晶获取一次虚神界闭关时间\r"
+                 f" 🔹 与传承卡数量有关，0传承卡请勿使用\r"
+                 f"3：传承信息\r"
+                 f" 🔹 获取传承主要信息\r"
+                 f"4：传承背包\r"
+                 f" 🔹 获取传承全部信息\r"
+                 f"5：加载传承数据\r"
+                 f" 🔹 重新加载所有传承属性\r"
+                 f"6：传承卡图\r"
+                 f" 🔹 加上卡片名字获取传承卡牌详情\r"
+                 f"7：虚神界对决\r"
+                 f" 🔹 进入虚神界与{NICKNAME}进行对决\r"
+                 f"8：虚神界祈愿\r"
+                 f" 🔹 获得自身传承与虚神界内传承共鸣的机会\r"
+                 f"9：虚神界闭关\r🔹 进入虚神界闭关效率是外界闭关的6倍\r"
+                 f" "
+                  f"虚神界祈愿获取祈愿结晶，共鸣越高祈愿时间越多！\r",
+                  "虚神界对决", "虚神界对决",
+                  "虚神界祈愿", "虚神界祈愿",
+                  "虚神界闭关", "虚神界闭关",
+                  "传承背包", "传承背包" )
     await bot.send(event=event, message=msg)
     await impart_help.finish()
 

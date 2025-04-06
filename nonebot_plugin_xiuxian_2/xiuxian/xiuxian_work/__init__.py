@@ -35,13 +35,7 @@ do_work = on_regex(
     permission=GROUP,
     block=True
 )
-__work_help__ = (f"\r"
-                 f"1：悬赏令:获取对应实力的悬赏令\r"
-                 f"2：悬赏令刷新:刷新当前悬赏令,每日{count}次\r"
-                 f"3：悬赏令终止:终止当前悬赏令任务\r"
-                 f"4：悬赏令结算:结算悬赏奖励\r"
-                 f"5：悬赏令接取+编号：接取对应的悬赏令\r"
-                 f"6：最后的悬赏令:用于接了悬赏令却境界突破导致卡住的道友使用")
+__work_help__ = (f"\r✨悬赏令帮助✨\r")
 
 
 @last_work.handle(parameterless=[Cooldown(stamina_cost=0)])
@@ -375,7 +369,12 @@ async def do_work_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = R
 
         elif mode == "帮助":
             msg = main_md(__work_help__,
-                  f"小月唯一官方群914556251"
+                 f"1：悬赏令:获取对应实力的悬赏令\r"
+                 f"2：悬赏令刷新:刷新当前悬赏令,每日{count}次\r"
+                 f"3：悬赏令终止:终止当前悬赏令任务\r"
+                 f"4：悬赏令结算:结算悬赏奖励\r"
+                 f"5：悬赏令接取+编号：接取对应的悬赏令\r"
+                 f"6：最后的悬赏令:用于接了悬赏令却境界突破导致卡住的道友使用"
                   f"",
                   "秘境帮助", "秘境帮助",
                   "灵田帮助", "灵田帮助",
