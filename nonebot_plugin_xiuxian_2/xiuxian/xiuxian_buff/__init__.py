@@ -258,7 +258,7 @@ async def qc_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
 
 @send_exp.handle(parameterless=[Cooldown(cd_time=3, stamina_cost=0)])
 async def send_exp_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
-    """双修"""
+    """指点"""
 
     user_1 = await check_user(event)
 
@@ -266,7 +266,7 @@ async def send_exp_(bot: Bot, event: GroupMessageEvent, args: Message = CommandA
 
     user_1_id = user_1['user_id']
     user_2_id = await get_id_from_str(args)  # 使用道号获取用户id，代替原at
-    if not check_lock(user_2_id):
+    if check_lock(user_2_id):
         msg = "对方忙碌中！"
         await bot.send(event=event, message=msg)
         await two_exp.finish()
