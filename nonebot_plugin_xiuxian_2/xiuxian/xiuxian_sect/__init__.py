@@ -319,7 +319,7 @@ async def sect_buff_info_(bot: Bot, event: GroupMessageEvent):
                       "宗门任务", "宗门任务接取",
                       "宗门信息", "我的宗门",
                       "宗门功法学习", "宗门功法学习",
-                      SECT_BUTTON)
+                      )
         await bot.send(event=event, message=msg)
         await sect_buff_info.finish()
     else:
@@ -795,7 +795,7 @@ async def sect_users_(bot: Bot, event: GroupMessageEvent, args: Message = Comman
                           "周贡检查", "宗门周贡检查",
                           "移除成员", "踢出宗门",
                           "下一页", f"宗门成员查看 {page + 1}",
-                          SECT_BUTTON)
+                          )
         else:
             msg = simple_md(f"道友还未",
                             "加入", "加入",
@@ -861,7 +861,7 @@ async def sect_users_donate_check_(bot: Bot, event: GroupMessageEvent, args: Mes
                       "全部成员", "宗门成员查看",
                       "移除成员", "踢出宗门",
                       "下一页", f"宗门周贡检查 {goal_donate} {page + 1}",
-                      SECT_BUTTON)
+                      )
     else:
         msg = simple_md(f"道友还未",
                         "加入", "加入",
@@ -1178,14 +1178,14 @@ async def sect_kick_out_(bot: Bot, event: GroupMessageEvent, args: Message = Com
                     msg = simple_md(f"{give_user['user_name']}不在你",
                                     "管理的宗门", "我的宗门",
                                     "内，请检查。",
-                                    SECT_BUTTON)
+                                    )
                     await bot.send(event=event, message=msg)
                     await sect_kick_out.finish()
         else:
             msg = simple_md(f"请按照规范进行操作,例如:",
                             "踢出宗门", "踢出宗门",
                             " 云依,将云依道友(需在自己管理下的宗门）踢出宗门",
-                            SECT_BUTTON)
+                            )
             await bot.send(event=event, message=msg)
             await sect_kick_out.finish()
 
@@ -1214,7 +1214,7 @@ async def sect_out_(bot: Bot, event: GroupMessageEvent):
         msg = simple_md(f"{user_name}道友已",
                         f"退出{sect_info['sect_name']}", "退出宗门",
                         "，今后就是自由散修，是福是祸，犹未可知。",
-                        SECT_BUTTON)
+                        )
         await bot.send(event=event, message=msg)
         await sect_out.finish()
     else:
@@ -1222,7 +1222,7 @@ async def sect_out_(bot: Bot, event: GroupMessageEvent):
             f"宗主无法直接退出宗门，如确有需要，请完成",
             "宗主传位", "宗主传位",
             "后另行尝试。",
-            SECT_BUTTON)
+            )
         await bot.send(event=event, message=msg)
         await sect_out.finish()
 
