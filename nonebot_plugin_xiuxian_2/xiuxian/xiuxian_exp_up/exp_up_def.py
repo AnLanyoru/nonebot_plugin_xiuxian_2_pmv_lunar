@@ -114,7 +114,7 @@ async def exp_up_by_time_no_buff(user_info, exp_time) -> tuple[str, int, dict]:
         * (1 + main_buff_rate_buff)
         * (1 + user_buff_data['blessed_spot'])
         * (1 + world_buff))
-           * exp_time)
+           * exp_time * 6)
 
     await sql_message.update_power2(user_id)  # 更新战力
 

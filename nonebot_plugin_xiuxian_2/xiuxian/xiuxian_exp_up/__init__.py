@@ -63,7 +63,7 @@ async def exp_up_keep_out_(bot: Bot, event: GroupMessageEvent, cmd: str = RawCom
         await sql_message.do_work(user_id, 0)
         exp_time = move_info["to_id"]
         # 根据时间发送修为
-        is_full, exp, result_msg = await exp_up_by_time_no_buff(user_info, exp_time * 6)
+        is_full, exp, result_msg = await exp_up_by_time_no_buff(user_info, exp_time)
         # 拼接提示
         msg = (f"入定修炼结束，{is_full}共修炼{exp_time}分钟"
                f"本次入定修炼共增加修为：{number_to(exp)}|{exp}{result_msg[0]}{result_msg[1]}")
@@ -88,7 +88,7 @@ async def exp_up_keep_out_(bot: Bot, event: GroupMessageEvent, cmd: str = RawCom
     await sql_message.do_work(user_id, 0)
     exp_time = pass_time
     # 根据时间发送修为
-    is_full, exp, result_msg = await exp_up_by_time_no_buff(user_info, exp_time * 6)
+    is_full, exp, result_msg = await exp_up_by_time_no_buff(user_info, exp_time)
     # 拼接提示
     msg = (f"入定修炼结束，道友强行出定，"
            f"心境浮躁之时，紫府蕴气，洞玄澈神，涤净心魂，"

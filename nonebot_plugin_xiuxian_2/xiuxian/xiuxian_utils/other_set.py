@@ -3,6 +3,7 @@ import random
 from .clean_utils import number_to
 from .xiuxian2_handle import sql_message, xiuxian_impart
 from .. import XiuConfig
+from ..user_data_handle import UserBuffHandle
 from ..xiuxian_place import place
 
 
@@ -158,7 +159,8 @@ class OtherSet(XiuConfig):
 
     @staticmethod
     async def send_hp_mp(user_id, time_min: int):
-        user_info = await sql_message.get_user_real_info(user_id)
+        user_buff_handle = UserBuffHandle(user_id)
+        user_info = await user_buff_handle.get_user_fight_info()
         max_hp = user_info['exp'] / 2
         max_mp = user_info['exp']
         max_hp_see = user_info['max_hp']
