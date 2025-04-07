@@ -63,27 +63,7 @@ remove_history_skill_sure = on_command("确认忘记功法", aliases={'确认遗
 add_history_skill_max = on_command("拓展识海", aliases={'识海拓展'},
                                    priority=4, permission=GROUP, block=True)
 
-__back_help__ = f"""
-指令：
-1：我的背包:
- - 查看自身背包内的物品信息
-2：使用+物品名字
- - 使用物品,可批量使用
-3：换装+装备名字
- - 卸载目标装备
-4注释：交易请上灵宝楼
- - 发送 灵宝楼帮助
-5：炼金+物品名字
- - 将物品炼化为灵石,支持批量炼金
-6：快速炼金+目标物品品阶
- - 将指定品阶的物品全部炼金  例（快速炼金 先天品级）
-7：保护物品+物品名称
- - 将指定物品保护，不会被误操作
-8：取消保护物品+物品名称
- - 将保护的物品取消保护
-——tips——
-官方群914556251
-""".strip()
+__back_help__ = (f"\r✨背包帮助✨\r")
 
 
 @remove_history_skill_sure.handle(parameterless=[Cooldown()])
@@ -535,7 +515,19 @@ async def back_help_(bot: Bot, event: GroupMessageEvent):
 @back_help.handle(parameterless=[Cooldown()])
 async def back_help_(bot: Bot, event: GroupMessageEvent):
     """背包帮助"""
-    msg = __back_help__
+    msg = main_md(__back_help__,
+                 f"1：我的背包:查看自身背包内的物品\r"
+                 f"2：使用+物品名字:使用物品,可批量使用\r"
+                 f"3：换装+装备名字:卸载目标装备\r"
+                 f"5：炼金+物品名字:将物品炼化为灵石\r"
+                 f"5：悬赏令接取+编号：接取对应的悬赏令\r"
+                 f"6：快速炼金+目标物品品阶:将指定品阶的物品全部炼金  例（快速炼金 先天品级）\r"
+                 f"7：保护物品+物品名称：将指定物品保护，不会被误操作\r"
+                 f"8：取消保护物品+物品名称：将保护的物品取消保护\r",
+                  "我的背包", "我的背包",
+                  "使用+名称", "使用",
+                  "换装+名称", "换装",
+                  "快速炼金+目标物品品阶", "快速炼金" )
     await bot.send(event=event, message=msg)
     await back_help.finish()
 
