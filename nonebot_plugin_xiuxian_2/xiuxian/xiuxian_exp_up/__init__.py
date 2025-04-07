@@ -70,13 +70,16 @@ async def exp_up_keep_out_(bot: Bot, event: GroupMessageEvent, cmd: str = RawCom
         await bot.send(event=event, message=msg)
         await exp_up_keep_out.finish()
 
+    exp_type = move_info["start_id"]
     if cmd != '强行出定':
         last_time = math.ceil(need_time - pass_time)
-        msg = f"道友的入定修炼，预计{last_time}分钟后可结束"
+        tips = "(注意：将会导致本次入定前功尽弃！)" if not exp_type \
+            else f"(将获取{pass_time}分钟修炼修为)"
+        msg = simple_md(f"道友的入定修炼，预计{last_time}分钟后可结束，"
+                        f"如需提前结束，可", "强行出定", "强行出定",
+                        f"{tips}")
         await bot.send(event=event, message=msg)
         await exp_up_keep_out.finish()
-
-    exp_type = move_info["start_id"]
     if not exp_type:
         await sql_message.do_work(user_id, 0)
         msg = f"道友强行出定，心境浮躁，前功尽弃！！"
@@ -132,10 +135,10 @@ async def exp_up_keep_(bot: Bot, event: GroupMessageEvent, args: Message = Comma
                         f"直到入定结束！{free_out_msg}请", "确认", f"{cmd}确认 {num}", "。")
         await bot.send(event=event, message=msg)
         await exp_up_keep.finish()
-    need_time = 3600 * num
+    need_time = 60 * num
     move_data = {
         "start_id": every_time,
-        "to_id": 60 * num,
+        "to_id": need_time,
         "need_time": need_time}
     if every_time:
         await sql_message.decrease_user_item(user_id, {2019: num}, True)
