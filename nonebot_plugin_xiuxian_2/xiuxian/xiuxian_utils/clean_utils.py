@@ -260,7 +260,7 @@ def get_paged_msg(msg_list: list, page: int | Message,
     return msg_list
 
 
-def get_paged_item(msg_list: list, page: int | Message, per_page_item: int = 12) -> list:
+def get_paged_item(msg_list: list, page: int | Message, per_page_item: int = 12) -> tuple[list, int]:
     """
     分组化信息
     :param msg_list: 需要翻页化的信息列表
@@ -275,12 +275,12 @@ def get_paged_item(msg_list: list, page: int | Message, per_page_item: int = 12)
     # 总页数
     page_all = (items_all - 1 // per_page_item) + 1
     if page_all < page:
-        msg = []
-        return msg
+        msg = ['没有那么多页！']
+        return msg, page_all
     item_num = page * per_page_item - per_page_item
     item_num_end = item_num + per_page_item
     msg_list = msg_list[item_num:item_num_end]
-    return msg_list
+    return msg_list, page_all
 
 
 def get_args_num(args: Message | str, no: int = 1, default: int = 0) -> int:

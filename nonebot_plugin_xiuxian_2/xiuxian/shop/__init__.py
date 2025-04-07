@@ -267,7 +267,7 @@ async def shop_goods_check_(bot: Bot, event: GroupMessageEvent, args: Message = 
     else:
         all_type = tuple(strs)
     item_price_data = await fetch_goods_min_price_type(user_id=user_id, item_type=all_type)
-    item_price_data = get_paged_item(msg_list=item_price_data, page=page, per_page_item=24)
+    item_price_data, _ = get_paged_item(msg_list=item_price_data, page=page, per_page_item=24)
     item_price_data.sort(key=lambda item_per: item_per['item_id'])
     msg_list: list[str] = []
     temp_pick_list: list[str] = []
@@ -316,7 +316,7 @@ async def my_shop_goods_(bot: Bot, event: GroupMessageEvent, args: Message = Com
             all_type = tuple(strs)
         item_price_data = await fetch_self_goods_data_all_type(user_id=user_id, item_type=all_type)
         type_msg: str = '、'.join(all_type)
-    item_price_data = get_paged_item(msg_list=item_price_data, page=page, per_page_item=24)
+    item_price_data, _ = get_paged_item(msg_list=item_price_data, page=page, per_page_item=24)
     item_price_data.sort(key=lambda item_per: item_per['item_id'])
     msg_list: list[str] = []
     temp_pick_list: list[str] = []
