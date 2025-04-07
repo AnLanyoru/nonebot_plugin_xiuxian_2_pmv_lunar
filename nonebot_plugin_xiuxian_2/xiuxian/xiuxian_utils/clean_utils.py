@@ -562,6 +562,27 @@ def many_md(title,
     return msg
 
 
+def cmd_menu_md(back_data: list[list[str]]):
+    if len(back_data) < 10:
+        less_item_num = 10 - len(back_data)
+        for _ in range(less_item_num):
+            back_data.append(['.',
+                              '.',
+                              '.'])
+    msg = many_md('qqbot-cmd-input text="{}" show="{}" />'
+                  '{}\r<qqbot-cmd-input text="." show="." /'.format(*back_data[0]),
+                  '{}" show="{}" />\r{}<qqbot-cmd-input text="." show=".'.format(*back_data[1]),
+                  '{}" show="{}" />\r{}<qqbot-cmd-input text="." show=".'.format(*back_data[2]),
+                  '{}" show="{}" />\r{}<qqbot-cmd-input text="." show=".'.format(*back_data[3]),
+                  '{}" show="{}" />\r{}<qqbot-cmd-input text="." show=".'.format(*back_data[4]),
+                  '{}" show="{}" />\r{}<qqbot-cmd-input text="." show=".'.format(*back_data[5]),
+                  '{}" show="{}" />\r{}<qqbot-cmd-input text="." show=".'.format(*back_data[6]),
+                  '{}" show="{}" />\r{}<qqbot-cmd-input text="." show=".'.format(*back_data[7]),
+                  '{}" show="{}" />\r{}<qqbot-cmd-input text="." show=".'.format(*back_data[8]),
+                  '{}" show="{}" />\r{}<qqbot-cmd-input text="." show=".'.format(*back_data[9]), )
+    return msg
+
+
 def msg_handler(*args):
     if len(args) == 3:
         name, uin, msgs = args
