@@ -273,7 +273,7 @@ def get_paged_item(msg_list: list, page: int | Message, per_page_item: int = 12)
         page = int(page_msg[0]) if page_msg else 1
     items_all = len(msg_list)
     # 总页数
-    page_all = (items_all - 1 // per_page_item) + 1
+    page_all = ((items_all - 1) // per_page_item) + 1
     if page_all < page:
         msg = ['没有那么多页！']
         return msg, page_all
