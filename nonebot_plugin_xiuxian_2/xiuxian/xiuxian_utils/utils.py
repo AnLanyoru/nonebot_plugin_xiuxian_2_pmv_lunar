@@ -73,6 +73,7 @@ async def check_user_type(user_id, need_type):
                                   "！"),
                      6: simple_md("道友正在进行", "位面挑战", "查看挑战", "中，请全力以赴！！"),
                      7: simple_md("道友正在", "炼丹", "丹炉状态", "呢，请全神贯注！！"),
+                     8: simple_md("道友正在入定中呢，如需有要事，请先", "出定", "出定", "！！"),
                      0: "道友现在什么都没干呢~"}
         if user_type in type_msgs:
             msg = type_msgs[user_type]

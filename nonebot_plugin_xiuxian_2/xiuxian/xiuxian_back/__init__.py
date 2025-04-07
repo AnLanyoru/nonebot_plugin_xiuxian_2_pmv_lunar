@@ -1093,7 +1093,7 @@ async def use_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg())
             await use.finish()
 
         # 进入炼丹状态
-        await sql_message.in_closing(user_id, 7)
+        await sql_message.do_work(user_id, 7)
         mix_user_temp[user_id] = AlchemyFurnace(goods_id)
         msg = f'道友取出{item_name}, 开始炼丹'
 

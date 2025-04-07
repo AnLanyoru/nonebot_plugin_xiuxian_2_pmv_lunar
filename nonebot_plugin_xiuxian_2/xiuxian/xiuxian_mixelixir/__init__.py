@@ -598,7 +598,7 @@ async def mix_stop_(bot: Bot, event: GroupMessageEvent):
     user_id = user_info['user_id']
     is_type, msg = await check_user_type(user_id, 7)
     if is_type:
-        await sql_message.in_closing(user_id, user_type)  # 退出修炼状态
+        await sql_message.do_work(user_id, user_type)  # 退出修炼状态
         msg = "道友收起丹炉，停止了炼丹。"
         remove_mix_user(user_id)
     else:

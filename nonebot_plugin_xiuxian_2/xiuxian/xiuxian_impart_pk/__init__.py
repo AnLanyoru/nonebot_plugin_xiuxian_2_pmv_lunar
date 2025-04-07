@@ -110,7 +110,7 @@ async def impart_pk_exp_(bot: Bot, event: GroupMessageEvent):
     if is_type:  # 符合
         impart_data_draw = await impart_pk_check(user_id)  # 虚神界余剩闭关时间
         if int(impart_data_draw['exp_day']) > 0:
-            await sql_message.in_closing(user_id, user_type)
+            await sql_message.do_work(user_id, user_type)
             msg = f"进入虚神界，开始闭关，余剩虚神界内加速修炼时间：{int(impart_data_draw['exp_day'])}分钟，如需出关，发送【出关】！"
             await bot.send(event=event, message=msg)
             await impart_pk_exp.finish()

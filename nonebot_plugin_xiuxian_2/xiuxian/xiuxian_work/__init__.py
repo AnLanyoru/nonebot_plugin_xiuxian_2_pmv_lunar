@@ -152,6 +152,7 @@ async def do_work_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = R
                        5: simple_md("道友还在虚神界修炼中，请", "出关", "出关", "后获取悬赏令！"),
                        6: simple_md("道友还在进行位面挑战中，请", "全力以赴", "开始挑战", "！"),
                        7: simple_md("道友正在", "炼丹", "丹炉状态", "呢，请全神贯注！！"),
+                       8: simple_md("道友正在入定中呢，如需完成悬赏令请先", "出定", "出定", "！！"),
                        }
             msg = msg_map.get(user_type)
             if not msg:

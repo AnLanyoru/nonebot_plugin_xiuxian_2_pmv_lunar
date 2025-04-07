@@ -29,6 +29,9 @@ class UserStatusType(Enum):
     mix_elixir = 7
     """炼丹"""
 
+    exp_up_keep = 8
+    """入定"""
+
 
 class SectPosition(Enum):
     """宗门职位"""

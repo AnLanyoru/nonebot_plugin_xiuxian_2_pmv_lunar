@@ -766,29 +766,6 @@ class XiuxianDateManage:
             else:
                 return None
 
-    async def in_closing(self, user_id, the_type):
-        """
-        更新用户状态
-        :param user_id: qq
-        :param the_type: 0:无状态  1:闭关中  2:历练中  3:闭关中  4:修炼中  -1:赶路中
-        :return:
-        """
-        now_time = None
-        if the_type == 1:
-            now_time = datetime.now()
-        elif the_type == 0:
-            now_time = 0
-        elif the_type == 2:
-            now_time = datetime.now()
-        elif the_type == 5:
-            now_time = datetime.now()
-        elif the_type == -1:
-            now_time = datetime.now()
-        now_time = str(now_time)
-        sql = "UPDATE user_cd SET type=$1,create_time=$2 WHERE user_id=$3"
-        async with self.pool.acquire() as db:
-            await db.execute(sql, the_type, now_time, user_id)
-
     async def update_exp(self, user_id, exp):
         """增加修为"""
         sql = "UPDATE user_xiuxian SET exp=exp+$1 WHERE user_id=$2"
@@ -1027,15 +1004,8 @@ class XiuxianDateManage:
         :return:
         """
         now_time = None
-        if the_type == 1:
-            now_time = datetime.now()
-        elif the_type == 0:
-            now_time = 0
-        elif the_type == 2:
-            now_time = datetime.now()
-        elif the_type == 3:
-            now_time = datetime.now()
-        elif the_type == -1:
+        count_job = [-1, 0, 1, 2, 5, 8]
+        if the_type in count_job:
             now_time = datetime.now()
         now_time = str(now_time)
         sql = f"UPDATE user_cd SET type=$1,create_time=$2,scheduled_time=$3 WHERE user_id=$4"

@@ -583,7 +583,7 @@ async def in_closing_(bot: Bot, event: GroupMessageEvent):
     user_id = user_info['user_id']
     is_type, msg = await check_user_type(user_id, 0)
     if is_type:  # 符合
-        await sql_message.in_closing(user_id, user_type)
+        await sql_message.do_work(user_id, user_type)
         msg = simple_md('进入闭关状态如需出关，发送', '出关', "出关", '！')
     await bot.send(event=event, message=msg)
     await in_closing.finish()
@@ -634,7 +634,7 @@ async def out_closing_(bot: Bot, event: GroupMessageEvent):
             time_msg = ''
 
         # 退出状态
-        await sql_message.in_closing(user_id, user_type)
+        await sql_message.do_work(user_id, user_type)
         # 根据时间发送修为
         is_full, exp, result_msg = await exp_up_by_time(user_info, exp_time)
         # 拼接提示

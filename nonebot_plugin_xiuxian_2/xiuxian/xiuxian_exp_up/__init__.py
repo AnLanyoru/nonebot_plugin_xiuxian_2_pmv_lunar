@@ -1,19 +1,24 @@
 import asyncio
+import math
 import random
+from datetime import datetime
 
 from nonebot import on_command
 from nonebot.adapters.onebot.v11 import (
     Bot,
     GROUP,
-    GroupMessageEvent
+    GroupMessageEvent, Message
 )
+from nonebot.params import CommandArg, RawCommand
 from nonebot.typing import T_State
 
+from .exp_up_def import exp_up_by_time_no_buff
+from ..database_utils.move_database import save_move_data, read_move_data
 from ..xiuxian_config import XiuConfig, convert_rank
 from ..xiuxian_data.data.境界_data import level_data
 from ..xiuxian_limit.limit_database import limit_handle
 from ..xiuxian_place import place
-from ..xiuxian_utils.clean_utils import get_strs_from_str, simple_md
+from ..xiuxian_utils.clean_utils import get_strs_from_str, simple_md, get_args_num
 from ..xiuxian_utils.lay_out import Cooldown
 from ..xiuxian_utils.other_set import OtherSet
 from ..xiuxian_utils.utils import (
@@ -24,6 +29,8 @@ from ..xiuxian_utils.xiuxian2_handle import (
 )
 
 exp_up = on_command("修炼", aliases={"/修炼"}, priority=2, permission=GROUP, block=True)
+exp_up_keep = on_command("入定", aliases={"丹药入定"}, priority=2, permission=GROUP, block=True)
+exp_up_keep_out = on_command("出定", aliases={"强行出定"}, priority=2, permission=GROUP, block=True)
 power_break_up = on_command("吸收天地精华", aliases={"融合天地精华"}, priority=12, permission=GROUP, block=True)
 power_break_up_help = on_command("天地精华", aliases={"天地精华帮助"}, priority=12, permission=GROUP, block=True)
 world_rank_up = on_command("踏破虚空", aliases={"突破位面", "飞升"}, priority=12, permission=GROUP, block=True)
@@ -31,6 +38,114 @@ exp_up_end = on_command("结束修炼", aliases={"重置修炼状态", "停止�
 all_end = on_command("重置状态", aliases={"重置闭关状态", "重置悬赏令状态"}, priority=12,
                      permission=GROUP, block=True)
 active_gift = on_command("神州大地齐欢腾，祝福祖国永太平", priority=12, permission=GROUP, block=True)
+
+
+@exp_up_keep_out.handle(parameterless=[Cooldown()])
+async def exp_up_keep_out_(bot: Bot, event: GroupMessageEvent, cmd: str = RawCommand()):
+    """入定结算"""
+
+    user_info = await check_user(event)
+
+    user_id = user_info['user_id']
+
+    is_type, msg = await check_user_type(user_id, 8)  # 需要在入定中的用户
+    if not is_type:
+        await bot.send(event=event, message=msg)
+        await exp_up_keep_out.finish()
+    user_cd_message = await sql_message.get_user_cd(user_id)
+    work_time = datetime.strptime(
+        user_cd_message['create_time'], "%Y-%m-%d %H:%M:%S.%f"
+    )
+    pass_time = (datetime.now() - work_time).seconds // 60  # 时长计算
+    move_info = await read_move_data(user_id)
+    need_time = move_info["need_time"]
+    if pass_time >= need_time:  # 正常入定结算逻辑
+        await sql_message.do_work(user_id, 0)
+        exp_time = move_info["to_id"]
+        # 根据时间发送修为
+        is_full, exp, result_msg = await exp_up_by_time_no_buff(user_info, exp_time * 6)
+        # 拼接提示
+        msg = (f"入定修炼结束，{is_full}共修炼{exp_time}分钟"
+               f"本次入定修炼共增加修为：{number_to(exp)}|{exp}{result_msg[0]}{result_msg[1]}")
+        await bot.send(event=event, message=msg)
+        await exp_up_keep_out.finish()
+
+    if cmd != '强行出定':
+        last_time = math.ceil(need_time - pass_time)
+        msg = f"道友的入定修炼，预计{last_time}分钟后可结束"
+        await bot.send(event=event, message=msg)
+        await exp_up_keep_out.finish()
+
+    exp_type = move_info["start_id"]
+    if not exp_type:
+        await sql_message.do_work(user_id, 0)
+        msg = f"道友强行出定，心境浮躁，前功尽弃！！"
+        await bot.send(event=event, message=msg)
+        await exp_up_keep_out.finish()
+    await sql_message.do_work(user_id, 0)
+    exp_time = pass_time
+    # 根据时间发送修为
+    is_full, exp, result_msg = await exp_up_by_time_no_buff(user_info, exp_time * 6)
+    # 拼接提示
+    msg = (f"入定修炼结束，道友强行出定，"
+           f"心境浮躁之时，紫府蕴气，洞玄澈神，涤净心魂，"
+           f"保留了本次修炼的成果，{is_full}共修炼{exp_time}分钟"
+           f"本次入定修炼共增加修为：{number_to(exp)}|{exp}{result_msg[0]}{result_msg[1]}")
+    await bot.send(event=event, message=msg)
+    await exp_up_keep_out.finish()
+
+
+@exp_up_keep.handle(parameterless=[Cooldown()])
+async def exp_up_keep_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg(), cmd: str = RawCommand()):
+    """
+    移动位置
+    """
+
+    user_info = await check_user(event)
+
+    user_id = user_info['user_id']
+
+    is_type, msg = await check_user_type(user_id, 0)  # 需要空闲的用户
+
+    if not is_type:
+        await bot.send(event=event, message=msg)
+        await exp_up_keep.finish()
+
+    msg_text = args.extract_plain_text()
+    num = get_args_num(msg_text, 1, 1)
+    every_time = 0
+    free_out_msg = "本次入定提前出定将不会获取任何修为!"
+    if cmd == "丹药入定":
+        every_time = 1
+        free_out_msg = "本次入定提前出定将获取已入定时间的入定修为!"
+        need_elixir = await sql_message.get_item_by_good_id_and_user_id(user_id, 2019)
+        had_elixir_num = need_elixir['goods_num']
+        if had_elixir_num < num:
+            msg = simple_md(f"道友的丹药：",
+                            "洞玄澈神丹", f"查看效果 洞玄澈神丹",
+                            "不足呢！。")
+            await bot.send(event=event, message=msg)
+            await exp_up_keep.finish()
+    if '确认' not in msg_text:
+        msg = simple_md(f"道友是否要屏气凝神, 进入入定状态, "
+                        f"将耗时{num}小时, 期间将无法行动，"
+                        f"直到入定结束！{free_out_msg}请", "确认", f"{cmd}确认 {num}", "。")
+        await bot.send(event=event, message=msg)
+        await exp_up_keep.finish()
+    need_time = 3600 * num
+    move_data = {
+        "start_id": every_time,
+        "to_id": 60 * num,
+        "need_time": need_time}
+    if every_time:
+        await sql_message.decrease_user_item(user_id, {2019: num}, True)
+    await save_move_data(user_id, move_data)
+    await sql_message.do_work(user_id, 8, need_time)
+    msg = simple_md(f"道友开始屏气凝神, 进入入定状态, "
+                    f"将耗时{num}小时, 期间将无法行动，"
+                    f"直到入定结束时", "出定", "出定", f"！{free_out_msg}")
+    await bot.send(event=event, message=msg)
+    await exp_up_keep.finish()
 
 
 @exp_up.handle(parameterless=[Cooldown(cd_time=60)])
@@ -48,7 +163,7 @@ async def exp_up_(bot: Bot, event: GroupMessageEvent):
         if not is_type:
             await bot.send(event=event, message=msg)
             await exp_up.finish()
-    await sql_message.in_closing(user_id, user_type)  # 进入修炼状态
+    await sql_message.do_work(user_id, user_type)  # 进入修炼状态
     exp_time = 6  # 闭关时长计算(分钟) = second // 60
     sleep_time = exp_time * 10
     msg = simple_md(f"{user_info['user_name']}道友开始屏息凝神，感受道韵流动，进入{int(sleep_time)}秒", "修炼", "修炼",
@@ -89,7 +204,7 @@ async def exp_up_(bot: Bot, event: GroupMessageEvent):
         await exp_up.finish()
     if exp >= user_get_exp_max:
         # 用户获取的修为到达上限
-        await sql_message.in_closing(user_id, user_type)
+        await sql_message.do_work(user_id, user_type)
         await sql_message.update_exp(user_id, user_get_exp_max)
         await sql_message.update_power2(user_id)  # 更新战力
 
@@ -100,7 +215,7 @@ async def exp_up_(bot: Bot, event: GroupMessageEvent):
         await bot.send(event=event, message=msg)
         await exp_up.finish()
     else:
-        await sql_message.in_closing(user_id, user_type)
+        await sql_message.do_work(user_id, user_type)
         await sql_message.update_exp(user_id, exp)
         await sql_message.update_power2(user_id)  # 更新战力
         result_msg, result_hp_mp = await OtherSet().send_hp_mp(user_id, 1)
@@ -122,7 +237,7 @@ async def exp_up_end_(bot: Bot, event: GroupMessageEvent):
     user_id = user_info['user_id']
     is_type, msg = await check_user_type(user_id, 4)
     if is_type:
-        await sql_message.in_closing(user_id, user_type)  # 退出修炼状态
+        await sql_message.do_work(user_id, user_type)  # 退出修炼状态
         msg = "道友收敛心神，停止了修炼。"
     else:
         msg = "道友现在没在修炼呢！！"
@@ -159,7 +274,7 @@ async def all_end_(bot: Bot, event: GroupMessageEvent, state: T_State):
     user_id = user_info['user_id']
 
     if input_key == state["key"]:
-        await sql_message.in_closing(user_id, 0)  # 重置状态
+        await sql_message.do_work(user_id, 0)  # 重置状态
         await bot.send(event=event, message="成功重置道友的状态！！！")
         await all_end.finish()
     else:
