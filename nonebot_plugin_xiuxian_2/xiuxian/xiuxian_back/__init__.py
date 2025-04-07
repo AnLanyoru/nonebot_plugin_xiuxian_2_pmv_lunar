@@ -708,13 +708,14 @@ async def main_back_(bot: Bot, event: GroupMessageEvent, args: Message = Command
             '丹药背包', '丹药背包',
             '药材背包', '药材背包',
             '背包帮助', '背包帮助')
+        await bot.send(event, msg)
     elif test_on:
         argp = '测试'
         msg = await get_user_main_back_msg_md(user_id)
         page_per = 19
         items_list, page_all = get_paged_item(msg, page, page_per)
-        up_page = ['上一页', f'背包{argp} {page - 1}'] if page > 1 else ['首页', f'背包{argp}']
-        page_down = ['下一页', f'背包{argp} {page + 1}'] if page_all > page else ['尾页', f'背包{argp}']
+        up_page = [f'背包{argp} {page - 1}', '上一页'] if page > 1 else [f'背包{argp}', '已是首页']
+        page_down = [f'背包{argp} {page + 1}', '下一页'] if page_all > page else [f'背包{argp}', '已是尾页']
         items_list.append([*up_page, f'-{page}/{page_all}页-', *page_down])
         msg = md_back(items_list[:10])
         await bot.send(event, msg)
@@ -733,6 +734,7 @@ async def main_back_(bot: Bot, event: GroupMessageEvent, args: Message = Command
             '丹药背包', '丹药背包',
             '药材背包', '药材背包',
             '背包帮助', '背包帮助')
+        await bot.send(event, msg)
 
     if msg:
         pass
