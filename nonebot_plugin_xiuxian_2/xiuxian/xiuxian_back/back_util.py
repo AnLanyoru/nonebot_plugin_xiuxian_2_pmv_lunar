@@ -273,6 +273,51 @@ async def get_user_main_back_msg_md(user_id):
     return l_msg
 
 
+async def get_user_back_msg_md_type(user_id, item_types: list[str]):
+    """
+    获取背包内的指定物品信息
+    """
+    l_msg = []
+    user_backs = await sql_message.get_back_msg(user_id)  # list(back)
+    if user_backs is None:
+        return l_msg
+    l_types_dict = {}
+    for user_back in user_backs:
+        goods_type = user_back.get('goods_type')
+        if not l_types_dict.get(goods_type):
+            l_types_dict[goods_type] = []
+        l_types_dict[goods_type].append(user_back)
+    l_types_msg_dict = {}
+    for item_type in item_types:
+        if l_items := l_types_dict.get(item_type):
+            l_items.sort(key=lambda k: int(items.get_data_by_item_id(k.get('goods_id')).get('rank')))
+            l_items_msg = []
+            l_types_sec_dict = {}
+            for item in l_items:
+                item_info = items.get_data_by_item_id(item['goods_id'])
+                item_type_sec = item_info.get('item_type')
+                if not l_types_sec_dict.get(item_type_sec):
+                    l_types_sec_dict[item_type_sec] = []
+                suit_msg = f"{item_info['suits']}·" if 'suits' in item_info else ''
+                level = f" - {item_info.get('level')}" if item_info.get('level') else ''
+                bind_msg = f"(绑定:{item['bind_num']})" if item['bind_num'] else ""
+                l_types_sec_dict[item_type_sec].append(
+                    [f"查看效果 {item['goods_name']}", f"{suit_msg}{item['goods_name']}",
+                     f"{level}\r数量：{item['goods_num']}{bind_msg}--",
+                     f"使用 {item['goods_name']}", f"使用"])
+            for item_type_sec, l_items_sec_msg in l_types_sec_dict.items():
+                if item_type_sec != item_type:
+                    top_msg = [f"小类背包{item_type_sec}", ".", f"✨{item_type_sec}✨", ".", "."]
+                    l_items_msg.append(top_msg)
+                l_items_msg.extend(l_items_sec_msg)
+            l_types_msg_dict[item_type] = l_items_msg
+    for item_type, l_items_msg in l_types_msg_dict.items():
+        top_msg = [f"大类背包{item_type}", ".", f"☆------{item_type}------☆", ".", "."]
+        l_msg.append(top_msg)
+        l_msg.extend(l_items_msg)
+    return l_msg
+
+
 async def get_user_back_msg(user_id, item_types: list):
     """
     获取背包内的指定物品信息

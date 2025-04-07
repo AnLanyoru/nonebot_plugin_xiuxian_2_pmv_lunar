@@ -693,8 +693,7 @@ async def main_back_(bot: Bot, event: GroupMessageEvent, args: Message = Command
     arg = get_strs_from_str(args)
     desc_on = True if "详情" in arg else False
     test_on = True if "测试" in arg else False
-    page = get_args_num(args, 1)  # 背包页数
-    page = page if page else 1
+    page = get_args_num(args, 1, 1)  # 背包页数
     if desc_on:
         msg = await get_user_main_back_msg(user_id)
         page_all = 12

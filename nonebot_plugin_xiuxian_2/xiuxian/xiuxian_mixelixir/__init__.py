@@ -17,11 +17,11 @@ from .mix_elixir_config import LEVEL_UP_NEED_EXP, FIRE_NAME_BY_LEVEL
 from .mix_elixir_database import create_user_mix_elixir_info, get_user_mix_elixir_info
 from .mixelixirutil import AlchemyFurnace, get_user_alchemy_furnace, remove_mix_user
 from ..xiuxian_back.back_util import get_user_yaocai_back_msg, get_user_yaocai_back_msg_easy, \
-    get_user_back_msg
+    get_user_back_msg_md_type, md_back
 from ..xiuxian_config import convert_rank
 from ..xiuxian_database.database_connect import database
 from ..xiuxian_utils.clean_utils import get_strs_from_str, get_args_num, get_paged_msg, get_num_from_str, main_md, \
-    three_md, simple_md, zips
+    three_md, simple_md, zips, get_paged_item
 from ..xiuxian_utils.item_json import items
 from ..xiuxian_utils.lay_out import Cooldown
 from ..xiuxian_utils.utils import (
@@ -865,12 +865,22 @@ async def elixir_back_(bot: Bot, event: GroupMessageEvent, args: Message = Comma
     user_info = await check_user(event)
 
     user_id = user_info['user_id']
-    msg_list = await get_user_back_msg(user_id, ['炼丹炉', '丹药', '合成丹药'])
-
-    args = args.extract_plain_text().strip()
-    page = get_args_num(args, 1, default=1)  # 背包页数
-    msg_list_per = get_paged_msg(msg_list=msg_list, page=page, per_page_item=20)
-    await send_msg_handler(bot, event, '丹药背包', bot.self_id, msg_list_per)
+    page = get_args_num(args, 1, 1)  # 背包页数
+    msg_list = await get_user_back_msg_md_type(user_id, ['炼丹炉', '丹药', '合成丹药'])
+    if not msg_list:
+        msg = "道友的丹药背包空空如也！"
+        await bot.send(event, msg)
+        await elixir_back.finish()
+    page_per = 19
+    items_list, page_all = get_paged_item(msg_list, page, page_per)
+    up_page = [f'丹药背包{page - 1}', '上一页'] if page > 1 else [f'丹药背包', '已是首页']
+    page_down = [f'丹药背包{page + 1}', '下一页'] if page_all > page else [f'丹药背包', '已是尾页']
+    items_list.append([*up_page, f' 第{page}/{page_all}页 ', *page_down])
+    msg = md_back(items_list[:10])
+    await bot.send(event, msg)
+    if len(items_list) > 10:
+        msg = md_back(items_list[10:])
+        await bot.send(event, msg)
     await elixir_back.finish()
 
 
