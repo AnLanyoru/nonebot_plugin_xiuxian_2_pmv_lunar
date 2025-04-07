@@ -716,11 +716,12 @@ async def main_back_(bot: Bot, event: GroupMessageEvent, args: Message = Command
         items_list, page_all = get_paged_item(msg, page, page_per)
         up_page = [f'背包{argp} {page - 1}', '上一页'] if page > 1 else [f'背包{argp}', '已是首页']
         page_down = [f'背包{argp} {page + 1}', '下一页'] if page_all > page else [f'背包{argp}', '已是尾页']
-        items_list.append([*up_page, f'-{page}/{page_all}页-', *page_down])
+        items_list.append([*up_page, f' 第{page}/{page_all}页 ', *page_down])
         msg = md_back(items_list[:10])
         await bot.send(event, msg)
-        msg = md_back(items_list[10:])
-        await bot.send(event, msg)
+        if len(items_list) > 10:
+            msg = md_back(items_list[10:])
+            await bot.send(event, msg)
     else:
         msg = await get_user_main_back_msg_easy(user_id)
         page_all = 30
