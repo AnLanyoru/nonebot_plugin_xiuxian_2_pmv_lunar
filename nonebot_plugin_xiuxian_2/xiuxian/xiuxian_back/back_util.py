@@ -35,7 +35,7 @@ def md_back(back_data: list[list[str]]):
         for _ in range(less_item_num):
             back_data.append(['.',
                               '.',
-                              '.',
+                              '\0',
                               '.',
                               '.'])
     msg = many_md('qqbot-cmd-input text="{}" show="{}" />'
@@ -915,7 +915,7 @@ async def get_use_jlq_msg(user_id, goods_id):
     return msg
 
 
-async def get_use_tool_msg(user_id, goods_id, use_num) -> (str, bool):
+async def get_use_tool_msg(user_id, goods_id, use_num) -> tuple[str, bool]:
     """
     使用道具
     :param user_id: 用户ID
